@@ -125,8 +125,8 @@ export default function BoothAsk({
           2026 going through every function in the booth. Now the route says
           which one answered, and before any answer the badge names the job
           rather than a supplier. */}
-      <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+      <div className="flex items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 py-2 text-xs font-semibold text-sky-300">
+        <span className="inline-block h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
         <span className="truncate">
           {engine
             ? `${t('ask.answeredBy', 'Answered by')} ${engineName(engine)}`
@@ -144,7 +144,7 @@ export default function BoothAsk({
 
       {/* Quick AI Suggestions Chips */}
       <div className="space-y-1.5 pt-1">
-        <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400/80">
+        <p className="text-[10px] font-black uppercase tracking-wider text-sky-400/80">
           {t('ask.proTips', 'Ask it like an engineer')}
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -170,7 +170,7 @@ export default function BoothAsk({
                 key={k}
                 type="button"
                 onClick={() => setQuestion(promptText)}
-                className="min-h-[44px] rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:text-emerald-200 active:scale-[0.98]"
+                className="min-h-[44px] rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-sky-500/40 hover:bg-sky-950/30 hover:text-sky-200 active:scale-[0.98]"
               >
                 {promptText}
               </button>
@@ -186,7 +186,7 @@ export default function BoothAsk({
           rows={3}
           placeholder={t('ask.placeholder', 'The voice is buried under the drums and the guitar is all on one side.')}
           aria-label={t('ask.label', 'What do you want changed about the mix?')}
-          className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-hidden pr-11"
+          className="w-full rounded-xl p-3 text-sm focus:border-sky-500 focus:outline-hidden pr-11"
           style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: INK }}
         />
         <SpeakButton onHeard={(said) => setQuestion((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
@@ -196,7 +196,7 @@ export default function BoothAsk({
         type="button"
         onClick={() => void ask()}
         disabled={asking || !question.trim()}
-        className="flex min-h-[44px] items-center gap-2 rounded-xl bg-linear-to-r from-emerald-500 via-emerald-400 to-teal-400 px-5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-950/50 hover:opacity-90 disabled:opacity-40 transition-all"
+        className="flex min-h-[44px] items-center gap-2 fb-fx-go rounded-xl px-5 text-sm font-bold disabled:opacity-40 transition-all"
       >
         {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
         {asking ? t('ask.asking', 'Reading the desk…') : t('ask.go', 'Ask')}

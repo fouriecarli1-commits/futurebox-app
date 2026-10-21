@@ -1313,7 +1313,7 @@ export default function ProBooth({
             onClick={() => setSoundKind(one)}
             className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold ${
               soundKind === one
-                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                ? 'border-sky-500/60 bg-sky-500/15 text-sky-300'
                 : 'border-zinc-700 bg-zinc-900 text-zinc-200'
             }`}
           >
@@ -1353,7 +1353,7 @@ export default function ProBooth({
             onClick={() => setDepth(one.id)}
             className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold ${
               depth === one.id
-                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                ? 'border-sky-500/60 bg-sky-500/15 text-sky-300'
                 : 'border-zinc-700 bg-zinc-900 text-zinc-200'
             }`}
           >
@@ -3001,7 +3001,7 @@ export default function ProBooth({
           aria-label={t('pro.click', 'Click')}
           className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-semibold ${
             clicking
-              ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+              ? 'border-sky-500 bg-sky-500/15 text-sky-300'
               : 'border-zinc-700 bg-zinc-950 text-zinc-500'
           }`}
         >
@@ -3029,7 +3029,7 @@ export default function ProBooth({
                 max={0}
                 value={clickDb}
                 onChange={(event) => setClickDb(Number(event.target.value))}
-                className="h-11 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
+                className="h-11 min-w-0 flex-1 accent-sky-500 touch-manipulation"
                 aria-label={t('pro.clickLevel', 'Click level')}
               />
               <span className="w-12 text-right text-xs tabular-nums" style={{ color: INK_DIM }}>
@@ -3350,7 +3350,7 @@ export default function ProBooth({
               aria-pressed={layout === one.id}
               className={`${BAR} border ${
                 layout === one.id
-                  ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                  ? 'border-sky-500/60 bg-sky-500/15 text-sky-300'
                   : 'border-zinc-700 bg-zinc-900 text-zinc-200'
               }`}
             >
@@ -3397,7 +3397,7 @@ export default function ProBooth({
         label={`${t('pro.toLibrary', 'Send it to my Library')}${bounceCost > 0 ? ` · ${bounceCost} ${t('pro.credits', 'credits')}` : ''}`}
         busyLabel={t('pro.toLibraryBusy', 'Making one song of it\u2026')}
         doneLabel={t('pro.toLibraryDone', 'It is in your Library')}
-        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-onAccent disabled:opacity-40"
+        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl fb-fx-go px-4 text-sm font-bold text-onAccent disabled:opacity-40"
         onDo={keep}
       />
       <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
@@ -3444,7 +3444,7 @@ export default function ProBooth({
               setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
               setStale(true);
             }}
-            className="h-11 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
+            className="h-11 min-w-0 flex-1 accent-sky-500 touch-manipulation"
             aria-label={t('pro.masterLevel', 'Level')}
           />
           <span className="w-10 text-right text-sm tabular-nums" style={{ color: INK_DIM }}>
@@ -3589,7 +3589,7 @@ export default function ProBooth({
           aria-label={t('pro.matchLoudness', 'Match the loudness')}
           className={`min-h-[44px] w-full rounded-xl border px-3 text-sm font-semibold ${
             master.matchLoudness
-              ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+              ? 'border-sky-500 bg-sky-500/15 text-sky-300'
               : 'border-zinc-700 bg-zinc-950 text-zinc-500'
           }`}
         >
@@ -3734,8 +3734,8 @@ export default function ProBooth({
                       aria-pressed={partId === one.id}
                       className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold transition-all ${
                         partId === one.id
-                          ? 'border-emerald-500 bg-emerald-500/20 text-emerald-100 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                          : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-emerald-500/40 hover:text-white'
+                          ? 'border-sky-500 bg-sky-500/20 text-sky-100 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-sky-500/40 hover:text-white'
                       }`}
                     >
                       {t(one.name, one.english)}
@@ -3758,8 +3758,8 @@ export default function ProBooth({
                     aria-pressed={partBars === bars}
                     className={`min-h-[44px] rounded-xl border px-4 py-2 text-sm font-semibold tabular-nums transition-all ${
                       partBars === bars
-                        ? 'border-emerald-500 bg-emerald-500/20 text-emerald-100 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                        : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-emerald-500/40 hover:text-white'
+                        ? 'border-sky-500 bg-sky-500/20 text-sky-100 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                        : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-sky-500/40 hover:text-white'
                     }`}
                   >
                     {bars}
@@ -3805,7 +3805,7 @@ export default function ProBooth({
               type="button"
               onClick={() => void makePart()}
               disabled={making}
-              className="min-h-[44px] w-full rounded-xl bg-emerald-500 px-4 py-3 font-bold text-onAccent flex items-center justify-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] w-full rounded-xl fb-fx-go px-4 py-3 font-bold text-onAccent flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {making ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music2 className="w-4 h-4" />}
               {making ? t('part.making', 'Generating\u2026') : t('part.make', 'Generate it')}
@@ -3866,7 +3866,7 @@ export default function ProBooth({
                   Each one cuts the mark onto a piece of its own first, so
                   what changes is what she drew and what is billed is its
                   length. */}
-              <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-emerald-300">
+              <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-sky-300">
                 <Sparkles className="h-3.5 w-3.5" />
                 {t('pro.magicTitle', 'AI magic on this piece')}
               </p>
@@ -3910,15 +3910,15 @@ export default function ProBooth({
                   data-regionmagic={one.id}
                   onClick={one.run}
                   disabled={busy || humming}
-                  className="flex w-full items-start gap-3 rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 text-left disabled:opacity-50"
+                  className="flex w-full items-start gap-3 rounded-xl border border-sky-500/40 bg-sky-950/30 p-3 text-left disabled:opacity-50"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">
                     {one.icon}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="block text-sm font-bold leading-tight text-white">{one.title}</span>
-                      <span className="shrink-0 text-[11px] font-bold text-emerald-300">{one.price}</span>
+                      <span className="shrink-0 text-[11px] font-bold text-sky-300">{one.price}</span>
                     </span>
                     <span className="block pt-0.5 text-xs leading-snug text-zinc-400">{one.says}</span>
                   </span>
@@ -4099,7 +4099,7 @@ export default function ProBooth({
                   aria-pressed={engine === 'singing'}
                   className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
                     engine === 'singing'
-                      ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                      ? 'border-sky-500 bg-sky-500/15 text-white'
                       : 'border-zinc-800 bg-zinc-900 text-zinc-400'
                   }`}
                 >
@@ -4111,7 +4111,7 @@ export default function ProBooth({
                   aria-pressed={engine === 'speech'}
                   className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
                     engine === 'speech'
-                      ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                      ? 'border-sky-500 bg-sky-500/15 text-white'
                       : 'border-zinc-800 bg-zinc-900 text-zinc-400'
                   }`}
                 >
@@ -4246,7 +4246,7 @@ export default function ProBooth({
               disabled={busy || (asInstrument
                 ? !instruments.some((one) => one.id === instrumentId)
                 : engine === 'singing' && canSing ? !modelId : !voiceId)}
-              className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-40"
+              className="w-full min-h-[44px] px-4 py-2.5 rounded-xl fb-fx-go text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-40"
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin" />}
               {asInstrument ? t('pro.playGo', 'Play it') : t('pro.singGo', 'Sing it')}
@@ -4501,7 +4501,7 @@ export default function ProBooth({
             data-prosaveall
             disabled={busy}
             onClick={() => { void saveAll(); }}
-            className="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-bold text-emerald-300 disabled:opacity-50"
+            className="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 text-sm font-bold text-sky-300 disabled:opacity-50"
           >
             <Layers className="h-4 w-4" />
             {t('pro.saveAllZip', 'Every lane in one .zip')} ({lanes.length})
@@ -4517,7 +4517,7 @@ export default function ProBooth({
                     data-proimprove={lane.id}
                     disabled={busy}
                     onClick={() => void deRoom(lane)}
-                    className="inline-flex h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 px-3 text-xs font-bold text-emerald-300 disabled:opacity-50"
+                    className="inline-flex h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl border border-sky-500/40 px-3 text-xs font-bold text-sky-300 disabled:opacity-50"
                   >
                     <Wand2 className="h-3.5 w-3.5 shrink-0" />
                     <span className="line-clamp-2 text-center leading-tight">
@@ -4554,9 +4554,9 @@ export default function ProBooth({
           type="button"
           onClick={() => setPartOpen(true)}
           disabled={busy || recording || making}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-semibold text-emerald-200 hover:border-emerald-400 hover:bg-emerald-900/40 hover:text-white transition-all disabled:opacity-50"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 text-sm font-semibold text-sky-200 hover:border-sky-400 hover:bg-sky-900/40 hover:text-white transition-all disabled:opacity-50"
         >
-          <Music2 className="h-4 w-4 text-emerald-400" />
+          <Music2 className="h-4 w-4 text-sky-400" />
           {t('part.title', 'Generate a part')}
         </button>
       </Card>
@@ -4587,7 +4587,7 @@ export default function ProBooth({
                   data-playas={lane.id}
                   disabled={busy}
                   onClick={() => playAs(lane)}
-                  className="inline-flex h-[44px] w-full min-w-0 items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-3 text-sm font-bold text-emerald-200 disabled:opacity-50"
+                  className="inline-flex h-[44px] w-full min-w-0 items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-3 text-sm font-bold text-sky-200 disabled:opacity-50"
                 >
                   <Guitar className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-left">{lane.name}</span>
@@ -4694,7 +4694,7 @@ export default function ProBooth({
               data-humtovoice
               disabled={!humLane || busy}
               onClick={() => { if (humLane) setChanging(humLane); }}
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-bold text-emerald-300 disabled:opacity-50"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 text-sm font-bold text-sky-300 disabled:opacity-50"
             >
               <Mic2 className="h-4 w-4" />
               {t('hum.toVoice', 'Sing my hum as a voice part')}
@@ -4871,7 +4871,7 @@ export default function ProBooth({
                 disabled={busy}
                 data-prosplitvoice
                 aria-label={t('pro.split', 'Split the voice off')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 disabled:opacity-40"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-xs font-semibold text-sky-200 disabled:opacity-40"
               >
                 <SquareSplitHorizontal className="h-4 w-4" />
                 {t('pro.splitShort', 'Voice off')} · {perMinute(pieceSeconds(lane), CREDITS.stems)} {t('video.credits', 'credits')}
@@ -4882,7 +4882,7 @@ export default function ProBooth({
                 disabled={busy || looking === lane.id}
                 data-prosplitparts
                 aria-label={t('pro.parts', 'Split into named parts')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 disabled:opacity-40"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-xs font-semibold text-sky-200 disabled:opacity-40"
               >
                 <Layers className="h-4 w-4" />
                 {t('pro.partsShort', 'Named parts')} · {perMinute(pieceSeconds(lane), CREDITS.parts)} {t('video.credits', 'credits')}
@@ -5015,7 +5015,7 @@ export default function ProBooth({
             type="button"
             onClick={() => void record()}
             disabled={busy}
-            className={`${BAR} bg-emerald-500 text-onAccent disabled:opacity-50`}
+            className={`${BAR} fb-fx-go text-onAccent disabled:opacity-50`}
           >
             <Circle className="w-4 h-4 fill-current" />
             {t('pro.record', 'Record a lane')}
@@ -5099,7 +5099,7 @@ export default function ProBooth({
           )}
           className={`${BAR} border disabled:opacity-50 ${
             clicking
-              ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+              ? 'bg-sky-500/15 border-sky-500/50 text-sky-300'
               : 'bg-zinc-900 border-zinc-700 text-zinc-200'
           }`}
         >
@@ -5177,7 +5177,7 @@ export default function ProBooth({
           type="button"
           onClick={() => void keep()}
           disabled={busy || recording || !heard.length}
-          className={`${BAR} col-span-2 bg-emerald-500 text-onAccent disabled:opacity-40`}
+          className={`${BAR} col-span-2 fb-fx-go text-onAccent disabled:opacity-40`}
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {/* Not "Mix it down".
@@ -5432,8 +5432,9 @@ export default function ProBooth({
             <span className="hidden text-sm font-extrabold text-white sm:inline">
               FUTURE<span className="text-emerald-500">BOX</span>
             </span>
-            <span className="rounded-lg border border-emerald-400 bg-emerald-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-onAccent">
-              {t('booth.title', 'ProBooth')} · {t('pro.lanesBadge', 'Lanes')}
+            <span className="whitespace-nowrap rounded-lg border border-sky-400/45 bg-sky-500/10 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
+              {t('booth.title', 'ProBooth')}
+              <span className="hidden sm:inline"> · {t('pro.lanesBadge', 'Lanes')}</span>
             </span>
             <span className="hidden min-w-0 truncate text-xs text-zinc-400 md:inline">{title}</span>
           </div>
@@ -5505,7 +5506,7 @@ export default function ProBooth({
           that works silently and storage that has quietly stopped look exactly
           the same from a chair, and the difference is a night's takes. */}
       {jamArrived && (
-        <div className="flex items-center gap-3 border-b border-emerald-500/30 bg-emerald-500/10 px-5 py-2 text-xs text-emerald-100" data-jamarrived>
+        <div className="flex items-center gap-3 border-b border-sky-500/30 bg-sky-500/10 px-5 py-2 text-xs text-sky-100" data-jamarrived>
           <Repeat className="h-4 w-4 shrink-0" />
           <span className="min-w-0 flex-1">
             {t('pro.jamArrived', 'Your loop from the jam room is in, as the lane “Jam loop”, going round from the top to the end of the song. Drag its end to make it shorter.')}
@@ -5548,7 +5549,7 @@ export default function ProBooth({
                 setCameBack(false);
                 setSavedAt(null);
               }}
-              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
+              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-sky-500 hover:text-white"
             >
               {t('pro.startFresh', 'Start fresh')}
             </button>
@@ -5610,9 +5611,9 @@ export default function ProBooth({
                 <button
                   type="button"
                   onClick={() => setDeskOpen('stems')}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
                 >
-                  <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                  <Layers className="h-3.5 w-3.5 text-sky-400" />
                   <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
                 </button>
                 {/* ── Each one does what it says ─────────────────────────
@@ -5759,7 +5760,7 @@ export default function ProBooth({
             }}
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 py-2 text-sm font-black disabled:opacity-50"
             style={looping
-              ? { background: 'rgba(16,185,129,0.22)', color: LIT, boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.6)' }
+              ? { background: 'rgba(56,189,248,0.22)', color: LIT, boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.6)' }
               : { background: 'rgba(255,255,255,0.06)', color: INK_DIM }}
             title={t('pro.loopWhat', 'Plays the marked piece round and round. Record while it loops and every pass is kept as its own take.')}
           >
@@ -5770,7 +5771,7 @@ export default function ProBooth({
             type="button"
             data-regiontools=""
             onClick={() => setRegionOpen(true)}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-black text-onAccent shadow-[0_0_18px_rgba(16,185,129,0.35)]"
+            className="inline-flex min-h-[44px] items-center gap-1.5 fb-fx-go rounded-full px-4 py-2 text-sm font-black text-onAccent"
           >
             <Sparkles className="h-4 w-4" />
             {t('pro.regionMagic', 'AI magic')}
@@ -6073,7 +6074,7 @@ function LaneRow({
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
           placeholder={t('pro.laneNameHint', 'Bass, Lead vocal, Kick…')}
-          className="min-h-[44px] w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-200 placeholder:font-normal placeholder:text-zinc-600 outline-hidden focus:border-emerald-500 focus:text-white"
+          className="min-h-[44px] w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-200 placeholder:font-normal placeholder:text-zinc-600 outline-hidden focus:border-sky-500 focus:text-white"
         />
         <div className="flex items-center gap-1 min-w-0">
           <button
@@ -6090,7 +6091,7 @@ function LaneRow({
             onClick={() => onChange({ soloed: !lane.soloed })}
             className={`min-h-[44px] min-w-[44px] rounded text-[11px] font-bold border ${
               lane.soloed
-                ? 'bg-amber-500/20 border-emerald-500 text-emerald-300'
+                ? 'bg-amber-500/20 border-amber-400 text-amber-200'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
             }`}
           >
@@ -6102,7 +6103,7 @@ function LaneRow({
             max={150}
             value={Math.round(lane.gain * 100)}
             onChange={(event) => onChange({ gain: Number(event.target.value) / 100 })}
-            className="flex-1 accent-emerald-500 h-11 touch-manipulation"
+            className="flex-1 accent-sky-500 h-11 touch-manipulation"
             aria-label={t('pro.level', 'Level')}
           />
           <span className="text-[11px] text-zinc-500 tabular-nums w-8 text-right">
@@ -6156,7 +6157,7 @@ function LaneRow({
         className={`shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-lg border text-xs font-bold ${
           isClean(lane.tone)
             ? 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
-            : 'border-emerald-500/50 text-emerald-400'
+            : 'border-sky-500/50 text-sky-400'
         }`}
       >
         <Sliders className="w-4 h-4 shrink-0" />
@@ -6196,7 +6197,7 @@ function LaneRow({
  
              A stated width contributes itself to the measurement, which is
              what a content-sized box needs from every child in it. */
-          className="w-24 accent-emerald-500 h-11 touch-manipulation"
+          className="w-24 accent-sky-500 h-11 touch-manipulation"
           aria-label={t('pro.pan', 'Where it sits, left to right')}
         />
         <span className="text-[11px] text-zinc-600">R</span>
@@ -6234,7 +6235,7 @@ function LaneRow({
           disabled={busy}
           title={`${t('pro.split', 'Split the voice off')} — ${perMinute(pieceSeconds(lane), CREDITS.stems)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.split', 'Split the voice off')}
-          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-sky-400 disabled:opacity-40"
         >
           <SquareSplitHorizontal className="w-4 h-4" />
         </button>
@@ -6244,7 +6245,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(pieceSeconds(lane), CREDITS.parts)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.parts', 'Split into named parts')}
-          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-sky-400 disabled:opacity-40"
         >
           <Layers className="w-4 h-4" />
         </button>
@@ -6254,7 +6255,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(pieceSeconds(lane), CREDITS.read)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.read', 'Read the chords, key and tempo')}
-          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-sky-400 disabled:opacity-40"
         >
           {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
         </button>
@@ -6264,7 +6265,7 @@ function LaneRow({
           disabled={busy}
           title={t('pro.sing', 'Sing this in another voice')}
           aria-label={t('pro.sing', 'Sing this in another voice')}
-          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-sky-400 disabled:opacity-40"
         >
           <Mic2 className="w-4 h-4" />
         </button>
@@ -6298,7 +6299,7 @@ function LaneRow({
             }}
             aria-expanded={saving}
             title={t('pro.save', 'Take this lane away')}
-            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/50 hover:text-emerald-400"
+            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-sky-500/50 hover:text-sky-400"
           >
             <ArrowDownToLine className="h-4 w-4 shrink-0" />
             {t('pro.save', 'Take this lane away')}
@@ -6395,14 +6396,14 @@ function LaneRow({
           )}
           {found.key && (
             <span className="text-sm text-zinc-300">
-              {t('pro.key', 'Key')} <span className="text-emerald-400">{found.key}</span>
+              {t('pro.key', 'Key')} <span className="text-sky-400">{found.key}</span>
             </span>
           )}
           {found.tempo !== null && (
             <button
               type="button"
               onClick={() => onUseTempo(found.tempo as number, found.key)}
-              className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
+              className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-sky-500/50 bg-sky-500/10 text-xs font-bold text-sky-300"
             >
               {t('pro.useTempo', 'Set the session to this')}
             </button>
@@ -6466,7 +6467,7 @@ function LaneRow({
           {([
             [t('pro.rigAmp', 'Amp capture'), lane.amped?.name ?? t('pro.rigNone', 'None yet'), 'text-amber-300'],
             [t('pro.rigCab', 'Cabinet'), tone.cabinet ? t('pro.rigCabOn', 'Guitar speaker') : t('pro.rigCabOff', 'Straight'), 'text-teal-300'],
-            [t('pro.rigDrive', 'Drive'), `${Math.round(tone.drive * 100)}%`, 'text-emerald-300'],
+            [t('pro.rigDrive', 'Drive'), `${Math.round(tone.drive * 100)}%`, 'text-sky-300'],
           ] as const).map(([what, now, ink]) => (
             <div key={what} className="min-w-0 rounded-lg border border-amber-500/20 bg-zinc-900/80 p-2">
               <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{what}</span>
@@ -6513,7 +6514,7 @@ function LaneRow({
                 })}
                 className={`min-h-[44px] rounded-lg border px-3 py-2 text-xs font-bold ${
                   on
-                    ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                    ? 'border-sky-500 bg-sky-500/15 text-white'
                     : 'border-zinc-700 bg-zinc-950 text-zinc-500 hover:text-zinc-200'
                 }`}
               >
@@ -6549,7 +6550,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.drive * 100)}
               onChange={(event) => onChange({ tone: { ...tone, drive: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-11 touch-manipulation"
+              className="w-28 accent-sky-500 h-11 touch-manipulation"
               aria-label={t('pro.drive', 'Drive')}
             />
           </label>
@@ -6561,7 +6562,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.colour * 100)}
               onChange={(event) => onChange({ tone: { ...tone, colour: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-11 touch-manipulation"
+              className="w-28 accent-sky-500 h-11 touch-manipulation"
               aria-label={t('pro.colour', 'Colour')}
             />
           </label>
@@ -6573,7 +6574,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.mix * 100)}
               onChange={(event) => onChange({ tone: { ...tone, mix: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-11 touch-manipulation"
+              className="w-28 accent-sky-500 h-11 touch-manipulation"
               aria-label={t('pro.blend', 'Blend')}
             />
           </label>
@@ -6583,7 +6584,7 @@ function LaneRow({
             aria-pressed={tone.cabinet}
             className={`px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border text-xs font-bold ${
               tone.cabinet
-                ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+                ? 'bg-sky-500/15 border-sky-500 text-sky-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
             }`}
           >
@@ -6608,7 +6609,7 @@ function LaneRow({
             <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
               <span>{t('pro.stockAmps', 'Stock amp sounds (built-in)')}</span>
             </span>
-            <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+            <span className="text-[10px] text-sky-400 font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30">
               {t('pro.offlineReady', 'Works without internet')}
             </span>
           </div>
@@ -6627,7 +6628,7 @@ function LaneRow({
                   title={lang === 'af' ? amp.descAf : amp.descEn}
                   className={`flex min-h-[44px] items-center gap-2 px-2 py-1.5 rounded-xl border text-left text-xs font-bold transition-all ${
                     isActive
-                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                      ? 'border-sky-500 bg-sky-500/20 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
                       : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-white'
                   }`}
                 >
@@ -6665,7 +6666,7 @@ function LaneRow({
             <span className="text-xs text-zinc-500">{t('pro.amp', 'Amp')}</span>
             {lane.amped ? (
               <>
-                <span className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
+                <span className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg bg-sky-500/15 border border-sky-500/50 text-sky-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
                   {lane.amped.name}
                 </span>
                 <button
@@ -6733,7 +6734,7 @@ function LaneRow({
                       data-useamp={one.id}
                       className={`min-h-[44px] px-2.5 py-1.5 rounded-lg border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
                         on
-                          ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                          ? 'border-sky-500 bg-sky-500/15 text-sky-300'
                           : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:text-white hover:border-zinc-500'
                       }`}
                     >

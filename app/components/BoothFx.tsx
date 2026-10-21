@@ -855,17 +855,17 @@ export default function BoothFx({
   return (
     <div className="space-y-3 px-4 pb-4" style={{ background: PANEL }}>
       {/* ── Sound Sculptor presets: fixed settings, no AI is called ──── */}
-      <div className="rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-950/40 via-zinc-950 to-teal-950/30 p-3.5 shadow-lg shadow-emerald-950/20">
+      <div className="rounded-2xl border border-sky-500/30 bg-linear-to-br from-sky-950/40 via-zinc-950 to-cyan-950/30 p-3.5 shadow-lg shadow-sky-950/20">
         <div className="flex items-center justify-between gap-2 pb-2">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-500/20 text-sky-300">
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
+              <p className="text-xs font-black uppercase tracking-wider text-sky-300">
                 {t('fx.aiSculpt', 'Sound Sculptor presets')}
               </p>
-              <p className="text-[11px] leading-tight text-emerald-400/70">
+              <p className="text-[11px] leading-tight text-sky-400/70">
                 {t('fx.aiSculptWhat', 'One-click studio presets to sculpt tone, warmth, dynamics and space.')}
               </p>
             </div>
@@ -889,7 +889,7 @@ export default function BoothFx({
               type="button"
               onClick={() => { onWhole?.('preset'); onChange({ ...preset.fx }); }}
               data-tidycard=""
-              className="flex min-h-[44px] min-w-0 flex-col items-start justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
+              className="flex min-h-[44px] min-w-0 flex-col items-start justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 text-left transition-all hover:border-sky-500/50 hover:bg-sky-950/30 active:scale-[0.98]"
             >
               {/* What it does to the sound, drawn: its EQ as a curve. */}
               <EqCurve eq={preset.fx.eq} />

@@ -1282,7 +1282,7 @@ export default function VocalBooth({
         >
           {(track.bpm ?? 0) > 0 && (
             <span className="hidden text-zinc-400 sm:inline">
-              <span className="font-bold text-emerald-500">{Math.round(track.bpm ?? 0)}</span> BPM
+              <span className="font-bold text-sky-500">{Math.round(track.bpm ?? 0)}</span> BPM
               {track.key ? <span className="text-zinc-200"> · {track.key}</span> : null}
             </span>
           )}
@@ -1637,7 +1637,7 @@ export default function VocalBooth({
                 type="button"
                 data-boothlisten
                 onClick={() => { setIntroAt(null); setWordsShift(0); }}
-                className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-400 hover:text-emerald-300"
+                className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-sky-400 hover:text-sky-300"
               >
                 {t('booth.listenWords', 'Listen to the words')}
                 <span className="pl-1.5 text-zinc-500">{t('play.free', 'no credits')}</span>
@@ -1715,7 +1715,7 @@ export default function VocalBooth({
             mark where every other explanation in this app already lives,
             and the price on the button rather than under it. */}
         <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
-          <Ear className="w-4 h-4 text-emerald-400 shrink-0" />
+          <Ear className="w-4 h-4 text-sky-400 shrink-0" />
           <span className="text-sm font-semibold text-zinc-300">
             {t('booth.heardWhat', 'The words as sung')}
           </span>
@@ -1736,7 +1736,7 @@ export default function VocalBooth({
                   type="button"
                   onClick={() => setPreferWritten(choice.written)}
                   className={`min-h-[44px] px-3 py-1.5 text-sm font-semibold ${
-                    preferWritten === choice.written ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
+                    preferWritten === choice.written ? 'bg-sky-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
                   }`}
                 >
                   {choice.label}
@@ -1904,7 +1904,7 @@ export default function VocalBooth({
               {sheet.map((part, at) => (
                 <div key={`${part.name}-${at}`} className="space-y-1">
                   {part.name && (
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-sky-400">
                       {part.name}
                     </p>
                   )}
@@ -1938,7 +1938,7 @@ export default function VocalBooth({
             pressing it re-wrapped the row. */}
         {!stems && (
           <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
-            <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+            <Users className="w-4 h-4 text-sky-400 shrink-0" />
             <span className="text-sm font-semibold text-zinc-300">
               {t('booth.splitWhat', 'Sing beside the voice')}
             </span>
@@ -2008,7 +2008,7 @@ export default function VocalBooth({
                       step={2}
                       value={Math.round(doubleLevel * 100)}
                       onChange={(event) => setDoubleLevel(Number(event.target.value) / 100)}
-                      className="flex-1 accent-emerald-500"
+                      className="flex-1 accent-sky-500"
                       aria-label={t('booth.aiVoice', 'The AI voice')}
                     />
                     <span className="text-sm text-zinc-400 tabular-nums w-10">
@@ -2044,7 +2044,7 @@ export default function VocalBooth({
                     // result goes rather than sitting there being wrong.
                     setTuned(null);
                   }}
-                  className="flex-1 accent-emerald-500"
+                  className="flex-1 accent-sky-500"
                   aria-label={t('booth.tune', 'Tuning')}
                 />
                 <span className="text-sm text-zinc-500">{t('booth.strong', 'Strong')}</span>
@@ -2061,7 +2061,7 @@ export default function VocalBooth({
                       setInKey(event.target.checked);
                       setTuned(null);
                     }}
-                    className="accent-emerald-500"
+                    className="accent-sky-500"
                   />
                   {t('booth.stayInKey', 'Stay in')} {track.key}
                 </label>
@@ -2101,7 +2101,7 @@ export default function VocalBooth({
                         if (phase === 'playing') setPhase('idle');
                       }}
                       className={`min-h-[44px] px-3 py-1.5 text-sm font-semibold ${
-                        hearRaw === choice.raw ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
+                        hearRaw === choice.raw ? 'bg-sky-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
                       }`}
                     >
                       {choice.label}
@@ -2137,7 +2137,7 @@ export default function VocalBooth({
         <div className="absolute right-5 bottom-24 z-30 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Sliders className="w-4 h-4 text-emerald-400" />
+              <Sliders className="w-4 h-4 text-sky-400" />
               {t('booth.desk', 'Desk')}
             </p>
             <button type="button" onClick={() => setDeskOpen(false)} className="text-zinc-500 hover:text-white">
@@ -2486,7 +2486,7 @@ function Fader({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-emerald-500"
+        className="w-full accent-sky-500"
       />
       {hint && <span className="block text-sm text-zinc-600 leading-snug">{hint}</span>}
     </label>
