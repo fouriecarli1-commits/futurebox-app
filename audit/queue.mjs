@@ -206,7 +206,9 @@ check('an empty queue says so rather than showing nothing',
    the only thing that knows which one was meant. */
 await room.locator('#queue-date').fill('2027-03-09');
 await room.locator('#queue-time').fill('18:00');
-await room.locator('textarea').filter({ hasText: '' }).last().fill('New single out now.');
+/* By its id: since 21 October 2026 the reminder sits inside the run planner,
+   and "the last empty text box in the room" became the advert report's. */
+await room.locator('#queue-caption').fill('New single out now.');
 await room.locator('button').filter({ hasText: af ? /^Sit dit in die ry$/ : /^Put it in the queue$/ }).first().click();
 await p.waitForTimeout(1500);
 

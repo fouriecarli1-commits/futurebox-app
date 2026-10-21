@@ -86,8 +86,11 @@ const TONE: Record<Standing, string> = {
 export default function AdRuns({
   /** The headline of the advert on screen, so a new run starts named. */
   headline,
+  children,
 }: {
   readonly headline?: string;
+  /** The reminder (`Queue`), drawn at the foot of this panel rather than as a second one. */
+  readonly children?: React.ReactNode;
 }): React.ReactElement {
   const { t } = useLang();
   const [runs, setRuns] = useState<Run[]>([]);
@@ -328,11 +331,23 @@ export default function AdRuns({
       {/* Said plainly, because a calendar that quietly fails to notify is
           worse than a list somebody knows to check. */}
       <Note className="text-xs text-zinc-600 leading-relaxed">
-        {t(
-          'run.noReminder',
-          'Nothing is sent from here — this is a list you check, not a reminder. It is kept on this device.',
-        )}
+        {children
+          ? t('run.listOnly', 'Nothing is sent from these runs — they are a list you check, kept on this device. The reminder below is the part that tells you when.')
+          : t(
+              'run.noReminder',
+              'Nothing is sent from here — this is a list you check, not a reminder. It is kept on this device.',
+            )}
       </Note>
+
+      {children && (
+        <div className="space-y-3 border-t border-white/10 pt-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+            <CalendarClock className="h-4 w-4" />
+            {t('run.remind', 'Remind me when it is time')}
+          </p>
+          {children}
+        </div>
+      )}
     </Card>
   );
 }

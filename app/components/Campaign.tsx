@@ -1361,7 +1361,14 @@ export default function Campaign({
           goes out, and what it did. The second needs numbers read back from
           Meta and Google and cannot be built yet; the first needs nobody's
           permission and is this. */}
-      <AdRuns headline={ads[0]?.headline} />
+      {/* The reminder lives inside the run planner, not as a second panel
+          whose title differed by two words — the owner, 21 October 2026:
+          *"Hier by adverts is basies 2 van dieselfde buttons."* The caption
+          from the first advert is carried in so the common case is two taps;
+          it reminds rather than posts, and says so (`components/Queue.tsx`). */}
+      <AdRuns headline={ads[0]?.headline}>
+        <Queue bare caption={ads[0]?.caption || ads[0]?.body || ''} />
+      </AdRuns>
 
       {/* ── And what it did ─────────────────────────────────────────────
           The other half of an advertising service, and the half a client
@@ -1407,13 +1414,6 @@ export default function Campaign({
         onGoTo={onGoTo}
         onSetUp={onSetUp}
       />
-
-      {/* The plan says Tuesday at six; this is what makes Tuesday at six
-          happen rather than being read once and forgotten. It reminds
-          rather than posts, and says so on its own face — see
-          `components/Queue.tsx`. The caption from the first advert is
-          carried in so the common case is two taps. */}
-      <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
 
       <History surface="campaign" reloadKey={kept} />
 

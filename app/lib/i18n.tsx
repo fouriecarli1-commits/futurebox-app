@@ -5924,6 +5924,8 @@ export const STRINGS: Dict = {
   "run.soon": { en: "Coming up.", af: "Kom binnekort." },
   "run.done": { en: "All out.", af: "Alles uit." },
   "run.noDay": { en: "No day set.", af: "Geen dag gestel nie." },
+  "run.listOnly": { en: "Nothing is sent from these runs \u2014 they are a list you check, kept on this device. The reminder below is the part that tells you when.", af: "Niks word van hierdie lopies gestuur nie \u2014 dis \u2019n lys wat jy nagaan, op hierdie toestel gehou. Die herinnering hieronder is die deel wat jou s\u00ea wanneer." },
+  "run.remind": { en: "Remind me when it is time", af: "Herinner my wanneer dit tyd is" },
   "run.noReminder": { en: "Nothing is sent from here \u2014 this is a list you check, not a reminder. It is kept on this device.", af: "Niks word van hier gestuur nie \u2014 dis ’n lys wat jy nagaan, nie ’n herinnering nie. Dit word op hierdie toestel gehou." },
 
   /* Trimming a shot: the cheapest edit on the video desk. */

@@ -89,8 +89,10 @@ check('the run panel is in the advert desk',
   af ? /Wanneer dit uitgaan, en waarheen/.test(words) : /When it goes out, and where/.test(words));
 check('it says why the tags matter',
   af ? /een reël in jou syfers/.test(words) : /one line in your analytics/.test(words));
+/* Since 21 October 2026 the reminder sits at the foot of this panel, so the
+   sentence names the runs rather than the whole panel. */
 check('and that nothing is sent from here',
-  af ? /Niks word van hier gestuur nie/.test(words) : /Nothing is sent from here/.test(words));
+  af ? /Niks word van hier(die lopies)? gestuur nie/.test(words) : /Nothing is sent from (here|these runs)/.test(words));
 
 await room.locator('button').filter({ hasText: af ? /^Beplan 'n lopie/ : /^Plan a run/ }).first().click();
 await p.waitForTimeout(600);

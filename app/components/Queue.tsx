@@ -62,8 +62,16 @@ function shown(iso: string, lang: 'en' | 'af'): string {
 export default function Queue({
   /** Pre-filled from whatever the room just made, where there is something. */
   caption: given = '',
+  bare = false,
 }: {
   readonly caption?: string;
+  /**
+   * Drawn inside another panel rather than as its own fold. The advert room
+   * shows it inside "When it goes out, and where" — two panels a word apart
+   * in their titles read as the same one twice (the owner, 21 October 2026:
+   * *"Hier by adverts is basies 2 van dieselfde buttons"*).
+   */
+  readonly bare?: boolean;
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [queue, setQueue] = useState<Waiting>(NO_QUEUE);
@@ -112,8 +120,8 @@ export default function Queue({
      before anybody had chosen one. A JSX comment cannot sit above the root
      element — that is two expressions and neither compiles — so it lives
      here, outside the return. */
-  return (
-    <Card title={t('queue.title', 'When it goes out')} icon={<CalendarClock className="w-4 h-4" />}>
+  const body = (
+    <>
       <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'queue.what',
               'Plan a post and this reminds you at the moment you chose, with the words in front of you. It cannot post for you: every platform wants its own approved developer app first. What each one asks for is listed below.',
@@ -183,6 +191,8 @@ export default function Queue({
           />
         </div>
         <textarea
+          id="queue-caption"
+          aria-label={t('queue.caption', 'The words that go with it')}
           value={caption}
           onChange={(event) => setCaption(event.target.value)}
           rows={2}
@@ -281,6 +291,10 @@ export default function Queue({
           )}
         </p>
       </details>
-    </Card>
+    </>
   );
+
+  return bare
+    ? <div data-queue className="space-y-3">{body}</div>
+    : <Card title={t('queue.title', 'When it goes out')} icon={<CalendarClock className="w-4 h-4" />}>{body}</Card>;
 }
