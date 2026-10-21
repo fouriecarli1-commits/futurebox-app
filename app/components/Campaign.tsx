@@ -1113,7 +1113,11 @@ export default function Campaign({
           must be COPIED rather than redrawn, because a logo restyled is not
           her logo. */}
       </aside>
-      <main className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0" data-adpreview>
+      {/* Pinned beside the setup on a desk. The setup runs three screens
+          long and the preview is a few lines until something is written, so
+          once the brief was scrolled the right column was empty space — and
+          the adverts, when they came, landed out of sight. */}
+      <main className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0 lg:sticky lg:top-2 lg:max-h-[calc(100dvh-10rem)] lg:overflow-y-auto" data-adpreview>
         <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
           <span>{t('ads.previewTitle', 'Multi-format creative preview')}</span>
           <span className="rounded border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
