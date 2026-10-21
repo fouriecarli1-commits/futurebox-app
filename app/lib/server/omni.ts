@@ -85,6 +85,7 @@
  */
 
 import { interactionsAddress } from './google';
+import { interactionsAuth } from './googleauth';
 
 /**
  * The model, exactly as her page spells it.
@@ -321,7 +322,9 @@ export async function askOmni(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
+        /* A signed-in service account when one is set: this API refuses
+           the key (`googleauth.ts`). */
+        ...(await interactionsAuth()),
       },
       body: asked.body,
     });

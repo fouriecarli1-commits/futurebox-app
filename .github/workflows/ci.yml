@@ -750,6 +750,11 @@ jobs:
       - name: Google stands in for voice and transcription when ElevenLabs cannot
         run: npm run check:googlevoice
 
+      # Lyria refuses an API key; the app signs in with its service account
+      # when one is set, and sends the key as before when not.
+      - name: The app signs in to Google with its own account when it has one
+        run: npm run check:googleauth
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a

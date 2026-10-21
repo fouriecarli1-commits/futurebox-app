@@ -49,6 +49,7 @@
     "check:sqlgrants": "tsx scripts/check-sqlgrants.mts",
     "check:elevenbusy": "tsx scripts/check-elevenbusy.mts",
     "check:googlevoice": "tsx scripts/check-googlevoice.mts",
+    "check:googleauth": "tsx scripts/check-googleauth.mts",
     "check:covermaker": "tsx scripts/check-covermaker.mts",
     "check:coverkeep": "tsx scripts/check-coverkeep.mts",
     "check:onedoor": "tsx scripts/check-onedoor.mts",

@@ -374,6 +374,33 @@ refuse, so nothing is generated and nothing is billed. It comes back with a
 sentence saying which Lyria and which Veo id to use — which is the question
 Google's own documentation currently disagrees with itself about.
 
+### Google: signing in for Lyria
+
+`GOOGLE_SERVICE_ACCOUNT` is needed for **Lyria 3 songs** (and Gemini Omni
+Flash video editing). Measured on 21 October 2026: Lyria's `interactions` API
+answers **401 — "API keys are not supported by this API"**. Veo, the picture
+models and Gemini keep using `GOOGLE_VERTEX_KEY`; only this one API wants the
+app to sign in.
+
+The value is a service account's key file, pasted whole. Made once:
+
+1. Google Cloud console → the project with the spend cap → **IAM & Admin →
+   Service Accounts → Create service account**. Name it `futurebox-lyria`.
+2. Give it one role: **Vertex AI User**. Nothing else.
+3. Open it → **Keys → Add key → Create new key → JSON**. A file downloads.
+4. Open that file in Notepad, copy **everything**, and paste it into
+   Vercel → Settings → Environment Variables as `GOOGLE_SERVICE_ACCOUNT`
+   (Production and Preview). Redeploy.
+5. Delete the downloaded file. Never paste it into a chat or an email.
+
+If step 3 says key creation is disabled, the organisation policy
+`iam.disableServiceAccountKeyCreation` is on; it can be switched off for this
+project under **IAM & Admin → Organization Policies**.
+
+The app signs a short token from the key itself (`app/lib/server/googleauth.ts`)
+and reuses it for an hour. Unset, everything else still works and a Lyria
+song says which variable is missing rather than passing on Google's 401.
+
 `MUSIC_ENGINE` is optional and names **which engine the booth's own button
 reaches**. Unset means ElevenLabs, which is what works today. Set it to
 `google` for Lyria 3 Pro.

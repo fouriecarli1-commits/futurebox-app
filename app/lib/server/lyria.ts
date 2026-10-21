@@ -25,6 +25,7 @@
  */
 
 import { CHOSEN, configured, interactionsAddress } from './google';
+import { interactionsAuth, NEEDS_ACCOUNT, serviceAccount } from './googleauth';
 
 /** Where the audio was found, so the guessing can stop after the first song. */
 export let foundUnder: string | null = null;
@@ -255,7 +256,9 @@ export async function makeSong(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
+        /* A signed-in service account when one is set: this API refuses
+           the key (`googleauth.ts`). */
+        ...(await interactionsAuth()),
       },
       body: JSON.stringify({
         model,
@@ -273,7 +276,10 @@ export async function makeSong(
     return {
       ok: false,
       status: response.status,
-      message: text.slice(0, 300) || `The music engine answered ${response.status}.`,
+      /* Except the one refusal whose cure is known: no signed-in account. */
+      message: response.status === 401 && !serviceAccount()
+        ? NEEDS_ACCOUNT
+        : text.slice(0, 300) || `The music engine answered ${response.status}.`,
     };
   }
 
