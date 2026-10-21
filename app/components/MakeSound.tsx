@@ -104,6 +104,8 @@ export default function MakeSound({
   const [words, setWords] = useState('');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
+  /** The last read came from the backup voice, because the usual service was busy. */
+  const [backup, setBackup] = useState(false);
   const [made, setMade] = useState<{ blob: Blob; url: string } | null>(null);
   const [playing, setPlaying] = useState(false);
   const player = useRef<HTMLAudioElement | null>(null);
@@ -146,6 +148,7 @@ export default function MakeSound({
     if (script.length < FEWEST_CHARACTERS || busy) return;
     setBusy(true);
     setProblem('');
+    setBackup(false);
     try {
       const token = await accessToken();
       const headers = {
@@ -198,6 +201,7 @@ export default function MakeSound({
       }
       if (made) URL.revokeObjectURL(made.url);
       setMade({ blob, url: URL.createObjectURL(blob) });
+      setBackup(answer.headers.get('X-Read-Engine') === 'backup');
       onAudio?.(blob, script.slice(0, 40));
     } catch {
       setProblem(t('makesound.failed', 'That could not be read just now.'));
@@ -356,6 +360,11 @@ export default function MakeSound({
           {!busy && <Cost waitMinutes={1} className="w-full justify-center" />}
 
           {problem && <p className="text-sm leading-relaxed text-rose-400">{problem}</p>}
+          {backup && made && !problem && (
+            <p className="text-xs leading-relaxed text-zinc-400">
+              {t('voice.backupRead', 'The usual voice service was busy, so a backup voice read this. Try again later for the voice you picked.')}
+            </p>
+          )}
 
           {made && (
             <div data-makesoundmade className="flex flex-wrap items-center gap-2">

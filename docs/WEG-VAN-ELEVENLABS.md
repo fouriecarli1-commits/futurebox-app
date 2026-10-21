@@ -129,3 +129,26 @@ is 'n wetlike blokkasie. POPIA artikels 20–21 vereis 'n geskrewe ooreenkoms
 met elke operateur wat persoonlike data namens jou verwerk. 'n Verskaffer wat
 nie daarop antwoord nie, laat jou sonder iets wat jy moet hê — en dan is die
 skuif nie 'n voorkeur nie, dit is 'n sperdatum.
+
+---
+
+## 21 Oktober 2026: Google as rugsteun vir stem en transkripsie
+
+Die eienaar: *"Ja, bou die Google rugsteun vir stem en transkripsie."*
+
+`app/lib/server/googlevoice.ts`. ElevenLabs bly eerste keuse. Google lees voor
+(Gemini-TTS) en skryf neer (Flash luister) wanneer ElevenLabs **besig** is (429
+ná drie pogings), **af** is (5xx of geen antwoord), **nie aangeskakel** is nie,
+of die maand se ruimte **op** is.
+
+- Dieselfde prys vir die lid, een keer gehef. Ons koste tel teen Google se
+  `music`-plafon (`googlespend`), so geen nuwe SQL nie.
+- **Nie** 'n lid se eie gekloonde stem nie — dié bestaan net by ElevenLabs.
+  Sy kry "probeer oor 'n minuut" eerder as iemand anders se stem.
+- Die skerm sê wanneer die rugsteunstem gelees het.
+- Transkripsie-tye kom per frase, nie per woord nie; die woorde word oor die
+  frase versprei. Die antwoord sê so.
+- **Afrikaans moet geluister word** voor ons daarop staatmaak: Google se eerste
+  gepubliseerde taallys vir hierdie stemme het nie Afrikaans nie.
+
+`check:googlevoice` hou dit.

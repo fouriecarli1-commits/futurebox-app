@@ -28,6 +28,7 @@ import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
+import { backupReady, fallsBack, speakBackup, voiceFor } from '@/app/lib/server/googlevoice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -116,7 +117,15 @@ export async function POST(request: Request): Promise<Response> {
   /* The supplier's ceiling, at the 'medium' rung: a read is a credit or two,
      so it keeps running long after music has had to stop. */
   const room = await roomFor('medium');
-  if (!room.go) {
+  /* ── Google, when ElevenLabs cannot ────────────────────────────────────
+
+     Busy, down, switched off or out of the month's room, a stock voice is
+     read by Google instead (`lib/server/googlevoice.ts`). Same price to the
+     member, charged once. A member's OWN cloned voice is never stood in for:
+     it exists only at ElevenLabs, and her script read in somebody else's
+     voice while she thinks it is hers is worse than "busy". */
+  let viaEleven = room.go;
+  if (!room.go && !backupReady()) {
     return Response.json(
       { error: 'supplier_full', message: refusal('medium', langOf(request)) },
       { status: 503 },
@@ -173,7 +182,10 @@ export async function POST(request: Request): Promise<Response> {
   // After the refusal, not before it: what will not be read aloud does not
   // depend on whether a key happens to be set. See app/api/music/route.ts.
   if (!configured()) {
-    return Response.json({ message: 'Voices are not switched on for this app yet.' }, { status: 503 });
+    if (!backupReady()) {
+      return Response.json({ message: 'Voices are not switched on for this app yet.' }, { status: 503 });
+    }
+    viaEleven = false;
   }
 
   const tier = caller?.tier ?? 'free';
@@ -209,6 +221,10 @@ export async function POST(request: Request): Promise<Response> {
 
   const wanted = String(body.voiceId ?? '');
   let voiceId = '';
+  /** Her own cloned voice, which only ElevenLabs can read with. */
+  let cloned = false;
+  /** What the stock voice says about itself, so Google's stand-in matches it. */
+  let about = '';
   if (wanted) {
     if (caller && client) {
       const { data } = await client
@@ -217,22 +233,37 @@ export async function POST(request: Request): Promise<Response> {
         .eq('owner', caller.id)
         .eq('id', wanted)
         .maybeSingle();
-      if (data) voiceId = wanted;
+      if (data) { voiceId = wanted; cloned = true; }
     }
     if (!voiceId) {
       // Not theirs — but it may be one of ElevenLabs' own, which anybody may use.
-      const stock = await stockVoices();
-      if (stock.some((one) => one.id === wanted)) voiceId = wanted;
+      const stock = viaEleven ? await stockVoices() : [];
+      const found = stock.find((one) => one.id === wanted);
+      if (found) { voiceId = wanted; about = found.about ?? ''; }
+      /* No list to check against because ElevenLabs is not answering. Google
+         reads it in one of Google's own voices, so nobody's voice can be
+         borrowed by naming its id — there is nothing of theirs to borrow. */
+      else if (!stock.length && backupReady()) { voiceId = wanted; viaEleven = false; }
     }
     if (!voiceId) {
       return Response.json({ message: 'That voice is not yours to use.' }, { status: 403 });
     }
   } else {
-    const stock = await stockVoices();
-    if (!stock.length) {
+    const stock = viaEleven ? await stockVoices() : [];
+    if (stock.length) {
+      voiceId = stock[0].id;
+      about = stock[0].about ?? '';
+    } else if (backupReady()) {
+      viaEleven = false;
+    } else {
       return Response.json({ message: 'No voice is available to read with.' }, { status: 503 });
     }
-    voiceId = stock[0].id;
+  }
+  if (cloned && !viaEleven) {
+    return Response.json(
+      { error: 'own_voice_busy', message: 'Your own voice can only be read by the main voice service, and it is not available right now. Pick one of the stock voices, or try again later.' },
+      { status: 503 },
+    );
   }
 
   // A long episode is a real bill rather than a rounding error, so this is
@@ -240,6 +271,43 @@ export async function POST(request: Request): Promise<Response> {
   const asked = readCost(text.length);
   const paid = await charge(request, asked, 'read');
   if (!paid.ok) return paid.response;
+
+  /** Read by Google instead: the answer in the same two shapes as ElevenLabs'. */
+  const backup = async (timed: boolean): Promise<Response> => {
+    const made = await speakBackup(text, {
+      voice: voiceFor(voiceId, about),
+      language: typeof body.language === 'string' ? body.language : '',
+      owner: caller?.id ?? null,
+    });
+    if (!made.ok) {
+      await paid.refund();
+      return Response.json({ message: made.message }, { status: made.status });
+    }
+    if (caller && client) {
+      wrote(await client.from('speech_runs').insert({ owner: caller.id, characters: text.length }), 'what the read cost');
+    }
+    if (timed) {
+      return Response.json({
+        audio: Buffer.from(made.audio).toString('base64'),
+        type: 'audio/wav',
+        model: made.model,
+        modelWhy: 'backup',
+        engine: 'backup',
+        words: null,
+        lines: null,
+        why: 'The usual voice service was busy, so a backup voice read this. It comes without timings; the audio is fine.',
+      });
+    }
+    return new Response(made.audio, {
+      headers: {
+        'Content-Type': 'audio/wav',
+        'Cache-Control': 'no-store',
+        'X-Read-Model': made.model,
+        'X-Read-Model-Why': 'backup',
+        'X-Read-Engine': 'backup',
+      },
+    });
+  };
 
   /* Streamed, so the first sound arrives in about a second.
 
@@ -269,7 +337,8 @@ export async function POST(request: Request): Promise<Response> {
   const named = MODELS[String(body.model ?? '')] ?? '';
   const chosen = named
     ? { id: named, why: 'asked' as const }
-    : readIn
+    /* Not asked of ElevenLabs when they are not the ones reading. */
+    : readIn && viaEleven
       ? await modelForLanguage(readIn, BY_LANGUAGE)
       : { id: MODELS.steady, why: 'default' as const };
 
@@ -298,16 +367,20 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
+    if (!viaEleven) return backup(true);
+    /* No answer at all is a thrown fetch, not a status. It used to escape
+       this route as a bare 500 with the member's credits still taken. */
     const timed = await speakTimed(
       voiceId,
       text,
       chosen.id,
       performance(body.how),
       asked,
-    );
+    ).catch(() => ({ ok: false as const, status: 0, message: 'Could not reach the voice service. Try again in a moment.' }));
+    if (!timed.ok && fallsBack(timed.status) && !cloned && backupReady()) return backup(true);
     if (!timed.ok) {
       await paid.refund();
-      return Response.json({ message: timed.message }, { status: timed.status });
+      return Response.json({ message: timed.message }, { status: timed.status || 502 });
     }
 
     if (caller && client) {
@@ -342,16 +415,18 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
+  if (!viaEleven) return backup(false);
   const read = await speakStream(
     voiceId,
     text,
     chosen.id,
     performance(body.how),
     asked,
-  );
+  ).catch(() => ({ ok: false as const, status: 0, message: 'Could not reach the voice service. Try again in a moment.' }));
+  if (!read.ok && fallsBack(read.status) && !cloned && backupReady()) return backup(false);
   if (!read.ok) {
     await paid.refund();
-    return Response.json({ message: read.message }, { status: read.status });
+    return Response.json({ message: read.message }, { status: read.status || 502 });
   }
 
   /* Recorded once the read has been accepted rather than once it has finished,

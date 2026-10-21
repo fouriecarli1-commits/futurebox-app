@@ -421,6 +421,11 @@ export default function VoiceLab({
       }
       const audio = await response.blob();
       setSpoken(audio);
+      /* Read by the backup when the voice service was busy. Said, because the
+         voice will not be the one she picked. */
+      if (response.headers.get('X-Read-Engine') === 'backup') {
+        setProblem(t('voice.backupRead', 'The usual voice service was busy, so a backup voice read this. Try again later for the voice you picked.'));
+      }
       void rememberMake(
         {
           id: makeId('voice_studio'),
@@ -443,7 +448,7 @@ export default function VoiceLab({
     } finally {
       setBusy(null);
     }
-  }, [lang, model, onUpgrade, script, similarity, speakerBoost, speed, stability, style, voiceId]);
+  }, [lang, model, onUpgrade, script, similarity, speakerBoost, speed, stability, style, t, voiceId]);
 
   const takeClip = useCallback(async () => {
     setProblem(null);

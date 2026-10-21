@@ -119,7 +119,7 @@ export default function Presenter({
    * Collapsing those two into one blank space is exactly the fault
    * `check:couldnotask` was written for, one screen further out.
    */
-  const [noLines, setNoLines] = useState<'tooLong' | 'unreadable' | null>(null);
+  const [noLines, setNoLines] = useState<'tooLong' | 'unreadable' | 'backup' | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState<'read' | 'make' | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -355,12 +355,17 @@ export default function Presenter({
          the content type costs nothing and cannot be wrong about what is
          actually in the body. */
       const isJson = (response.headers.get('Content-Type') ?? '').includes('application/json');
+      /* Read by the backup voice when the usual service was busy: no line
+         times, and not the voice that was picked — one sentence says both. */
+      let backup = response.headers.get('X-Read-Engine') === 'backup';
       if (timed && isJson) {
         const answer = (await response.json()) as {
           audio: string;
           type?: string;
           lines?: SpokenWord[] | null;
+          engine?: string;
         };
+        backup = backup || answer.engine === 'backup';
         /* Their base64 back into bytes. `atob` gives one character per byte,
            which is what `Uint8Array.from` is reading here — anything cleverer
            mangles a byte above 127 and the file will not play. */
@@ -381,7 +386,7 @@ export default function Presenter({
          "too long". Everything else that leaves us without lines, including a
          route that sent audio when JSON was asked for, is "they did not come
          back", which is what the other sentence says. */
-      setNoLines(said?.length ? null : timed ? 'unreadable' : 'tooLong');
+      setNoLines(said?.length ? null : backup ? 'backup' : timed ? 'unreadable' : 'tooLong');
       const element = player.current;
       if (element) {
         if (heard.current) URL.revokeObjectURL(heard.current);
@@ -672,6 +677,12 @@ export default function Presenter({
                 'pres.noTimings',
                 'The reading is here, but the times of each line did not come back with it — so the words are not shown following along. Nothing is wrong with the audio.',
               )}
+            </p>
+          )}
+
+          {reading && noLines === 'backup' && (
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {t('voice.backupRead', 'The usual voice service was busy, so a backup voice read this. Try again later for the voice you picked.')}
             </p>
           )}
 

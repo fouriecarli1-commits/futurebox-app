@@ -48,6 +48,7 @@
     "check:applechart": "tsx scripts/check-applechart.mts",
     "check:sqlgrants": "tsx scripts/check-sqlgrants.mts",
     "check:elevenbusy": "tsx scripts/check-elevenbusy.mts",
+    "check:googlevoice": "tsx scripts/check-googlevoice.mts",
     "check:covermaker": "tsx scripts/check-covermaker.mts",
     "check:coverkeep": "tsx scripts/check-coverkeep.mts",
     "check:onedoor": "tsx scripts/check-onedoor.mts",

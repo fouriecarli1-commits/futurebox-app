@@ -3621,6 +3621,7 @@ export const STRINGS: Dict = {
   "makesound.listen": { en: "Listen", af: "Luister" },
   "makesound.landed": { en: "It is on the timeline as the sound under the film.", af: "Dit is op die tydlyn as die klank onder die fliek." },
   "makesound.failed": { en: "That could not be read just now.", af: "Dit kon nie nou gelees word nie." },
+  "voice.backupRead": { en: "The usual voice service was busy, so a backup voice read this. Try again later for the voice you picked.", af: "Die gewone stemdiens was besig, so ’n rugsteunstem het dit gelees. Probeer later weer vir die stem wat jy gekies het." },
   "makesound.empty": { en: "The engine answered with nothing. Nothing was charged \u2014 try it again.", af: "Die enjin het met niks geantwoord nie. Niks is gehef nie \u2014 probeer weer." },
   "canvas.shape.9:16": { en: "Tall", af: "Regop" },
   "canvas.shape.16:9": { en: "Wide", af: "Wyd" },

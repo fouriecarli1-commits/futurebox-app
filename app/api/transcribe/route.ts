@@ -30,6 +30,7 @@ import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 import { noteCost } from '@/app/lib/server/eleven';
+import { backupReady, fallsBack, hearBackup } from '@/app/lib/server/googlevoice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -136,8 +137,14 @@ export async function POST(request: Request): Promise<Response> {
   /* Whether the supplier for `transcribe` is configured — asked of the seam
      rather than of the environment, so one file knows which variable
      holds which supplier's key. */
-  const key = ready('transcribe');
-  if (!key) {
+  /* ── Google, when ElevenLabs cannot ────────────────────────────────────
+
+     Not switched on, out of the month's room, busy or down: Google listens
+     instead (`lib/server/googlevoice.ts`). Same price to the member, charged
+     once. Its times are per phrase, shared among the words, which the answer
+     says rather than hides. */
+  let viaEleven = !!ready('transcribe');
+  if (!viaEleven && !backupReady()) {
     return Response.json(
       { error: 'no_key', message: 'Reading the words off a song is not switched on for this app yet.' },
       { status: 503 },
@@ -177,18 +184,22 @@ export async function POST(request: Request): Promise<Response> {
   const trackId = typeof asked === 'string' ? asked : undefined;
 
   let record: (() => Promise<void>) | null = null;
+  /** Whose month Google's share is counted against, when it is Google. */
+  let owner: string | null = null;
   if (metered()) {
     const caller = await callerFrom(request);
+    owner = caller?.id ?? null;
     /* 'light': two credits a minute. It stops last, and only just before the
        plan is actually empty — a transcript is how somebody rescues work that
        already exists, so cutting it early costs more than it saves. */
     const room = await roomFor('light');
-    if (!room.go) {
+    if (!room.go && !backupReady()) {
       return Response.json(
         { error: 'supplier_full', message: refusal('light', langOf(request)) },
         { status: 503 },
       );
     }
+    if (!room.go) viaEleven = false;
 
     const allowance = await allowanceFor(caller, request);
     if (!allowance.allowed) {
@@ -219,11 +230,36 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, perMinute(billed, CREDITS.transcribe), 'transcribe');
   if (!paid.ok) return paid.response;
 
+  /** Listened to by Google instead, answered in the same shape. */
+  const backup = async (): Promise<Response> => {
+    const heardBack = await hearBackup(file, { seconds: billed, speakers: diarize, owner });
+    if (!heardBack.ok) {
+      await paid.refund();
+      return Response.json({ error: 'upstream', message: heardBack.message }, { status: heardBack.status });
+    }
+    if (!heardBack.words.length) {
+      return Response.json(
+        { error: 'nothing_heard', message: 'No words could be heard in that song.' },
+        { status: 422 },
+      );
+    }
+    if (record) await record().catch(() => undefined);
+    return Response.json({
+      words: heardBack.words,
+      text: heardBack.text,
+      ...(diarize ? { turns: turnsFrom(heardBack.words) } : {}),
+      engine: 'backup',
+      why: 'The usual service was busy, so a backup listened. Its times are per phrase, so a word can sit a little early or late.',
+    });
+  };
+  if (!viaEleven) return backup();
+
   let raw = '';
   for (const model of MODELS) {
     try {
       upstream = await ask(file, model, diarize);
     } catch {
+      if (backupReady()) return backup();
       await paid.refund();
       return Response.json(
         { error: 'unreachable', message: 'Could not reach the music service. Try again in a moment.' },
@@ -243,6 +279,7 @@ export async function POST(request: Request): Promise<Response> {
     if (upstream.status !== 422 && upstream.status !== 400) break;
   }
 
+  if (upstream && !upstream.ok && fallsBack(upstream.status) && backupReady()) return backup();
   if (!upstream || !upstream.ok) {
     await paid.refund();
     let theirs = '';

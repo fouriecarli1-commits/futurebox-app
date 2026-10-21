@@ -745,6 +745,11 @@ jobs:
       - name: A busy voice service is asked again; a refusal is not
         run: npm run check:elevenbusy
 
+      # When ElevenLabs is busy or down, Google reads aloud and transcribes
+      # instead — a member's own cloned voice excepted — and only then.
+      - name: Google stands in for voice and transcription when ElevenLabs cannot
+        run: npm run check:googlevoice
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a

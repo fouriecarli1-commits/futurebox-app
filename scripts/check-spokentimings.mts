@@ -123,8 +123,11 @@ check('a failed timed read is refunded, like every other paid call here',
   /if \(!timed\.ok\) \{[\s\S]{0,120}paid\.refund\(\)/.test(route));
 check('an unreadable alignment answers null and says why, rather than an empty list',
   /words: null|words,[\s\S]{0,200}why:/.test(route) && /why: 'The reading came back without timings/.test(route));
-check('the read is still counted against the day, on both paths',
-  (route.match(/speech_runs/g) ?? []).length === 2,
+/* Three since 21 October 2026: the timed read, the streamed read, and the
+   backup voice that reads when ElevenLabs cannot (`googlevoice.ts`). A read
+   by the backup is still a read of the day's allowance. */
+check('the read is still counted against the day, on every path',
+  (route.match(/speech_runs/g) ?? []).length === 3,
   `${(route.match(/speech_runs/g) ?? []).length} insert(s)`);
 
 /* The library side: audio missing is a failure, alignment missing is not. */
