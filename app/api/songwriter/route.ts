@@ -48,6 +48,12 @@ interface Body {
   style?: string;
   lyrics?: string;
   section?: string;
+  /** What that section is for in a song — the guide the writer is reading. */
+  purpose?: string;
+  /** What the song is about, in the writer's own words. */
+  about?: string;
+  /** What the writer wants this section to say, in their own words. */
+  ask?: string;
   /** Rolls already shown, so a re-roll returns something new. */
   seen?: string[];
 }
@@ -70,6 +76,7 @@ const SYSTEM = [
 function promptFor(body: Body): string {
   const context = [
     body.title ? `Title: ${body.title}` : 'No title yet.',
+    body.about?.trim() ? `What the song is about: ${body.about.trim().slice(0, 500)}` : '',
     body.style ? `Style: ${body.style}` : '',
     body.lyrics?.trim() ? `Lyrics so far:\n${body.lyrics}` : 'Nothing written yet.',
     body.seen?.length ? `Already suggested, do not repeat these ideas:\n- ${body.seen.join('\n- ')}` : '',
@@ -79,7 +86,12 @@ function promptFor(body: Body): string {
 
   const ask: Record<Mode, string> = {
     continue: body.section
-      ? `Write four different options for the [${body.section}]. Each one two to four lines. Words to be sung only — no [Style] block, no instruments, no production notes.`
+      ? [
+        `Write four different options for the ${body.section}. Each one two to four lines. Words to be sung only — no [Style] block, no instruments, no production notes, and no section tag: the writer's sheet adds it.`,
+        body.purpose?.trim() ? `What this part of a song is for: ${body.purpose.trim().slice(0, 300)}` : '',
+        body.ask?.trim() ? `What the writer wants this part to say, in their words: ${body.ask.trim().slice(0, 500)}` : '',
+        'Fit what is already written around it — the same voice, the same story — so the song reads as one person wrote it.',
+      ].filter(Boolean).join('\n')
       : 'Write four different options for the next section. Each one two to four lines, and say which section it is for. Words to be sung only — no [Style] block, no instruments, no production notes; the sound has its own button.',
     style: 'Suggest four different style lines for this song — the comma-separated field a generator takes. Read what is actually written and let the words decide the sound, not the other way round. Name instruments, a tempo feel and a production choice.',
     polish: 'Four specific improvements to what is written. Point at an actual line, give the rewrite, say what it fixes. No general encouragement.',
@@ -127,7 +139,7 @@ export async function POST(request: Request) {
   // first would double the wait and the bill to reach the same answer. What
   // the rules add is a refusal in this app's own words, arriving before the
   // request leaves, and identical to the one the studio gives.
-  const refused = screen([body.title, body.style, body.lyrics].filter(Boolean).join('\n'), 'song');
+  const refused = screen([body.title, body.style, body.lyrics, body.about, body.ask].filter(Boolean).join('\n'), 'song');
   if (refused) {
     return Response.json({ error: refused.message, rule: refused.rule }, { status: 422 });
   }

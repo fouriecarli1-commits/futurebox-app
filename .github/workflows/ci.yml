@@ -761,6 +761,8 @@ jobs:
         run: npm run check:pairapprove
       - name: In a shared room the turn and the song so far reach the other side
         run: npm run check:pairdraft
+      - name: Extensive writes the song part by part, with a copilot for each part
+        run: npm run check:versecopilot
 
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing

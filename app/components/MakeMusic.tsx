@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
   Video as VideoIcon, X, Mic,
-  Sliders, Image as ImageIcon, Plus, Clock, AudioLines, SlidersHorizontal, Palette,
+  Sliders, Image as ImageIcon, Plus, Clock, AudioLines, SlidersHorizontal, Palette, Send,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -109,6 +109,7 @@ export default function MakeMusic({
   copilot,
   pairGate = null,
   onPairMade,
+  onPairSubmit,
 }: {
   userPlan: Plan;
   /** The copilot pane, drawn inside the song box on Easy. */
@@ -160,9 +161,15 @@ export default function MakeMusic({
    * approved it yet, and if not, the sentence saying what is missing
    * (`readyToMake` in `lib/pairs.ts`). The button waits for it.
    */
-  pairGate?: { readonly id: string; readonly ready: boolean; readonly why: string } | null;
+  pairGate?: { readonly id: string; readonly ready: boolean; readonly why: string; readonly mine?: boolean } | null;
   /** After a song is made in a pair room, so the cleared ticks are re-read. */
   onPairMade?: () => void;
+  /**
+   * Send what is written and hand the turn over, in one press — the owner's
+   * "submit button wat 'n skrywe of vers submit … en outomaties die hand
+   * over initieer". Answers null when it went, or the sentence saying why not.
+   */
+  onPairSubmit?: () => Promise<string | null>;
 }) {
   const { t, lang } = useLang();
   const title = canvas.title;
@@ -821,6 +828,8 @@ export default function MakeMusic({
   }, []);
   const [mineAfter, setMineAfter] = useState(false);
   const [justMade, setJustMade] = useState<string | null>(null);
+  const [pairSending, setPairSending] = useState(false);
+  const [pairSendProblem, setPairSendProblem] = useState('');
 
   const make = useCallback(
     async (remixOf?: Track) => {
@@ -1148,7 +1157,11 @@ export default function MakeMusic({
           Mobile priority: In 390px phone view, users should never have to
           scroll past 10 cards to hear their newest creation or see player state.
           This docked card gives immediate playback & jump-to-channel controls. */}
-      {tracks.length > 0 && (() => {
+      {/* Not in a room shared with somebody: this is YOUR newest song from
+          your own channel, and a shared room is about the song the two of
+          you are writing (the owner, 21 October 2026: "Hierdie moet nie in
+          die colab room wees nie"). */}
+      {tracks.length > 0 && !pairGate && (() => {
         /* First is fine here: the list is newest first, and this card is
            "the song playing, or else your newest" — falling back to the
            newest is what it is for, not a wrong row. */
@@ -1853,6 +1866,41 @@ export default function MakeMusic({
               </span>
             </span>
           </button>
+        )}
+
+        {/* ── Submit my part ─────────────────────────────────────────────
+            In a shared room: send what is written and hand the turn over
+            in one press, beside the words rather than at the top of the
+            page. What is typed also travels as it is written, so the other
+            person can watch; this is the "I'm done, your go" press. */}
+        {pairGate && (
+          <div data-pairsubmitrow className="space-y-1.5">
+            {pairGate.mine ? (
+              <button
+                type="button"
+                data-pairsubmit
+                disabled={pairSending || !onPairSubmit}
+                onClick={() => {
+                  if (!onPairSubmit) return;
+                  setPairSending(true);
+                  setPairSendProblem('');
+                  void onPairSubmit().then((said) => {
+                    setPairSending(false);
+                    if (said) setPairSendProblem(said);
+                  });
+                }}
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-sky-400/50 bg-sky-500/15 px-4 text-base font-bold text-sky-200 hover:bg-sky-500/25 disabled:opacity-50"
+              >
+                {pairSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                {t('pair.submit', 'Submit my part — their turn')}
+              </button>
+            ) : (
+              <p data-pairwaiting className="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-center text-sm text-zinc-300">
+                {t('pair.waitingPart', 'Their turn. What they write shows up here, and the turn comes back to you when they submit their part.')}
+              </p>
+            )}
+            {pairSendProblem && <p className="text-center text-sm text-amber-300">{pairSendProblem}</p>}
+          </div>
         )}
 
         <button

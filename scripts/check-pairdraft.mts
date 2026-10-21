@@ -68,6 +68,18 @@ ok('  and so does saying yes', /answer === 'accepted' && !\(await ownHandle\(cli
 ok('the room asks for a handle before it matters', /myHandle === '' && <HandleFirst/.test(collab));
 ok('  and says plainly when the other person has none', (collab.match(/collab\.noHandle/g) ?? []).length >= 4);
 
+/* The owner: "kan daar 'n submit button wees wat 'n skrywe of vers submit,
+   wat dan weer aan die ander kant wys en outomaties die hand over initieer"
+   — and, of her own newest song showing in the shared room, "Hierdie moet
+   nie in die colab room wees nie". */
+const make = read('app/components/MakeMusic.tsx');
+ok('beside the words, one press sends your part and hands the turn over',
+  /data-pairsubmit/.test(make) && /onPairSubmit=\{makeGate \? async \(\) => \{[\s\S]{0,400}movePen\(makeGate\.id, 'give', songDraft\)/.test(page));
+ok('  and the side waiting is told the turn comes back when they submit', /data-pairwaiting/.test(make));
+ok('your own newest song is not shown in a shared room', /tracks\.length > 0 && !pairGate && /.test(make));
+const verses = read('app/components/VerseWriter.tsx');
+ok('words arriving from the other person show in Extensive too', /\}, \[lyrics\]\);/.test(verses) && /compiledRef/.test(verses));
+
 const sql = read('supabase/pairs.sql');
 ok('the draft is a column the table can hold', /add column if not exists draft jsonb/.test(sql) && /add column if not exists draft_at/.test(sql));
 

@@ -5,10 +5,22 @@
  *
  * Guides songwriters step-by-step through Verse 1, Chorus, Verse 2, Bridge, and Outro
  * with contextual pedagogical prompts and section-specific drafting assistance.
+ *
+ * ── A copilot for each part ──────────────────────────────────────────────
+ *
+ * The owner, 21 October 2026: *"By make a song se extensive gedeelte is daar
+ * nie 'n copilot om die verse by verse te skryf nie."* There was a "Suggest
+ * lines" button, and it pasted the same fixed four lines into every song,
+ * with the song's topic dropped into the middle — which reads as help and is
+ * not. Each part now has its own copilot (`/api/songwriter`, 'continue' with
+ * the section): say what this part should do, and four options come back
+ * written for THIS song — the words around it, what it is about, what the
+ * part is for. Tap one to put it in, or to add it under what is there.
  */
 
-import React, { useEffect, useState } from 'react';
-import { AlignLeft, Check, ChevronDown, ChevronUp, FileText, Lightbulb, Sparkles, Wand2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown, ChevronUp, Lightbulb, Loader2, Plus, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
+import { refusalText } from '../lib/apierror';
 import { useLang } from '../lib/i18n';
 import { withSaid } from '../lib/speak';
 import SpeakButton from './SpeakButton';
@@ -72,6 +84,13 @@ const DEFAULT_SECTIONS: readonly Omit<SongSection, 'text'>[] = [
   },
 ] as const;
 
+/** One option the copilot wrote for a part. */
+interface Option {
+  readonly label: string;
+  readonly text: string;
+  readonly why: string;
+}
+
 interface VerseWriterProps {
   readonly lyrics: string;
   readonly onLyricsChange: (updated: string) => void;
@@ -100,9 +119,35 @@ export default function VerseWriter({
 
   const [activeId, setActiveId] = useState<string>('verse1');
   const [suggestingFor, setSuggestingFor] = useState<string | null>(null);
+  /** Whether a model is behind the copilot on this deployment; null until asked. */
+  const [copilotReady, setCopilotReady] = useState<boolean | null>(null);
+  /** What the writer asked of each part, in their own words. */
+  const [asks, setAsks] = useState<Record<string, string>>({});
+  /** The four options that came back for each part. */
+  const [options, setOptions] = useState<Record<string, Option[]>>({});
+  /** Every option already shown per part, so "More ideas" brings new ones. */
+  const [seen, setSeen] = useState<Record<string, string[]>>({});
+  const [problem, setProblem] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let live = true;
+    void fetch('/api/songwriter')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((said) => { if (live) setCopilotReady(Boolean(said?.available)); })
+      .catch(() => { if (live) setCopilotReady(false); });
+    return () => { live = false; };
+  }, []);
+
+  /* The sheet as this writer last compiled it. Words that arrive from
+     anywhere else — the other person in a shared room, the copilot in Easy —
+     are read back into the parts; this writer's own typing is not re-read,
+     which would move the cursor under the person typing. */
+  const compiledRef = useRef('');
 
   // Parse existing lyrics into sections if present
   useEffect(() => {
+    if (lyrics === compiledRef.current) return;
+    compiledRef.current = lyrics;
     if (!lyrics.trim()) return;
     // Simple parser checking for tags
     const lines = lyrics.split('\n');
@@ -117,10 +162,16 @@ export default function VerseWriter({
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
-      const lower = line.toLowerCase();
-      if (lower.includes('verse 1') || lower.includes('vers 1')) {
+      /* A heading is a line that is ONLY a heading — "[Chorus]", "Vers 2:" —
+         never a sung line that happens to hold the word: "Koor van
+         Pretoor" is a lyric, and reading it as a tag dropped it. */
+      const heading = /^\[[^\]]+\]$/.test(line) || /^(verse|vers|chorus|koor|refrein|bridge|brug|outro|slot)\s*\d*\s*:?$/i.test(line);
+      const lower = heading ? line.toLowerCase() : '';
+      if (!heading && line) {
+        parsedMap[currentTag]?.push(rawLine);
+      } else if (lower.includes('verse 1') || lower.includes('vers 1')) {
         currentTag = 'verse1';
-      } else if (lower.includes('chorus') || lower.includes('koor')) {
+      } else if (lower.includes('chorus') || lower.includes('koor') || lower.includes('refrein')) {
         currentTag = 'chorus';
       } else if (lower.includes('verse 2') || lower.includes('vers 2')) {
         currentTag = 'verse2';
@@ -128,18 +179,18 @@ export default function VerseWriter({
         currentTag = 'bridge';
       } else if (lower.includes('outro') || lower.includes('slot')) {
         currentTag = 'outro';
-      } else if (line) {
-        parsedMap[currentTag]?.push(rawLine);
+      } else if (lower.includes('vers')) {
+        /* "[Verse]" with no number: the first one is verse 1, the next is 2. */
+        currentTag = parsedMap.verse1.length ? 'verse2' : 'verse1';
       }
+      /* Any other heading — [Intro], [Pre-Chorus] — starts no part here and
+         is not a line to sing either, so it is left out. */
     }
 
     setSections((prev) =>
-      prev.map((sec) => {
-        const found = parsedMap[sec.id]?.join('\n') || '';
-        return found ? { ...sec, text: found } : sec;
-      }),
+      prev.map((sec) => ({ ...sec, text: parsedMap[sec.id]?.join('\n') || '' })),
     );
-  }, []);
+  }, [lyrics]);
 
   // Sync sections to the full lyric sheet
   const updateSectionText = (id: string, text: string) => {
@@ -152,44 +203,56 @@ export default function VerseWriter({
       .map((sec) => `${isAf ? sec.tag : sec.tagEn}\n${sec.text.trim()}`)
       .join('\n\n');
 
+    compiledRef.current = compiled;
     onLyricsChange(compiled);
   };
 
-  const suggestForSection = (section: SongSection) => {
+  /** Ask the copilot for four options for this part of the song. */
+  const suggestForSection = async (section: SongSection, again = false): Promise<void> => {
     setSuggestingFor(section.id);
-    const theme = (about || songTitle || (isAf ? 'lewe en liefde' : 'life and rhythm')).trim();
-
-    // Section-specific templates that feel authentic
-    let generated = '';
-    if (section.id === 'verse1') {
-      generated = isAf
-        ? `Die son sak stadig oor die horison\nEk loop weer met my gedagtes oor ${theme}\nElke tree vat my nader aan die waarheid\nEn die stilte praat harder as voorheen`
-        : `Shadows stretching down this empty street\nThinking back on ${theme} and what it means\nEvery step falls right on the groove\nNothing left for me to prove`;
-    } else if (section.id === 'chorus') {
-      generated = isAf
-        ? `En dit voel soos die heel eerste keer!\nJa, ons sing dit uit tot die sterre breek\nGeen twyfel meer in my hart vanaand\nOns hou styf vas aan ${theme}`
-        : `And it feels like the sparks taking flight!\nYeah we’re singing it loud in the neon light\nNothing can tear down this feeling now\nWe’re holding onto ${theme}`;
-    } else if (section.id === 'verse2') {
-      generated = isAf
-        ? `Die nag tel die spore wat ons agterlaat\nNiks sal ooit weer dieselfde wees nie\nOns het geleer om deur die storm te kyk\nEn die vrees het vlerke gekry`
-        : `The night carries echoes of where we have been\nA brand new chapter starting right within\nWe learned to run straight through the rain\nAnd wash away the yesterday pain`;
-    } else if (section.id === 'bridge') {
-      generated = isAf
-        ? `En as die musiek vir ’n oomblik stop\nKlop die ritme steeds diep in my bors\nOns kyk mekaar in die oë en weet\nDis ons tyd, ons oomblik`
-        : `And when the music suddenly drops down low\nThere’s only one direction left to go\nLook in my eyes, can you hear the sound?\nWe’re never touching back down`;
-    } else {
-      generated = isAf
-        ? `Ja, hou vas aan vanaand…\nTot die son weer opkom\nNet jy en ek en die melodie.`
-        : `Yeah hold on till the morning light…\nJust the music and you and I\nFading out into the sky.`;
-    }
-
-    setTimeout(() => {
-      const merged = section.text.trim()
-        ? `${section.text.trim()}\n${generated}`
-        : generated;
-      updateSectionText(section.id, merged);
+    setProblem((was) => ({ ...was, [section.id]: '' }));
+    const shownBefore = again ? seen[section.id] ?? [] : [];
+    try {
+      const response = await fetch('/api/songwriter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'continue',
+          section: isAf ? section.titleAf : section.titleEn,
+          purpose: isAf ? section.guideAf : section.guideEn,
+          title: songTitle,
+          style,
+          about,
+          ask: asks[section.id] ?? '',
+          lyrics,
+          seen: shownBefore.slice(-12),
+        }),
+      });
+      const answer = (await response.json().catch(() => null)) as
+        | { suggestions?: Option[]; error?: string; detail?: string; message?: string }
+        | null;
+      const came = (answer?.suggestions ?? []).filter((one) => typeof one?.text === 'string' && one.text.trim());
+      if (!response.ok || !came.length) {
+        setProblem((was) => ({
+          ...was,
+          [section.id]: refusalText(answer, lang, t('versewriter.failed', 'The copilot did not answer. Try again in a moment.')),
+        }));
+        return;
+      }
+      setOptions((was) => ({ ...was, [section.id]: came }));
+      setSeen((was) => ({ ...was, [section.id]: [...shownBefore, ...came.map((one) => one.label || one.text.slice(0, 60))] }));
+    } catch {
+      setProblem((was) => ({ ...was, [section.id]: t('wand.offline', 'Could not reach the app’s server.') }));
+    } finally {
       setSuggestingFor(null);
-    }, 300);
+    }
+  };
+
+  /** Put an option in: in place of what is there, or under it. */
+  const putOption = (section: SongSection, text: string, how: 'replace' | 'add'): void => {
+    const lines = text.replace(/^\s*\[[^\]]*\]\s*\n?/, '').trim();
+    const now = section.text.trim();
+    updateSectionText(section.id, how === 'add' && now ? `${now}\n${lines}` : lines);
   };
 
   return (
@@ -287,30 +350,98 @@ export default function VerseWriter({
                     <SpeakButton onHeard={(said) => updateSectionText(sec.id, withSaid(sec.text, said))} className="absolute bottom-2 right-2" />
                   </span>
 
-                  {/* Quick actions for this section */}
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => suggestForSection(sec)}
-                      disabled={suggestingFor === sec.id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all disabled:opacity-50"
-                    >
-                      <Wand2 className="w-3.5 h-3.5" />
-                      <span>
-                        {suggestingFor === sec.id
-                          ? t('versewriter.suggesting', 'Crafting lines…')
-                          : t('versewriter.suggestBtn', 'Suggest lines for this section')}
-                      </span>
-                    </button>
-
-                    {hasContent && (
-                      <button
-                        type="button"
-                        onClick={() => updateSectionText(sec.id, '')}
-                        className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                      >
-                        {t('versewriter.clear', 'Clear')}
-                      </button>
+                  {/* ── The copilot for this part ─────────────────── */}
+                  <div data-versecopilot={sec.id} className="space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-2.5">
+                    <p className="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {t('versewriter.copilot', 'Copilot for this part')}
+                    </p>
+                    {copilotReady === false ? (
+                      <p className="text-xs text-zinc-400">
+                        {t('versewriter.copilotOff', 'The copilot is not switched on here yet. Write the part yourself, or use Easy.')}
+                      </p>
+                    ) : (
+                      <>
+                        <span className="relative block">
+                          <textarea
+                            rows={2}
+                            data-verseask={sec.id}
+                            value={asks[sec.id] ?? ''}
+                            onChange={(event) => setAsks((was) => ({ ...was, [sec.id]: event.target.value.slice(0, 500) }))}
+                            placeholder={t('versewriter.askPlaceholder', 'What should this part say? (optional — e.g. "the moment she leaves the farm")')}
+                            className="w-full resize-y rounded-xl border border-zinc-800 bg-black/50 px-3 py-2 pr-11 text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
+                          />
+                          <SpeakButton
+                            onHeard={(said) => setAsks((was) => ({ ...was, [sec.id]: withSaid(was[sec.id] ?? '', said) }))}
+                            className="absolute bottom-2 right-2"
+                          />
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            data-verseaskgo={sec.id}
+                            onClick={() => void suggestForSection(sec)}
+                            disabled={suggestingFor !== null}
+                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-3 text-xs font-bold text-emerald-300 transition-all hover:bg-emerald-500/25 disabled:opacity-50"
+                          >
+                            {suggestingFor === sec.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                            {suggestingFor === sec.id
+                              ? t('versewriter.suggesting', 'Writing…')
+                              : t('versewriter.write', 'Write this part with the copilot')}
+                          </button>
+                          {(options[sec.id]?.length ?? 0) > 0 && (
+                            <button
+                              type="button"
+                              data-versemore={sec.id}
+                              onClick={() => void suggestForSection(sec, true)}
+                              disabled={suggestingFor !== null}
+                              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-xs font-semibold text-zinc-300 hover:text-white disabled:opacity-50"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" />
+                              {t('versewriter.more', 'More ideas')}
+                            </button>
+                          )}
+                          {hasContent && (
+                            <button
+                              type="button"
+                              onClick={() => updateSectionText(sec.id, '')}
+                              className="ml-auto min-h-[44px] px-2 text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+                            >
+                              {t('versewriter.clear', 'Clear')}
+                            </button>
+                          )}
+                        </div>
+                        {problem[sec.id] && <p className="text-xs text-amber-300">{problem[sec.id]}</p>}
+                        {(options[sec.id] ?? []).map((one, i) => (
+                          <div key={`${sec.id}-${i}`} data-verseoption className="space-y-1.5 rounded-xl border border-zinc-800 bg-zinc-950/70 p-2.5">
+                            {one.label && <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300/90">{one.label}</p>}
+                            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-100">{one.text.trim()}</p>
+                            {one.why && <p className="text-xs text-zinc-500">{one.why}</p>}
+                            <div className="flex flex-wrap gap-2 pt-0.5">
+                              <button
+                                type="button"
+                                data-verseuse="replace"
+                                onClick={() => putOption(sec, one.text, 'replace')}
+                                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-bold text-onAccent"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                                {hasContent ? t('versewriter.useReplace', 'Use this instead') : t('versewriter.use', 'Use this')}
+                              </button>
+                              {hasContent && (
+                                <button
+                                  type="button"
+                                  data-verseuse="add"
+                                  onClick={() => putOption(sec, one.text, 'add')}
+                                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-zinc-700 px-3 text-xs font-semibold text-zinc-200"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                  {t('versewriter.useAdd', 'Add under mine')}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>
