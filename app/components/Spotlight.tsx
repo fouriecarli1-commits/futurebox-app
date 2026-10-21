@@ -291,7 +291,10 @@ export default function Spotlight({
       </div>
 
       {/* ── Right: chips, people, style, the blog ───────────────────────── */}
-      <aside className="flex flex-col gap-6 lg:col-span-4">
+      {/* Kept in view on a desk. It is a column of short cards beside a long
+          list of articles, and once it ran out the right third of the page
+          was empty for two thousand pixels of scrolling. */}
+      <aside className="flex flex-col gap-6 lg:col-span-4 lg:sticky lg:top-40 lg:self-start" data-spotlightside>
         <div className={`${GLASS} p-5`}>
           <h3 className="mb-3 flex items-center justify-between text-sm font-bold text-white">
             <span>{t('spot.trending', 'Trending styles')}</span>
