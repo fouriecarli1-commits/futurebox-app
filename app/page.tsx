@@ -26,7 +26,8 @@ import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
 import CollabDesk from './components/CollabDesk';
 import PairStrip from './components/PairStrip';
-import { loadPairs, readyToMake, type Pair } from './lib/pairs';
+import { loadPairs, readyToMake, saveDraft, type Pair } from './lib/pairs';
+import { draftFor, sameDraft, type SongDraft } from './lib/pairdraft';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -818,15 +819,63 @@ export default function FutureBoxHome() {
     return () => { alive = false; };
   }, [pairSignal]);
   const pairHere = pairs.find((one) => one.surface === studioTab) ?? null;
-  /* The one exception to "re-read on a signal": in a pair's song room the
-     other person's yes arrives without anybody here pressing anything, and
-     the Make button waits on it. Every fifteen seconds, only there. */
-  const pairWaits = pairHere?.surface === 'make' && pairHere.approvals === true;
+  /* The one exception to "re-read on a signal": in a room two people share,
+     the other person's turn, their yes and their words all arrive without
+     anybody here pressing anything. It was only polled in the song room and
+     only once the approval columns existed — so on the owner's first test,
+     21 October 2026, the turn she handed over never reached the other
+     phone, which went on saying it was her turn. Every eight seconds while
+     a pair room is on screen and the tab is visible, and at once when the
+     tab comes back. */
+  const pairOpen = Boolean(pairHere);
   useEffect(() => {
-    if (!pairWaits) return;
-    const every = window.setInterval(() => setPairSignal((n) => n + 1), 15_000);
-    return () => window.clearInterval(every);
-  }, [pairWaits]);
+    if (!pairOpen) return;
+    const again = (): void => { if (document.visibilityState === 'visible') setPairSignal((n) => n + 1); };
+    const every = window.setInterval(again, 8_000);
+    document.addEventListener('visibilitychange', again);
+    window.addEventListener('focus', again);
+    return () => {
+      window.clearInterval(every);
+      document.removeEventListener('visibilitychange', again);
+      window.removeEventListener('focus', again);
+    };
+  }, [pairOpen]);
+
+  /* The song so far, between the two of them (`lib/pairdraft.ts`).
+
+     The hand holding the pen keeps it in the room as it is written — two
+     seconds after the last change, and only when it changed — so the other
+     person watches it arrive. The other side takes each new version once,
+     and never its own back: `draftMine` is when this page last wrote it. */
+  const pairDraftRoom = pairHere?.surface === 'make' && pairHere.drafts !== false ? pairHere : null;
+  const draftSent = useRef<SongDraft | null>(null);
+  const draftMine = useRef('');
+  const draftTaken = useRef('');
+  const songDraft = useMemo(
+    () => draftFor('make', canvas),
+    [canvas],
+  );
+  useEffect(() => {
+    if (!pairDraftRoom?.draft || !pairDraftRoom.draftAt) return;
+    if (pairDraftRoom.draftAt === draftMine.current || pairDraftRoom.draftAt === draftTaken.current) return;
+    draftTaken.current = pairDraftRoom.draftAt;
+    const came = pairDraftRoom.draft;
+    draftSent.current = came;
+    setCanvas((was) => ({ ...was, ...came }));
+  }, [pairDraftRoom]);
+  useEffect(() => {
+    if (!pairDraftRoom?.mine || !songDraft || sameDraft(songDraft, draftSent.current)) return;
+    const id = pairDraftRoom.id;
+    const wait = window.setTimeout(() => {
+      void saveDraft(id, songDraft).then((said) => {
+        if ('at' in said) {
+          draftSent.current = songDraft;
+          draftMine.current = said.at;
+        }
+      });
+    }, 2_000);
+    return () => window.clearTimeout(wait);
+  }, [pairDraftRoom, songDraft]);
   const makeGate = pairHere?.surface === 'make'
     ? (() => {
       const said = readyToMake(pairHere);
@@ -4638,7 +4687,7 @@ export default function FutureBoxHome() {
                 opened in a pair mode. A strip in nine places is nine places
                 for it to go stale. */}
             {pairHere && (
-              <PairStrip pair={pairHere} unread={pairsUnread} onChanged={() => setPairSignal((n) => n + 1)} />
+              <PairStrip pair={pairHere} unread={pairsUnread} song={pairHere.surface === 'make' ? songDraft : null} onChanged={() => setPairSignal((n) => n + 1)} />
             )}
 
             {studioTab === 'voice_studio' && (

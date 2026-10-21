@@ -509,7 +509,8 @@
     "check:sleeves": "tsx scripts/check-sleeves.mts",
     "check:socialformats": "tsx scripts/check-socialformats.mts",
     "check:frontdoor": "tsx scripts/check-frontdoor.mts",
-    "check:quizroom": "node audit/quiz.mjs 3112"
+    "check:quizroom": "node audit/quiz.mjs 3112",
+    "check:pairdraft": "tsx scripts/check-pairdraft.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

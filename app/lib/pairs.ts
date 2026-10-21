@@ -33,6 +33,7 @@
 
 import { accessToken } from './cloud';
 import type { SurfaceId } from './surfaces';
+import type { SongDraft } from './pairdraft';
 
 export interface Pair {
   readonly id: string;
@@ -60,6 +61,15 @@ export interface Pair {
   readonly okMine?: boolean;
   /** They said yes. */
   readonly okTheirs?: boolean;
+  /**
+   * Whether this project can hold the song so far yet (`pairs.sql`, re-run).
+   * False means the turn moves and the words stay where they were written.
+   */
+  readonly drafts?: boolean;
+  /** The song as the person holding the pen last left it, for a room that carries one. */
+  readonly draft?: SongDraft | null;
+  /** When it was last written, so a page applies each version once. */
+  readonly draftAt?: string;
 }
 
 /**
@@ -155,13 +165,18 @@ export async function openPair(
   }
 }
 
-/** Ask for the pen, or hand it over. Which one depends on who holds it. */
-export async function pen(id: string, what: 'ask' | 'give'): Promise<string | null> {
+/**
+ * Ask for the pen, or hand it over. Which one depends on who holds it.
+ *
+ * Handing over takes the song so far with it (`draft`), so the turn arrives
+ * at the page as it was left rather than at an empty one.
+ */
+export async function pen(id: string, what: 'ask' | 'give', draft?: SongDraft | null): Promise<string | null> {
   try {
     const response = await fetch('/api/pairs', {
       method: 'POST',
       headers: await head(),
-      body: JSON.stringify({ what: `pen_${what}`, id }),
+      body: JSON.stringify({ what: `pen_${what}`, id, ...(draft ? { draft } : {}) }),
     });
     if (response.ok) return null;
     const body = await response.json();
@@ -187,5 +202,27 @@ export async function shareLink(
     return body?.message ?? 'That did not go through.';
   } catch {
     return 'Could not reach the app’s server.';
+  }
+}
+
+/**
+ * Keep the song so far in the room, from the hand holding the pen.
+ *
+ * Returns when it was written, or null when it could not be — the page tries
+ * again on the next change, and `notSetUp` says the columns are not there so
+ * it stops trying.
+ */
+export async function saveDraft(id: string, draft: SongDraft): Promise<{ at: string } | { notSetUp: boolean }> {
+  try {
+    const response = await fetch('/api/pairs', {
+      method: 'POST',
+      headers: await head(),
+      body: JSON.stringify({ what: 'draft', id, draft }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (response.ok && typeof body?.draftAt === 'string') return { at: body.draftAt };
+    return { notSetUp: Boolean(body?.notSetUp) };
+  } catch {
+    return { notSetUp: false };
   }
 }

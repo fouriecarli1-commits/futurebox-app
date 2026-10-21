@@ -458,6 +458,10 @@ export const STRINGS: Dict = {
      The rooms are not duplicated; they open in a pair mode with a turn
      each. These are the words on that strip and on the picker. */
   "pair.with": { en: "In here with you:", af: "Hier saam met jou:" },
+  "pair.draftsOff": { en: "The words stay on the screen they were written on for now — sending them with the turn is being switched on.", af: "Die woorde bly vir eers op die skerm waarop hulle geskryf is — om hulle saam met die beurt te stuur word aangeskakel." },
+  "pair.draftsMine": { en: "What you write is kept for them as you go, and goes with the turn.", af: "Wat jy skryf, word vir hulle gehou terwyl jy skryf, en gaan saam met die beurt." },
+  "pair.draftsTheirs": { en: "What they write shows up here as they go.", af: "Wat hulle skryf, wys hier terwyl hulle skryf." },
+  "collab.with": { en: "With", af: "Saam met" },
   "pair.yours": { en: "Your turn \u2014 you can work", af: "Jou beurt \u2014 jy kan werk" },
   "pair.theirs": { en: "Their turn \u2014 watch, or ask for it", af: "Hulle beurt \u2014 kyk, of vra daarvoor" },
   "pair.give": { en: "Hand over the turn", af: "Gee die beurt oor" },

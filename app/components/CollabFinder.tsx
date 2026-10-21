@@ -319,7 +319,7 @@ export default function CollabFinder({
         <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/[0.06] p-3 space-y-1.5" data-radarpicked>
           <p className="text-sm font-bold text-white truncate">
             {pickedPerson.name}
-            {pickedPerson.handle && <span className="font-normal text-zinc-500"> {pickedPerson.handle}</span>}
+            {pickedPerson.handle && <span data-collabhandle className="font-normal text-sky-300"> {pickedPerson.handle}</span>}
           </p>
           {pickedPerson.about && (
             <p className="text-sm text-zinc-400 leading-snug line-clamp-3">{pickedPerson.about}</p>
@@ -555,7 +555,7 @@ export default function CollabFinder({
               <div key={person.handle || person.name} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-1.5">
                 <p className="text-sm font-bold text-white truncate">
                   {person.name}
-                  {person.handle && <span className="font-normal text-zinc-500"> {person.handle}</span>}
+                  {person.handle && <span data-collabhandle className="font-normal text-sky-300"> {person.handle}</span>}
                 </p>
                 {person.about && (
                   <p className="text-sm text-zinc-400 leading-snug line-clamp-2">{person.about}</p>

@@ -18,6 +18,7 @@ import { admin, callerFrom } from '@/app/lib/server/account';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import { SURFACE_IDS, type SurfaceId } from '@/app/lib/surfaces';
 import { readHandle, readShareLink } from '@/app/lib/sociallink';
+import { draftFor } from '@/app/lib/pairdraft';
 
 const NOT_SET_UP = {
   ready: false,
@@ -56,11 +57,22 @@ export async function GET(request: Request): Promise<Response> {
      and saying so, when `pairs.sql` has not been re-run since they were
      added — the rooms still open, they just cannot hold a yes yet. */
   let approvals = true;
+  /* And the song so far, once its columns are there too — the same
+     stepping down, one set of columns at a time. */
+  let drafts = true;
   let read = await client
     .from('pairs')
-    .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b')
+    .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b, draft, draft_at')
     .or(`a.eq.${caller.id},b.eq.${caller.id}`)
     .order('created_at', { ascending: false });
+  if (missingColumn(read.error)) {
+    drafts = false;
+    read = await client
+      .from('pairs')
+      .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b')
+      .or(`a.eq.${caller.id},b.eq.${caller.id}`)
+      .order('created_at', { ascending: false }) as typeof read;
+  }
   if (missingColumn(read.error)) {
     approvals = false;
     read = await client
@@ -137,6 +149,9 @@ export async function GET(request: Request): Promise<Response> {
         approvals,
         okMine: approvals ? Boolean(row.a === caller.id ? row.ok_a : row.ok_b) : false,
         okTheirs: approvals ? Boolean(row.a === caller.id ? row.ok_b : row.ok_a) : false,
+        drafts,
+        draft: drafts ? draftFor(row.surface, row.draft) : null,
+        draftAt: drafts ? row.draft_at ?? '' : '',
       };
     }),
   });
@@ -148,7 +163,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ message: 'Sign in first.' }, { status: 401 });
   if (!filterSafe(caller.id)) return Response.json({ message: 'Not a caller this app made.' }, { status: 400 });
 
-  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean };
+  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean; draft?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -224,11 +239,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   /* ── The pen ───────────────────────────────────────────────────────── */
-  if (body.what === 'pen_ask' || body.what === 'pen_give') {
+  if (body.what === 'pen_ask' || body.what === 'pen_give' || body.what === 'draft') {
     const id = String(body.id ?? '').trim();
     if (!filterSafe(id)) return Response.json({ message: 'Which room?' }, { status: 400 });
     const { data: row, error } = await client
-      .from('pairs').select('id, a, b, pen').eq('id', id).maybeSingle();
+      .from('pairs').select('id, a, b, pen, surface').eq('id', id).maybeSingle();
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
     if (!row || (row.a !== caller.id && row.b !== caller.id)) {
       return Response.json({ message: 'That room is not yours.' }, { status: 403 });
@@ -242,6 +257,28 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ ok: true });
     }
 
+    /* The song so far, saved as it is written so the other person watches it
+       arrive. Only from the hand holding the pen: the one waiting can type,
+       but what they type is not the room's until it is their turn. */
+    const draft = draftFor(row.surface, body.draft);
+    const at = new Date().toISOString();
+    if (body.what === 'draft') {
+      if (row.pen !== caller.id) {
+        return Response.json({ message: 'It is their turn — what you write is kept once the turn is yours.' }, { status: 403 });
+      }
+      if (!draft) return Response.json({ message: 'Nothing in this room travels between you yet.' }, { status: 400 });
+      const { error: draftError } = await client
+        .from('pairs').update({ draft, draft_at: at }).eq('id', id);
+      if (missingColumn(draftError)) {
+        return Response.json(
+          { message: 'Sharing the song as you write is not switched on yet — supabase/pairs.sql needs to be run again.', notSetUp: true },
+          { status: 503 },
+        );
+      }
+      if (draftError) return Response.json(NOT_SET_UP, { status: 503 });
+      return Response.json({ ok: true, draftAt: at });
+    }
+
     /* Giving, and only giving. There is no route that takes the pen out of
        somebody's hand — the person working is the person who decides when
        they have stopped, and a room where it can be snatched is a room where
@@ -252,16 +289,24 @@ export async function POST(request: Request): Promise<Response> {
     const other = row.a === caller.id ? row.b : row.a;
     /* The ticks go with the turn: what they approved is about to change in
        somebody else's hands, so a yes given before is not a yes to that. */
-    const handOver = { pen: other, pen_at: new Date().toISOString(), pen_wanted: null };
-    let { error: giveError } = await client
-      .from('pairs')
-      .update({ ...handOver, ok_a: false, ok_b: false })
-      .eq('id', id);
-    if (missingColumn(giveError)) {
-      ({ error: giveError } = await client.from('pairs').update(handOver).eq('id', id));
+    /* And the song goes with it, so the turn arrives at the page as it was
+       left. Stepped down a set of columns at a time on a project that has
+       not re-run `pairs.sql`: the turn still moves, and the answer says
+       whether the words went too. */
+    const handOver = { pen: other, pen_at: at, pen_wanted: null };
+    const tries: Record<string, unknown>[] = [
+      ...(draft ? [{ ...handOver, ok_a: false, ok_b: false, draft, draft_at: at }] : []),
+      { ...handOver, ok_a: false, ok_b: false },
+      handOver,
+    ];
+    let giveError: { code?: string; message?: string } | null = null;
+    let used = 0;
+    for (; used < tries.length; used += 1) {
+      ({ error: giveError } = await client.from('pairs').update(tries[used]).eq('id', id));
+      if (!missingColumn(giveError)) break;
     }
     if (giveError) return Response.json(NOT_SET_UP, { status: 503 });
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, draftSent: Boolean(draft) && used === 0 });
   }
 
   /* ── A yes to the song as it stands, or taking it back ──────────────── */

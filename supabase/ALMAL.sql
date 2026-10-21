@@ -5335,6 +5335,20 @@ alter table public.pairs
   add column if not exists ok_a boolean not null default false,
   add column if not exists ok_b boolean not null default false;
 
+-- ── The song so far travels with the turn ───────────────────────────────
+--
+-- the owner, 21 October 2026, testing a collab: *"Ek het klaar geskryf en
+-- die ander persoon kans gegee, maar daar wys niks aan hulle kant nie."*
+-- The pen moved and the words stayed on her phone. The room's work in
+-- progress — for Make a song: the title, the words, the style, the feeling —
+-- is kept here, written only by whoever holds the pen (`/api/pairs` 'draft'
+-- and 'pen_give'), so the other person watches it arrive and picks it up
+-- where it was left.
+
+alter table public.pairs
+  add column if not exists draft jsonb,
+  add column if not exists draft_at timestamptz;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/tone3000.sql

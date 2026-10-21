@@ -759,6 +759,8 @@ jobs:
       # on the server before it charges and on the button.
       - name: A song made together waits for both yeses
         run: npm run check:pairapprove
+      - name: In a shared room the turn and the song so far reach the other side
+        run: npm run check:pairdraft
 
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing

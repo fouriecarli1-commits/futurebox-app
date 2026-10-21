@@ -29,14 +29,18 @@
 import React, { useCallback, useState } from 'react';
 import { Check, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
 import { approve, pen as movePen, shareLink, type Pair } from '../lib/pairs';
+import type { SongDraft } from '../lib/pairdraft';
 import { HANDLE_PLATFORMS, CARRIES_A_NUMBER } from '../lib/sociallink';
 import { useLang } from '../lib/i18n';
 
 export default function PairStrip({
   pair,
   unread = false,
+  song = null,
   onChanged,
 }: {
+  /** The song so far, handed over with the turn (Make a song only). */
+  readonly song?: SongDraft | null;
   readonly pair: Pair;
   /** The names and links could not be read, so the strip says so. */
   readonly unread?: boolean;
@@ -67,6 +71,11 @@ export default function PairStrip({
         <p className="text-sm text-zinc-300 min-w-0">
           {t('pair.with', 'In here with you:')}{' '}
           <span className="font-semibold text-white">{pair.withName}</span>
+          {/* Their handle, so two people called the same name are not the
+              same person — the owner asked to see it in the room. */}
+          {pair.withHandle && (
+            <span data-pairhandle className="ml-1 text-sky-300">@{pair.withHandle.replace(/^@/, '')}</span>
+          )}
         </p>
 
         {/* Whose turn, in a sentence. The greyed-out version of this was the
@@ -84,13 +93,26 @@ export default function PairStrip({
         </span>
       </div>
 
+      {/* What happens to the words. Said, because the first test of this
+          room was somebody writing a song, handing it over, and the other
+          side seeing an empty page with nothing saying why. */}
+      {pair.surface === 'make' && (
+        <p data-pairdraftnote className="text-xs text-zinc-400">
+          {pair.drafts === false
+            ? t('pair.draftsOff', 'The words stay on the screen they were written on for now — sending them with the turn is being switched on.')
+            : pair.mine
+              ? t('pair.draftsMine', 'What you write is kept for them as you go, and goes with the turn.')
+              : t('pair.draftsTheirs', 'What they write shows up here as they go.')}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         {pair.mine ? (
           <button
             type="button"
             data-pairgive
             disabled={busy}
-            onClick={() => void act(() => movePen(pair.id, 'give'))}
+            onClick={() => void act(() => movePen(pair.id, 'give', song))}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <PenLine className="h-4 w-4" />}

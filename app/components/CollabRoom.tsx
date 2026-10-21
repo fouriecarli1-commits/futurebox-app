@@ -358,7 +358,7 @@ export default function CollabRoom({
           {waiting.map((one) => (
             <div key={one.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
               <p className="text-sm font-semibold text-zinc-100">
-                {one.name} <span className="text-zinc-500 font-normal">{one.handle}</span>
+                {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
               </p>
               {one.because && <p className="text-sm text-zinc-400 leading-snug">{one.because}</p>}
               {gone && <p className="text-sm text-amber-400 leading-snug">{gone}</p>}
@@ -411,7 +411,7 @@ export default function CollabRoom({
                 className="w-full rounded-xl border border-white/10 bg-zinc-950/60 p-3 text-left hover:border-emerald-500/60 transition"
               >
                 <span className="block text-sm font-bold text-white truncate">
-                  {one.name} <span className="font-normal text-zinc-500">{one.handle}</span>
+                  {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
                 </span>
                 <span className="mt-1.5 inline-flex min-h-[36px] items-center rounded-lg bg-emerald-500 px-3 text-xs font-extrabold text-onAccent">
                   {t('collab.enterRoom', 'Enter the room')}
@@ -450,7 +450,7 @@ export default function CollabRoom({
                     : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                {one.name} <span className="text-zinc-600">{one.handle}</span>
+                {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
               </button>
             ))}
           </div>
@@ -468,6 +468,12 @@ export default function CollabRoom({
             rooms is nine second places for every fault to live. */}
         {room && (
           <div className="rounded-xl border border-emerald-800/60 bg-emerald-950/20 p-3 space-y-2">
+            {/* Who this is with, by name and handle — the owner asked to see
+                the handle in the room, not only in the list before it. */}
+            <p data-collabwith className="text-base font-bold text-white">
+              {t('collab.with', 'With')} {room.name}{' '}
+              {room.handle && <span data-collabhandle className="font-normal text-sky-300">{room.handle}</span>}
+            </p>
             <p className="text-sm text-zinc-300">
               {t('pair.pickRoom', 'Open a room and work in it together, one turn at a time:')}
             </p>
@@ -599,7 +605,7 @@ export default function CollabRoom({
           <p className="text-sm font-bold text-white">{t('collab.sent', 'Asked, waiting')}</p>
           {sent.map((one) => (
             <p key={one.id} className="text-sm text-zinc-500">
-              {one.name} <span className="text-zinc-600">{one.handle}</span>
+              {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
             </p>
           ))}
         </div>
