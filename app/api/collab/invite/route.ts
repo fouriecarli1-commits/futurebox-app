@@ -31,6 +31,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { SITE_URL } from '@/app/lib/brand';
 
 export const runtime = 'nodejs';
@@ -60,6 +61,10 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     // A body is optional: an invite with no reason on it is still an invite.
   }
+
+  /* The note travels to a stranger on the link; the app's own blocker first. */
+  const allowed = await guard(request, note, 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   const value = token();
   const expires = new Date(Date.now() + LASTS_DAYS * 24 * 60 * 60 * 1000).toISOString();

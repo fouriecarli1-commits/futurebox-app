@@ -20,6 +20,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { filterSafe } from '@/app/lib/server/filtersafe';
+import { guard } from '@/app/lib/server/safety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -208,12 +209,18 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ id: row.id, state: row.state, existing: true });
   }
 
+  /* What is said with the request is the first thing the other person
+     reads from you; it goes past the app's own blocker first. */
+  const because = String(body.because ?? '').slice(0, 300);
+  const allowed = await guard(request, because, 'room', caller);
+  if (!allowed.ok) return allowed.response;
+
   const { data: made, error } = await client
     .from('collabs')
     .insert({
       asked_by: caller.id,
       asked_of: other,
-      because: String(body.because ?? '').slice(0, 300),
+      because,
     })
     .select('id, state')
     .maybeSingle();

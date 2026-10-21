@@ -18,7 +18,9 @@ import { admin, callerFrom } from '@/app/lib/server/account';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import { SURFACE_IDS, type SurfaceId } from '@/app/lib/surfaces';
 import { readHandle, readShareLink } from '@/app/lib/sociallink';
-import { draftFor } from '@/app/lib/pairdraft';
+import { cleanNote, draftFor, draftText } from '@/app/lib/pairdraft';
+import { screen } from '@/app/lib/moderation';
+import { guard } from '@/app/lib/server/safety';
 
 const NOT_SET_UP = {
   ready: false,
@@ -152,6 +154,10 @@ export async function GET(request: Request): Promise<Response> {
         drafts,
         draft: drafts ? draftFor(row.surface, row.draft) : null,
         draftAt: drafts ? row.draft_at ?? '' : '',
+        /* The note left with the turn, kept in the same column as the song
+           (`draft.note`), and whose it is — each side shows the other's. */
+        note: drafts ? cleanNote((row.draft as { note?: unknown } | null)?.note) : '',
+        noteMine: drafts ? (row.draft as { noteBy?: unknown } | null)?.noteBy === caller.id : false,
       };
     }),
   });
@@ -163,7 +169,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ message: 'Sign in first.' }, { status: 401 });
   if (!filterSafe(caller.id)) return Response.json({ message: 'Not a caller this app made.' }, { status: 400 });
 
-  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean; draft?: unknown };
+  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean; draft?: unknown; note?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -267,8 +273,22 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ message: 'It is their turn — what you write is kept once the turn is yours.' }, { status: 403 });
       }
       if (!draft) return Response.json({ message: 'Nothing in this room travels between you yet.' }, { status: 400 });
+      /* The fixed rules on every save, because this is the other person's
+         screen filling up as it is typed. The model's reading waits for the
+         handover — saved every two seconds, it would be a model call per
+         pause in somebody's typing. */
+      const ruled = screen(draftText(draft), 'room');
+      if (ruled) return Response.json({ message: ruled.message, rule: ruled.rule }, { status: 422 });
+      /* The note left with the last turn stays until the next handover. */
+      const { data: was } = await client.from('pairs').select('draft').eq('id', id).maybeSingle();
+      const kept = (was?.draft ?? {}) as { note?: unknown; noteBy?: unknown };
+      /* Built apart from the update: these are keys inside the draft's JSON,
+         not columns (`check:sqlcolumns` reads an update's keys as columns). */
+      const merged = kept.note ? { ...draft, note: kept.note, noteBy: kept.noteBy } : draft;
       const { error: draftError } = await client
-        .from('pairs').update({ draft, draft_at: at }).eq('id', id);
+        .from('pairs')
+        .update({ draft: merged, draft_at: at })
+        .eq('id', id);
       if (missingColumn(draftError)) {
         return Response.json(
           { message: 'Sharing the song as you write is not switched on yet — supabase/pairs.sql needs to be run again.', notSetUp: true },
@@ -293,9 +313,19 @@ export async function POST(request: Request): Promise<Response> {
        left. Stepped down a set of columns at a time on a project that has
        not re-run `pairs.sql`: the turn still moves, and the answer says
        whether the words went too. */
+    /* The note bar: a line or two for the other person, handed over with
+       the song (the owner, 21 October 2026: "'n notabalk waar iemand 'n nota
+       kan los"). The song and the note go past the whole gate here — the
+       rules and the model's reading — because this is the press that puts
+       them in front of somebody else: "harmful musiekwoorde en notas" are
+       refused before they arrive. */
+    const note = cleanNote(body.note);
+    const allowed = await guard(request, draftText(draft, note), 'room', caller);
+    if (!allowed.ok) return allowed.response;
     const handOver = { pen: other, pen_at: at, pen_wanted: null };
+    const carried = draft ? { ...draft, ...(note ? { note, noteBy: caller.id } : {}) } : null;
     const tries: Record<string, unknown>[] = [
-      ...(draft ? [{ ...handOver, ok_a: false, ok_b: false, draft, draft_at: at }] : []),
+      ...(carried ? [{ ...handOver, ok_a: false, ok_b: false, draft: carried, draft_at: at }] : []),
       { ...handOver, ok_a: false, ok_b: false },
       handOver,
     ];

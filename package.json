@@ -512,7 +512,8 @@
     "check:quizroom": "node audit/quiz.mjs 3112",
     "check:pairdraft": "tsx scripts/check-pairdraft.mts",
     "check:versecopilot": "tsx scripts/check-versecopilot.mts",
-    "check:transparency": "tsx scripts/check-transparency.mts"
+    "check:transparency": "tsx scripts/check-transparency.mts",
+    "check:blockers": "tsx scripts/check-blockers.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

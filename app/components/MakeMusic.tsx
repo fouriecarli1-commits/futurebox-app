@@ -161,7 +161,11 @@ export default function MakeMusic({
    * approved it yet, and if not, the sentence saying what is missing
    * (`readyToMake` in `lib/pairs.ts`). The button waits for it.
    */
-  pairGate?: { readonly id: string; readonly ready: boolean; readonly why: string; readonly mine?: boolean } | null;
+  pairGate?: {
+    readonly id: string; readonly ready: boolean; readonly why: string; readonly mine?: boolean;
+    /** The note left with the last turn, whose it is, and who the other person is. */
+    readonly note?: string; readonly noteMine?: boolean; readonly withName?: string;
+  } | null;
   /** After a song is made in a pair room, so the cleared ticks are re-read. */
   onPairMade?: () => void;
   /**
@@ -169,7 +173,7 @@ export default function MakeMusic({
    * "submit button wat 'n skrywe of vers submit … en outomaties die hand
    * over initieer". Answers null when it went, or the sentence saying why not.
    */
-  onPairSubmit?: () => Promise<string | null>;
+  onPairSubmit?: (note: string) => Promise<string | null>;
 }) {
   const { t, lang } = useLang();
   const title = canvas.title;
@@ -830,6 +834,8 @@ export default function MakeMusic({
   const [justMade, setJustMade] = useState<string | null>(null);
   const [pairSending, setPairSending] = useState(false);
   const [pairSendProblem, setPairSendProblem] = useState('');
+  /** The note bar: a line for the other person, sent with the turn. */
+  const [pairNote, setPairNote] = useState('');
 
   const make = useCallback(
     async (remixOf?: Track) => {
@@ -1881,6 +1887,32 @@ export default function MakeMusic({
             person can watch; this is the "I'm done, your go" press. */}
         {pairGate && (
           <div data-pairsubmitrow className="space-y-1.5">
+            {/* Their note, by the words it is about. */}
+            {pairGate.note && !pairGate.noteMine && (
+              <div data-pairnotein className="rounded-2xl border border-sky-500/30 bg-sky-500/[0.07] px-4 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-sky-300">
+                  {t('pair.noteFrom', 'Note from')} {pairGate.withName ?? t('collab.someone', 'Someone')}
+                </p>
+                <p className="whitespace-pre-line pt-1 text-sm text-zinc-100">{pairGate.note}</p>
+              </div>
+            )}
+            {pairGate.mine && (
+              /* The note bar (the owner, 21 October 2026: "'n notabalk waar
+                 iemand 'n nota kan los"). Optional, a line or two, and it goes
+                 past the same gate as the words before it reaches them. */
+              <label className="block">
+                <span className="sr-only">{t('pair.noteLabel', 'A note for them')}</span>
+                <textarea
+                  data-pairnote
+                  rows={2}
+                  maxLength={300}
+                  value={pairNote}
+                  onChange={(event) => setPairNote(event.target.value)}
+                  placeholder={t('pair.notePlaceholder', 'A note for them (optional) — e.g. "I wrote verse 2, see if the chorus still fits"')}
+                  className="w-full resize-y rounded-2xl border border-zinc-700 bg-zinc-950/70 px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-sky-400 focus:outline-hidden"
+                />
+              </label>
+            )}
             {pairGate.mine ? (
               <button
                 type="button"
@@ -1890,9 +1922,10 @@ export default function MakeMusic({
                   if (!onPairSubmit) return;
                   setPairSending(true);
                   setPairSendProblem('');
-                  void onPairSubmit().then((said) => {
+                  void onPairSubmit(pairNote).then((said) => {
                     setPairSending(false);
                     if (said) setPairSendProblem(said);
+                    else setPairNote('');
                   });
                 }}
                 className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-sky-400/50 bg-sky-500/15 px-4 text-base font-bold text-sky-200 hover:bg-sky-500/25 disabled:opacity-50"

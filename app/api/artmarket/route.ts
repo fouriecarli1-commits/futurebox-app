@@ -41,6 +41,7 @@ import { charge } from '@/app/lib/server/credits';
 import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
+import { guard } from '@/app/lib/server/safety';
 import {
   ART_MAX_BYTES, ART_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '@/app/data/artmarket';
@@ -643,6 +644,18 @@ export async function POST(request: Request): Promise<Response> {
     const row = (data ?? null) as ArtistRow | null;
     return row && row.approved ? row : null;
   };
+
+  /* Every word an artist or a buyer writes here is shown to somebody else —
+     a name and an about on the wall, a title on a piece, a note on a
+     request. One pass of the app's own blocker over all of it, before any
+     action runs (the owner, 21 October 2026: harmful words posted "moet
+     geblok word"). */
+  const written = [body.name, body.about, body.place, body.title, body.note, body.songTitle, body.for]
+    .filter((one): one is string => typeof one === 'string' && one.trim().length > 0)
+    .map((one) => one.slice(0, 1200))
+    .join('\n');
+  const allowed = await guard(request, written, 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   switch (body.what) {
     /* ── Apply to sell here ──────────────────────────────────────────

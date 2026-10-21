@@ -765,6 +765,8 @@ jobs:
         run: npm run check:versecopilot
       - name: A photo or a shot can be solid or see-through, in both editors
         run: npm run check:transparency
+      - name: Everything a member writes for somebody else goes past the blocker
+        run: npm run check:blockers
 
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing

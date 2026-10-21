@@ -36,7 +36,7 @@ const route = read('app/api/pairs/route.ts');
 ok('only the hand holding the pen writes the draft',
   /what === 'draft'[\s\S]{0,200}row\.pen !== caller\.id/.test(route));
 ok('handing over the turn takes the draft with it',
-  /handOver, ok_a: false, ok_b: false, draft, draft_at/.test(route));
+  /handOver, ok_a: false, ok_b: false, draft: carried, draft_at/.test(route) && /const carried = draft \? \{ \.\.\.draft/.test(route));
 ok('  and on a project without the columns the turn still moves',
   /tries\[used\]/.test(route) && /handOver,\s*\]/.test(route));
 ok('the room is read back with its draft', /draft: drafts \? draftFor\(row\.surface, row\.draft\)/.test(route));
@@ -74,7 +74,18 @@ ok('  and says plainly when the other person has none', (collab.match(/collab\.n
    nie in die colab room wees nie". */
 const make = read('app/components/MakeMusic.tsx');
 ok('beside the words, one press sends your part and hands the turn over',
-  /data-pairsubmit/.test(make) && /onPairSubmit=\{makeGate \? async \(\) => \{[\s\S]{0,400}movePen\(makeGate\.id, 'give', songDraft\)/.test(page));
+  /data-pairsubmit/.test(make) && /onPairSubmit=\{makeGate \? async \(note: string\) => \{[\s\S]{0,400}movePen\(makeGate\.id, 'give', songDraft, note\)/.test(page));
+/* The owner: "Gee asb 'n notabalk waar iemand 'n nota kan los. Ons moet dalk
+   ons eie blokkers in sit, om te sien as harmful musiekwoorde en notas gepos
+   word dan moet dit geblok word." */
+ok('there is a note bar beside "Submit my part", and the note goes with the turn',
+  /data-pairnote/.test(make) && /onPairSubmit\(pairNote\)/.test(make) && /noteBy: caller\.id/.test(route));
+ok('  and the other side sees it as a note from them, not their own', /data-pairnotein/.test(make) && /pairGate\.note && !pairGate\.noteMine/.test(make));
+ok('  and a note is a line or two, not a letter', /NOTE_MOST = 300/.test(read('app/lib/pairdraft.ts')));
+ok('the song and the note go past the whole gate before they reach the other person',
+  /const allowed = await guard\(request, draftText\(draft, note\), 'room', caller\);\s*if \(!allowed\.ok\) return allowed\.response;/.test(route));
+ok('  and every save of the song as it is typed goes past the fixed rules',
+  /const ruled = screen\(draftText\(draft\), 'room'\);\s*if \(ruled\) return/.test(route));
 ok('  and the side waiting is told the turn comes back when they submit', /data-pairwaiting/.test(make));
 ok('your own newest song is not shown in a shared room', /tracks\.length > 0 && !pairGate && /.test(make));
 const verses = read('app/components/VerseWriter.tsx');

@@ -181,6 +181,39 @@ const IMPERSONATE_ORG = /\b(bank|banking|fnb|absa|capitec|nedbank|standard\s+ban
 
 const SELF_HARM = /\b(suicide|kill\s+(?:myself|yourself|himself|herself|themselves)|end\s+(?:my|your)\s+life|hang\s+(?:myself|yourself)|overdose\s+on|self[-\s]harm|cutting\s+myself|starve\s+(?:myself|yourself)|pro[-\s]?ana|thinspo|selfmoord|selfdood)\b/i;
 
+/* ── Text posted for other people to read ─────────────────────────────────
+   The owner, 21 October 2026: "Ons moet dalk ons eie blokkers in sit, om te
+   sien as harmful musiekwoorde en notas gepos word dan moet dit geblok word."
+   Run against the rules on that day, three things walked through that no
+   one would let a member post: sexual words about "a 12 year old", an offer
+   to sell cocaine, and "kill yourself" said to somebody. The model's reading
+   behind these rules may well have caught them — but the rules are what
+   runs on every keystroke-save and when the model cannot be reached. */
+
+/** An age under eighteen, stated: "12 year old", "12-year-old", "12 jaar oud", "12-jarige". */
+const AGE = /\b(\d{1,2})\s*-?\s*(?:years?|yrs?|jaar|jarige)(?:\s*-?\s*(?:old|oud))?\b/gi;
+const underAge = (text: string): boolean => {
+  for (const found of text.matchAll(AGE)) {
+    const years = Number(found[1]);
+    if (years > 0 && years < 18) return true;
+  }
+  return false;
+};
+
+/** Offering something for sale or delivery — the post, not the subject. */
+const SELLING = /\b(?:buy|buying|sell|selling|for\s+sale|order\s+now|in\s+stock|deliver\w*|dm\s+me|inbox\s+me|whats\s*app\s+me|hmu|plug|koop|verkoop|te\s+koop|aflewer\w*)\b/i;
+
+/** Telling somebody to kill themselves. "Don't kill yourself" is the opposite and is left alone. */
+const TOLD_TO_DIE = /(?<!\b(?:don['’]?t|do\s+not|never|moenie|nie)\s+)\b(?:kill\s+your\s*self|kys|go\s+(?:and\s+)?die|you\s+should\s+die|hang\s+your\s*self|maak\s+jou\s*self\s+dood|gaan\s+vrek)\b/i;
+
+/**
+ * Slurs with no use in a song or a post here — racial, in the two languages
+ * this app is written in, and homophobic. Short on purpose: a word that is
+ * also an ordinary word, a name or reclaimed in music is left to the model's
+ * reading rather than refused on sight.
+ */
+const SLUR = /\b(?:kaffir|kaffirs|kaffer|kaffers|nigger|niggers|hotnot|hotnots|faggot|faggots)\b/i;
+
 const ENCOURAGE = /\b(how\s+to|best\s+way|instructions?|method|guide|encourag\w*|convince|persuade|tell\s+(?:me|them)\s+to|hoe\s+om|beste\s+manier)\b/i;
 
 /* ── Names ─────────────────────────────────────────────────────────────── */
@@ -408,7 +441,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   const hit = (pattern: RegExp): boolean => pattern.test(value) || pattern.test(collapsed);
 
   // 1. Nothing about a child and sex, in any surface, in any framing, ever.
-  if (hit(MINOR) && hit(SEXUAL)) {
+  if ((hit(MINOR) || underAge(value)) && hit(SEXUAL)) {
     return refuse(
       'minors',
       'This asks for sexual content involving a child. It is refused, it is recorded, and repeating it will close the account.',
@@ -484,6 +517,12 @@ export function screen(text: string, surface: Surface): Refusal | null {
       'This asks for violence against a group of people. Songs can be angry, and this is not that.',
     );
   }
+  if (hit(SLUR)) {
+    return refuse(
+      'extremism',
+      'This uses a slur for a group of people. Say what you mean without it — the anger can stay, the slur cannot.',
+    );
+  }
   if (hit(DEHUMANISE) && hit(GROUP)) {
     return refuse(
       'extremism',
@@ -503,6 +542,17 @@ export function screen(text: string, surface: Surface): Refusal | null {
   }
   if (hit(DRUGS) && hit(SYNTHESIS)) {
     return refuse('drugs', 'This asks how to manufacture a controlled drug. Write about it, do not ask for the method.');
+  }
+  // Posted text only: a song can be about any of this; a post aimed at a
+  // person, or selling to one, is something else.
+  if (surface === 'room' && hit(TOLD_TO_DIE)) {
+    return refuse(
+      'self-harm',
+      'This tells somebody to hurt or kill themselves. It is refused and it is recorded. If any of this is close to you, the South African Depression and Anxiety Group answers on 0800 567 567, any hour.',
+    );
+  }
+  if (surface === 'room' && hit(DRUGS) && hit(SELLING)) {
+    return refuse('drugs', 'This reads as offering drugs for sale. Posts here cannot sell or deliver them.');
   }
   if (hit(SELF_HARM) && hit(ENCOURAGE)) {
     return refuse(

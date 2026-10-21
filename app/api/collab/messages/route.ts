@@ -20,6 +20,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 
 /** Said in one place, because it is the same answer to four different reads. */
 const NOT_SET_UP = 'Collaboration is not switched on for this app yet. Run supabase/collab.sql.';
@@ -125,6 +126,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!said && !trackId) {
     return Response.json({ message: 'Say something, or bring a song.' }, { status: 400 });
   }
+  /* The app's own blocker, before another person reads it — the rules and
+     the model's reading, with strikes and a log (the owner, 21 October 2026:
+     "harmful musiekwoorde en notas … moet geblok word"). */
+  const allowed = await guard(request, said, 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   const { data, error } = await client
     .from('collab_messages')

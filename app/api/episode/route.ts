@@ -13,6 +13,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { wrote } from '../../lib/server/wrote';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { PODCAST_CAPS } from '@/app/lib/plans';
@@ -63,6 +64,11 @@ export async function POST(request: Request): Promise<Response> {
 
   const title = String(form.get('title') ?? '').trim().slice(0, 200);
   if (!title) return Response.json({ message: 'An episode needs a title.' }, { status: 400 });
+  /* The app's own blocker before this is shown to anybody else: fixed
+     rules, then the model's reading, with strikes and a log (the owner,
+     21 October 2026: harmful words posted "moet geblok word"). */
+  const allowed = await guard(request, `${title}\n${String(form.get('notes') ?? '').slice(0, 8_000)}`, 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   const client = admin();
   if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });

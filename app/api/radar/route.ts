@@ -27,6 +27,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -152,6 +153,20 @@ export async function POST(request: Request): Promise<Response> {
 
   const client = admin();
   if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
+
+  /* Sharing puts the song's name, style and words in front of strangers on
+     the radar, so they go past the app's own blocker first — a song brought
+     in from a file never went past any gate on its way in (the owner, 21
+     October 2026: harmful "musiekwoorde … moet geblok word"). Turning
+     sharing OFF is never stopped. */
+  if (body.shared) {
+    const { data: song } = await client
+      .from('tracks').select('title, style, lyrics').eq('id', id).eq('owner', caller.id).maybeSingle();
+    if (song) {
+      const allowed = await guard(request, [song.title, song.style, song.lyrics].filter(Boolean).join('\n'), 'room', caller);
+      if (!allowed.ok) return allowed.response;
+    }
+  }
 
   // Scoped to the caller, so the id in the request cannot reach anybody else's
   // song even if it names one.

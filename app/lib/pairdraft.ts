@@ -55,6 +55,17 @@ export function draftFor(surface: SurfaceId | string, raw: unknown): SongDraft |
   };
 }
 
+/** The longest note left with a turn: a line or two, not a letter. */
+export const NOTE_MOST = 300;
+
+/** A note left with the turn, cleaned: text only, cut to its limit. */
+export const cleanNote = (raw: unknown): string =>
+  (typeof raw === 'string' ? raw : '').replace(/\s+\n/g, '\n').trim().slice(0, NOTE_MOST);
+
+/** Everything in a draft a person typed, as one text to screen. */
+export const draftText = (draft: SongDraft | null, note = ''): string =>
+  [draft?.title, draft?.style, draft?.about, draft?.lyrics, note].filter(Boolean).join('\n');
+
 /** True when two drafts say the same thing, so an unchanged one is not sent again. */
 export const sameDraft = (one: SongDraft | null, two: SongDraft | null): boolean =>
   JSON.stringify(one) === JSON.stringify(two);

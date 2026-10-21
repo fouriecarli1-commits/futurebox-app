@@ -7,6 +7,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { ownedPath } from '@/app/lib/server/ownedpath';
 import { isOwnerEmail, ownerEmails } from '@/app/lib/server/owners';
 import { RESERVED_REASON, isReserved } from '@/app/lib/reserved';
@@ -136,6 +137,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!isOwnerEmail(caller.email) && (isReserved(wantedName) || isReserved(wantedHandle))) {
     return Response.json({ message: RESERVED_REASON, code: 'reserved' }, { status: 403 });
   }
+
+  /* The app's own blocker before this is shown to anybody else: fixed
+     rules, then the model's reading, with strikes and a log (the owner,
+     21 October 2026: harmful words posted "moet geblok word"). */
+  const allowed = await guard(request, [wantedName, wantedHandle, String(body.about ?? '').slice(0, 500)].join('\n'), 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   const row = {
     owner: caller.id,

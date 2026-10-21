@@ -70,6 +70,10 @@ export interface Pair {
   readonly draft?: SongDraft | null;
   /** When it was last written, so a page applies each version once. */
   readonly draftAt?: string;
+  /** The note left with the last handover, if any. */
+  readonly note?: string;
+  /** True when that note is yours rather than theirs. */
+  readonly noteMine?: boolean;
 }
 
 /**
@@ -171,12 +175,12 @@ export async function openPair(
  * Handing over takes the song so far with it (`draft`), so the turn arrives
  * at the page as it was left rather than at an empty one.
  */
-export async function pen(id: string, what: 'ask' | 'give', draft?: SongDraft | null): Promise<string | null> {
+export async function pen(id: string, what: 'ask' | 'give', draft?: SongDraft | null, note = ''): Promise<string | null> {
   try {
     const response = await fetch('/api/pairs', {
       method: 'POST',
       headers: await head(),
-      body: JSON.stringify({ what: `pen_${what}`, id, ...(draft ? { draft } : {}) }),
+      body: JSON.stringify({ what: `pen_${what}`, id, ...(draft ? { draft } : {}), ...(note.trim() ? { note: note.trim() } : {}) }),
     });
     if (response.ok) return null;
     const body = await response.json();

@@ -7,6 +7,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 
 export const runtime = 'nodejs';
@@ -93,6 +94,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!title) return Response.json({ message: 'A show needs a name.' }, { status: 400 });
 
   const { data: existing } = await client.from('shows').select('id').eq('owner', caller.id).maybeSingle();
+
+  /* The app's own blocker before this is shown to anybody else: fixed
+     rules, then the model's reading, with strikes and a log (the owner,
+     21 October 2026: harmful words posted "moet geblok word"). */
+  const allowed = await guard(request, [title, String(body.about ?? '').slice(0, 4_000), String(body.author ?? '').slice(0, 140)].join('\n'), 'room', caller);
+  if (!allowed.ok) return allowed.response;
 
   const row = {
     // The slug is fixed at creation: changing it would break every feed

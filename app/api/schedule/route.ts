@@ -8,6 +8,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { tooMany } from '@/app/lib/server/brake';
 import { configured as canEmail } from '@/app/lib/server/email';
 import { paidRoom } from '@/app/lib/server/room';
@@ -91,6 +92,11 @@ export async function POST(request: Request): Promise<Response> {
 
   const platform = text(body.platform, 40);
   const caption = text(body.caption, 5000) ?? '';
+  /* The app's own blocker before this is posted to a platform under their name: fixed
+     rules, then the model's reading, with strikes and a log (the owner,
+     21 October 2026: harmful words posted "moet geblok word"). */
+  const allowed = await guard(request, caption, 'room', caller);
+  if (!allowed.ok) return allowed.response;
   const mediaPath = text(body.mediaPath, 400) ?? '';
   if (!platform) {
     return Response.json({ error: 'bad_request', message: 'Say where it goes.' }, { status: 400 });
