@@ -285,10 +285,24 @@ const ANONYMOUS: Record<string, string> = {
   'app/api/eleven/dictionary/route.ts':
     'writes which pronunciation dictionary is live — one row for the whole app, no member to scope it to; behind POST_SECRET',
 };
+/* Routes for somebody who has no account but holds a key the owner sent
+   them. Their scope is not a caller id but a row found by the key's hash,
+   and every path they touch has to start with that row's id — so that is
+   what is asserted, rather than waving them through as anonymous. */
+const KEYED: Record<string, string> = {
+  'app/api/cubed/host/route.ts':
+    'a Cubed³ presenter with no account: the row is found by the SHA-256 of the 256-bit key in their link, and every file path starts with that row id',
+};
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;
   const src = readFileSync(file, 'utf8');
   if (!/\badmin\(\)/.test(src)) continue;
+  if (KEYED[file]) {
+    if (!/hostFrom\(/.test(src) || !/\$\{row\.id\}\//.test(src) || !/id !== row\.id/.test(src)) {
+      fail('a key-scoped route is scoped to the row its key opens', `${file} does not find its row by the key, or touches paths outside it`);
+    }
+    continue;
+  }
   if (ANONYMOUS[file]) {
     /* Listed here is not a way out of the rule, it is a different rule. A
        route that acts for everybody must either hold nothing personal — the

@@ -127,6 +127,10 @@ export const ORDER = [
   /* Loops in the live jam room — one table, service_role alone, standing on
      `auth.users`. See the file's own header. */
   'liveloops',
+  /* Cubed³ presenters — one table, service_role alone, and one private
+     bucket for their videos and photographs. Stands on `auth.users` and the
+     storage schema. See the file's own header. */
+  'cubedhosts',
 ] as const;
 
 /**
@@ -257,6 +261,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
   liveloops:
     'Loops in die live jam room: een ry per persoon wat nou loop, met die loop self daarin. Terwyl iemand loop, pols \u2019n plussie op almal anders se skerm, en ’n druk daarop sit daardie loop in jou eie. Sonder dit werk die looper steeds op jou eie toestel, maar niemand in die kamer sien jou loop nie.',
+  cubedhosts:
+    'Die Cubed³-aanbieders se registrasies: een ry per uitnodiging met hulle besonderhede, handtekening en wanneer hulle geteken het, en ’n privaat emmer vir hulle video’s en foto’s. Sonder dit maak die eienaar se aanbieder-inkassie nie skakels nie en kan ’n aanbieder nie registreer of oplaai nie.',
   designs:
     'Die fototemplates wat the owner in die fotoredigeerder stoor vir almal: die plasing se vorm, kleur, rame, woorde en vorms — nooit foto’s nie. Lede sien dit onder "Van FutureBox" in Templates. Sonder dit werk die sestien wat saam met die app kom steeds, maar "Stoor as template" sê die tabel is nog nie daar nie.',
   berging:

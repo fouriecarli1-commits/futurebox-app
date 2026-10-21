@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
+import SignaturePad from './SignaturePad';
 import { barClearance } from './TabBar';
 import { fit } from '../lib/imagefile';
 import { zipOf } from '../lib/zip';
@@ -154,6 +155,8 @@ const WORDS = {
   makeInitials: ['Make your initials', 'Maak jou voorletters'],
   drawIt: ['Draw', 'Teken'],
   typeIt: ['Type', 'Tik'],
+  uploadIt: ['Upload', 'Laai op'],
+  uploadHint: ['Choose a photo of your signature — the paper is taken out', 'Kies ’n foto van jou handtekening — die papier word uitgehaal'],
   clear: ['Clear', 'Maak skoon'],
   use: ['Use it', 'Gebruik dit'],
   yourName: ['Your name', 'Jou naam'],
@@ -1673,7 +1676,7 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
       {pad && (
         <SignaturePad
           what={pad}
-          words={{ title: w(pad === 'signature' ? 'makeSignature' : 'makeInitials'), draw: w('drawIt'), type: w('typeIt'), clear: w('clear'), use: w('use'), name: w('yourName'), here: w('signHere'), close: w('close') }}
+          words={{ title: w(pad === 'signature' ? 'makeSignature' : 'makeInitials'), draw: w('drawIt'), type: w('typeIt'), upload: w('uploadIt'), uploadHint: w('uploadHint'), clear: w('clear'), use: w('use'), name: w('yourName'), here: w('signHere'), close: w('close') }}
           onClose={() => setPad(null)}
           onMade={(made) => { setReady({ ...made, as: pad }); setPen(pad); setPad(null); }}
         />
@@ -1721,115 +1724,4 @@ function ImageMark({ data, type, style, grab }: { readonly data: Uint8Array; rea
   const url = useMemo(() => URL.createObjectURL(new Blob([data.slice().buffer], { type: type === 'png' ? 'image/png' : 'image/jpeg' })), [data, type]);
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
   return <img src={url} alt="" data-pdfmark="image" onPointerDown={grab} draggable={false} style={{ ...style, objectFit: 'fill', cursor: 'move' }} />;
-}
-
-/** Draw a signature with a finger, or type it in a hand-written letter; either becomes a see-through picture. */
-function SignaturePad({ what, words, onClose, onMade }: {
-  readonly what: 'signature' | 'initials';
-  readonly words: Readonly<Record<'title' | 'draw' | 'type' | 'clear' | 'use' | 'name' | 'here' | 'close', string>>;
-  readonly onClose: () => void;
-  readonly onMade: (made: { data: Uint8Array; type: 'png'; w: number; h: number; url: string }) => void;
-}): React.ReactElement {
-  useBackLayer(true, onClose);
-  const [how, setHow] = useState<'draw' | 'type'>('draw');
-  const [typed, setTyped] = useState('');
-  const sheet = useRef<HTMLCanvasElement | null>(null);
-  const last = useRef<{ x: number; y: number } | null>(null);
-  const [inked, setInked] = useState(false);
-  const W = what === 'initials' ? 400 : 900;
-  const H = 300;
-  const HAND = '"Segoe Script", "Brush Script MT", "Snell Roundhand", cursive';
-
-  const ctx = (): CanvasRenderingContext2D | null => sheet.current?.getContext('2d') ?? null;
-  const clear = (): void => { ctx()?.clearRect(0, 0, W, H); setInked(false); };
-  useEffect(() => {
-    if (how !== 'type') return;
-    const c = ctx();
-    if (!c) return;
-    c.clearRect(0, 0, W, H);
-    if (!typed.trim()) { setInked(false); return; }
-    c.fillStyle = '#10152a';
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    let px = 130;
-    c.font = `${px}px ${HAND}`;
-    while (px > 30 && c.measureText(typed).width > W * 0.92) { px -= 6; c.font = `${px}px ${HAND}`; }
-    c.fillText(typed, W / 2, H / 2);
-    setInked(true);
-  }, [typed, how]);
-
-  const at = (event: React.PointerEvent<HTMLCanvasElement>): { x: number; y: number } => {
-    const box = event.currentTarget.getBoundingClientRect();
-    return { x: ((event.clientX - box.left) / box.width) * W, y: ((event.clientY - box.top) / box.height) * H };
-  };
-  const use = async (): Promise<void> => {
-    const el = sheet.current;
-    if (!el || !inked) return;
-    /* Cut to what was drawn, so it is placed by its ink and not by the empty pad around it. */
-    const c = el.getContext('2d', { willReadFrequently: true });
-    if (!c) return;
-    const d = c.getImageData(0, 0, W, H).data;
-    let x1 = W; let y1 = H; let x2 = 0; let y2 = 0;
-    for (let y = 0; y < H; y += 1) for (let x = 0; x < W; x += 1) if (d[(y * W + x) * 4 + 3] > 10) { x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y); }
-    if (x2 <= x1 || y2 <= y1) return;
-    const pad = 6;
-    const out = document.createElement('canvas');
-    out.width = x2 - x1 + pad * 2;
-    out.height = y2 - y1 + pad * 2;
-    out.getContext('2d')?.drawImage(el, x1 - pad, y1 - pad, out.width, out.height, 0, 0, out.width, out.height);
-    const data = await canvasBytes(out, 'png');
-    if (!data) return;
-    onMade({ data, type: 'png', w: out.width, h: out.height, url: URL.createObjectURL(new Blob([data.slice().buffer], { type: 'image/png' })) });
-  };
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-scrim sm:items-center" role="dialog" aria-modal="true" aria-label={words.title} data-pdfpad>
-      <div className="w-full max-w-lg space-y-3 rounded-t-3xl border border-zinc-700 bg-zinc-900 p-4 sm:rounded-3xl" style={{ paddingBottom: barClearance(16) }}>
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-extrabold text-zinc-100">{words.title}</p>
-          <button type="button" onClick={onClose} aria-label={words.close} className="grid h-11 w-11 place-items-center rounded-full border border-zinc-700"><X className="h-5 w-5" /></button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {(['draw', 'type'] as const).map((one) => (
-            <button key={one} type="button" aria-pressed={how === one} data-pdfpadhow={one} onClick={() => { setHow(one); clear(); setTyped(''); }} className={`min-h-[44px] rounded-xl border text-xs font-bold ${how === one ? 'border-sky-400 bg-sky-500/15 text-sky-100' : 'border-zinc-700 text-zinc-300'}`}>{words[one]}</button>
-          ))}
-        </div>
-        {how === 'type' && <input className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm" value={typed} onChange={(e) => setTyped(e.target.value.slice(0, 40))} placeholder={words.name} aria-label={words.name} data-pdfpadtyped />}
-        <div className="relative rounded-2xl" style={{ background: PAPER }}>
-          <canvas
-            ref={sheet}
-            width={W}
-            height={H}
-            data-pdfpadsheet
-            className="w-full touch-none"
-            style={{ aspectRatio: `${W} / ${H}` }}
-            onPointerDown={(event) => { if (how !== 'draw') return; event.currentTarget.setPointerCapture(event.pointerId); last.current = at(event); }}
-            onPointerMove={(event) => {
-              if (how !== 'draw' || !last.current) return;
-              const c = ctx();
-              if (!c) return;
-              const p = at(event);
-              c.strokeStyle = '#10152a';
-              c.lineWidth = what === 'initials' ? 7 : 6;
-              c.lineCap = 'round';
-              c.lineJoin = 'round';
-              c.beginPath();
-              c.moveTo(last.current.x, last.current.y);
-              c.lineTo(p.x, p.y);
-              c.stroke();
-              last.current = p;
-              setInked(true);
-            }}
-            onPointerUp={() => { last.current = null; }}
-          />
-          {how === 'draw' && !inked && <p className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-zinc-400">{words.here}</p>}
-          <div className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-zinc-300" />
-        </div>
-        <div className="flex gap-2">
-          <button type="button" onClick={() => { clear(); setTyped(''); }} className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 text-xs font-bold text-zinc-200">{words.clear}</button>
-          <button type="button" disabled={!inked} data-pdfpaduse onClick={() => { void use(); }} className="min-h-[44px] flex-1 rounded-xl text-sm font-extrabold text-zinc-950 disabled:opacity-40" style={{ background: 'linear-gradient(120deg, #38bdf8, #a78bfa 60%, #f472b6)' }}>{words.use}</button>
-        </div>
-      </div>
-    </div>
-  );
 }

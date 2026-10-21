@@ -53,15 +53,41 @@
  * room for that.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Clock, GraduationCap, Layers, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Clock, GraduationCap, Inbox, Layers, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   CLASSES_IN_A_SERIES, GUEST_TERMS, SERIES, minutesOf, randSaid, seriesRand,
 } from '../lib/cubed';
 import { useLang } from '../lib/i18n';
 import CubedMark from './CubedMark';
 import LanguagePicker from './LanguagePicker';
+import { accessToken } from '../lib/cloud';
+
+/**
+ * The owner's way to the presenter inbox, shown to her alone.
+ *
+ * The route answers 404 to everybody else, so a member who is signed in asks
+ * once and sees nothing; somebody signed out does not ask at all.
+ */
+function InboxDoor(): React.ReactElement | null {
+  const [owner, setOwner] = useState(false);
+  useEffect(() => {
+    let gone = false;
+    void accessToken().then(async (token) => {
+      if (!token) return;
+      const answer = await fetch('/api/cubed/hosts?peek=1', { headers: { Authorization: `Bearer ${token}` } });
+      if (!gone && answer.ok) setOwner(true);
+    }).catch(() => undefined);
+    return () => { gone = true; };
+  }, []);
+  if (!owner) return null;
+  return (
+    <Link href="/cubed/hosts" data-cubedinbox className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-sky-400/40 bg-sky-500/10 px-4 text-xs font-bold text-sky-100">
+      <Inbox className="h-4 w-4" /> Presenter inbox
+    </Link>
+  );
+}
 
 export default function CubedRoom(): React.ReactElement {
   const { lang, t } = useLang();
@@ -87,7 +113,10 @@ export default function CubedRoom(): React.ReactElement {
             </span>
             <span>{t('cubed.exclusive', 'Cubed³ · VIP masterclasses · By invitation')}</span>
           </div>
-          <LanguagePicker compact />
+          <div className="flex items-center gap-2">
+            <InboxDoor />
+            <LanguagePicker compact />
+          </div>
         </div>
       </header>
 

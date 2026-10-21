@@ -7,8 +7,8 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 64 tabelle, 38 kolomme wat later
--- bygekom het, 8 stoor-emmers en 61 beleide, en gee 'n ry
+-- Dit kyk na 65 tabelle, 38 kolomme wat later
+-- bygekom het, 9 stoor-emmers en 61 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
 -- En of die bediener elke tabel mag bereik ("toegang"). Vanaf 30 Oktober 2026
@@ -104,6 +104,7 @@ with verwag (l_eer, soort, naam) as (
     ('albumart.sql', 'emmer', 'art'),
     ('avatars.sql', 'emmer', 'avatars'),
     ('cast.sql', 'emmer', 'cast'),
+    ('cubedhosts.sql', 'emmer', 'cubed'),
     ('designs.sql', 'emmer', 'designs'),
     ('podcast.sql', 'emmer', 'episodes'),
     ('kinderplank.sql', 'emmer', 'kidshelf'),
@@ -168,6 +169,7 @@ with verwag (l_eer, soort, naam) as (
     ('coverkeep.sql', 'tabel', 'public.cover_jobs'),
     ('radar.sql', 'tabel', 'public.creators'),
     ('credits.sql', 'tabel', 'public.credit_entries'),
+    ('cubedhosts.sql', 'tabel', 'public.cubed_hosts'),
     ('dubs.sql', 'tabel', 'public.dubs'),
     ('eleven.sql', 'tabel', 'public.eleven_costs'),
     ('arena.sql', 'tabel', 'public.entries'),
@@ -232,6 +234,7 @@ with verwag (l_eer, soort, naam) as (
     ('coverkeep.sql', 'toegang', 'public.cover_jobs'),
     ('radar.sql', 'toegang', 'public.creators'),
     ('credits.sql', 'toegang', 'public.credit_entries'),
+    ('cubedhosts.sql', 'toegang', 'public.cubed_hosts'),
     ('dubs.sql', 'toegang', 'public.dubs'),
     ('eleven.sql', 'toegang', 'public.eleven_costs'),
     ('arena.sql', 'toegang', 'public.entries'),

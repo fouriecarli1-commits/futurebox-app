@@ -79,6 +79,13 @@ const NO_DOOR: Record<string, string> = {
   'kids/art': 'the operator\'s own bench for the children\'s artwork: every'
     + ' press spends her Google budget on twenty-three pictures, and the route'
     + ' refuses anybody who is not her',
+  /* A Cubed³ presenter's registration. It opens only with the key in the
+     link the owner sends them, so a door to it inside the app would be a
+     door to a page that says "this link does not open a registration" to
+     everybody who presses it. The owner's own way in is the presenter inbox,
+     which the Cubed³ page links to for her. */
+  'cubed/host': 'a presenter\'s registration, opened only from the invitation'
+    + ' link the owner sends them; without its key the page has nothing to show',
   'cubed/mark': 'the operator\'s own bench: every press spends her Google'
     + ' budget on four pictures, and the route refuses anybody who is not her,'
     + ' so a door would only put a spend button on a member\'s screen',

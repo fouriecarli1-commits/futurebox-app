@@ -514,7 +514,8 @@
     "check:versecopilot": "tsx scripts/check-versecopilot.mts",
     "check:transparency": "tsx scripts/check-transparency.mts",
     "check:blockers": "tsx scripts/check-blockers.mts",
-    "check:livetimed": "tsx scripts/check-livetimed.mts"
+    "check:livetimed": "tsx scripts/check-livetimed.mts",
+    "check:cubedhost": "tsx scripts/check-cubedhost.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

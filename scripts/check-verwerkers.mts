@@ -300,6 +300,10 @@ ok(`every processor that receives personal data is named on the privacy page (${
  * silent, so the map is checked against the schema below as well.
  */
 const KEPT: Record<string, string> = {
+  /* Not a member's row: an invited presenter's registration — ID number,
+     address, signature, their videos and photographs. Nobody signs up for it,
+     which is exactly why the page has to say it exists. */
+  cubed_hosts: 'Cubed³ presenter',
   /* One sentence covers both: the handshake row and the token it produces.
      The token is the part that needed saying — it is lasting access to
      somebody else's account at another company, which is not what a person
