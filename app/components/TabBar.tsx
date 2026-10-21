@@ -51,8 +51,8 @@
  * away mid-way is worse than no bar.
  */
 
-import React from 'react';
-import { Compass, Library, Radio, Sparkles, UserRound } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Compass, Library, Radio, Search, Sparkles, UserRound } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 
 export type TabId = 'spotlight' | 'live' | 'make' | 'library' | 'you';
@@ -83,7 +83,11 @@ export const BAR_HEIGHT = 64;
  * @param extra room above the bar, in pixels, for breathing space.
  */
 export function barClearance(extra = 12): string {
-  return `calc(${BAR_HEIGHT}px + env(safe-area-inset-bottom) + ${extra}px)`;
+  /* `--fb-bar-bottom` is BAR_HEIGHT on a phone and nought on a computer,
+     where the bar runs along the TOP of the window instead (`globals.css`,
+     "The desktop"). The number stays the fallback, so a page drawn before
+     the stylesheet has the phone's answer. */
+  return `calc(var(--fb-bar-bottom, ${BAR_HEIGHT}px) + env(safe-area-inset-bottom) + ${extra}px)`;
 }
 
 /**
@@ -153,7 +157,10 @@ const TABS: readonly {
 export default function TabBar({
   active,
   onGo,
+  onSearch,
 }: {
+  /** Opens the search — on a computer the bar carries it; on a phone the corner button does. */
+  readonly onSearch?: () => void;
   readonly active: TabId;
   /**
    * Where to go.
@@ -167,6 +174,15 @@ export default function TabBar({
 }): React.ReactElement {
   const { t } = useLang();
 
+  /* While the bar is on screen the page knows it: on a computer the bar sits
+     at the top, and everything under it is moved down by its height
+     (`html[data-topbar]` in globals.css). Gone again when the bar is — a
+     room that owns the screen has no bar to clear. */
+  useEffect(() => {
+    document.documentElement.dataset.topbar = '';
+    return () => { delete document.documentElement.dataset.topbar; };
+  }, []);
+
   return (
     <nav
       /* Furniture, not content. `BlankGuard` asks whether anything has
@@ -178,10 +194,24 @@ export default function TabBar({
       aria-label={t('tab.nav', 'The five parts of the app')}
       /* Dark glass with a line of light along the top, and the tab you are on
          lit from above — the futuristic look (`.fb-fx-bar`, globals.css). */
-      className="fb-fx-bar fixed bottom-0 inset-x-0 z-[95] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl"
+      className="fb-fx-bar fb-desk-bar fixed bottom-0 inset-x-0 z-[95] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-auto flex max-w-3xl items-stretch justify-around px-1">
+      {/* ── On a computer: the command bar across the top ──────────────
+          The owner, 21 October 2026: *"die future look baie meer
+          explanated moet wees op die rekenaar se webblad … Dit hoef nie te
+          lyk soos die mobile app nie, dit moet eerder professioneel soos
+          ander online webs lyk."* A phone keeps its five tabs under the
+          thumb; a computer gets a bar along the top like any serious site,
+          with the mark on the left, the five places in the middle and the
+          search on the right (`.fb-desk-*`, globals.css). */}
+      <div className="fb-desk-brand hidden lg:flex" aria-hidden="true">
+        <span className="fb-desk-mark">
+          <span className="block h-8 w-8 rounded-lg bg-cover" style={{ backgroundImage: 'url(/icon-chip-192.png)' }} />
+        </span>
+        <span className="fb-desk-word">FutureBox</span>
+      </div>
+      <div className="fb-desk-tabs mx-auto flex max-w-3xl items-stretch justify-around px-1">
         {TABS.map((tab) => {
           const on = active === tab.id;
           const Icon = tab.icon;
@@ -191,6 +221,7 @@ export default function TabBar({
               key={tab.id}
               type="button"
               aria-current={on ? 'page' : undefined}
+              data-desktab={tab.id}
               onClick={() => onGo(tab.id)}
               /* `min-w-0` because `flex-1` alone will not shrink a tab below
                  its own content, and the pill inside is a fixed 56px. Five of
@@ -226,6 +257,13 @@ export default function TabBar({
           );
         })}
       </div>
+      {onSearch && (
+        <button type="button" onClick={onSearch} className="fb-desk-search hidden lg:flex" aria-label={t('tab.search', 'Search')}>
+          <Search className="h-4 w-4" />
+          <span>{t('tab.search', 'Search')}</span>
+          <kbd>⌘K</kbd>
+        </button>
+      )}
     </nav>
   );
 }

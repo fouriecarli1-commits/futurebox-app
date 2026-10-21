@@ -119,6 +119,7 @@ import { SEE_PLANS_EVENT } from './lib/space';
 import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 import { inPlayApp, playAvailable, resumePlayPurchases } from './lib/playbilling';
+import DeskStage from './components/DeskStage';
 
 interface Blueprint {
   tag: string;
@@ -4100,6 +4101,7 @@ export default function FutureBoxHome() {
           and the studio is what you arrive into. */}
       {atDoor && (
         <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto">
+          <DeskStage />
           {/* Top-aligned with room around it, not vertically centred.
 
               Centring inside a scrolling box is the classic way to make the
@@ -4338,6 +4340,8 @@ export default function FutureBoxHome() {
           data-studiosheet=""
           className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden"
         >
+          {/* The computer's stage, over the sheet's own colour. */}
+          <DeskStage />
           {/* One column that scrolls, on a phone. Two panes that scroll
               independently, on a desktop.
 
@@ -5741,7 +5745,7 @@ export default function FutureBoxHome() {
           they are mixing. The way out is the back button at the top left of
           the room. See `app/lib/fullroom.ts`. */}
       {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null || roomOwnsScreen) && (
-        <TabBar active={bottomTab} onGo={goTab} />
+        <TabBar active={bottomTab} onGo={goTab} onSearch={() => setSearchOpen(true)} />
       )}
 
       {/* The pop-ups, over everything, and the watch that feeds the collab

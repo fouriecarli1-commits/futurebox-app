@@ -34,8 +34,16 @@ ok('the bar pads itself away from the home indicator', /env\(safe-area-inset-bot
 ok('and exports the clearance a page has to leave', /export function barClearance/.test(bar));
 ok(
   'which includes the inset rather than only the height',
-  /calc\(\$\{BAR_HEIGHT\}px \+ env\(safe-area-inset-bottom\)/.test(bar),
+  /calc\(var\(--fb-bar-bottom, \$\{BAR_HEIGHT\}px\) \+ env\(safe-area-inset-bottom\)/.test(bar),
 );
+/* On a computer the bar moves to the top (the owner, 21 October 2026: the
+   desktop is not a big phone), and the stylesheet sets the clearance it
+   leaves at the bottom to nothing. On a phone the variable is the bar's own
+   height, the same number as here. */
+const css = readFileSync(join(ROOT, 'app/globals.css'), 'utf8');
+const BAR = /export const BAR_HEIGHT = (\d+);/.exec(bar)?.[1];
+ok('  and the stylesheet\u2019s phone clearance is the same height', Boolean(BAR) && new RegExp(`--fb-bar-bottom: ${BAR}px;`).test(css));
+ok('  and only a computer with the top bar sets it to nothing', /html\[data-topbar\] \{\s*--fb-bar-bottom: 0px;/.test(css));
 
 /* Every page that reserves room does it with the helper.
 

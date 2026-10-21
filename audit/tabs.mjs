@@ -94,7 +94,9 @@ try {
   };
 
   check('the bar is there once you are signed in', (await bar.count()) === 1);
-  const names = (await bar.locator('button').allInnerTexts()).map((one) => one.trim());
+  /* The ones a phone can see: on a computer the same bar carries a search
+     button too, hidden here, and it is not a tab. */
+  const names = (await bar.locator('button:visible').allInnerTexts()).map((one) => one.trim());
   check('with five tabs and no more', names.length === 5, names.join(' · '));
   for (const want of af
     ? ['Kollig', 'Live', 'Maak', 'Kanaal', 'Jy']

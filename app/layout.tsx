@@ -13,6 +13,7 @@ import SpaceFull from './components/SpaceFull';
 import TapGlow from './components/TapGlow';
 import { startupImages } from './lib/splash';
 import { SITE_URL } from './lib/brand';
+import DeskStage from './components/DeskStage';
 
 /**
  * The child's room's own face.
@@ -189,6 +190,8 @@ export default function RootLayout({
           <LaunchMark />
           {/* A glow on every press that outlives the finger. */}
           <TapGlow />
+          {/* The stage behind every page on a computer. */}
+          <DeskStage />
           {children}
           {/* Says so when an upload was refused because the plan's cloud
               space is full — see `lib/space.ts`. */}

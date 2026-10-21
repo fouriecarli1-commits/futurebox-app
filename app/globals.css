@@ -3100,3 +3100,347 @@ button[data-liveheart]:active:not(:disabled) {
     animation: none;
   }
 }
+
+/* ── The desktop ─────────────────────────────────────────────────────────
+
+   The owner, 21 October 2026: *"die future look baie meer explanated moet wees
+   op die rekenaar se webblad, daar lyk alles boring. Elke bladsy op die
+   rekenaar moet baie hyped en vol energie wees … baie neon, baie beweging,
+   maar dit moet anders wees as die mobile app. … nuwe manier van buttons
+   dink, nuwe styl — ons is die future!"*
+
+   A computer is not a big phone. From 1024 pixels up:
+
+     · the five tabs leave the bottom of the screen and become a command bar
+       along the top, as on any serious site;
+     · behind every page there is a stage: slow aurora light, a neon grid
+       floor running into the distance, and a scan line that passes now and
+       then;
+     · buttons stop being phone pills. They are BLADES — two corners round,
+       two sharp, cut on the diagonal — with light that flows through the
+       main ones and cards that tilt toward the pointer and catch a sweep of
+       light as it passes.
+
+   Phones keep their own look untouched: everything here is inside the
+   media query. Reduced motion stills the movement and keeps the light. */
+:root {
+  --fb-bar-bottom: 64px;
+  --fb-bar-top: 0px;
+  --fb-blade: 18px 3px 18px 3px;
+  --fb-blade-lg: 26px 3px 26px 3px;
+}
+
+@media (min-width: 1024px) {
+  html[data-topbar] {
+    --fb-bar-bottom: 0px;
+    --fb-bar-top: 72px;
+  }
+  html[data-topbar] body { padding-top: var(--fb-bar-top); }
+  html[data-topbar] .sticky.top-0 { top: var(--fb-bar-top); }
+  html[data-topbar] [data-searchcorner] { display: none; }
+
+  /* ── The command bar ── */
+  .fb-desk-bar {
+    top: 0;
+    bottom: auto;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 28px !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid rgb(56 189 248 / 0.22) !important;
+    background: linear-gradient(180deg, rgb(2 6 16 / 0.94), rgb(2 6 16 / 0.82)) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: 0 14px 44px -24px rgb(56 189 248 / 0.7) !important;
+  }
+  .fb-desk-bar::before { display: none !important; }
+  .fb-desk-bar::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #38bdf8 20%, #e879f9 50%, #34d399 80%, transparent);
+    background-size: 200% 100%;
+    animation: fb-desk-beam 6s linear infinite;
+    pointer-events: none;
+  }
+  .fb-desk-brand { align-items: center; gap: 12px; flex-shrink: 0; }
+  .fb-desk-mark {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--fb-blade);
+    background: radial-gradient(circle at 50% 30%, rgb(56 189 248 / 0.35), rgb(2 6 16) 70%);
+    box-shadow: 0 0 0 1px rgb(125 211 252 / 0.55), 0 0 24px rgb(56 189 248 / 0.55);
+    animation: fb-desk-pulse 3.2s ease-in-out infinite;
+  }
+  .fb-desk-word {
+    font-weight: 900;
+    font-size: 21px;
+    letter-spacing: -0.03em;
+    color: transparent;
+    background: linear-gradient(100deg, #ffffff 0%, #7dd3fc 30%, #f0abfc 50%, #a7f3d0 70%, #ffffff 90%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: fb-desk-shine 7s ease-in-out infinite;
+  }
+  .fb-desk-tabs { max-width: none !important; margin: 0 auto; gap: 6px; justify-content: center !important; }
+  .fb-desk-bar [data-desktab] {
+    position: relative;
+    flex: none !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    min-height: 44px !important;
+    padding: 0 18px !important;
+    border-radius: var(--fb-blade);
+    color: #cbd5e1 !important;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .fb-desk-bar [data-desktab] > span:first-child {
+    width: auto !important;
+    height: auto !important;
+    background: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+  }
+  .fb-desk-bar [data-desktab] > span:last-child { font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
+  .fb-desk-bar [data-desktab]:hover { color: #ffffff !important; background: rgb(56 189 248 / 0.1); box-shadow: inset 0 0 0 1px rgb(125 211 252 / 0.25); }
+  .fb-desk-bar [data-desktab][aria-current='page'] {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgb(56 189 248 / 0.24), rgb(217 70 239 / 0.2));
+    box-shadow: inset 0 0 0 1px rgb(125 211 252 / 0.5), 0 0 26px rgb(56 189 248 / 0.35);
+  }
+  .fb-desk-bar [data-desktab][aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: -14px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #38bdf8, #e879f9);
+    box-shadow: 0 0 12px #38bdf8, 0 0 22px #e879f9;
+  }
+  /* Make: the one thing the app is for, lit like an ignition. */
+  .fb-desk-bar [data-desktab='make'],
+  .fb-desk-bar [data-desktab='make'][aria-current='page'] {
+    color: #021018 !important;
+    background: linear-gradient(110deg, #34d399, #38bdf8 45%, #a78bfa 75%, #f472b6);
+    background-size: 220% 100%;
+    animation: fb-desk-flow 6s linear infinite;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25), 0 0 28px rgb(56 189 248 / 0.55), 0 10px 30px -10px rgb(217 70 239 / 0.6);
+  }
+  .fb-desk-bar [data-desktab='make']:hover { color: #021018 !important; filter: brightness(1.12); }
+  .fb-desk-search {
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 14px;
+    flex-shrink: 0;
+    border-radius: var(--fb-blade);
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgb(15 23 42 / 0.72);
+    box-shadow: inset 0 0 0 1px rgb(125 211 252 / 0.28);
+    transition: box-shadow 0.2s ease, color 0.2s ease;
+  }
+  .fb-desk-search:hover { color: #ffffff; box-shadow: inset 0 0 0 1px rgb(125 211 252 / 0.7), 0 0 22px rgb(56 189 248 / 0.4); }
+  .fb-desk-search kbd {
+    font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #bae6fd;
+    background: rgb(56 189 248 / 0.16);
+  }
+
+  /* ── The stage behind every page ── */
+  .fb-desk-stage {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .fb-desk-stage::before {
+    content: '';
+    position: absolute;
+    inset: -25%;
+    background:
+      radial-gradient(30% 26% at 18% 22%, rgb(56 189 248 / 0.3), transparent 70%),
+      radial-gradient(28% 24% at 82% 30%, rgb(217 70 239 / 0.26), transparent 70%),
+      radial-gradient(34% 26% at 55% 80%, rgb(52 211 153 / 0.2), transparent 70%);
+    animation: fb-desk-aurora 26s ease-in-out infinite alternate;
+  }
+  /* The grid floor: lines running into the distance, moving toward you. */
+  .fb-desk-floor {
+    position: absolute;
+    /* Inside the window's own width: wider and clipped reads the same, but
+       is a box past the edge to every probe that measures for one. */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 80%;
+    transform: perspective(900px) rotateX(50deg);
+    transform-origin: 50% 100%;
+    background-image:
+      linear-gradient(rgb(56 189 248 / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(217 70 239 / 0.5) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: fb-desk-floor 3.5s linear infinite;
+    mask-image: linear-gradient(to top, #000 10%, transparent 85%);
+    -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 85%);
+    opacity: 0.8;
+  }
+  /* The horizon where the floor meets the light. */
+  .fb-desk-stage::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 68%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgb(56 189 248 / 0.55) 25%, rgb(240 171 252 / 0.7) 50%, rgb(52 211 153 / 0.55) 75%, transparent);
+    box-shadow: 0 0 24px 4px rgb(56 189 248 / 0.25);
+    animation: fb-desk-horizon 5s ease-in-out infinite;
+  }
+  /* A scan line that crosses the window now and then. */
+  .fb-desk-scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10%;
+    height: 120px;
+    background: linear-gradient(180deg, transparent, rgb(125 211 252 / 0.07) 45%, rgb(240 171 252 / 0.1) 50%, rgb(125 211 252 / 0.07) 55%, transparent);
+    animation: fb-desk-scan 11s ease-in-out infinite;
+  }
+  /* Below everything the page draws, over the body's own light. Not raised
+     with z-index on the page instead: rooms put sheets straight into the body
+     with portals, and those must stay fixed to the window. The kids room
+     paints its own photograph, and a light theme keeps its quiet paper. */
+  body:has([data-kidsroom]) .fb-desk-stage,
+  body:has([data-kidsdoor]) .fb-desk-stage,
+  html[data-fb-mode='light'] .fb-desk-stage { display: none; }
+
+  /* ── Blades: the new buttons ── */
+  .fb-fx-go {
+    border-radius: var(--fb-blade) !important;
+    background-size: 220% 100% !important;
+    animation: fb-desk-flow 7s linear infinite;
+    transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.25s ease;
+  }
+  .fb-fx-go:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1) saturate(1.15);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.35),
+      0 0 34px rgb(var(--fb-secondary-500) / 0.65),
+      0 14px 34px -10px rgb(var(--fb-primary-500) / 0.8) !important;
+  }
+  .fb-fx-tile {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--fb-blade-lg) !important;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .fb-fx-tile::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: -60%;
+    width: 40%;
+    background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.16), rgb(240 171 252 / 0.12), transparent);
+    transform: skewX(-16deg) translateX(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .fb-fx-tile:hover {
+    transform: translateY(-4px) perspective(800px) rotateX(4deg);
+    border-color: rgb(125 211 252 / 0.7) !important;
+    box-shadow: 0 0 0 1px rgb(125 211 252 / 0.45), 0 22px 44px -20px rgb(56 189 248 / 0.75), 0 0 34px -8px rgb(217 70 239 / 0.5) !important;
+  }
+  .fb-fx-tile:hover::after { animation: fb-desk-sweep 0.9s ease-out; }
+  .fb-fx-tile:hover .fb-fx-lens { box-shadow: 0 0 0 1px rgb(125 211 252 / 0.8), 0 0 22px rgb(56 189 248 / 0.8) !important; }
+
+  /* ── The home page on a computer ── */
+  .fb-desk-title {
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    color: transparent;
+    background: linear-gradient(100deg, #ffffff 0%, #e0f2fe 25%, #f5d0fe 45%, #ffffff 55%, #a7f3d0 75%, #ffffff 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 22px rgb(56 189 248 / 0.35));
+    animation: fb-desk-shine 8s ease-in-out infinite;
+  }
+  .fb-desk-eq { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+  .fb-desk-eq i {
+    display: block;
+    width: 10px;
+    border-radius: 3px 3px 1px 1px;
+    background: linear-gradient(to top, #34d399, #38bdf8 50%, #e879f9);
+    box-shadow: 0 0 14px rgb(56 189 248 / 0.7);
+    animation: fb-desk-eq 1.2s ease-in-out infinite alternate;
+  }
+  .fb-desk-orbit {
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgb(125 211 252 / 0.25);
+    animation: fb-desk-spin 18s linear infinite;
+  }
+  .fb-desk-orbit::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: #f0abfc;
+    box-shadow: 0 0 14px #f0abfc, 0 0 24px #e879f9;
+  }
+}
+
+@keyframes fb-desk-beam { to { background-position: -200% 0; } }
+@keyframes fb-desk-flow { to { background-position: -220% 0; } }
+@keyframes fb-desk-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgb(125 211 252 / 0.55), 0 0 18px rgb(56 189 248 / 0.45); }
+  50% { box-shadow: 0 0 0 1px rgb(240 171 252 / 0.7), 0 0 30px rgb(217 70 239 / 0.6); }
+}
+@keyframes fb-desk-shine {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0% 0; }
+}
+@keyframes fb-desk-aurora {
+  0% { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+  100% { transform: translate3d(4%, 3%, 0) rotate(10deg); }
+}
+@keyframes fb-desk-horizon { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes fb-desk-floor { to { background-position: 0 64px; } }
+@keyframes fb-desk-scan {
+  0%, 55% { transform: translateY(0); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: translateY(130vh); opacity: 0; }
+}
+@keyframes fb-desk-sweep {
+  0% { transform: skewX(-16deg) translateX(0); opacity: 1; }
+  100% { transform: skewX(-16deg) translateX(520%); opacity: 0; }
+}
+@keyframes fb-desk-eq { 0% { height: 18%; } 100% { height: 100%; } }
+@keyframes fb-desk-spin { to { transform: rotate(360deg); } }
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .fb-desk-bar::after, .fb-desk-mark, .fb-desk-word, .fb-desk-bar [data-desktab='make'],
+  .fb-desk-stage::before, .fb-desk-stage::after, .fb-desk-floor, .fb-desk-scan, .fb-fx-go, .fb-desk-title,
+  .fb-desk-eq i, .fb-desk-orbit, .fb-fx-tile:hover::after {
+    animation: none !important;
+  }
+  .fb-fx-tile:hover { transform: none; }
+}

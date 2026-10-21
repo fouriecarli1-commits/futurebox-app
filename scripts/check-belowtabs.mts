@@ -58,7 +58,7 @@ ok('there is no second clearance rule to drift from the first',
   !/below-tabs/.test(readFileSync('app/globals.css', 'utf8')));
 ok('the clearance is built on the bar\u2019s own height',
   /export const BAR_HEIGHT = \d+;/.test(bar)
-  && /calc\(\$\{BAR_HEIGHT\}px \+ env\(safe-area-inset-bottom\)/.test(bar));
+  && /calc\(var\(--fb-bar-bottom, \$\{BAR_HEIGHT\}px\) \+ env\(safe-area-inset-bottom\)/.test(bar));
 
 /**
  * Rooms that clear the bar another way, or that do not need to.

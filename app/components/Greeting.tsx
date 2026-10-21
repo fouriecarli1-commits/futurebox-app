@@ -262,10 +262,10 @@ export default function Greeting({
            Since 20 October 2026 the glass is the futuristic look's tile
            (`fb-fx-tile`): the same tinted glass, with a light-line edge, and
            the icon in a round glowing lens. */
-        className="fb-fx-tile group min-h-[44px] w-full rounded-2xl border px-4 py-3.5 text-left transition-all flex items-start gap-3 backdrop-blur-xs"
+        className="fb-fx-tile group min-h-[44px] w-full rounded-2xl border px-4 py-3.5 text-left transition-all flex items-start gap-3 backdrop-blur-xs lg:min-h-[128px] lg:flex-col lg:gap-4 lg:p-5"
       >
-        <span className="fb-fx-lens mt-0.5 grid h-9 w-9 shrink-0 place-items-center border transition-all group-hover:scale-105">
-          <Icon className="h-[18px] w-[18px] text-emerald-400" />
+        <span className="fb-fx-lens mt-0.5 grid h-9 w-9 shrink-0 place-items-center border transition-all group-hover:scale-105 lg:h-12 lg:w-12">
+          <Icon className="h-[18px] w-[18px] text-emerald-400 lg:h-6 lg:w-6" />
         </span>
         <span className="min-w-0 flex-1">
           {/* Wraps. It was `truncate`, and two rooms out of eleven had names
@@ -290,7 +290,7 @@ export default function Greeting({
               that already fits changes shape. Found by the fit measuring in
               `audit/afrikaans.mjs`, which walks both languages and compares
               the same box in each. */}
-          <span className="block break-words text-sm font-black leading-tight text-white group-hover:text-emerald-300 transition-colors">
+          <span className="block break-words text-sm font-black leading-tight text-white group-hover:text-emerald-300 transition-colors lg:text-base">
             {roomName(id)}
           </span>
           {/* The floor under the line is what keeps a row of cards the same
@@ -314,15 +314,30 @@ export default function Greeting({
        not apply — at 48rem the cards sat in a narrow strip with a third of the
        window empty on either side, which reads as a phone layout stretched
        onto a desktop. */
-    <div className="mx-auto w-full max-w-5xl space-y-7 py-2">
+    /* On a computer, wider again and louder: the owner, 21 October 2026,
+       "Elke bladsy op die rekenaar moet baie hyped en vol energie wees".
+       Every `lg:` below is the desktop look; a phone draws none of it. */
+    <div className="mx-auto w-full max-w-5xl space-y-7 py-2 lg:max-w-[1280px] lg:space-y-10 lg:py-6">
       {/* ── Who they are, and where they are ─────────────────────────────── */}
       {/* Drawn in the futuristic look — glass, a light-line edge and the
           viewfinder corners. The owner, 20 October 2026, after seeing it
           beside the old one: "Go ahead met die nuwe styl." */}
-      <div data-studiohero className="fb-fx-panel overflow-hidden rounded-3xl p-6 md:p-8">
+      <div data-studiohero className="fb-fx-panel overflow-hidden rounded-3xl p-6 md:p-8 lg:p-10">
         <HoloCorners />
         {/* Glow orb */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+        {/* The live sound on the right of a computer's hero: bars that never
+            stop and two rings in orbit. Drawn, not a picture, so it costs
+            nothing to load. */}
+        <div aria-hidden className="pointer-events-none absolute bottom-10 right-12 hidden h-[200px] w-[260px] items-center justify-center lg:flex">
+          <span className="fb-desk-orbit h-[200px] w-[200px]" />
+          <span className="fb-desk-orbit h-[150px] w-[150px] [animation-direction:reverse] [animation-duration:11s]" />
+          <span className="fb-desk-eq relative">
+            {[0.1, 0.5, 0.25, 0.8, 0.35, 0.65, 0.15, 0.9, 0.45, 0.3, 0.7].map((delay, i) => (
+              <i key={i} style={{ animationDelay: `-${delay}s`, animationDuration: `${0.8 + (i % 4) * 0.2}s` }} />
+            ))}
+          </span>
+        </div>
 
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center gap-3">
@@ -345,11 +360,11 @@ export default function Greeting({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-4 md:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-4 md:flex-nowrap lg:min-h-[160px] lg:gap-x-8 lg:pr-[300px]">
           {/* Their own face if they put one on their channel, and the
               generated cover if not — never a grey silhouette, which reads as
               something failing to load. Same rule as the channel itself. */}
-          <div className="fb-fx-ring h-14 w-14 shrink-0 overflow-hidden md:h-16 md:w-16">
+          <div className="fb-fx-ring h-14 w-14 shrink-0 overflow-hidden md:h-16 md:w-16 lg:h-28 lg:w-28">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -365,20 +380,20 @@ export default function Greeting({
           {/* Held at a fixed height while the name is fetched, so the row does
               not grow under the reader's eye a quarter-second in. */}
           <div className="min-w-0 flex-1 min-h-[68px] flex flex-col justify-center">
-            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight truncate tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight truncate tracking-tight fb-desk-title lg:pb-2 lg:text-6xl">
               {habit
                 ? habit.name
                   ? fill(t('hello.hi', 'Hello, {name}!'), { name: habit.name })
                   : t('hello.hiNoName', 'Hello!')
                 : ' '}
             </h2>
-            <p className="text-sm md:text-base text-zinc-300 leading-snug">{welcome()}</p>
+            <p className="text-sm md:text-base text-zinc-300 leading-snug lg:mt-2 lg:text-xl">{welcome()}</p>
           </div>
         </div>
 
         {/* ── The one thing worth doing next ─────────────────────────────── */}
         {said && (
-          <div className="fb-fx-tray mt-6 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="fb-fx-tray mt-6 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between lg:mr-[300px] lg:p-5">
             <p className="text-base font-bold leading-snug text-emerald-300 md:text-lg flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
               <span>{ask()}</span>
@@ -386,7 +401,7 @@ export default function Greeting({
             <button
               type="button"
               onClick={() => onGo(said.room)}
-              className="fb-fx-go min-h-[44px] w-full shrink-0 px-6 py-3 rounded-xl text-onAccent font-extrabold inline-flex items-center justify-center gap-2 hover:opacity-95 transition-all sm:w-auto hover:scale-[1.02]"
+              className="fb-fx-go min-h-[44px] w-full shrink-0 px-6 py-3 rounded-xl text-onAccent font-extrabold inline-flex items-center justify-center gap-2 hover:opacity-95 transition-all sm:w-auto hover:scale-[1.02] lg:min-h-[56px] lg:px-8 lg:text-lg"
             >
               <span className="fb-fx-shine" aria-hidden="true" />
               {roomName(said.room)}

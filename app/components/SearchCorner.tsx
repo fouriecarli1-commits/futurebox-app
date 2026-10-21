@@ -50,6 +50,7 @@ export default function SearchCorner({
       type="button"
       onClick={onOpen}
       aria-label={t('tab.search', 'Search')}
+      data-searchcorner
       className="fixed right-3 z-[96] flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700/80 bg-zinc-950/80 text-zinc-300 backdrop-blur-xl transition-colors hover:text-white hover:border-zinc-500"
       /* Clear of a notch and of a phone's own status bar. `env()` is zero on a
          desktop, so the twelve pixels are what it falls back to. */
