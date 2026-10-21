@@ -40,7 +40,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { MIN_NOTE_S, notesIn, snapTo } from '../app/lib/humnotes.ts';
-import { GROUPS, RATE, VOICES, renderHum, voiceById } from '../app/lib/huminstrument.ts';
+import { GROUPS, PLAIN, RATE, VOICES, renderHum, voiceById } from '../app/lib/huminstrument.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -392,6 +392,67 @@ ok('  and spends nothing to do it',
   !/charge\s*\([^)]*hum/i.test(booth),
   'the hum path charges — it runs entirely on the device, and a charge for'
   + ' arithmetic done on a phone is a charge for nothing');
+
+/* ── Hear it first, then shape it ────────────────────────────────────────
+
+   The owner, 21 October 2026, after humming and picking the violin: *"Dit
+   klink nie soos 'n violin. Iewers moet die opgeneemde klank, eers iewers lê
+   om na te luister, dan die instrument kies, en dan daai klank kan verstel
+   totdat dit klink soos dit moet. Daar moet ook 'n retake button wees."*
+   A bowed string is a held tone that wavers and rings through a wooden body;
+   one that does neither is an organ. And the order is hers: listen, pick,
+   adjust, keep — with a way to start over. */
+const violin = voiceById('violin')!;
+ok('the violin wavers like a bowed string',
+  Boolean(violin.vibrato && violin.vibrato.rate > 4 && violin.vibrato.depth > 0.05),
+  'the violin has no vibrato, and a steady sawtooth with no waver is what she'
+  + ' heard and said was not a violin');
+ok('  and rings through a body',
+  (violin.body ?? []).length >= 2,
+  'the violin has no body resonances, so every partial is as loud as the'
+  + ' arithmetic made it and nothing sounds like wood');
+
+const plainOut = renderHum(played, violin, 2.5);
+const plainAgain = renderHum(played, violin, 2.5, RATE, PLAIN);
+ok('the dials at rest change nothing',
+  plainOut.every((one, i) => one === plainAgain[i]),
+  'rendering with the resting dials differs from rendering without them, so'
+  + ' "back to how it comes" does not go back');
+
+const dialled: Record<string, Partial<typeof PLAIN>> = {
+  octave: { octave: 1 }, bright: { bright: 0.8 }, vibrato: { vibrato: 2 },
+  attack: { attack: 3 }, length: { length: 0.5 }, room: { room: 0.6 },
+};
+for (const [dial, moved] of Object.entries(dialled)) {
+  const out = renderHum(played, violin, 2.5, RATE, { ...PLAIN, ...moved });
+  const clean = out.every((one) => Number.isFinite(one) && Math.abs(one) <= 1);
+  ok(`  and the ${dial} dial changes the sound, cleanly`,
+    clean && out.some((one, i) => one !== plainOut[i]),
+    clean ? 'turning it renders the same part, so it is a dial that does nothing'
+      : 'turning it makes a NaN or a sample past one — a click or a buzz');
+}
+
+const higher = crossings(renderHum(played, violin, 2.5, RATE, { ...PLAIN, octave: 1 }));
+ok('  and an octave up is an octave up',
+  higher > crossings(plainOut) * 1.5,
+  'the octave dial does not move the pitch an octave');
+
+ok('the hum can be listened to before an instrument is picked',
+  /data-humlisten/.test(booth),
+  'there is no way to hear the take itself, so she picks an instrument for a'
+  + ' recording she has not heard back');
+ok('  and taken again',
+  /data-humretake/.test(booth),
+  'there is no retake: a bad hum is kept, or the lane deleted by hand');
+ok('  and heard as the instrument before it goes on a lane',
+  /data-humhear/.test(booth) && /data-humgo/.test(booth),
+  'picking an instrument writes the lane at once, so the only way to hear it'
+  + ' is to keep it');
+ok('  and shaped with all six dials',
+  ['octave', 'bright', 'vibrato', 'attack', 'length', 'room']
+    .every((dial) => new RegExp(`data-humdial=["{'\`]*${dial}|humdial.{0,40}${dial}`).test(booth)
+      || booth.includes(`'${dial}'`)),
+  'a dial is missing from the card');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

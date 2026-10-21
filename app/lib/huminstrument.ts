@@ -142,7 +142,54 @@ export interface Voice {
   readonly breath?: number;
   /** How much of the note's start the breath covers. 1 is all of it. */
   readonly breathFor?: number;
+  /**
+   * The slow wobble in pitch a player adds to a held note.
+   *
+   * The owner, 21 October 2026, having hummed a line and picked the violin:
+   * *"Dit klink nie soos 'n violin."* A bowed string with no vibrato is the
+   * sound of a test tone with harmonics on it; the wobble — five or six times
+   * a second, a fifth of a semitone, starting a moment after the note does —
+   * is most of what the ear takes for "a person playing a violin".
+   * `depth` is in semitones and `after` is how long the note is held before
+   * the wobble has fully come in.
+   */
+  readonly vibrato?: { readonly rate: number; readonly depth: number; readonly after: number };
+  /**
+   * The instrument's body: the frequencies its wood or brass rings at.
+   *
+   * Each harmonic is made louder by how close it sits to one of these. A
+   * violin's body rings near 280Hz and again around 3kHz, and that is why
+   * the same note on a violin and on a synth string are told apart in a
+   * second. `width` is in Hz; `gain` is how much louder at the peak.
+   */
+  readonly body?: readonly { readonly hz: number; readonly width: number; readonly gain: number }[];
 }
+
+/**
+ * How she has set the sound after hearing it.
+ *
+ * The owner, 21 October 2026: *"die instrument kies, en dan daai klank kan
+ * verstel totdat dit klink soos dit moet."* Every one of these is a dial on
+ * the hum desk; `PLAIN` is every dial at the middle, and at the middle the
+ * part is exactly what the instrument's own row makes — so a part made
+ * before the dials existed sounds the same today.
+ */
+export interface Tweak {
+  /** Octaves up or down, on top of the instrument's own shift. */
+  readonly octave: number;
+  /** −1 is darker, +1 is brighter. Tilts the harmonics. */
+  readonly bright: number;
+  /** How much wobble, as a share of the instrument's own. 0 is none. */
+  readonly vibrato: number;
+  /** The attack, multiplied: 0.25 is a sharp start, 4 a slow bow. */
+  readonly attack: number;
+  /** How long notes ring and fall, multiplied. */
+  readonly length: number;
+  /** How much room is around it, 0 to 1. */
+  readonly room: number;
+}
+
+export const PLAIN: Tweak = { octave: 0, bright: 0, vibrato: 1, attack: 1, length: 1, room: 0 };
 
 export const VOICES: readonly Voice[] = [
   /* ── The low end ──────────────────────────────────────────────────────
@@ -206,6 +253,8 @@ export const VOICES: readonly Voice[] = [
     detune: { ratio: 1.0025, level: 0.3 },
     breath: 0.05,
     breathFor: 1,
+
+    vibrato: { rate: 4.8, depth: 0.12, after: 0.3 },
   },
 
   /* ── Held and sustained ───────────────────────────────────────────────
@@ -264,6 +313,8 @@ export const VOICES: readonly Voice[] = [
     detune: { ratio: 1.006, level: 0.7 },
     breath: 0.03,
     breathFor: 1,
+
+    vibrato: { rate: 5, depth: 0.08, after: 0.3 },
   },
   {
     id: 'cello',
@@ -287,6 +338,9 @@ export const VOICES: readonly Voice[] = [
     release: 0.12,
     breath: 0.04,
     breathFor: 1,
+
+    vibrato: { rate: 5.2, depth: 0.2, after: 0.25 },
+    body: [{ hz: 210, width: 90, gain: 0.8 }, { hz: 2200, width: 900, gain: 0.45 }],
   },
   {
     id: 'violin',
@@ -298,13 +352,20 @@ export const VOICES: readonly Voice[] = [
     /* Up an octave, where a violin lives. Brighter than the cello — more
        weight in the upper harmonics — and a faster bow, because a violin
        speaks sooner than a cello does. */
-    partials: [1, 0.6, 0.45, 0.35, 0.22, 0.14, 0.09],
+    /* 21 October 2026: she hummed a line, picked this, and it did not sound
+       like a violin. It was seven harmonics and a hiss. A bowed string is
+       nearly a sawtooth — many harmonics, falling slowly — sung through a
+       body that rings near 280Hz and 3kHz, with a vibrato that arrives just
+       after the bow does. All three are here now. */
+    partials: [1, 0.7, 0.55, 0.45, 0.36, 0.28, 0.22, 0.17, 0.13, 0.1, 0.07, 0.05],
     decay: 0,
     decayFloor: 16,
-    attack: 0.05,
-    release: 0.1,
-    breath: 0.05,
+    attack: 0.07,
+    release: 0.12,
+    breath: 0.03,
     breathFor: 1,
+    vibrato: { rate: 5.6, depth: 0.22, after: 0.22 },
+    body: [{ hz: 290, width: 110, gain: 0.9 }, { hz: 3000, width: 1100, gain: 0.7 }],
   },
   {
     id: 'brass',
@@ -334,6 +395,8 @@ export const VOICES: readonly Voice[] = [
     decayFloor: 8,
     attack: 0.035,
     release: 0.06,
+
+    vibrato: { rate: 5.5, depth: 0.08, after: 0.3 },
   },
   {
     id: 'trombone',
@@ -368,6 +431,8 @@ export const VOICES: readonly Voice[] = [
     /* The breath is the instrument. Without it this is a test tone. */
     breath: 0.1,
     breathFor: 1,
+
+    vibrato: { rate: 5, depth: 0.08, after: 0.25 },
   },
   {
     id: 'clarinet',
@@ -407,6 +472,8 @@ export const VOICES: readonly Voice[] = [
     release: 0.08,
     breath: 0.08,
     breathFor: 1,
+
+    vibrato: { rate: 5.4, depth: 0.12, after: 0.25 },
   },
   {
     id: 'konsertina',
@@ -449,6 +516,8 @@ export const VOICES: readonly Voice[] = [
     detune: { ratio: 1.004, level: 0.8 },
     breath: 0.05,
     breathFor: 1,
+
+    vibrato: { rate: 5.2, depth: 0.12, after: 0.2 },
   },
   {
     id: 'lead',
@@ -638,6 +707,7 @@ function play(
   voice: Voice,
   note: Played,
   rate: number,
+  tweak: Tweak = PLAIN,
 ): void {
   const start = Math.max(0, Math.round(note.from * rate));
   const held = Math.max(0.05, note.to - note.from);
@@ -669,12 +739,14 @@ function play(
     return;
   }
 
-  const midi = (note.midi ?? 60) + voice.shift;
+  const midi = (note.midi ?? 60) + voice.shift + 12 * Math.round(tweak.octave);
   const hz = hzOf(midi);
   /* How long the note sounds. A struck instrument has a ceiling of its own
      — `most` — because a hum held for four seconds does not make a marimba
      ring for four seconds. A held one lasts as long as it was hummed. */
-  const length = voice.most ? Math.min(held, voice.most) : held;
+  const length = voice.most ? Math.min(held, voice.most * tweak.length) : held;
+  const attack = voice.attack * tweak.attack;
+  const release = voice.release * tweak.length;
   const n = Math.min(out.length - start, Math.round(length * rate));
 
   /* The fall. A fixed `decay` is a note that dies on its own; zero means it
@@ -682,28 +754,62 @@ function play(
      floor under it — which is how the three voices that existed before this
      was data were written, and these are their numbers unchanged. */
   const fall = voice.decay > 0
-    ? voice.decay
-    : Math.max(voice.decayFloor ?? 0.2, length);
+    ? voice.decay * tweak.length
+    : Math.max((voice.decayFloor ?? 0.2) * tweak.length, length);
+
+  /* Each harmonic's amount, after the two things that shape it: the body it
+     sings through, and the brightness dial. Worked out once per note rather
+     than per sample. At the middle of the dial and with no body these are
+     the row's own numbers. */
+  const amounts = voice.partials.map((amount, k) => {
+    if (amount === 0) return 0;
+    const at = hz * (k + 1);
+    const ring = (voice.body ?? []).reduce(
+      (more, peak) => more + peak.gain * Math.exp(-(((at - peak.hz) / peak.width) ** 2)),
+      0,
+    );
+    return amount * (1 + ring) * (tweak.bright ? (k + 1) ** (tweak.bright * 0.8) : 1);
+  });
+  /* The wobble: the instrument's own, scaled by the dial — and a little of
+     one for an instrument that has none, when the dial is turned past 1. */
+  const wobble = voice.vibrato
+    ? { ...voice.vibrato, depth: voice.vibrato.depth * tweak.vibrato }
+    : tweak.vibrato > 1
+      ? { rate: 5.4, depth: 0.12 * (tweak.vibrato - 1), after: 0.25 }
+      : null;
 
   /* Normalised, so an instrument with eight harmonics is not eight times as
      loud as one with two. Without this, adding a richer voice to the list
      would quietly make it the loudest thing in the room — and a part that
      clips is a part somebody blames the recording for. */
-  const weight = voice.partials.reduce((all, one) => all + Math.abs(one), 0)
+  const weight = amounts.reduce((all, one) => all + Math.abs(one), 0)
     * (1 + (voice.detune?.level ?? 0));
   const level = weight > 0 ? 1 / weight : 1;
 
+  /* The phase, carried sample to sample when the pitch wobbles: a pitch
+     that moves cannot be written as sin(2πft), because f is not one number. */
+  let phase = 0;
   for (let i = 0; i < n; i += 1) {
     const t = i / rate;
-    const env = shaped(t, length, voice.attack, voice.release);
+    const env = shaped(t, length, attack, release);
 
     /* The harmonics, summed. Index zero is the fundamental, so harmonic
        `k + 1` is at `(k + 1) × hz`. */
     let value = 0;
-    for (let k = 0; k < voice.partials.length; k += 1) {
-      const amount = voice.partials[k];
-      if (amount === 0) continue;
-      value += amount * Math.sin(2 * Math.PI * hz * (k + 1) * t);
+    if (wobble && wobble.depth > 0) {
+      const into = Math.min(1, t / Math.max(0.01, wobble.after));
+      const bend = 2 ** ((wobble.depth * into * Math.sin(2 * Math.PI * wobble.rate * t)) / 12);
+      phase += (2 * Math.PI * hz * bend) / rate;
+      for (let k = 0; k < amounts.length; k += 1) {
+        if (amounts[k] === 0) continue;
+        value += amounts[k] * Math.sin(phase * (k + 1));
+      }
+    } else {
+      for (let k = 0; k < amounts.length; k += 1) {
+        const amount = amounts[k];
+        if (amount === 0) continue;
+        value += amount * Math.sin(2 * Math.PI * hz * (k + 1) * t);
+      }
     }
 
     /* The twin a little out of tune. One copy of the fundamental is enough
@@ -727,6 +833,39 @@ function play(
 }
 
 /**
+ * A room around the part: four echoes that feed back, smeared by two
+ * all-passes — the plainest reverb there is, and enough to put a dry
+ * instrument somewhere. Done in place; `amount` 0 to 1 is how much.
+ */
+function roomAround(out: Float32Array, rate: number, amount: number): void {
+  const combs = [0.0297, 0.0371, 0.0411, 0.0437].map((s) => ({
+    line: new Float32Array(Math.max(1, Math.round(s * rate))), at: 0,
+  }));
+  const passes = [0.005, 0.0017].map((s) => ({ line: new Float32Array(Math.max(1, Math.round(s * rate))), at: 0 }));
+  const feed = 0.72 + amount * 0.12;
+  const wet = amount * 0.38;
+  for (let i = 0; i < out.length; i += 1) {
+    const dry = out[i];
+    let sum = 0;
+    for (const comb of combs) {
+      const back = comb.line[comb.at];
+      comb.line[comb.at] = dry + back * feed;
+      comb.at = (comb.at + 1) % comb.line.length;
+      sum += back;
+    }
+    let smear = sum / combs.length;
+    for (const pass of passes) {
+      const back = pass.line[pass.at];
+      const into = smear + back * 0.5;
+      pass.line[pass.at] = into;
+      pass.at = (pass.at + 1) % pass.line.length;
+      smear = back - into * 0.5;
+    }
+    out[i] = dry * (1 - wet * 0.5) + smear * wet;
+  }
+}
+
+/**
  * The whole part, as samples.
  *
  * `seconds` is how long the result should be — normally the length of the
@@ -743,11 +882,15 @@ export function renderHum(
      which is the kind of wrong that sounds like the pitch detection failing
      rather than like a resampling bug. */
   rate: number = RATE,
+  /* How she has set it after hearing it. Left out, it is the instrument's
+     own row, exactly as before the dials. */
+  tweak: Tweak = PLAIN,
 ): Float32Array {
   const last = notes.reduce((most, one) => Math.max(most, one.to), 0);
-  const total = Math.max(seconds ?? 0, last) + 0.4;
+  const total = Math.max(seconds ?? 0, last) + 0.4 + tweak.room * 1.2;
   const out = new Float32Array(Math.max(1, Math.round(total * rate)));
-  for (const note of notes) play(out, voice, note, rate);
+  for (const note of notes) play(out, voice, note, rate, tweak);
+  if (tweak.room > 0) roomAround(out, rate, tweak.room);
 
   /* Soft clipping rather than hard, the same as `renderSketch` does: notes
      that overlap sum past 1, and a hard clip on a sine is a buzz. */

@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -96,7 +96,7 @@ import { songEngine } from '../lib/engines';
 import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
 import { downloadBlob, safeFilename } from '../lib/library';
-import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
+import { GROUPS, PLAIN, VOICES, renderHum, voiceById, type Tweak, type VoiceId } from '../lib/huminstrument';
 import AmpFace from './AmpFace';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
@@ -4309,6 +4309,90 @@ export default function ProBooth({
     ?? [...lanes].reverse().find((one) => !one.backing)
     ?? null;
 
+  /* ── Hear it first, set it, then keep it ───────────────────────────────
+
+     The owner, 21 October 2026, having hummed a line and picked the violin:
+     *"Iewers moet die opgeneemde klank, eers iewers lê om na te luister, dan
+     die instrument kies, en dan daai klank kan verstel totdat dit klink soos
+     dit moet. Daar moet ook 'n retake button wees."*
+
+     So the hum is listened to on its own, a hum that is wrong is taken
+     again, the instrument is HEARD before it becomes a lane, and the dials
+     below (`Tweak`) shape it until it is right. Only "Put it on a lane"
+     adds anything to the session. */
+  const [humTweak, setHumTweak] = useState<Tweak>(PLAIN);
+  const [humSounding, setHumSounding] = useState<'hum' | 'part' | null>(null);
+  const humVoiceRef = useRef<AudioBufferSourceNode | null>(null);
+  const hushHum = useCallback((): void => {
+    try { humVoiceRef.current?.stop(); } catch { /* already over */ }
+    humVoiceRef.current = null;
+    setHumSounding(null);
+  }, []);
+  useEffect(() => hushHum, [hushHum]);
+  const soundOut = useCallback((buffer: AudioBuffer, what: 'hum' | 'part'): void => {
+    const ctx = context();
+    if (!ctx) return;
+    hushHum();
+    const node = ctx.createBufferSource();
+    node.buffer = buffer;
+    node.connect(ctx.destination);
+    node.onended = () => { if (humVoiceRef.current === node) { humVoiceRef.current = null; setHumSounding(null); } };
+    humVoiceRef.current = node;
+    setHumSounding(what);
+    void ctx.resume?.();
+    node.start();
+  }, [context, hushHum]);
+
+  /** The hum's sound and the notes heard in it, or why there are none. */
+  const humHeard = useCallback((piece?: { audio: AudioBuffer; at: number }) => {
+    const lane = piece ? null : humLane;
+    const ctxNow = lane ? context() : null;
+    const source = piece?.audio ?? (lane && ctxNow ? playsOf(lane, ctxNow) : lane?.audio) ?? null;
+    if (!source) return null;
+    const heard = notesIn(source.getChannelData(0), source.sampleRate);
+    const notes = humSnap ? snapTo(heard, meter.bpm) : heard;
+    return { source, notes, at: piece?.at ?? lane?.at ?? 0 };
+  }, [humLane, humSnap, meter.bpm, context]);
+
+  /** The hum on its own, before anything is made of it. */
+  const listenToHum = useCallback((): void => {
+    if (humSounding === 'hum') { hushHum(); return; }
+    const ctx = context();
+    const source = humLane && ctx ? playsOf(humLane, ctx) : humLane?.audio;
+    if (source) soundOut(source, 'hum');
+  }, [humLane, humSounding, context, hushHum, soundOut]);
+
+  /** The picked instruments, played from the hum with the dials as set — heard, not kept. */
+  const hearPart = useCallback((): void => {
+    if (humSounding === 'part') { hushHum(); return; }
+    const got = humHeard();
+    const ctx = context();
+    const voices = humVoices.map((id) => voiceById(id)).filter((one): one is NonNullable<typeof one> => Boolean(one));
+    if (!got || !ctx || !voices.length) return;
+    if (!got.notes.length) {
+      setProblem(t('hum.nothing', 'Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.'));
+      return;
+    }
+    const parts = voices.map((voice) => renderHum(got.notes, voice, got.source.duration, got.source.sampleRate, humTweak));
+    const longest = parts.reduce((most, one) => Math.max(most, one.length), 0);
+    const buffer = ctx.createBuffer(1, longest, got.source.sampleRate);
+    const mix = buffer.getChannelData(0);
+    for (const part of parts) for (let i = 0; i < part.length; i += 1) mix[i] += part[i] / parts.length;
+    soundOut(buffer, 'part');
+  }, [humSounding, humHeard, humVoices, humTweak, context, hushHum, soundOut, t]);
+
+  /** Take the hum again: the one that was wrong goes, and the microphone opens. */
+  const retakeHum = useCallback((): void => {
+    if (!humLane || recording) return;
+    hushHum();
+    remember(t('undo.retake', 'the retake'));
+    const gone = humLane.id;
+    setLanes((was) => was.filter((one) => one.id !== gone));
+    setPicked((was) => (was === gone ? null : was));
+    setStale(true);
+    void record();
+  }, [humLane, recording, hushHum, record, remember, t]);
+
   /**
    * The hum, played as instruments — one lane per instrument picked.
    *
@@ -4317,34 +4401,31 @@ export default function ProBooth({
    * lane in the hum card, whole, as it always was.
    */
   const humIt = useCallback(async (piece?: { audio: AudioBuffer; at: number }): Promise<void> => {
-    const lane = piece ? null : humLane;
     /* What the lane PLAYS — its cut, its repeats, its amp — not the whole
-       recording under it. A hum trimmed to its good bar was played back
-       whole, starting at the lane's start, so the instrument came in with
-       the false start she had cut off and ran past the end of the clip.
-       Found on 15 October 2026. */
-    const ctxNow = lane ? context() : null;
-    const source = piece?.audio ?? (lane && ctxNow ? playsOf(lane, ctxNow) : lane?.audio) ?? null;
-    const at = piece?.at ?? lane?.at ?? 0;
+       recording under it (`humHeard`). A hum trimmed to its good bar was
+       played back whole, starting at the lane's start, so the instrument came
+       in with the false start she had cut off and ran past the end of the
+       clip. Found on 15 October 2026. */
+    const got = humHeard(piece);
     const voices = humVoices.map((id) => voiceById(id)).filter((one): one is NonNullable<typeof one> => Boolean(one));
-    if (!source || !voices.length || humming) return;
+    if (!got || !voices.length || humming) return;
+    const { source, at } = got;
+    hushHum();
     setHumming(true);
     setProblem(null);
     try {
-      const samples = source.getChannelData(0);
-      const heard = notesIn(samples, source.sampleRate);
-      if (!heard.length) {
+      if (!got.notes.length) {
         setProblem(t(
           'hum.nothing',
           'Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.',
         ));
         return;
       }
-      /* Snapped by default, and her own instinct about this feature: a
-         hummed rhythm is never quite in time and the point is to get
-         something usable rather than something faithful. The switch is there
-         because a swung or rubato part is the case where it is wrong. */
-      const notes = humSnap ? snapTo(heard, meter.bpm) : heard;
+      /* Snapped by default (in `humHeard`), and her own instinct about this
+         feature: a hummed rhythm is never quite in time and the point is to
+         get something usable rather than something faithful. The switch is
+         there because a swung or rubato part is the case where it is wrong. */
+      const { notes } = got;
       const ctx = context();
       if (!ctx) {
         setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
@@ -4356,6 +4437,9 @@ export default function ProBooth({
         voice,
         source.duration,
         source.sampleRate,
+        /* As she set it after hearing it. A part from the timeline's AI magic
+           takes the same dials: one set of dials, one sound. */
+        humTweak,
       );
       const buffer = ctx.createBuffer(1, played.length, source.sampleRate);
       /* `set` on the channel rather than `copyToChannel`: one fewer copy,
@@ -4385,7 +4469,7 @@ export default function ProBooth({
     } finally {
       setHumming(false);
     }
-  }, [humLane, humVoices, humSnap, humming, meter.bpm, context, t]);
+  }, [humHeard, humVoices, humTweak, humming, hushHum, context, t]);
   humRef.current = humIt;
 
   const stemDesk = (
@@ -4564,6 +4648,30 @@ export default function ProBooth({
                 ? `${t('hum.using', 'Will play')}: ${humLane.name}`
                 : t('hum.nothingYet', 'Nothing recorded yet. Leave a little space between the notes.')}
             </p>
+            {/* The hum, heard on its own, and taken again if it is wrong. */}
+            {humLane && !recording && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  data-humlisten
+                  onClick={listenToHum}
+                  className="fb-fx-booth-tile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border px-3 text-sm font-bold text-sky-100"
+                >
+                  {humSounding === 'hum' ? <Square className="h-4 w-4 fill-current" /> : <PlayIcon className="h-4 w-4" />}
+                  {humSounding === 'hum' ? t('hum.stopListen', 'Stop') : t('hum.listen', 'Listen to my hum')}
+                </button>
+                <button
+                  type="button"
+                  data-humretake
+                  onClick={retakeHum}
+                  disabled={busy || making}
+                  className="fb-fx-booth-tile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border px-3 text-sm font-bold text-sky-100 disabled:opacity-50"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {t('hum.retake', 'Retake')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ── 2. Pick the sound ─────────────────────────────────────────
@@ -4661,24 +4769,77 @@ export default function ProBooth({
             </span>
           </label>
 
-          {/* ── 3. Play it ──────────────────────────────────────────────── */}
+          {/* ── 3. Hear it, and set it until it sounds right ───────────────
+              The owner, 21 October 2026: *"dan die instrument kies, en dan
+              daai klank kan verstel totdat dit klink soos dit moet."* Heard
+              here, changed here, heard again — nothing is added to the song
+              until step 4. Each dial is one `Tweak` field, and in the middle
+              each one is the instrument as it comes. */}
+          <div className="space-y-2" data-humshape>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('hum.step3shape', '3 · Hear it, and shape it')}
+            </p>
+            <button
+              type="button"
+              data-humhear
+              onClick={hearPart}
+              disabled={!humLane || humming || busy || recording || making || !humVoices.length}
+              className="fb-fx-booth-tile inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold text-sky-100 disabled:opacity-50"
+            >
+              {humSounding === 'part' ? <Square className="h-4 w-4 fill-current" /> : <PlayIcon className="h-4 w-4" />}
+              {humSounding === 'part' ? t('hum.stopHear', 'Stop') : t('hum.hear', 'Hear it')}
+            </button>
+            {([
+              ['octave', t('hum.dialOctave', 'Octave'), -2, 2, 1, (v: number) => (v > 0 ? `+${v}` : `${v}`)],
+              ['bright', t('hum.dialBright', 'Darker · brighter'), -1, 1, 0.1, (v: number) => (v > 0 ? `+${Math.round(v * 10)}` : `${Math.round(v * 10)}`)],
+              ['vibrato', t('hum.dialVibrato', 'Vibrato'), 0, 3, 0.1, (v: number) => `${Math.round(v * 100)}%`],
+              ['attack', t('hum.dialAttack', 'Sharp · slow start'), 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}×`],
+              ['length', t('hum.dialLength', 'Short · long notes'), 0.5, 2, 0.05, (v: number) => `${v.toFixed(2)}×`],
+              ['room', t('hum.dialRoom', 'Room'), 0, 1, 0.05, (v: number) => `${Math.round(v * 100)}%`],
+            ] as const).map(([key, label, low, high, step, said]) => (
+              <label key={key} className="grid grid-cols-[minmax(0,7rem)_1fr_2.75rem] items-center gap-2 text-xs text-zinc-300">
+                <span className="truncate">{label}</span>
+                <input
+                  type="range"
+                  min={low}
+                  max={high}
+                  step={step}
+                  value={humTweak[key]}
+                  data-humdial={key}
+                  onChange={(event) => { const v = Number(event.target.value); setHumTweak((was) => ({ ...was, [key]: v })); }}
+                  className="h-8 w-full accent-sky-400"
+                />
+                <span className="text-right tabular-nums text-sky-200">{said(humTweak[key])}</span>
+              </label>
+            ))}
+            <button
+              type="button"
+              data-humplain
+              onClick={() => setHumTweak(PLAIN)}
+              className="text-xs font-semibold text-sky-300 underline-offset-2 hover:underline"
+            >
+              {t('hum.plain', 'Back to how it comes')}
+            </button>
+          </div>
+
+          {/* ── 4. Keep it ─────────────────────────────────────────────── */}
           <div className="space-y-1.5">
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-              {t('hum.step3', '3 · Have it played')}
+              {t('hum.step4', '4 · Put it on a lane')}
             </p>
             <button
               type="button"
               onClick={() => void humIt()}
               disabled={!humLane || humming || busy || recording || making}
               data-humgo
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+              className="fb-fx-go inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-50"
             >
-              <Mic2 className="h-4 w-4 shrink-0" />
+              <Check className="h-4 w-4 shrink-0" />
               {humming
                 ? t('hum.working', 'Listening to it\u2026')
                 : humVoices.length > 1
-                  ? `${t('hum.goMany', 'Play it as')} ${humVoices.length} ${t('hum.stems', 'stems')}`
-                  : t('hum.go', 'Play it as the instrument')}
+                  ? `${t('hum.keepMany', 'Put them on')} ${humVoices.length} ${t('hum.lanes', 'lanes')}`
+                  : t('hum.keep', 'Put it on a lane')}
             </button>
           </div>
         </div>

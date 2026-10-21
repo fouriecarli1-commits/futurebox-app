@@ -82,6 +82,8 @@ const SAME_IN_BOTH = new Set([
   'Rap', 'Reggae', 'Disco',
   /* The jam room's looper: a musician says "looper" and "pads" in Afrikaans too. */
   'Looper', 'Pads',
+  /* A singer says "vibrato" in Afrikaans too: the hum dials. */
+  'Vibrato',
   /* Borrowed whole, because that is what people actually say. */
   /* Sonar is the Afrikaans word for sonar too. */
   'Sonar',
