@@ -57,6 +57,17 @@ ok('  and says what happens to the words', /data-pairdraftnote/.test(strip));
 const collab = read('app/components/CollabRoom.tsx');
 ok('the open collab names who it is with, with their handle', /data-collabwith/.test(collab) && /room\.handle/.test(collab));
 
+/* The owner, at a lobby that said only "Someone": "Hier moet nie net sê
+   someone nie. Maar die handle naam." */
+const collabRoute = read('app/api/collab/route.ts');
+ok('a person with no name is named by their handle, not "Someone"',
+  /one\.name \|\| \(one\.handle \? `@\$\{one\.handle\}` : 'Someone'\)/.test(collabRoute));
+ok('asking somebody needs your own handle first',
+  /if \(!handle\) return[\s\S]{0,200}ownHandle\(client, caller\.id\)[\s\S]{0,40}NO_HANDLE/.test(collabRoute));
+ok('  and so does saying yes', /answer === 'accepted' && !\(await ownHandle\(client, caller\.id\)\)/.test(collabRoute));
+ok('the room asks for a handle before it matters', /myHandle === '' && <HandleFirst/.test(collab));
+ok('  and says plainly when the other person has none', (collab.match(/collab\.noHandle/g) ?? []).length >= 4);
+
 const sql = read('supabase/pairs.sql');
 ok('the draft is a column the table can hold', /add column if not exists draft jsonb/.test(sql) && /add column if not exists draft_at/.test(sql));
 

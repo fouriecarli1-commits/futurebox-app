@@ -139,7 +139,7 @@ export async function GET(request: Request): Promise<Response> {
       return {
         id: row.id,
         surface: row.surface,
-        withName: who?.name || 'someone',
+        withName: who?.name || (who?.handle ? `@${who.handle}` : 'someone'),
         withHandle: who?.handle || '',
         mine: row.pen === caller.id,
         wanted: Boolean(row.pen_wanted) && row.pen_wanted !== caller.id,
@@ -229,7 +229,7 @@ export async function POST(request: Request): Promise<Response> {
       pair: {
         id: row.id,
         surface: row.surface,
-        withName: who?.name || 'someone',
+        withName: who?.name || (who?.handle ? `@${who.handle}` : 'someone'),
         withHandle: who?.handle || '',
         mine: row.pen === caller.id,
         wanted: Boolean(row.pen_wanted) && row.pen_wanted !== caller.id,

@@ -21,7 +21,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Handshake, Loader2, Mic, Music, Send, X } from 'lucide-react';
-import { answer, ask, COLLAB_CHANGED, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
+import { answer, ask, chooseHandle, COLLAB_CHANGED, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
 import { openPair, type Pair } from '../lib/pairs';
 import type { SurfaceId } from '../lib/surfaces';
 import { loadTracks, type Track } from '../lib/library';
@@ -122,6 +122,8 @@ export default function CollabRoom({
   /** Null until asked; false when the tables are missing rather than empty. */
   const [ready, setReady] = useState<boolean | null>(null);
   const [why, setWhy] = useState<string | null>(null);
+  /** Your own handle: '' when you have none yet, null until read. */
+  const [myHandle, setMyHandle] = useState<string | null>(null);
 
   /* A room being opened opens the card it lives in. "Enter the room" from
      the lobby used to land on "Working together" folded shut — every card
@@ -144,6 +146,7 @@ export default function CollabRoom({
     void loadThreads().then((next) => {
       setThreads(next.threads);
       setReady(next.ready);
+      setMyHandle(next.myHandle ?? null);
       setWhy(next.message ?? null);
       setLoaded(true);
     });
@@ -327,6 +330,12 @@ export default function CollabRoom({
   const showRoom = view !== 'lobby';
   return (
     <div className="space-y-4" data-collabview={view}>
+      {/* ── Your handle, before anything else ──────────────────────────
+          The owner, 21 October 2026, at a lobby that said only "Someone":
+          "Hier moet nie net sê someone nie. Maar die handle naam." The
+          other person sees you by your @handle, so the room asks for one
+          first — and the server will not send or accept a request without. */}
+      {myHandle === '' && <HandleFirst onSaved={refresh} />}
       {/* ── What this is for ─────────────────────────────────────────────
           Asked for, and worth the space: a Handshake icon and an empty list
           do not tell anybody what collaborating here actually means, and
@@ -358,7 +367,7 @@ export default function CollabRoom({
           {waiting.map((one) => (
             <div key={one.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
               <p className="text-sm font-semibold text-zinc-100">
-                {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
+                {one.name === 'Someone' ? t('collab.someone', 'Someone') : one.name} {one.handle ? <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span> : <span className="font-normal text-zinc-500">{t('collab.noHandle', '(no @handle yet)')}</span>}
               </p>
               {one.because && <p className="text-sm text-zinc-400 leading-snug">{one.because}</p>}
               {gone && <p className="text-sm text-amber-400 leading-snug">{gone}</p>}
@@ -411,7 +420,7 @@ export default function CollabRoom({
                 className="w-full rounded-xl border border-white/10 bg-zinc-950/60 p-3 text-left hover:border-emerald-500/60 transition"
               >
                 <span className="block text-sm font-bold text-white truncate">
-                  {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
+                  {one.name === 'Someone' ? t('collab.someone', 'Someone') : one.name} {one.handle ? <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span> : <span className="font-normal text-zinc-500">{t('collab.noHandle', '(no @handle yet)')}</span>}
                 </span>
                 <span className="mt-1.5 inline-flex min-h-[36px] items-center rounded-lg bg-emerald-500 px-3 text-xs font-extrabold text-onAccent">
                   {t('collab.enterRoom', 'Enter the room')}
@@ -450,7 +459,7 @@ export default function CollabRoom({
                     : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
+                {one.name === 'Someone' ? t('collab.someone', 'Someone') : one.name} {one.handle ? <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span> : <span className="font-normal text-zinc-500">{t('collab.noHandle', '(no @handle yet)')}</span>}
               </button>
             ))}
           </div>
@@ -605,7 +614,7 @@ export default function CollabRoom({
           <p className="text-sm font-bold text-white">{t('collab.sent', 'Asked, waiting')}</p>
           {sent.map((one) => (
             <p key={one.id} className="text-sm text-zinc-500">
-              {one.name} <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span>
+              {one.name === 'Someone' ? t('collab.someone', 'Someone') : one.name} {one.handle ? <span data-collabhandle className="font-normal text-sky-300">{one.handle}</span> : <span className="font-normal text-zinc-500">{t('collab.noHandle', '(no @handle yet)')}</span>}
             </p>
           ))}
         </div>
@@ -725,5 +734,67 @@ export function AskToCollab({
       </button>
       {note && <span className="text-sm text-zinc-500">{note}</span>}
     </span>
+  );
+}
+
+/**
+ * Choose a name and @handle, for an account that has neither yet.
+ *
+ * Saved through the same route as the channel's own form, so the handle is
+ * checked for reserved names and for being taken in one place.
+ */
+function HandleFirst({ onSaved }: { readonly onSaved: () => void }): React.ReactElement {
+  const { t } = useLang();
+  const [name, setName] = useState('');
+  const [handle, setHandle] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState('');
+  const clean = handle.trim().replace(/^@/, '').toLowerCase();
+  return (
+    <div data-handlefirst className="rounded-2xl border border-sky-500/40 bg-sky-500/[0.06] p-4 space-y-3">
+      <p className="text-base font-bold text-white">{t('collab.handleFirst', 'Choose your @handle first')}</p>
+      <p className="text-sm text-zinc-300 leading-snug">
+        {t('collab.handleWhy', 'The person you work with sees you by it. Without one they only see "Someone".')}
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          maxLength={80}
+          placeholder={t('collab.handleName', 'Your name, or your artist name')}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-white placeholder:text-zinc-500"
+        />
+        <label className="flex min-h-[44px] items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-3">
+          <span className="text-sky-300">@</span>
+          <input
+            data-handlefirstinput
+            value={handle}
+            onChange={(event) => setHandle(event.target.value.replace(/\s/g, ''))}
+            maxLength={30}
+            placeholder="beatmaker99"
+            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-hidden placeholder:text-zinc-500"
+          />
+        </label>
+      </div>
+      <button
+        type="button"
+        data-handlefirstsave
+        disabled={busy || clean.length < 3}
+        onClick={() => {
+          setBusy(true);
+          setProblem('');
+          void chooseHandle(name.trim() || clean, clean).then((said) => {
+            setBusy(false);
+            if (said) setProblem(said);
+            else onSaved();
+          });
+        }}
+        className="fb-fx-go inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-50"
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+        {t('collab.handleSave', 'Keep this handle')}
+      </button>
+      {problem && <p className="text-sm text-amber-300">{problem}</p>}
+    </div>
   );
 }

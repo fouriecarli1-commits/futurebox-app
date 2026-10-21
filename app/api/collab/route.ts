@@ -47,10 +47,30 @@ async function namesFor(
   return new Map(
     ((data ?? []) as Array<{ owner: string; name: string; handle: string | null }>).map((one) => [
       one.owner,
-      { name: one.name || 'Someone', handle: one.handle ? `@${one.handle}` : '' },
+      /* With no name, the handle is the name — "Someone" only for an
+         account that has neither (the owner, 21 October 2026: "Hier moet
+         nie net sê someone nie. Maar die handle naam"). */
+      { name: one.name || (one.handle ? `@${one.handle}` : 'Someone'), handle: one.handle ? `@${one.handle}` : '' },
     ]),
   );
 }
+
+/**
+ * The caller's own @handle, or '' when they have none.
+ *
+ * Asking somebody, or saying yes to them, needs one: the other person's
+ * screen shows who you are by it, and an account without a channel reached
+ * them as "Someone" with nothing else to go on.
+ */
+async function ownHandle(client: NonNullable<ReturnType<typeof admin>>, owner: string): Promise<string> {
+  const { data } = await client.from('creators').select('handle').eq('owner', owner).maybeSingle();
+  return (data as { handle?: string | null } | null)?.handle ?? '';
+}
+
+const NO_HANDLE = {
+  code: 'no_handle',
+  message: 'Choose your own @handle first — it is how the other person sees who you are. It is at the top of this page.',
+};
 
 
 export async function GET(request: Request): Promise<Response> {
@@ -89,11 +109,14 @@ export async function GET(request: Request): Promise<Response> {
   const rows = (data ?? []) as Row[];
 
   const others = rows.map((row) => (row.asked_by === caller.id ? row.asked_of : row.asked_by));
-  const names = await namesFor(client, Array.from(new Set(others)));
+  const names = await namesFor(client, Array.from(new Set([...others, caller.id])));
 
   return Response.json({
     signedIn: true,
     ready: true,
+    /* Whether you have a handle yet, so the room can ask for one before it
+       matters rather than after somebody has seen "Someone". */
+    myHandle: names.get(caller.id)?.handle ?? '',
     threads: rows.map((row) => {
       const other = row.asked_by === caller.id ? row.asked_of : row.asked_by;
       const who = names.get(other);
@@ -127,6 +150,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const handle = String(body.handle ?? '').replace(/^@/, '').trim().toLowerCase();
   if (!handle) return Response.json({ message: 'Who did you want to ask?' }, { status: 400 });
+  if (!(await ownHandle(client, caller.id))) return Response.json(NO_HANDLE, { status: 409 });
 
   const { data: them } = await client
     .from('creators')
@@ -217,6 +241,9 @@ export async function PATCH(request: Request): Promise<Response> {
   const answer = String(body.answer ?? '');
   if (!id || (answer !== 'accepted' && answer !== 'declined')) {
     return Response.json({ message: 'Accept it or decline it.' }, { status: 400 });
+  }
+  if (answer === 'accepted' && !(await ownHandle(client, caller.id))) {
+    return Response.json(NO_HANDLE, { status: 409 });
   }
 
   // `asked_of` is the whole check. Without it anybody holding a thread id

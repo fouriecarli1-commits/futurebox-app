@@ -61,6 +61,8 @@ export interface Threads {
    */
   readonly ready: boolean;
   readonly message?: string;
+  /** Your own @handle, or '' when you have not chosen one yet. Absent when it could not be read. */
+  readonly myHandle?: string;
 }
 
 export async function loadThreads(): Promise<Threads> {
@@ -73,12 +75,13 @@ export async function loadThreads(): Promise<Threads> {
   // this reads as not-ready rather than as empty.
   if (!response?.ok) return { threads: [], ready: false };
   const data = (await response.json().catch(() => null)) as
-    | { threads?: Thread[]; ready?: boolean; message?: string }
+    | { threads?: Thread[]; ready?: boolean; message?: string; myHandle?: string }
     | null;
   return {
     threads: data?.threads ?? [],
     ready: data?.ready !== false,
     ...(data?.message ? { message: data.message } : {}),
+    ...(typeof data?.myHandle === 'string' ? { myHandle: data.myHandle } : {}),
   };
 }
 
@@ -234,4 +237,25 @@ export async function redeemInvite(token: string): Promise<{ code: Redeemed; fro
     code: known.includes(code as Redeemed) ? (code as Redeemed) : 'off',
     from: said?.from ?? '',
   };
+}
+
+/**
+ * Choose your @handle (and the name beside it) from the collab room.
+ *
+ * Only for an account with no channel yet — the channel's own form is where
+ * a handle is changed afterwards, and it saves the rest of the row with it.
+ */
+export async function chooseHandle(name: string, handle: string): Promise<string | null> {
+  const response = await fetch('/api/creator', {
+    method: 'POST',
+    headers: await head(),
+    body: JSON.stringify({ name, handle }),
+  }).catch(() => null);
+  if (!response) return 'Could not reach the app.';
+  if (response.ok) {
+    changed();
+    return null;
+  }
+  const data = (await response.json().catch(() => ({}))) as { message?: string };
+  return data.message ?? 'That could not be saved.';
 }
