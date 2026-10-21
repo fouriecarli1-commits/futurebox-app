@@ -151,6 +151,23 @@ ok('the post export writes nothing into the covers bucket',
   'it charges a credit and the browser saves the picture; a post that lands '
     + 'in storage beside a song is a cover by another name');
 
+/* ── A bought piece carries its artist, on the picture ──────────────────
+   The owner, 21 October 2026: *"die artist van die art is nie op die album
+   art nie. Dit is deel van die ooreenkoms."* The credit is drawn by the one
+   component every sleeve goes through, and every screen that shows a bought
+   sleeve hands it the credit. */
+const cover = read(join('app', 'components', 'Cover.tsx'));
+ok('a bought sleeve is drawn with its title and artist on it',
+  /export function ArtTag/.test(cover) && /\{shown && <ArtTag credit=\{credit\} \/>\}/.test(cover));
+for (const [file, sign] of [
+  ['Channel.tsx', /credit=\{track\.art\}/],
+  ['LiveChannel.tsx', /credit=\{post\.kind === 'track' \? post\.art : null\}/],
+  ['RoomScreen.tsx', /<ArtTag credit=\{one\.art\} \/>/],
+  ['SongScreen.tsx', /<ArtTag credit=\{one\.art\} \/>/],
+] as const) {
+  ok(`  and ${file} hands it the credit`, sign.test(read(join('app', 'components', file))));
+}
+
 if (bad) {
   console.error(`\ncheck:ownart — ${bad} assertion(s) failed. A cover is generated or bought.`);
   process.exit(1);

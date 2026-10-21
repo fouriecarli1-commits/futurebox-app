@@ -298,6 +298,7 @@ function RoomPanel({
           seed={post.sourceId || post.id}
           label={post.title}
           photo={post.cover}
+          credit={post.kind === 'track' ? post.art : null}
           className="h-full w-full"
         />
       </button>
@@ -1321,6 +1322,8 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
                nie daar binne ook die genre van die liedjie nie, net buite
                die play room."* */
             cover: one.cover,
+            /* The bought piece's credit, drawn on the sleeve in the room too. */
+            art: one.kind === 'track' ? one.art : null,
             genre: one.genre,
             words: one.words,
             hearts: one.hearts,

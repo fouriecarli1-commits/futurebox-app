@@ -877,6 +877,7 @@ export default function Channel({
                     seed={track.id}
                     label={track.title}
                     photo={sleeves[track.id]}
+                    credit={track.art}
                     className="aspect-video"
                   />
                 )}

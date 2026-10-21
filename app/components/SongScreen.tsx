@@ -53,7 +53,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, Quote, X } from 'lucide-react';
-import Cover from './Cover';
+import Cover, { ArtTag } from './Cover';
 import { readAudio } from '../lib/trackaudio';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { evenly, timeFor, type Timing } from '../lib/lyrictime';
@@ -303,6 +303,8 @@ export default function SongScreen({
                   a scrim that fades out behind them is a scrim that does nothing
                   where it is needed. */}
               <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.45)_45%,rgba(0,0,0,0.88))]" />
+              {/* The bought piece's credit, over the shade so it reads. */}
+              {sleeves[one.id] && <ArtTag credit={one.art} />}
 
               {/* Tap anywhere to stop and start. The whole panel, because a
                   small button is the wrong target on a screen somebody is

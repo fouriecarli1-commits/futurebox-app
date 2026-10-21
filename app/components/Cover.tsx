@@ -23,6 +23,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { creditLine, type ArtCredit } from '../lib/artcredit';
 
 /** The video id out of any of the shapes a YouTube link comes in. */
 export function youtubeId(url: string | undefined): string | null {
@@ -135,13 +136,57 @@ function Drawn({ seed, label }: { seed: string; label: string }): React.ReactEle
   );
 }
 
+/**
+ * The bought piece's credit, on the piece: its title and its artist.
+ *
+ * The owner, 21 October 2026: *"die artist van die art is nie op die album art
+ * nie. Dit is deel van die ooreenkoms. ons moet die artist se naam en die
+ * album art se naam ook op sit met gekoopte art … so gesit dat dit nie die
+ * woorde cover wat nou op die prent wys nie."*
+ *
+ * So it lives on the picture wherever the picture goes, not in a caption
+ * somebody can scroll past — and where a photograph's credit has always
+ * lived: a slim line up the left edge, reading upwards. A sleeve's own
+ * lettering sits in the middle, at the top or along the bottom, and the
+ * screens' buttons sit on the right; the left edge is the one place that
+ * covers none of it. Nothing at all when there is no bought piece: a made
+ * cover is nobody's work to sign.
+ */
+export function ArtTag({ credit }: { readonly credit?: ArtCredit | null }): React.ReactElement | null {
+  const line = creditLine(credit);
+  if (!line || !credit) return null;
+  return (
+    <p
+      data-arttag
+      aria-label={`Cover art: ${line}`}
+      className="pointer-events-none absolute left-1.5 top-1/2 z-[5] max-h-[78%] overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-1 py-2.5 text-[9px] font-bold uppercase leading-none tracking-[0.18em]"
+      style={{
+        writingMode: 'vertical-rl',
+        transform: 'translateY(-50%) rotate(180deg)',
+        color: 'rgba(255,255,255,0.9)',
+        background: 'rgba(0,0,0,0.4)',
+        textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+      }}
+    >
+      Art · “{credit.title}” · {credit.by}
+    </p>
+  );
+}
+
 export default function Cover({
   seed,
   label,
   url,
   photo,
+  credit,
   className = '',
 }: {
+  /**
+   * Who made the sleeve, when it is a bought piece. Drawn on the picture
+   * by `ArtTag`, and only over the photograph itself — never over the
+   * drawing it falls back to.
+   */
+  credit?: ArtCredit | null;
   /** What the artwork is derived from — an id, or the title. */
   seed: string;
   /** Read out by a screen reader in place of the picture. */
@@ -208,6 +253,7 @@ export default function Cover({
       ) : (
         <Drawn seed={seed} label={label} />
       )}
+      {shown && <ArtTag credit={credit} />}
     </div>
   );
 }

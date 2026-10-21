@@ -44,7 +44,8 @@ import { countWhenPlayed } from '../lib/played';
 import { lineAt, timelineOf, type Part } from '../lib/timeline';
 import { linesFromParts } from '../lib/livetimed';
 import { Swept } from './SungWords';
-import Cover from './Cover';
+import Cover, { ArtTag } from './Cover';
+import type { ArtCredit } from '../lib/artcredit';
 import { lightDelay } from '../lib/livelight';
 import { ReportFlag } from './ReportSheet';
 
@@ -56,6 +57,8 @@ const GLASS = 'rgba(0,0,0,0.55)';
 
 export interface RoomPost {
   readonly id: string;
+  /** Who made the sleeve, when it is a bought piece — drawn on it (`ArtTag`). */
+  readonly art?: ArtCredit | null;
   readonly title: string;
   readonly by: string;
   /** Somebody else's: their key for reporting and blocking. Absent on your own. */
@@ -656,6 +659,8 @@ export default function RoomScreen({
             {/* Light through the picture: a haze that breathes while the song
                 plays, and a beam that crosses it now and then. Over a sleeve
                 only — a film brings its own picture and its own light. */}
+            {/* Over the shade rather than under it, so it reads like the rest. */}
+            {!one.video && one.cover && <ArtTag credit={one.art} />}
             {!one.video && (
               <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="fb-live-aurora" />
