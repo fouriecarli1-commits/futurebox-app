@@ -30,7 +30,7 @@
  * designed, placed and explained to members who will never need it.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { accessToken } from '../lib/cloud';
 
 export default function GoogleSetup(): React.ReactElement {
@@ -99,6 +99,53 @@ export default function GoogleSetup(): React.ReactElement {
     }
   }, []);
 
+  /* ── The backup voice, heard on purpose ─────────────────────────────
+
+     The owner, 21 October 2026: *"Ja, bou die toets knoppie vir die
+     rugsteunstem."* Google reads aloud only when ElevenLabs cannot, so this is
+     the one place to hear it before a member does — and to see whether the
+     backup listener writes the same words back down. */
+  const [line, setLine] = useState('Goeiemôre! Hier is jou nuwe liedjie, vars uit die ateljee. Luister mooi, en sê vir ons wat jy dink.');
+  const [lineLang, setLineLang] = useState<'af' | 'en'>('af');
+  const [lineVoice, setLineVoice] = useState('Kore');
+  const [heard, setHeard] = useState<{ url: string; model: string; heard: string | null; problem?: string } | null>(null);
+  const [hearing, setHearing] = useState(false);
+  const [lineProblem, setLineProblem] = useState('');
+  const urlRef = useRef('');
+  useEffect(() => () => { if (urlRef.current) URL.revokeObjectURL(urlRef.current); }, []);
+
+  const readLine = useCallback(async () => {
+    setHearing(true);
+    setLineProblem('');
+    try {
+      const token = await accessToken();
+      if (!token) {
+        setLineProblem('Not signed in. Sign in on the main site first, then come back.');
+        return;
+      }
+      const answer = await fetch('/api/google/voicetest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text: line, language: lineLang, voice: lineVoice }),
+      });
+      const raw = await answer.text();
+      let said: { audio?: string; type?: string; model?: string; heard?: string | null; heardProblem?: string; message?: string } = {};
+      try { said = JSON.parse(raw) as typeof said; } catch { /* a bare "no" is the owner gate */ }
+      if (!answer.ok || !said.audio) {
+        setLineProblem(said.message ?? `${answer.status}: ${raw.slice(0, 300)}`);
+        return;
+      }
+      const bytes = Uint8Array.from(atob(said.audio), (one) => one.charCodeAt(0));
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = URL.createObjectURL(new Blob([bytes], { type: said.type ?? 'audio/wav' }));
+      setHeard({ url: urlRef.current, model: said.model ?? '', heard: said.heard ?? null, problem: said.heardProblem });
+    } catch (why) {
+      setLineProblem(`Could not ask: ${String(why)}`);
+    } finally {
+      setHearing(false);
+    }
+  }, [line, lineLang, lineVoice]);
+
   return (
     <main className="mx-auto max-w-2xl p-6 space-y-4">
       <h1 className="text-xl font-bold">Google: what is actually there</h1>
@@ -137,8 +184,67 @@ export default function GoogleSetup(): React.ReactElement {
           pressed a button that says the price, and making her then edit an
           address would be the network tab all over again. */}
       <h2 className="pt-4 text-sm font-bold uppercase tracking-[0.12em] text-zinc-400">
-        These two spend money
+        These spend money
       </h2>
+
+      <section data-backupvoice className="space-y-3 rounded-xl border border-zinc-800 p-4">
+        <p className="text-sm leading-relaxed text-zinc-400">
+          <strong className="text-zinc-200">The backup voice.</strong>{' '}
+          When the usual voice service is busy, Google reads aloud instead. Hear
+          it here first: it reads your line, then writes down what it heard, so
+          you can judge both. Afrikaans especially — listen before members do.
+        </p>
+        <textarea
+          data-backupline
+          value={line}
+          onChange={(e) => setLine(e.target.value.slice(0, 400))}
+          rows={3}
+          className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-sm text-zinc-100"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            data-backuplang
+            value={lineLang}
+            onChange={(e) => setLineLang(e.target.value === 'en' ? 'en' : 'af')}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+          >
+            <option value="af">Afrikaans</option>
+            <option value="en">English</option>
+          </select>
+          <select
+            data-backupvoicepick
+            value={lineVoice}
+            onChange={(e) => setLineVoice(e.target.value)}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+          >
+            <option value="Kore">Kore · woman</option>
+            <option value="Aoede">Aoede · woman</option>
+            <option value="Charon">Charon · man</option>
+            <option value="Puck">Puck · man</option>
+          </select>
+          <span className="text-xs text-zinc-500">{line.length} / 400</span>
+        </div>
+        <button
+          type="button"
+          data-backupread
+          onClick={() => void readLine()}
+          disabled={hearing || !line.trim()}
+          className="min-h-[48px] rounded-xl border border-amber-500/60 px-4 font-bold text-amber-200 disabled:opacity-50"
+        >
+          {hearing ? 'Reading and listening…' : 'Read it with the backup voice · under 10c'}
+        </button>
+        {lineProblem && <p data-backupproblem className="text-sm text-rose-400">{lineProblem}</p>}
+        {heard && (
+          <div data-backupheard className="space-y-2">
+            <audio controls autoPlay src={heard.url} className="w-full" />
+            <p className="text-xs text-zinc-500">Read by {heard.model}.</p>
+            <p className="text-sm leading-relaxed text-zinc-300">
+              <strong className="text-zinc-200">Google heard:</strong>{' '}
+              {heard.heard ?? `nothing it could write down${heard.problem ? ` (${heard.problem})` : ''}.`}
+            </p>
+          </div>
+        )}
+      </section>
 
       <p className="text-sm leading-relaxed text-zinc-400">
         <strong className="text-zinc-200">Which text is the lyrics.</strong>{' '}

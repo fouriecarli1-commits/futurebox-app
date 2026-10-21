@@ -70,6 +70,9 @@ export const SPEECH_ORDER: readonly string[] = [
 
 const speechGone = new Set<string>();
 
+/** The Google voices a stock voice can be answered by — and the ones the owner's test page offers. */
+export const BACKUP_VOICES: readonly string[] = ['Kore', 'Aoede', 'Charon', 'Puck'];
+
 /**
  * Google's voice for one of ElevenLabs' stock voices.
  *

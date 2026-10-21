@@ -145,6 +145,25 @@ heard = await hear();
 const theirs = (await heard.json()) as { engine?: string; text?: string };
 ok('a healthy ElevenLabs transcribes, and Google is not asked', heard.status === 200 && theirs.engine !== 'backup' && theirs.text === 'theirs' && askedGoogle === 0);
 
+/* ── The owner's test button: /google → /api/google/voicetest ─────────── */
+
+process.env.POST_SECRET = 'a-test-secret';
+const { POST: testRoute } = await import('../app/api/google/voicetest/route.ts');
+const test = (text: string, secret = 'a-test-secret') => testRoute(new Request('http://localhost/api/google/voicetest', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${secret}` },
+  body: JSON.stringify({ text, language: 'af', voice: 'Charon' }),
+}));
+
+let tested = await test('Goeiemôre, hier is jou liedjie.', 'wrong');
+ok('the test button is the owner\'s alone', tested.status === 404);
+tested = await test('Goeiemôre, hier is jou liedjie.');
+const read = (await tested.json()) as { audio?: string; voice?: string; heard?: string | null };
+ok('the owner hears the backup voice, and sees what it heard', tested.status === 200 && !!read.audio && read.voice === 'Charon' && read.heard === 'ek sing',
+  `status ${tested.status} ${JSON.stringify(read).slice(0, 120)}`);
+tested = await test('a'.repeat(401));
+ok('a test is a line, not a podcast', tested.status === 413);
+
 delete process.env.GOOGLE_VERTEX_KEY;
 eleven = 'busy';
 got = await speak();
