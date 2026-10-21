@@ -224,7 +224,10 @@ export default function Landing({
       <main className="relative z-10">
         {/* ── Hero: the pitch, and the door beside it ──────────────────── */}
         <section id="top" className={`${GUTTER} pb-16 pt-12 lg:pb-24 lg:pt-20`}>
-          <div className="mx-auto max-w-3xl">
+          {/* Wider on a computer, with the sound beside the words. The owner,
+              21 October 2026: the website on a computer must be full and full
+              of energy — at 3xl the right half of the window was empty. */}
+          <div className="mx-auto max-w-3xl lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-12">
             <div className="space-y-6 text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/60 px-3.5 py-1.5 text-xs font-semibold text-emerald-400">
                 <span className="relative flex h-2 w-2">
@@ -260,6 +263,18 @@ export default function Landing({
               </p>
             </div>
 
+            {/* The live sound, drawn rather than loaded: bars that never stop
+                inside two rings in orbit. A computer only. */}
+            <div aria-hidden className="pointer-events-none relative hidden h-[360px] items-center justify-center lg:flex">
+              <span className="fb-desk-orbit h-[340px] w-[340px]" />
+              <span className="fb-desk-orbit h-[250px] w-[250px] [animation-direction:reverse] [animation-duration:12s]" />
+              <span className="fb-desk-orbit h-[160px] w-[160px] [animation-duration:8s]" />
+              <span className="fb-desk-eq relative h-[150px]">
+                {[0.1, 0.55, 0.3, 0.85, 0.2, 0.65, 0.4, 0.95, 0.15, 0.5, 0.75, 0.25, 0.6].map((delay, i) => (
+                  <i key={i} style={{ animationDelay: `-${delay}s`, animationDuration: `${0.75 + (i % 5) * 0.18}s` }} />
+                ))}
+              </span>
+            </div>
           </div>
         </section>
 
