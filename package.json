@@ -324,6 +324,7 @@
     "play:shots": "node audit/storeshots.mjs",
     "check:playwalk": "node audit/playbilling.mjs",
     "check:widetablet": "node audit/wide.mjs 3092 1024",
+    "check:copilotsheet": "node audit/copilotsheet.mjs",
     "check:taalbladsye": "node audit/taalbladsye.mjs",
     "check:titled": "tsx scripts/check-titled.mts",
     "check:taalvas": "tsx scripts/check-taalvas.mts",

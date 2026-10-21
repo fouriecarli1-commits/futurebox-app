@@ -2020,6 +2020,49 @@ export default function FutureBoxHome() {
     || (studioTab === 'canvas' && !canvasAdvanced)
     || studioTab === 'photo';
 
+  /* ── The copilot as a sheet, between a phone and a desk ────────────────
+
+     Measured at 820 pixels (a tablet held upright) the rail, the room and the
+     copilot column left the room 180 pixels, and at 1024 it was 320 —
+     narrower than a phone, so ProBooth's opening sentence ran one word to a
+     line and Collab Radar's title broke in two. Between `md` and `xl` the
+     copilot is a panel that slides in over the room when it is asked for,
+     and the room has the width. From `xl` there is room for three columns
+     and it is a column again. A phone never had the problem: there it is at
+     the foot of the page.
+
+     Held per room, so a sheet left open does not follow her into the next
+     one. The `top` layout already stacks, so it keeps its column. */
+  const [copilotSheetFor, setCopilotSheetFor] = useState<string | null>(null);
+  const copilotSheet = copilotSheetFor === studioTab;
+  const sheeted = theme.layout !== 'top' && !copilotInside;
+  const openCopilot = useCallback((): boolean => {
+    if (!sheeted || typeof window === 'undefined') return false;
+    if (!window.matchMedia('(min-width: 48rem) and (max-width: 79.99rem)').matches) return false;
+    setCopilotSheetFor(studioTab);
+    return true;
+  }, [sheeted, studioTab]);
+  useEffect(() => {
+    if (!copilotSheet) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCopilotSheetFor(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [copilotSheet]);
+  /* The "Room AI Copilot" button: to the box she types into, wherever this
+     room keeps it — opening the sheet first when that is where it is. */
+  const goToCopilot = useCallback(() => {
+    const find = () => document.querySelector<HTMLElement>('[data-copilot-ask], [data-postask], [data-videoask], [data-booth-ai]');
+    const go = () => {
+      const target = find();
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if ('focus' in target && typeof target.focus === 'function') target.focus();
+    };
+    const inAside = find()?.closest('[data-copilotaside]');
+    if (inAside && openCopilot()) window.requestAnimationFrame(() => window.requestAnimationFrame(go));
+    else go();
+  }, [openCopilot]);
+
   /* ── The rooms that ARE the screen ──────────────────────────────────────
  
      A room with its own bar at the foot claims the screen (`useOwnScreen`),
@@ -4380,13 +4423,7 @@ export default function FutureBoxHome() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    const target = document.querySelector<HTMLElement>('[data-copilot-ask], [data-postask], [data-videoask], [data-booth-ai]');
-                    if (target) {
-                      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      if ('focus' in target && typeof target.focus === 'function') target.focus();
-                    }
-                  }}
+                  onClick={goToCopilot}
                   data-roomai-mobile
                   aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
                   className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs shrink-0"
@@ -4560,13 +4597,7 @@ export default function FutureBoxHome() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        const target = document.querySelector<HTMLElement>('[data-copilot-ask], [data-postask], [data-videoask], [data-booth-ai]');
-                        if (target) {
-                          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          if ('focus' in target && typeof target.focus === 'function') target.focus();
-                        }
-                      }}
+                      onClick={goToCopilot}
                       data-roomai
                       aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
                       className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500 border border-emerald-400 text-xs font-bold text-onAccent hover:brightness-110 hover:border-emerald-500/50 transition-all"
@@ -4829,7 +4860,7 @@ export default function FutureBoxHome() {
                      kamer direk spring na die heel onder kant van die kamer
                      waar copilot is."* */
                   window.setTimeout(() => {
-                    document.querySelector('[data-copilotaside]')?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+                    if (!openCopilot()) document.querySelector('[data-copilotaside]')?.scrollIntoView({ block: 'end', behavior: 'smooth' });
                   }, 700);
                 }}
                 /* A song somebody opened up, carried into Make a song. The
@@ -5205,9 +5236,25 @@ export default function FutureBoxHome() {
                    asserts they use the helper, which is a rule about the
                    page's padding and says nothing about whether anybody can
                    reach the thing they type into. */
+                <>
+                {sheeted && copilotSheet && (
+                  <button
+                    type="button"
+                    aria-label={t('common.close', 'Close')}
+                    onClick={() => setCopilotSheetFor(null)}
+                    className="hidden md:max-xl:block fixed inset-0 z-40 bg-scrim/60 backdrop-blur-[2px]"
+                  />
+                )}
                 <aside
                   data-copilotaside=""
-                  className={`pb-[var(--bar-clear)] shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
+                  data-copilotsheet={sheeted ? (copilotSheet ? 'open' : 'shut') : undefined}
+                  className={`pb-[var(--bar-clear)] shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem] ${
+                    sheeted
+                      ? copilotSheet
+                        ? 'md:max-xl:fixed md:max-xl:z-50 md:max-xl:top-4 md:max-xl:bottom-0 md:max-xl:right-4 md:max-xl:w-[min(24rem,calc(100vw-2rem))] md:max-xl:flex md:max-xl:flex-col'
+                        : 'md:max-xl:hidden'
+                      : ''
+                  }`}
                   /* Reserved through a variable rather than straight onto
                      `paddingBottom`, because the answer is different at the
                      two widths and an inline style cannot hold a media query.
@@ -5230,8 +5277,20 @@ export default function FutureBoxHome() {
                      of the check's sight. */
                   style={{ ['--bar-clear' as string]: barClearance(12) } as React.CSSProperties}
                 >
+                  {sheeted && copilotSheet && (
+                    <button
+                      type="button"
+                      data-copilotsheetclose
+                      aria-label={t('common.close', 'Close')}
+                      onClick={() => setCopilotSheetFor(null)}
+                      className="hidden md:max-xl:grid absolute top-3 right-3 z-10 h-11 w-11 place-items-center rounded-xl border border-zinc-700 bg-zinc-950/80 text-zinc-300 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                   {copilotPane}
                 </aside>
+                </>
               )}
             </div>
 

@@ -2150,7 +2150,7 @@ jobs:
           - group: rooms two
             probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk
           - group: whole
-            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview
+            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:copilotsheet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview
           - group: whole two
             probes: check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
