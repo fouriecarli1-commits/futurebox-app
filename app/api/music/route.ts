@@ -38,6 +38,7 @@ import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 import { kidsCovers } from '@/app/lib/server/kidsmode';
+import { pairMayMake } from '@/app/lib/server/pairgate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -123,6 +124,15 @@ export async function POST(request: Request): Promise<Response> {
     .join('\n');
   const allowed = await guard(request, asked, 'song', caller);
   if (!allowed.ok) return allowed.response;
+
+  /* Two people making it together: both have said yes, and the one asking
+     holds the pen. Refused before anything is charged. */
+  const together = caller && typeof body.pair === 'string' && body.pair
+    ? await pairMayMake(caller.id, body.pair)
+    : null;
+  if (together && !together.ok) {
+    return Response.json({ error: 'pair_not_agreed', message: together.message }, { status: together.status });
+  }
 
   // The key check comes *after* the refusal on purpose. What the app will not
   // make is not a function of what it happens to be configured with, and a
@@ -328,6 +338,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ message: made.message }, { status: made.status });
     }
     void noteGoogle('music', COSTS.music, CHOSEN.music, caller?.id);
+    if (together?.ok) await together.made();
     return new Response(new Uint8Array(made.audio), {
       headers: {
         'Content-Type': made.type,
@@ -453,6 +464,8 @@ export async function POST(request: Request): Promise<Response> {
   // Counted only now, after upstream said yes: a rejected request costs
   // nothing and must not spend someone's allowance.
   if (record) await record();
+  /* And the two ticks cleared: the next song needs two new yeses. */
+  if (together?.ok) await together.made();
 
   // Audio bytes, streamed straight through — no point buffering a whole song
   // in this process just to hand it on.

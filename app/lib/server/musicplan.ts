@@ -53,6 +53,11 @@ export interface Body {
    * else's trained sound just by knowing the string.
    */
   finetuneId?: string;
+  /**
+   * The pair room this song is asked for from, when two people are making it
+   * together. Both must have approved first — see `pairgate.ts`.
+   */
+  pair?: string;
 }
 
 /**

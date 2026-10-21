@@ -755,6 +755,11 @@ jobs:
       - name: The app signs in to Google with its own account when it has one
         run: npm run check:googleauth
 
+      # Two people making a song together: both approve before it is made,
+      # on the server before it charges and on the button.
+      - name: A song made together waits for both yeses
+        run: npm run check:pairapprove
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a

@@ -51,6 +51,47 @@ export interface Pair {
   readonly theirLink?: { readonly platform: string; readonly url: string; readonly shown: string };
   /** What you left for them, if anything. */
   readonly myLink?: { readonly platform: string; readonly url: string; readonly shown: string };
+  /**
+   * Whether this project can hold the two approval ticks yet
+   * (`supabase/pairs.sql`, re-run). False means the room works as before.
+   */
+  readonly approvals?: boolean;
+  /** You said yes to the song as it stands. */
+  readonly okMine?: boolean;
+  /** They said yes. */
+  readonly okTheirs?: boolean;
+}
+
+/**
+ * Can the song be made in this room, and if not, why not — in a sentence.
+ *
+ * The owner, 21 October 2026: *"Beide moet kan goedkeuring gee om uiteindelik
+ * die liedjie te generate."* The person holding the pen presses Make, and
+ * only once both have approved. `/api/music` holds the same rule.
+ */
+export function readyToMake(pair: Pair): { ready: boolean; why: string; whyKey: string } {
+  if (!pair.approvals) return { ready: true, why: '', whyKey: '' };
+  if (!pair.mine) return { ready: false, whyKey: 'pair.makeTheirTurn', why: 'It is their turn — they press Make once you have both approved.' };
+  if (!pair.okMine && !pair.okTheirs) return { ready: false, whyKey: 'pair.makeBoth', why: 'Both of you approve the song first — then it can be made.' };
+  if (!pair.okMine) return { ready: false, whyKey: 'pair.makeYou', why: 'They approved. Approve it too, and it can be made.' };
+  if (!pair.okTheirs) return { ready: false, whyKey: 'pair.makeThem', why: 'You approved. Waiting for them to approve too.' };
+  return { ready: true, why: '', whyKey: '' };
+}
+
+/** Say yes to the song as it stands, or take the yes back. */
+export async function approve(id: string, yes: boolean): Promise<string | null> {
+  try {
+    const response = await fetch('/api/pairs', {
+      method: 'POST',
+      headers: await head(),
+      body: JSON.stringify({ what: 'approve', id, yes }),
+    });
+    if (response.ok) return null;
+    const body = await response.json();
+    return body?.message ?? 'That did not go through.';
+  } catch {
+    return 'Could not reach the app’s server.';
+  }
 }
 
 export interface Pairs {

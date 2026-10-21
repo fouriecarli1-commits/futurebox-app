@@ -26,7 +26,7 @@ import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
 import CollabDesk from './components/CollabDesk';
 import PairStrip from './components/PairStrip';
-import { loadPairs, type Pair } from './lib/pairs';
+import { loadPairs, readyToMake, type Pair } from './lib/pairs';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -818,6 +818,21 @@ export default function FutureBoxHome() {
     return () => { alive = false; };
   }, [pairSignal]);
   const pairHere = pairs.find((one) => one.surface === studioTab) ?? null;
+  /* The one exception to "re-read on a signal": in a pair's song room the
+     other person's yes arrives without anybody here pressing anything, and
+     the Make button waits on it. Every fifteen seconds, only there. */
+  const pairWaits = pairHere?.surface === 'make' && pairHere.approvals === true;
+  useEffect(() => {
+    if (!pairWaits) return;
+    const every = window.setInterval(() => setPairSignal((n) => n + 1), 15_000);
+    return () => window.clearInterval(every);
+  }, [pairWaits]);
+  const makeGate = pairHere?.surface === 'make'
+    ? (() => {
+      const said = readyToMake(pairHere);
+      return { id: pairHere.id, ready: said.ready, why: said.whyKey ? t(said.whyKey, said.why) : said.why };
+    })()
+    : null;
 
   /* Where the copilot sits when the three panes stack.
 
@@ -4911,6 +4926,8 @@ export default function FutureBoxHome() {
                 setCanvas={setCanvas}
                 makeSignal={makeSignal}
                 engineReady={engineReady}
+                pairGate={makeGate}
+                onPairMade={() => setPairSignal((n) => n + 1)}
                 onMade={(track) => {
                   setMadeTrack(track);
                   setTrackCount((count) => count + 1);

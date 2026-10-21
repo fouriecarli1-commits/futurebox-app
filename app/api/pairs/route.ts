@@ -38,6 +38,11 @@ const PAIRABLE: readonly SurfaceId[] = [
 ];
 
 /** Their two ids, in the order the table stores them. */
+/** A project where the tick columns have not been added yet (`pairs.sql`, re-run). */
+const NO_COLUMN = /42703|PGRST204|column .* does not exist|could not find .* column/i;
+const missingColumn = (error: { code?: string; message?: string } | null): boolean =>
+  !!error && NO_COLUMN.test(`${error.code ?? ''} ${error.message ?? ''}`);
+
 const ordered = (one: string, two: string): [string, string] =>
   (one < two ? [one, two] : [two, one]);
 
@@ -47,11 +52,24 @@ export async function GET(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ ...NOT_SET_UP, signedIn: false });
   if (!filterSafe(caller.id)) return Response.json({ ...NOT_SET_UP, message: 'Not a caller this app made.' });
 
-  const { data: rows, error } = await client
+  /* With the two approval ticks when the columns are there; without them,
+     and saying so, when `pairs.sql` has not been re-run since they were
+     added — the rooms still open, they just cannot hold a yes yet. */
+  let approvals = true;
+  let read = await client
     .from('pairs')
-    .select('id, surface, a, b, pen, pen_at, pen_wanted')
+    .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b')
     .or(`a.eq.${caller.id},b.eq.${caller.id}`)
     .order('created_at', { ascending: false });
+  if (missingColumn(read.error)) {
+    approvals = false;
+    read = await client
+      .from('pairs')
+      .select('id, surface, a, b, pen, pen_at, pen_wanted')
+      .or(`a.eq.${caller.id},b.eq.${caller.id}`)
+      .order('created_at', { ascending: false }) as typeof read;
+  }
+  const { data: rows, error } = read;
   /* A missing table is not an empty list. The collab room learned this the
      hard way: "no collaborations yet" and "the tables were never created"
      look identical from a chair, and one of them is a feature that has been
@@ -116,6 +134,9 @@ export async function GET(request: Request): Promise<Response> {
         penAt: row.pen_at,
         theirLink: links.get(`${row.id}:${other}`),
         myLink: links.get(`${row.id}:${caller.id}`),
+        approvals,
+        okMine: approvals ? Boolean(row.a === caller.id ? row.ok_a : row.ok_b) : false,
+        okTheirs: approvals ? Boolean(row.a === caller.id ? row.ok_b : row.ok_a) : false,
       };
     }),
   });
@@ -127,7 +148,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ message: 'Sign in first.' }, { status: 401 });
   if (!filterSafe(caller.id)) return Response.json({ message: 'Not a caller this app made.' }, { status: 400 });
 
-  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string };
+  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -229,11 +250,40 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ message: 'You are not the one holding it.' }, { status: 403 });
     }
     const other = row.a === caller.id ? row.b : row.a;
-    const { error: giveError } = await client
+    /* The ticks go with the turn: what they approved is about to change in
+       somebody else's hands, so a yes given before is not a yes to that. */
+    const handOver = { pen: other, pen_at: new Date().toISOString(), pen_wanted: null };
+    let { error: giveError } = await client
       .from('pairs')
-      .update({ pen: other, pen_at: new Date().toISOString(), pen_wanted: null })
+      .update({ ...handOver, ok_a: false, ok_b: false })
       .eq('id', id);
+    if (missingColumn(giveError)) {
+      ({ error: giveError } = await client.from('pairs').update(handOver).eq('id', id));
+    }
     if (giveError) return Response.json(NOT_SET_UP, { status: 503 });
+    return Response.json({ ok: true });
+  }
+
+  /* ── A yes to the song as it stands, or taking it back ──────────────── */
+  if (body.what === 'approve') {
+    const id = String(body.id ?? '').trim();
+    if (!filterSafe(id)) return Response.json({ message: 'Which room?' }, { status: 400 });
+    const { data: row, error } = await client
+      .from('pairs').select('id, a, b').eq('id', id).maybeSingle();
+    if (error) return Response.json(NOT_SET_UP, { status: 503 });
+    if (!row || (row.a !== caller.id && row.b !== caller.id)) {
+      return Response.json({ message: 'That room is not yours.' }, { status: 403 });
+    }
+    const field = row.a === caller.id ? 'ok_a' : 'ok_b';
+    const { error: approveError } = await client
+      .from('pairs').update({ [field]: body.yes !== false }).eq('id', id);
+    if (missingColumn(approveError)) {
+      return Response.json(
+        { message: 'Approving together is not switched on yet — supabase/pairs.sql needs to be run again.' },
+        { status: 503 },
+      );
+    }
+    if (approveError) return Response.json(NOT_SET_UP, { status: 503 });
     return Response.json({ ok: true });
   }
 

@@ -107,6 +107,8 @@ export default function MakeMusic({
   onBrowseArt,
   engineReady,
   copilot,
+  pairGate = null,
+  onPairMade,
 }: {
   userPlan: Plan;
   /** The copilot pane, drawn inside the song box on Easy. */
@@ -153,6 +155,14 @@ export default function MakeMusic({
   /** The album art market, to buy a cover from a real artist. */
   onBrowseArt?: () => void;
   engineReady: boolean;
+  /**
+   * When the song is made by two people in a pair room: whether both have
+   * approved it yet, and if not, the sentence saying what is missing
+   * (`readyToMake` in `lib/pairs.ts`). The button waits for it.
+   */
+  pairGate?: { readonly id: string; readonly ready: boolean; readonly why: string } | null;
+  /** After a song is made in a pair room, so the cleared ticks are re-read. */
+  onPairMade?: () => void;
 }) {
   const { t, lang } = useLang();
   const title = canvas.title;
@@ -819,6 +829,12 @@ export default function MakeMusic({
         setStatus(gate.reason);
         return;
       }
+      /* Two people making it together: not until both said yes. The copilot
+         can press this too, so the rule is here and not only on the button. */
+      if (pairGate && !pairGate.ready) {
+        setStatus(pairGate.why);
+        return;
+      }
       /* Never "Untitled". A name read off the first line of the words, or
          the style, before a sentence in the reader's language — see
          `lib/songtitle.ts` and `check:titled`. */
@@ -864,8 +880,10 @@ export default function MakeMusic({
             // asked for nothing in particular and the engine sang anyway.
             instrumental: singItYourself,
             finetuneId: ownSound || undefined,
+            pair: pairGate?.id,
             onStage: setStage,
           });
+          if (pairGate) onPairMade?.();
           blob = result.blob;
           source = 'engine';
           // Said on the release, because a backing with no voice on it is a
@@ -982,7 +1000,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, wantCover],
+    [bpm, canvas.style, lyrics, onMade, onPairMade, ownSound, pairGate, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, wantCover],
   );
 
   const toggle = async (track: Track) => {
@@ -1840,7 +1858,8 @@ export default function MakeMusic({
         <button
           type="button"
           onClick={() => make()}
-          disabled={busy}
+          disabled={busy || Boolean(pairGate && !pairGate.ready)}
+          data-makego
           className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
@@ -1855,6 +1874,9 @@ export default function MakeMusic({
           </span>
         </button>
 
+        {pairGate && !pairGate.ready && !busy && (
+          <p data-makewaits className="text-center text-sm text-amber-300">{pairGate.why}</p>
+        )}
         {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
 
         <div className="flex flex-wrap items-center justify-between gap-2">

@@ -113,3 +113,18 @@ grant select on public.pairs to authenticated;
 grant select on public.pair_links to authenticated;
 grant select, insert, update, delete on public.pairs to service_role;
 grant select, insert, update, delete on public.pair_links to service_role;
+
+-- ───────────────────────────────── both say yes before a song is made ────
+--
+-- the owner, 21 October 2026: *"Dit sal goed wees as die colab nie dadelik die
+-- make a song button beskikbaar het nie. Beide moet kan goedkeuring gee om
+-- uiteindelik die liedjie te generate."*
+--
+-- One tick each. The person holding the pen can only press Make once both
+-- are set; handing the pen over, or making the song, clears them — a yes is
+-- a yes to what was on the screen when it was given. Written by the server
+-- (`/api/pairs` 'approve'), read by both through the policy above.
+
+alter table public.pairs
+  add column if not exists ok_a boolean not null default false,
+  add column if not exists ok_b boolean not null default false;

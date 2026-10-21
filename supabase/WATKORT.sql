@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 64 tabelle, 34 kolomme wat later
+-- Dit kyk na 64 tabelle, 36 kolomme wat later
 -- bygekom het, 8 stoor-emmers en 61 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -130,6 +130,8 @@ with verwag (l_eer, soort, naam) as (
     ('live.sql', 'kolom', 'public.live_posts.genre'),
     ('buildon.sql', 'kolom', 'public.live_posts.style'),
     ('live.sql', 'kolom', 'public.live_posts.words'),
+    ('pairs.sql', 'kolom', 'public.pairs.ok_a'),
+    ('pairs.sql', 'kolom', 'public.pairs.ok_b'),
     ('albumart.sql', 'kolom', 'public.tracks.art_by'),
     ('albumart.sql', 'kolom', 'public.tracks.art_title'),
     ('albumart.sql', 'kolom', 'public.tracks.art_work'),

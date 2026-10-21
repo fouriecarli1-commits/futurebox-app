@@ -94,6 +94,8 @@ export interface AudioRequest {
    * up gets an ordinary song rather than somebody else's sound.
    */
   readonly finetuneId?: string;
+  /** The pair room it is made from, when two people make it together. */
+  readonly pair?: string;
   /** Told what is happening, as it happens. Optional; nothing depends on it. */
   readonly onStage?: (stage: Stage) => void;
 }
@@ -342,6 +344,7 @@ export const engines: Engines = {
         seconds: request.seconds,
         instrumental: Boolean(request.instrumental) || sections.length === 0,
         finetuneId: request.finetuneId || undefined,
+        pair: request.pair || undefined,
         }),
       });
     } catch (error) {

@@ -27,8 +27,8 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
-import { pen as movePen, shareLink, type Pair } from '../lib/pairs';
+import { Check, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
+import { approve, pen as movePen, shareLink, type Pair } from '../lib/pairs';
 import { HANDLE_PLATFORMS, CARRIES_A_NUMBER } from '../lib/sociallink';
 import { useLang } from '../lib/i18n';
 
@@ -121,6 +121,45 @@ export default function PairStrip({
           {pair.myLink ? t('pair.changeLink', 'Change where they reach you') : t('pair.addLink', 'Where they can reach you')}
         </button>
       </div>
+
+      {/* ── Both say yes before the song is made ───────────────────────
+          The owner, 21 October 2026: "Beide moet kan goedkeuring gee om
+          uiteindelik die liedjie te generate." Two ticks, each person's own,
+          and one button for yours. Handing over the turn or making the song
+          clears both — see `/api/pairs` and `pairgate.ts`. */}
+      {pair.surface === 'make' && pair.approvals && (
+        <div data-pairapprove className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2">
+          {([
+            [t('pair.okYou', 'You'), pair.okMine],
+            [pair.withName, pair.okTheirs],
+          ] as const).map(([who, yes], i) => (
+            <span
+              key={i}
+              data-pairtick={yes ? 'yes' : 'no'}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                yes ? 'bg-emerald-500/15 text-emerald-300' : 'bg-zinc-800 text-zinc-400'
+              }`}
+            >
+              <Check className={`h-3.5 w-3.5 ${yes ? '' : 'opacity-30'}`} />
+              {who} · {yes ? t('pair.okYes', 'approved') : t('pair.okNo', 'not yet')}
+            </span>
+          ))}
+          <button
+            type="button"
+            data-pairapprovebutton
+            disabled={busy}
+            onClick={() => void act(() => approve(pair.id, !pair.okMine))}
+            className={`ml-auto inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold disabled:opacity-50 ${
+              pair.okMine
+                ? 'border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white'
+                : 'bg-emerald-500 text-onAccent hover:opacity-90'
+            }`}
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {pair.okMine ? t('pair.unapprove', 'Take back my yes') : t('pair.approve', 'Approve this song')}
+          </button>
+        </div>
+      )}
 
       {/* Theirs, if they left one. Printed as what it is — a handle stays a
           handle, with nothing to press, because that is the whole point of
