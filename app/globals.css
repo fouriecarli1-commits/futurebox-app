@@ -3136,8 +3136,21 @@ button[data-liveheart]:active:not(:disabled) {
     --fb-bar-top: 72px;
   }
   html[data-topbar] body { padding-top: var(--fb-bar-top); }
-  html[data-topbar] .sticky.top-0 { top: var(--fb-bar-top); }
+  /* A sticky header in the page itself stops under the bar. One inside a
+     full-screen layer does not need to: the layer itself starts there. */
+  html[data-topbar] .sticky.top-0:not([class~='fixed'] *) { top: var(--fb-bar-top); }
+  /* A full-screen layer drawn UNDER the bar (the bar is z-95) starts at the
+     bar's foot, or the bar sits on its first 72 pixels — the profile's own
+     heading was under it. Layers above the bar cover it, and keep the whole
+     window. */
+  html[data-topbar] [class~='fixed'][class~='inset-0']:is([class~='z-40'], [class~='z-50'], [class~='z-[55]'], [class~='z-[60]'], [class~='z-[70]'], [class~='z-[80]'], [class~='z-[90]']) {
+    top: var(--fb-bar-top);
+  }
   html[data-topbar] [data-searchcorner] { display: none; }
+  html[data-topbar] [data-sheetsearch] { display: none; }
+  /* The studio's own strip, which the top bar used to sit on, carries the
+     way out of a room; the second one in the room's head is one too many. */
+  html[data-topbar] [data-roomback] { display: none; }
 
   /* ── The command bar ── */
   .fb-desk-bar {
@@ -3409,6 +3422,84 @@ button[data-liveheart]:active:not(:disabled) {
   }
 }
 
+/* ── The desktop, inside every room ───────────────────────────────────────
+
+   The second step of the computer's look (the owner, 21 October 2026: "Gaan
+   aan met take", after the top bar, the stage and the home page). The rooms
+   are written the app's usual way, so they are dressed here by that shape,
+   once, the same way the futuristic look reached them on a phone:
+
+     · every boxed button with corners becomes a blade; round ones and pills
+       stay round, because a circle is a play button or a swatch;
+     · the main actions carry light that flows, lift toward the pointer and
+       glow;
+     · panels take the blade too, and their edge brightens under the pointer;
+     · a box being typed into is lit with the second colour;
+     · a room's own big heading is drawn in chrome.
+
+   Only on a computer with the top bar, only where there is a mouse, and never
+   in the kids room or the booth, which keep their own colours and shapes. */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  html[data-topbar] :is(button, a):is([class*='rounded-xl'], [class*='rounded-2xl'], [class*='rounded-lg']):is([class*='border'], [class~='bg-emerald-500'], [class~='bg-emerald-400'], [class*='bg-gradient-to-r'], .fb-fx-go):not([data-kidsroom] *):not([data-booth] *):not([data-desktab]) {
+    border-radius: var(--fb-blade) !important;
+  }
+  html[data-topbar] :is(button, a):is([class~='bg-emerald-500'], [class~='bg-emerald-400']):is([class~='text-onAccent'], [class~='text-zinc-950'], [class~='text-black']):not([data-kidsroom] *):not([data-booth] *):not(:disabled) {
+    background-image: linear-gradient(110deg, rgb(var(--fb-primary-500)), rgb(var(--fb-secondary-500)) 40%, rgb(var(--fb-primary-400)) 70%, rgb(var(--fb-secondary-500)));
+    background-size: 220% 100%;
+    animation: fb-desk-flow 7s linear infinite;
+  }
+  html[data-topbar] :is(button, a):is([class~='bg-emerald-500'], [class~='bg-emerald-400'], .fb-fx-go):not([data-kidsroom] *):not([data-booth] *):not(:disabled):hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08) saturate(1.15);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.3),
+      0 0 30px rgb(var(--fb-secondary-500) / 0.6),
+      0 12px 30px -10px rgb(var(--fb-primary-500) / 0.75) !important;
+  }
+  html[data-topbar] button[class*='border']:is([class*='rounded-xl'], [class*='rounded-2xl'], [class*='rounded-lg']):not([data-kidsroom] *):not([data-booth] *):not(:disabled):not([class~='bg-emerald-500']):hover {
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--fb-secondary-300) / 0.55),
+      0 0 22px -4px rgb(var(--fb-secondary-500) / 0.55) !important;
+  }
+
+  html[data-topbar] :is(section, div, article, form, aside, details, li):is([class*='rounded-2xl'], [class*='rounded-3xl'])[class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']):not([data-kidsroom] *):not([data-booth] *),
+  html[data-topbar] :is(.fb-fx-card, .fb-fx-panel):not([data-kidsroom] *):not([data-booth] *) {
+    border-radius: var(--fb-blade-lg) !important;
+    transition: box-shadow 0.3s ease;
+  }
+  html[data-topbar] :is(section, article, form, details):is([class*='rounded-2xl'], [class*='rounded-3xl'])[class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']):not([data-kidsroom] *):not([data-booth] *):hover,
+  html[data-topbar] .fb-fx-card:not([data-kidsroom] *):not([data-booth] *):hover {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 0 0 1px rgb(var(--fb-secondary-400) / 0.25), 0 18px 40px -22px rgb(var(--fb-secondary-500) / 0.65);
+  }
+
+  html[data-topbar] :is(textarea, input[type='text'], input[type='search'], input[type='email'], input[type='url'], input[type='number'], input:not([type])):not([data-kidsroom] *):not([data-booth] *):focus {
+    outline: none;
+    box-shadow: 0 0 0 1px rgb(var(--fb-secondary-400) / 0.85), 0 0 22px -2px rgb(var(--fb-secondary-500) / 0.5) !important;
+  }
+
+  html[data-topbar] [data-studiosheet] :is(h1, h2, h3, h4):is([class*='text-2xl'], [class*='text-3xl']):not([data-kidsroom] *):not([data-booth] *) {
+    color: transparent;
+    background: linear-gradient(100deg, #ffffff 0%, rgb(var(--fb-primary-200)) 30%, rgb(var(--fb-secondary-200)) 55%, #ffffff 80%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 16px rgb(var(--fb-secondary-500) / 0.35));
+    animation: fb-desk-shine 9s ease-in-out infinite;
+  }
+  /* An icon in such a heading draws in currentColor, which the chrome has
+     just made transparent. It keeps the theme's light instead. */
+  html[data-topbar] [data-studiosheet] :is(h1, h2, h3, h4):is([class*='text-2xl'], [class*='text-3xl']) svg {
+    color: rgb(var(--fb-primary-400));
+  }
+  /* Chrome is light on a dark page; on a light theme the heading keeps ink. */
+  html[data-topbar][data-fb-mode='light'] [data-studiosheet] :is(h1, h2, h3, h4):is([class*='text-2xl'], [class*='text-3xl']) {
+    color: rgb(var(--fb-ink));
+    background: none;
+    filter: none;
+    animation: none;
+  }
+}
+
 @keyframes fb-desk-beam { to { background-position: -200% 0; } }
 @keyframes fb-desk-flow { to { background-position: -220% 0; } }
 @keyframes fb-desk-pulse {
@@ -3440,7 +3531,9 @@ button[data-liveheart]:active:not(:disabled) {
 @media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
   .fb-desk-bar::after, .fb-desk-mark, .fb-desk-word, .fb-desk-bar [data-desktab='make'],
   .fb-desk-stage::before, .fb-desk-stage::after, .fb-desk-floor, .fb-desk-scan, .fb-fx-go, .fb-desk-title,
-  .fb-desk-eq i, .fb-desk-orbit, .fb-fx-tile:hover::after {
+  .fb-desk-eq i, .fb-desk-orbit, .fb-fx-tile:hover::after,
+  html[data-topbar] :is(button, a):is([class~='bg-emerald-500'], [class~='bg-emerald-400']),
+  html[data-topbar] [data-studiosheet] :is(h1, h2, h3, h4) {
     animation: none !important;
   }
   .fb-fx-tile:hover { transform: none; }

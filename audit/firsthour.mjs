@@ -164,9 +164,12 @@ try {
   await p.waitForTimeout(1000);
 
   const bar = p.locator('nav[aria-label]').first();
+  /* The tabs a phone can see: on a computer the same bar carries a search
+     button as well, hidden here, and it is not a tab. */
+  const tabs = bar.locator('button[data-desktab]:visible');
   check('skipping lands on the feed, with all five tabs',
-    (await bar.count()) === 1 && (await bar.locator('button').count()) === 5,
-    `${await bar.locator('button').count()} tabs`);
+    (await bar.count()) === 1 && (await tabs.count()) === 5,
+    `${await tabs.count()} tabs`);
   await p.screenshot({ path: shot('firsthour-landed.png') });
 
   /* ── 3. Making a song ─────────────────────────────────────────────── */

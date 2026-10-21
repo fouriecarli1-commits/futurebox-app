@@ -4410,8 +4410,11 @@ export default function FutureBoxHome() {
                     setShort({ need: 0, balance: wallet.balance, message: '' });
                   }}
                 />
+                {/* `data-sheetsearch`: on a computer the top bar carries
+                    the search, and the stylesheet puts this one away. */}
                 <button
                   type="button"
+                  data-sheetsearch
                   onClick={() => setSearchOpen(true)}
                   className="min-h-[44px] flex items-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2"
                 >
