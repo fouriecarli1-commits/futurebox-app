@@ -129,6 +129,20 @@ alter table public.pairs
   add column if not exists ok_a boolean not null default false,
   add column if not exists ok_b boolean not null default false;
 
+-- ── Who pays for the song ───────────────────────────────────────────────
+--
+-- the owner, 21 October 2026: *"Ja, verdeel dit half-half, en gee die opsie
+-- van 1 persoon wat alles dra."* 'half' — each pays half; 'a' or 'b' — that
+-- person pays it all, which only that person can choose (`/api/pairs`
+-- 'pays'). Changing it clears both ticks: a yes is a yes to the price too.
+-- Charged by `/api/music` through `chargeTogether` in `credits.ts`.
+
+alter table public.pairs
+  add column if not exists pays text not null default 'half';
+do $$ begin
+  alter table public.pairs add constraint pairs_pays_known check (pays in ('half', 'a', 'b'));
+exception when duplicate_object then null; end $$;
+
 -- ── The song so far travels with the turn ───────────────────────────────
 --
 -- the owner, 21 October 2026, testing a collab: *"Ek het klaar geskryf en

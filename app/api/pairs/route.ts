@@ -46,6 +46,12 @@ const NO_COLUMN = /42703|PGRST204|column .* does not exist|could not find .* col
 const missingColumn = (error: { code?: string; message?: string } | null): boolean =>
   !!error && NO_COLUMN.test(`${error.code ?? ''} ${error.message ?? ''}`);
 
+/** The stored side ('half', 'a', 'b') as the caller reads it. */
+const paysFor = (row: { a: string; pays?: unknown }, caller: string): 'half' | 'me' | 'them' => {
+  if (row.pays !== 'a' && row.pays !== 'b') return 'half';
+  return (row.pays === 'a') === (row.a === caller) ? 'me' : 'them';
+};
+
 const ordered = (one: string, two: string): [string, string] =>
   (one < two ? [one, two] : [two, one]);
 
@@ -62,11 +68,21 @@ export async function GET(request: Request): Promise<Response> {
   /* And the song so far, once its columns are there too — the same
      stepping down, one set of columns at a time. */
   let drafts = true;
+  /* And who pays, once that column is there as well. */
+  let payments = true;
   let read = await client
     .from('pairs')
-    .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b, draft, draft_at')
+    .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b, draft, draft_at, pays')
     .or(`a.eq.${caller.id},b.eq.${caller.id}`)
     .order('created_at', { ascending: false });
+  if (missingColumn(read.error)) {
+    payments = false;
+    read = await client
+      .from('pairs')
+      .select('id, surface, a, b, pen, pen_at, pen_wanted, ok_a, ok_b, draft, draft_at')
+      .or(`a.eq.${caller.id},b.eq.${caller.id}`)
+      .order('created_at', { ascending: false }) as typeof read;
+  }
   if (missingColumn(read.error)) {
     drafts = false;
     read = await client
@@ -158,6 +174,9 @@ export async function GET(request: Request): Promise<Response> {
            (`draft.note`), and whose it is — each side shows the other's. */
         note: drafts ? cleanNote((row.draft as { note?: unknown } | null)?.note) : '',
         noteMine: drafts ? (row.draft as { noteBy?: unknown } | null)?.noteBy === caller.id : false,
+        /* Who pays for the song: half each, me, or them. */
+        payments,
+        pays: payments ? paysFor(row as { a: string; pays?: unknown }, caller.id) : 'half',
       };
     }),
   });
@@ -169,7 +188,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ message: 'Sign in first.' }, { status: 401 });
   if (!filterSafe(caller.id)) return Response.json({ message: 'Not a caller this app made.' }, { status: 400 });
 
-  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean; draft?: unknown; note?: unknown };
+  let body: { what?: string; collab?: string; surface?: string; id?: string; link?: string; platform?: string; handle?: string; yes?: boolean; draft?: unknown; note?: unknown; pays?: string };
   try {
     body = await request.json();
   } catch {
@@ -359,6 +378,35 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     if (approveError) return Response.json(NOT_SET_UP, { status: 503 });
+    return Response.json({ ok: true });
+  }
+
+  /* ── Who pays for the song ──────────────────────────────────────────
+
+     The owner, 21 October 2026: *"Ja, verdeel dit half-half, en gee die
+     opsie van 1 persoon wat alles dra."* Half each, or "I pay it all" — and
+     only ever for yourself: nobody can put the whole bill on somebody else.
+     Either way both ticks are cleared, because a yes was a yes to the song
+     at the price it had. */
+  if (body.what === 'pays') {
+    const id = String(body.id ?? '').trim();
+    if (!filterSafe(id)) return Response.json({ message: 'Which room?' }, { status: 400 });
+    const { data: row, error } = await client
+      .from('pairs').select('id, a, b').eq('id', id).maybeSingle();
+    if (error) return Response.json(NOT_SET_UP, { status: 503 });
+    if (!row || (row.a !== caller.id && row.b !== caller.id)) {
+      return Response.json({ message: 'That room is not yours.' }, { status: 403 });
+    }
+    const pays = body.pays === 'me' ? (row.a === caller.id ? 'a' : 'b') : 'half';
+    const { error: paysError } = await client
+      .from('pairs').update({ pays, ok_a: false, ok_b: false }).eq('id', id);
+    if (missingColumn(paysError)) {
+      return Response.json(
+        { message: 'Splitting the cost is not switched on yet — supabase/pairs.sql needs to be run again.' },
+        { status: 503 },
+      );
+    }
+    if (paysError) return Response.json(NOT_SET_UP, { status: 503 });
     return Response.json({ ok: true });
   }
 

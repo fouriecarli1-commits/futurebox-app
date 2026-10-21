@@ -18,10 +18,13 @@
  * one that keeps the video engine's ceiling servable.
  */
 
-import { admin, callerFrom, callerIsOwner, metered, type Caller } from './account';
+import { admin, callerById, callerFrom, callerIsOwner, metered, type Caller } from './account';
 import { wrote } from './wrote';
 import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
 import { kidsRelease, kidsSpend, kidsWalletReturn, kidsWalletTake } from './kidsmode';
+import { splitOf, type Share } from '@/app/lib/paysplit';
+
+export type { Share } from '@/app/lib/paysplit';
 
 /**
  * What is left, or null when the question could not be asked.
@@ -299,4 +302,84 @@ export async function charge(
 
   const owner = caller.id;
   return { ok: true, owner, refund: () => refund(owner, amount, ref) };
+}
+
+/* ─────────────────────────────────────── a song two people made together ─ */
+
+/**
+ * Take the credits for a song made together, from both accounts or from one.
+ *
+ * The owner, 21 October 2026, asked how a collab song's cost could be split,
+ * and then: *"Ja, verdeel dit half-half, en gee die opsie van 1 persoon wat
+ * alles dra."* Half each is what a room starts on; carrying all of it is a
+ * choice each person can only make for themselves (`/api/pairs` 'pays').
+ *
+ * All or nothing. The caller's part is taken first, through `charge`, so the
+ * caller's own refusals (signed out, short, a kids allowance) read exactly as
+ * they always have; then the other part, and if that one is short the
+ * caller's part goes back before the refusal is sent. Nobody is left having
+ * paid for a song that was not made.
+ *
+ * Whoever runs the place is not metered, on either side.
+ */
+export async function chargeTogether(
+  request: Request,
+  amount: number,
+  reason: string,
+  other: string,
+  share: Share,
+): Promise<Charged | Refused> {
+  if (share === 'caller' || !metered() || amount <= 0) return charge(request, amount, reason);
+
+  const { mine, theirs } = splitOf(amount, share);
+
+  let first: Charged;
+  if (mine > 0) {
+    const took = await charge(request, mine, reason);
+    if (!took.ok) return took;
+    first = took;
+  } else {
+    /* Paying nothing still needs somebody signed in to press the button. */
+    const caller = await callerFrom(request);
+    if (!caller) {
+      return {
+        ok: false,
+        response: Response.json({ message: 'Sign in first — credits belong to an account.', signedIn: false }, { status: 401 }),
+      };
+    }
+    first = { ok: true, owner: null, refund: async () => {} };
+  }
+
+  const them = await callerById(other);
+  if (!them) {
+    await first.refund();
+    return {
+      ok: false,
+      response: Response.json(
+        { message: 'The other person’s account could not be read just now, so nothing was charged. Try again in a moment.' },
+        { status: 503 },
+      ),
+    };
+  }
+  if (callerIsOwner(them)) return first;
+
+  const balance = await settle(them);
+  if (balance === null || !(await spend(them.id, theirs, `${reason}:together`))) {
+    await first.refund();
+    const short = balance === null
+      ? 'Their credits could not be read just now, so nothing was charged. Try again in a moment.'
+      : share === 'half'
+        ? `Their half is ${theirs} ${theirs === 1 ? 'credit' : 'credits'} and they have ${balance}. Nothing was charged — they can top up, or one of you can pay it all.`
+        : `They chose to pay it all — ${theirs} ${theirs === 1 ? 'credit' : 'credits'} — and they have ${balance}. Nothing was charged — they can top up, or you can split it.`;
+    return { ok: false, response: Response.json({ message: short, theirsShort: true }, { status: 402 }) };
+  }
+
+  return {
+    ok: true,
+    owner: first.owner,
+    refund: async () => {
+      await first.refund();
+      await refund(them.id, theirs);
+    },
+  };
 }

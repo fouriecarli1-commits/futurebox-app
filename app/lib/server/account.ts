@@ -97,6 +97,22 @@ export async function callerFrom(request: Request): Promise<Caller | null> {
   return { id: data.user.id, email, tier };
 }
 
+/**
+ * The account behind an id, for the one case where somebody other than the
+ * person asking pays: the other half of a song two people made together
+ * (`chargeTogether` in `credits.ts`). Read with the service key, never from
+ * anything the request said about them.
+ */
+export async function callerById(id: string): Promise<Caller | null> {
+  const db = admin();
+  if (!db || !id) return null;
+  const { data, error } = await db.auth.admin.getUserById(id);
+  if (error || !data.user) return null;
+  const email = data.user.email ?? '';
+  const tier = isOwner(email) ? 'label' : await tierOf(data.user.id);
+  return { id: data.user.id, email, tier };
+}
+
 /** Which tier someone is on, from the database. Free unless told otherwise. */
 async function tierOf(owner: string): Promise<Tier> {
   const db = admin();

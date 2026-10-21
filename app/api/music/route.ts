@@ -34,7 +34,7 @@ import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/goo
 import { makeSong, saidHeader } from '@/app/lib/server/lyria';
 import { cannot, promptFor } from '@/app/lib/server/lyriaprompt';
 import { songCost , CREDITS } from '@/app/lib/credits';
-import { charge } from '@/app/lib/server/credits';
+import { charge, chargeTogether } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 import { kidsCovers } from '@/app/lib/server/kidsmode';
@@ -301,6 +301,12 @@ export async function POST(request: Request): Promise<Response> {
      October 2026: "maak al die kids songs 8 credits". Only for what the kids
      room asks for: a song of a minute or less. */
   const kidsSong = (body as { kids?: unknown }).kids === true && length <= 60;
+  /* A song made by two people in a pair room is paid as they agreed — half
+     each, or all by one of them (`chargeTogether`); every other song by the
+     person who asked. */
+  const pay = (amount: number) => (together?.ok && together.other
+    ? chargeTogether(request, amount, 'song', together.other, together.share)
+    : charge(request, amount, 'song'));
   const sung = (body.sections ?? [])
     .flatMap((one) => one.lines ?? [])
     .join('\n');
@@ -328,7 +334,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     /* Lyria is one price per song, whatever its length — `songCost` says so. */
-    const bill = await charge(request, kidsSong ? CREDITS.kidSong : songCost(length, 'google'), 'song');
+    const bill = await pay(kidsSong ? CREDITS.kidSong : songCost(length, 'google'));
     if (!bill.ok) return bill.response;
 
     const asked = promptFor(body);
@@ -358,7 +364,7 @@ export async function POST(request: Request): Promise<Response> {
   // Paid for before a byte is asked for, and given back below if the engine
   // then refuses. Charging afterwards would hand free work to whoever is
   // quickest, because two requests can both pass a check that is not a write.
-  const paid = await charge(request, kidsSong ? CREDITS.kidSong : songCost(length), 'song');
+  const paid = await pay(kidsSong ? CREDITS.kidSong : songCost(length));
   if (!paid.ok) return paid.response;
 
   /* ── Out of the one door, which this call never went through ──────

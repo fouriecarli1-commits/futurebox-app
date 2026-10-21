@@ -277,7 +277,9 @@ ok('  and the engine that works today stays the default',
   + ' changed under her is a room that broke by itself');
 
 ok('  with the ceiling asked before the credits on that path too',
-  before(booth, "await enoughGoogle('music'", 'const bill = await charge('),
+  /* `pay` rather than `charge` since a pair room's song can be paid half
+     each (`chargeTogether`); either way it is the line that takes credits. */
+  before(booth, "await enoughGoogle('music'", 'const bill = await pay('),
   'the rule does not stop applying because it is a different supplier');
 
 ok('  and the credits given back when Lyria refuses',

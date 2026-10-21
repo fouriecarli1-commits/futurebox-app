@@ -92,7 +92,9 @@ ok('and so is a nonsense one', (await enough(Number.NaN)) === null);
 const route = readFileSync('app/api/music/route.ts', 'utf8');
 ok('the route that spends asks the brake', /enoughAllowance\(/.test(route));
 const askedAt = route.indexOf('await enoughAllowance(');
-const chargedAt = route.indexOf('await charge(');
+/* `pay` takes the credits — `charge`, or `chargeTogether` for a song two
+   people made in a pair room. */
+const chargedAt = route.indexOf('await pay(');
 ok('and asks before it charges', askedAt > 0 && chargedAt > 0 && askedAt < chargedAt,
   `asked at ${askedAt}, charged at ${chargedAt}`);
 /* A refusal must not look like a failed generation: 429 is the same status

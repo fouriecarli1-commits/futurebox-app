@@ -74,6 +74,14 @@ export interface Pair {
   readonly note?: string;
   /** True when that note is yours rather than theirs. */
   readonly noteMine?: boolean;
+  /** Whether this project can hold who pays yet (`pairs.sql`, re-run). */
+  readonly payments?: boolean;
+  /**
+   * Who pays for the song: half each, you, or them. The owner, 21 October
+   * 2026: *"Ja, verdeel dit half-half, en gee die opsie van 1 persoon wat
+   * alles dra."*
+   */
+  readonly pays?: 'half' | 'me' | 'them';
 }
 
 /**
@@ -90,6 +98,22 @@ export function readyToMake(pair: Pair): { ready: boolean; why: string; whyKey: 
   if (!pair.okMine) return { ready: false, whyKey: 'pair.makeYou', why: 'They approved. Approve it too, and it can be made.' };
   if (!pair.okTheirs) return { ready: false, whyKey: 'pair.makeThem', why: 'You approved. Waiting for them to approve too.' };
   return { ready: true, why: '', whyKey: '' };
+}
+
+/** Half each, or "I pay it all". Clears both approvals on the server. */
+export async function setPays(id: string, pays: 'half' | 'me'): Promise<string | null> {
+  try {
+    const response = await fetch('/api/pairs', {
+      method: 'POST',
+      headers: await head(),
+      body: JSON.stringify({ what: 'pays', id, pays }),
+    });
+    if (response.ok) return null;
+    const body = await response.json();
+    return body?.message ?? 'That did not go through.';
+  } catch {
+    return 'Could not reach the app’s server.';
+  }
 }
 
 /** Say yes to the song as it stands, or take the yes back. */

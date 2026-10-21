@@ -28,7 +28,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { Check, Copy, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
-import { approve, pen as movePen, shareLink, type Pair } from '../lib/pairs';
+import { approve, pen as movePen, setPays, shareLink, type Pair } from '../lib/pairs';
 import type { SongDraft } from '../lib/pairdraft';
 import { HANDLE_PLATFORMS, CARRIES_A_NUMBER } from '../lib/sociallink';
 import { useLang } from '../lib/i18n';
@@ -254,6 +254,46 @@ export default function PairStrip({
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             {pair.okMine ? t('pair.unapprove', 'Take back my yes') : t('pair.approve', 'Approve this song')}
           </button>
+        </div>
+      )}
+
+      {/* ── Who pays for the song ──────────────────────────────────────
+          The owner, 21 October 2026: "Ja, verdeel dit half-half, en gee die
+          opsie van 1 persoon wat alles dra." Half each to start with; "I pay
+          it all" is yours to choose for yourself only. Changing it clears
+          both ticks, because a yes was a yes at the price it had. */}
+      {pair.surface === 'make' && pair.payments && (
+        <div data-pairpays={pair.pays ?? 'half'} className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2">
+          <span className="text-xs font-semibold text-zinc-400">{t('pair.paysLabel', 'Who pays')}</span>
+          {([
+            ['half', t('pair.paysHalf', 'Half each')],
+            ['me', t('pair.paysMe', 'I pay it all')],
+          ] as const).map(([value, label]) => {
+            const on = (pair.pays ?? 'half') === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                data-pairpaysbutton={value}
+                aria-pressed={on}
+                disabled={busy || on}
+                onClick={() => void act(() => setPays(pair.id, value))}
+                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold disabled:cursor-default ${
+                  on ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white'
+                }`}
+              >
+                {on && <Check className="h-4 w-4" />}
+                {label}
+              </button>
+            );
+          })}
+          <span data-pairpayssaid className="basis-full text-xs text-zinc-400">
+            {pair.pays === 'me'
+              ? t('pair.paysMeSaid', 'You pay for the whole song. They pay nothing.')
+              : pair.pays === 'them'
+                ? t('pair.paysThemSaid', '{name} chose to pay for the whole song. You pay nothing.').replace('{name}', pair.withName)
+                : t('pair.paysHalfSaid', 'Each of you pays half. Whoever presses Make pays the odd credit.')}
+          </span>
         </div>
       )}
 

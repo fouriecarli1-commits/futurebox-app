@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 65 tabelle, 38 kolomme wat later
+-- Dit kyk na 65 tabelle, 39 kolomme wat later
 -- bygekom het, 9 stoor-emmers en 61 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -135,6 +135,7 @@ with verwag (l_eer, soort, naam) as (
     ('pairs.sql', 'kolom', 'public.pairs.draft_at'),
     ('pairs.sql', 'kolom', 'public.pairs.ok_a'),
     ('pairs.sql', 'kolom', 'public.pairs.ok_b'),
+    ('pairs.sql', 'kolom', 'public.pairs.pays'),
     ('albumart.sql', 'kolom', 'public.tracks.art_by'),
     ('albumart.sql', 'kolom', 'public.tracks.art_title'),
     ('albumart.sql', 'kolom', 'public.tracks.art_work'),
