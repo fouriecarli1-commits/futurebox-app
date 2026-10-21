@@ -105,11 +105,76 @@ export const ENOUGH = 0.45;
 export function sungWordsIn(rows: readonly string[]): string | null {
   let best: { text: string; score: number } | null = null;
   for (const row of rows) {
-    const reading = readingOf(row);
+    if (DESCRIBES.test(row)) continue;
+    const reading = readingOf(lyriaSheet(row).sheet);
     if (reading.score < ENOUGH) continue;
-    if (!best || reading.score > best.score) best = { text: row.trim(), score: reading.score };
+    if (!best || reading.score > best.score) best = { text: lyriaSheet(row).sheet, score: reading.score };
   }
   return best?.text ?? null;
+}
+
+/**
+ * The row that describes the music rather than singing it.
+ *
+ * Measured on the owner's first real Lyria song, 21 October 2026: the second
+ * row opens with the model's own numbers — `mosic: 4.5`, `bpm: 100.0`,
+ * `duration_secs: 62.4`, `good_crop: 1.0` — and then prose about the
+ * guitar. No lyric sheet starts with a `bpm:` line, so a row that does is
+ * not one, whatever its shape scores.
+ */
+const DESCRIBES = /^\s*(mosic|bpm|duration_secs|good_crop)\s*:/im;
+
+/** A line Lyria wrote, and when in the song it starts — when it said. */
+export interface TimedLine {
+  readonly line: string;
+  /** Seconds from the start, or null for a line that runs on from the last. */
+  readonly at: number | null;
+}
+
+/**
+ * Lyria's words, with its own marks read rather than printed.
+ *
+ * The first real song (21 October 2026) came back like this:
+ *
+ *     [[A0]]
+ *     [[B1]]
+ *     [12.0:] Die son sak laag oor die vlakte,
+ *     [:] Oranje strepe in die lug,
+ *     [[B2]]
+ *     [36.0:] Huis toe, huis toe, die pad is lank,
+ *
+ * `[[B1]]` is a section, `[12.0:]` is the second a line starts, and `[:]`
+ * is a line that follows on. Shown as they came, a release would carry
+ * `[[A0]]` as its first line and a lyric video would scroll `[12.0:]`. So
+ * the sheet is the words with a blank line between sections, and the
+ * timings are kept beside it for the lyric video — where Lyria said when a
+ * section starts, that is a measurement the video does not have to guess.
+ *
+ * Words with none of these marks — every other engine's — come back as
+ * they were.
+ */
+export function lyriaSheet(text: string): { sheet: string; timed: TimedLine[] } {
+  const timed: TimedLine[] = [];
+  const out: string[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (/^\[\[[A-Z]\d+\]\]$/.test(line)) {
+      if (out.length && out[out.length - 1] !== '') out.push('');
+      continue;
+    }
+    const mark = /^\[(\d+(?:\.\d+)?)?:\]\s*(.*)$/.exec(line);
+    if (mark) {
+      const words = mark[2].trim();
+      if (!words) continue;
+      out.push(words);
+      timed.push({ line: words, at: mark[1] !== undefined ? Number(mark[1]) : null });
+      continue;
+    }
+    out.push(line);
+  }
+  while (out.length && out[out.length - 1] === '') out.pop();
+  while (out.length && out[0] === '') out.shift();
+  return { sheet: out.join('\n'), timed };
 }
 
 /**

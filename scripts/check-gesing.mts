@@ -40,7 +40,7 @@
 
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { ENOUGH, readingOf, rowsFrom, sungWordsIn } from '../app/lib/sungwords.ts';
+import { ENOUGH, lyriaSheet, readingOf, rowsFrom, sungWordsIn } from '../app/lib/sungwords.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -154,6 +154,25 @@ ok('  and the room keeps them only where it has none of its own',
 ok('  and the track carries hers first',
   /lyrics: lyrics\.trim\(\) \|\| sungBack/.test(room),
   'the engine\'s words win over the ones she typed');
+
+/* ── The first real Lyria song ──────────────────────────────────────────
+   The owner pressed "Make one song" on /google, 21 October 2026, once the app
+   could sign in to Google. Row 1 was the words, with Lyria's own section and
+   timing marks; row 2 was its description, opening with its numbers. Both
+   rows exactly as they came (the description cut short). */
+const REAL_WORDS = '[[A0]]\n[[B1]]\n[12.0:] Die son sak laag oor die vlakte,\n[:] Oranje strepe in die lug,\n[:] Die venster is oop, die wind waai sag,\n[:] Ek is uiteindelik op pad terug.\n[[B2]]\n[36.0:] Huis toe, huis toe, die pad is lank,\n[:] Maar die hart is lig en die siel is dankbaar.\n[:] Deur die goud en die laaste lig,\n[:] Ry ek die vrede tegemoet.\n[[C3]]';
+const REAL_ABOUT = 'mosic: 4.5\nbpm: 100.0\nduration_secs: 62.4\ngood_crop: 1.0\n[[A0]]\n[0.0:] A warm, rustic Afrikaans Folk introduction defined by the gentle sound of fingerpicked acoustic guitar. The segment is anchored by a solo steel-string acoustic guitar playing a clean, repetitive folk-style pattern in a major key, characteristic of modern South African acoustic music.\n[[B1]]\n[12.0:] The vocals enter with a soft, intimate male voice singing in Afrikaans.';
+const realSung = sungWordsIn([REAL_WORDS, REAL_ABOUT]) ?? '';
+ok('a real Lyria song: the first row is the words, and that is the one chosen',
+  realSung.startsWith('Die son sak laag oor die vlakte,') && realSung.includes('Ry ek die vrede tegemoet.'),
+  `chose: ${JSON.stringify(realSung.slice(0, 60))}`);
+ok('  with none of its marks printed — no [[A0]], no [12.0:], no [:]', !/\[\[|\[\d|\[:\]/.test(realSung));
+ok('  and a blank line between its two sections', /terug\.\n\nHuis toe/.test(realSung));
+ok('  and the description is never taken for the words, even on its own', sungWordsIn([REAL_ABOUT]) === null);
+const realTimed = lyriaSheet(REAL_WORDS).timed;
+ok('  and when each section starts is kept for the lyric video',
+  realTimed.length === 8 && realTimed[0].at === 12 && realTimed[4].at === 36 && realTimed[1].at === null);
+ok('words from any other engine come back untouched', lyriaSheet('[Verse]\nOne line\nTwo line').sheet === '[Verse]\nOne line\nTwo line');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

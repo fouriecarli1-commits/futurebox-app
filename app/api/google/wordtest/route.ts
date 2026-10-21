@@ -38,6 +38,7 @@
 import { opened } from '@/app/lib/server/ownerdoor';
 import { CHOSEN, configured as googleOn, project, region } from '@/app/lib/server/google';
 import { makeSong } from '@/app/lib/server/lyria';
+import { sungWordsIn } from '@/app/lib/sungwords';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -116,11 +117,20 @@ export async function GET(request: Request): Promise<Response> {
     text: text.slice(0, SHOW) + (text.length > SHOW ? ' …' : ''),
   }));
 
+  /* Answered by the owner, 21 October 2026: row 1 is the words, row 2 the
+     description. The app now reads them itself (`lib/sungwords.ts`), so
+     the page says what it read rather than asking again. */
+  const sung = sungWordsIn(made.said);
   return Response.json({
     ready: true,
     howManyRows: rows.length,
     rows,
-    says: rows.length === 0
+    theAppReadTheseAsTheWords: sung,
+    says: sung
+      ? 'Settled: the app found the sung words itself and they are shown above'
+        + ' as "theAppReadTheseAsTheWords", without Lyria\'s timing marks. If'
+        + ' those are not the words that are sung, say so.'
+      : rows.length === 0
       ? 'Lyria made the song and sent NO text with it. That is an answer too:'
         + ' there is nothing to build a lyric video from, and the words would'
         + ' have to come from somewhere else.'
