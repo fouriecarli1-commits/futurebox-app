@@ -89,7 +89,7 @@ import { useCopilotOps } from '../lib/copilotactions';
 import { useBackLayer } from '../lib/backstack';
 import { creditsSaid } from '../lib/credits';
 import { useLang } from '../lib/i18n';
-import { loadTracks, type Track } from '../lib/library';
+import { loadTracks, rememberArt, type Track } from '../lib/library';
 import { square } from '../lib/imagefile';
 import { previewOf } from '../lib/artmark';
 import ArtMaker from './ArtMaker';
@@ -740,7 +740,7 @@ export default function ArtMarket(): React.ReactElement {
 
   /** One place every write goes through, so every one of them re-reads. */
   const doIt = useCallback(
-    async (body: Record<string, unknown>): Promise<boolean> => {
+    async (body: Record<string, unknown>, onSaid?: (said: Record<string, unknown> | null) => void): Promise<boolean> => {
       setProblem('');
       setSaid('');
       try {
@@ -758,6 +758,7 @@ export default function ArtMarket(): React.ReactElement {
           setProblem(refusalText(said, lang, t('art.failed')));
           return false;
         }
+        onSaid?.((await response.json().catch(() => null)) as Record<string, unknown> | null);
         await read();
         return true;
       } catch {
@@ -1132,7 +1133,15 @@ export default function ArtMarket(): React.ReactElement {
                 owned={market.bought}
                 songs={songs}
                 preset={forSong}
-                onPut={(work, trackId) => doIt({ what: 'wear', work, trackId })}
+                onPut={(work, trackId) => doIt({ what: 'wear', work, trackId }, (said) => {
+                  /* The phone's copy of the song learns the piece too: it is
+                     what the channel credits from, and a copy that does not
+                     know would otherwise save "no piece" over the song. */
+                  const art = said?.art as Track['art'] | undefined;
+                  if (!art) return;
+                  rememberArt(trackId, art);
+                  setSongs(loadTracks());
+                })}
                 t={t}
               />
             </Fold>

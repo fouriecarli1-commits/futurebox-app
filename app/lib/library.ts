@@ -173,6 +173,18 @@ export function saveTracks(tracks: readonly Track[]): void {
   }
 }
 
+/**
+ * A bought piece put on one of these songs, written onto this phone's copy.
+ *
+ * The song's row on the server already says so; this keeps the copy here in
+ * step, because a copy that does not know would save "no piece" over the row
+ * the next time the song is saved, and the cover would come off again.
+ * Nothing new is filed: the song is where it was.
+ */
+export function rememberArt(trackId: string, art: NonNullable<Track['art']>): void {
+  saveTracks(loadTracks().map((one) => (one.id === trackId ? { ...one, art } : one)));
+}
+
 /** Triggers a real file download from a blob already in memory. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

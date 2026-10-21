@@ -32,6 +32,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { boughtSleeves } from '@/app/lib/server/boughtcover';
 import { readPlatformLink, readTikTokLive } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
 import { cleanTimes } from '@/app/lib/livetimed';
@@ -388,6 +389,21 @@ export async function GET(request: Request): Promise<Response> {
     }
     for (const row of sleeves ?? []) {
       if (!row.error && row.path && row.signedUrl) coverFor.set(row.path, row.signedUrl);
+    }
+    /* A bought piece the song points at, drawn over the made one — the
+       owner, 21 October 2026: *"Ek het 'n cover foto gekoop vir hierdie
+       liedjie, maar dit wys nie."* See `lib/server/boughtcover.ts`. */
+    const bought = await boughtSleeves(
+      client,
+      ((posts ?? []) as PostRow[])
+        .filter((one) => one.kind === 'track' && one.source_id)
+        .map((one) => ({ owner: one.owner, track: one.source_id })),
+      LINK_SECONDS,
+    );
+    if (bought.unread) console.error('live: the bought covers could not be read');
+    for (const one of (posts ?? []) as PostRow[]) {
+      const url = one.source_id ? bought.urls[one.source_id] : undefined;
+      if (url) coverFor.set(coverPath(one.owner, one.source_id), url);
     }
   }
 

@@ -42,6 +42,7 @@ import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import { guard } from '@/app/lib/server/safety';
+import { storageId } from '@/app/lib/server/ownedpath';
 import {
   ART_MAX_BYTES, ART_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '@/app/data/artmarket';
@@ -1009,6 +1010,7 @@ export async function POST(request: Request): Promise<Response> {
        browser, because both are ids in a body anybody can post. */
     case 'wear': {
       const trackId = String(body.trackId ?? '');
+      if (!storageId(trackId)) return Response.json({ error: 'bad_request', message: 'Which song?' }, { status: 400 });
       const { data: work } = await client
         .from('art_works')
         .select('id, artist, title, sold_to')
@@ -1017,6 +1019,9 @@ export async function POST(request: Request): Promise<Response> {
       if (!work || (work as WorkRow).sold_to !== caller.id) {
         return Response.json({ error: 'not_yours', message: 'That piece is not yours.' }, { status: 403 });
       }
+      const { data: song } = await client.from('tracks').select('id').eq('id', trackId).eq('owner', caller.id).maybeSingle();
+      if (!song) return Response.json({ error: 'not_yours', message: 'That song is not yours.' }, { status: 403 });
+
       const { data: they } = await client
         .from('art_artists')
         .select('name')
@@ -1034,7 +1039,13 @@ export async function POST(request: Request): Promise<Response> {
       if (error) {
         return Response.json({ error: 'not_saved', message: 'That did not go onto the song.' }, { status: 500 });
       }
-      return Response.json({ worn: true });
+      /* The credit back, so the phone's copy of the song learns it too —
+         otherwise the next time that copy is saved it writes "no piece"
+         over this row, and the cover vanishes again. */
+      return Response.json({
+        worn: true,
+        art: { title: (work as WorkRow).title, by: (they as { name: string } | null)?.name ?? '', work: work.id },
+      });
     }
 
     /* ── A bid ───────────────────────────────────────────────────────

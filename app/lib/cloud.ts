@@ -1139,9 +1139,10 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
     created_at: track.createdAt,
     remix_of: track.remixOf ?? null,
     seed: track.seed,
-    art_title: track.art?.title ?? '',
-    art_by: track.art?.by ?? '',
-    art_work: track.art?.work ?? null,
+    /* Only when this copy knows of a piece. A copy that does not — a song
+       saved on this phone before the piece was put on it somewhere else —
+       must not write "no piece" over the row and take the cover off. */
+    ...(track.art ? { art_title: track.art.title, art_by: track.art.by, art_work: track.art.work ?? null } : {}),
   };
   const { error } = await supabase.from('tracks').upsert(row);
   if (error) return { saved: false, reason: 'row', message: `Song did not save: ${error.message}` };

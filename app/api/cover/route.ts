@@ -50,6 +50,7 @@ import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
 import { checkCover, configured, coverPrompt, startCover } from '@/app/lib/server/cover';
 import { storageId } from '@/app/lib/server/ownedpath';
+import { boughtSleeves } from '@/app/lib/server/boughtcover';
 import { claimRefund, markFailed, markKept, pending, remember } from '@/app/lib/server/coverkeep';
 
 export const runtime = 'nodejs';
@@ -205,6 +206,17 @@ export async function GET(request: Request): Promise<Response> {
       const found = ids.find((one) => row.path === coverPath(caller.id, one));
       if (found) covers[found] = row.signedUrl;
     }
+
+    /* ── A bought piece the song points at ───────────────────────────
+       A made cover lives beside the audio; a bought one stays the artist's
+       and the song points at it (`art_work`). Without following that
+       pointer a bought cover was paid for and never drawn — the owner, 21
+       October 2026: *"Ek het 'n cover foto gekoop vir hierdie liedjie, maar
+       dit wys nie."* Where a song has both, the bought piece is drawn:
+       it is the one that was paid for, and putting it on is the later act. */
+    const bought = await boughtSleeves(client, ids.map((one) => ({ owner: caller.id, track: one })), LINK_SECONDS);
+    Object.assign(covers, bought.urls);
+    if (bought.unread) return Response.json({ covers, asked: false });
     return Response.json({ covers, asked: true });
   }
 
