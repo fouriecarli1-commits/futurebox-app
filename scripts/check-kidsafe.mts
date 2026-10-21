@@ -280,6 +280,6 @@ if (bad) {
 }
 console.log(
   'check:kidsafe — which rooms can spend a credit is read off the code, and'
-  + ' the three that cannot and the photo editor’s three paid doors are still'
+  + ' the one that cannot and the photo editor’s seven paid doors are still'
   + ' what the write-up says they are.',
 );

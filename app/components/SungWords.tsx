@@ -137,7 +137,7 @@ export interface SungWordsProps {
  * and a word already sung stays lit. The times are the transcriber's own
  * when the song was listened to, and a fair division of the line when not.
  */
-function Swept({ line, at }: { line: TimedLine; at: number }): React.ReactElement {
+export function Swept({ line, at }: { line: TimedLine; at: number }): React.ReactElement {
   const words = wordsOf([line]);
   return (
     <>

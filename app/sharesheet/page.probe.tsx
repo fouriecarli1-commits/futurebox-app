@@ -10,6 +10,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import ShareRow from '@/app/components/ShareRow';
+import PostToLive from '@/app/components/PostToLive';
 import TabBar from '@/app/components/TabBar';
 import { putAudio, saveTracks, type Track } from '@/app/lib/library';
 
@@ -44,7 +45,7 @@ export default function ShareSheetProbe() {
   if (!ready) return <p className="p-6 text-zinc-400">…</p>;
   return (
     <div className="min-h-screen bg-zinc-950 p-4">
-      <ShareRow title={TRACK.title} what="A song I made on FutureBox." track={TRACK} />
+      <ShareRow title={TRACK.title} what="A song I made on FutureBox." track={TRACK} live={<PostToLive track={TRACK} />} />
       {/* The bar is fixed at every width and is painted over everything, so a
           sheet that does not clear it is measured against the real thing. */}
       <TabBar active="library" onGo={() => undefined} />

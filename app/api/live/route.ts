@@ -34,6 +34,7 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { readPlatformLink, readTikTokLive } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
+import { cleanTimes } from '@/app/lib/livetimed';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { storageId } from '@/app/lib/server/ownedpath';
 import { creditFrom } from '@/app/lib/artcredit';
@@ -779,14 +780,21 @@ export async function POST(request: Request): Promise<Response> {
   const words = (Array.isArray(body.words) ? body.words : [])
     .slice(0, 40)
     .map((part) => {
-      const one = (part ?? {}) as { name?: unknown; lines?: unknown; seconds?: unknown };
+      const one = (part ?? {}) as { name?: unknown; lines?: unknown; seconds?: unknown; at?: unknown; end?: unknown };
+      const sent = (Array.isArray(one.lines) ? one.lines : []).slice(0, 60).map((line) => String(line ?? '').trim().slice(0, 300));
+      const lines = sent.filter(Boolean);
+      /* The seconds each line is sung, when the song was listened to before
+         it was posted (`lib/livetimed.ts`). Kept only if they still line up
+         one to one with the lines after the cleaning above — a dropped empty
+         line would otherwise shift every time after it onto the wrong words. */
+      const times = lines.length === sent.length
+        ? cleanTimes({ at: Array.isArray(one.at) ? one.at.slice(0, 60) : one.at, end: Array.isArray(one.end) ? one.end.slice(0, 60) : one.end }, lines.length)
+        : null;
       return {
         name: String(one.name ?? '').trim().slice(0, 60),
-        lines: (Array.isArray(one.lines) ? one.lines : [])
-          .slice(0, 60)
-          .map((line) => String(line ?? '').trim().slice(0, 300))
-          .filter(Boolean),
+        lines,
         seconds: Math.max(0, Math.min(1800, Math.round(Number(one.seconds) || 0))),
+        ...(times ?? {}),
       };
     })
     .filter((part) => part.lines.length > 0);

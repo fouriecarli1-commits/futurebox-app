@@ -1084,6 +1084,7 @@ export default function Channel({
                   what={t('chan.shareWhat', 'A song I made on FutureBox.')}
                   hashtags={['newmusic', track.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
                   track={track}
+                  live={<PostToLive track={track} />}
                 />
 
                 {adding === track.id ? (

@@ -42,7 +42,10 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import { countWhenPlayed } from '../lib/played';
 import { lineAt, timelineOf, type Part } from '../lib/timeline';
+import { linesFromParts } from '../lib/livetimed';
+import { Swept } from './SungWords';
 import Cover from './Cover';
+import { lightDelay } from '../lib/livelight';
 import { ReportFlag } from './ReportSheet';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
@@ -215,7 +218,7 @@ export default function RoomScreen({
 
   const [at, setAt] = useState(opening);
   const [playing, setPlaying] = useState(false);
-  /** How far into the song it is, in seconds. Only the words read this. */
+  /** How far into the song it is, in seconds. The words and the progress filament read this. */
   const [along, setAlong] = useState(0);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -429,7 +432,10 @@ export default function RoomScreen({
   const timed = useMemo(() => {
     const one = latest.current.find((each) => each.id === playingId);
     const plan = one?.words ?? [];
-    return plan.length ? timelineOf(plan, one?.seconds || 0) : [];
+    /* The times the song was listened to before it was posted, when the post
+       carries them (`lib/livetimed.ts`); the even spread over each section
+       only for a post from before that, or one posted without listening. */
+    return linesFromParts(plan) ?? (plan.length ? timelineOf(plan, one?.seconds || 0) : []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingId]);
   const sung = timed.length ? lineAt(timed, along) : -1;
@@ -484,7 +490,14 @@ export default function RoomScreen({
   if (!mounted) return <></>;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80]" style={{ background: '#050505' }}>
+    /* Above the tab bar (`z-95`), as `FollowWords` is: at `z-80` the bar sat
+       across the foot of the room and over the song's own caption. */
+    <div data-roomscreen className="fixed inset-0 z-[100]" style={{ background: '#050505' }}>
+      {/* The app's look, in the one room everybody sees — the owner, 21
+          October 2026: "Die live channel is wat almal sien en dit moet presies
+          die app se future look kry, die hele vibe, elke button." A neon line
+          along the top, as the booth and the studio have. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px] bg-linear-to-r from-sky-400 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_14px_rgba(56,189,248,0.9)]" />
       {/* Top left, and deliberately.
 
           The search is a small round button fixed to the top-right corner of
@@ -496,7 +509,7 @@ export default function RoomScreen({
         type="button"
         onClick={onClose}
         aria-label={t('room.close', 'Close')}
-        className="absolute left-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full"
+        className="absolute left-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-sky-300/30 shadow-[0_0_14px_rgba(56,189,248,0.35)] backdrop-blur-md"
         style={{ background: GLASS, color: INK }}
       >
         <X className="h-5 w-5" />
@@ -519,8 +532,16 @@ export default function RoomScreen({
           <section
             key={one.id}
             data-at={index}
+            /* The light moves on the song being looked at, and wakes up
+               while it plays (`.fb-live-*`, `globals.css`). */
+            data-lit={index === at ? '' : undefined}
+            data-playing={index === at && playing ? '' : undefined}
             className="relative flex h-full w-full flex-col justify-end overflow-hidden p-5"
-            style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+            style={{
+              scrollSnapAlign: 'start',
+              scrollSnapStop: 'always',
+              '--fb-live-delay': lightDelay(one.sourceId || one.id),
+            } as React.CSSProperties}
           >
             {/* The picture, and it is the song's own.
 
@@ -617,17 +638,30 @@ export default function RoomScreen({
                 className="absolute inset-0 h-full w-full bg-black object-contain"
               />
             ) : (
-              <Cover
-                seed={one.sourceId || one.id}
-                label={one.title}
-                photo={one.cover}
-                className="absolute inset-0 h-full w-full"
-              />
+              /* The sleeve drifts, slowly, while its song plays — the owner:
+                 *"selfs wanneer dit geluister word."* */
+              <div className="fb-live-drift absolute inset-0">
+                <Cover
+                  seed={one.sourceId || one.id}
+                  label={one.title}
+                  photo={one.cover}
+                  className="h-full w-full"
+                />
+              </div>
             )}
             {/* Strong in the middle as well as at the ends, like `SongScreen`:
                 the words sit there, and a scrim that fades out behind them is
                 a scrim that does nothing where it is needed. */}
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.45)_45%,rgba(0,0,0,0.88))]" />
+            {/* Light through the picture: a haze that breathes while the song
+                plays, and a beam that crosses it now and then. Over a sleeve
+                only — a film brings its own picture and its own light. */}
+            {!one.video && (
+              <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="fb-live-aurora" />
+                <div className="fb-live-beam" />
+              </div>
+            )}
 
             {/* ── The words, following the song ──────────────────────────
 
@@ -658,14 +692,22 @@ export default function RoomScreen({
                     <p
                       key={`${which}-${line.start}`}
                       className={`leading-tight transition-all duration-300 ${
-                        now ? 'text-2xl font-black' : 'text-base'
+                        now ? 'text-3xl font-black' : 'text-base'
                       }`}
+                      /* No dark shadow on the sung line: the sweep paints the
+                         letters from behind (`background-clip: text`) and a
+                         text-shadow sits on top of that paint, greying it out.
+                         The sweep's own glow is what lifts it off the picture. */
                       style={{
                         color: now ? INK : INK_DIM,
-                        textShadow: now ? '0 2px 12px rgba(0,0,0,0.9)' : undefined,
+                        textShadow: now ? undefined : '0 1px 6px rgba(0,0,0,0.85)',
                       }}
                     >
-                      {line.text}
+                      {/* The line being sung lights up word by word, the same neon
+                          sweep as the ProBooth recording screen — the owner,
+                          21 October 2026: "die live se woorde op die prente,
+                          se glowiness net soos in probooth se recording". */}
+                      {now ? <Swept line={line} at={along} /> : line.text}
                     </p>
                   );
                 })}
@@ -717,19 +759,13 @@ export default function RoomScreen({
                         : t('live.heart', 'Heart it')
                       : t('live.heartSignIn', 'Sign in to heart it')
                   }
+                  data-liveheart
                   className="flex flex-col items-center gap-1 disabled:cursor-default"
                 >
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform active:scale-90"
-                    style={{
-                      background: GLASS,
-                      color: one.hearted ? '#34d399' : INK,
-                      opacity: signedIn ? 1 : 0.65,
-                    }}
-                  >
+                  <span className="fb-live-orb h-12 w-12" style={{ opacity: signedIn ? 1 : 0.65 }}>
                     <Heart className="h-5 w-5" fill={one.hearted ? 'currentColor' : 'none'} />
                   </span>
-                  <span className="text-xs font-bold tabular-nums" style={{ color: INK_SOFT }}>
+                  <span className="fb-live-count text-xs">
                     {one.hearts ?? '–'}
                   </span>
                 </button>
@@ -741,13 +777,10 @@ export default function RoomScreen({
                   className="flex flex-col items-center gap-1"
                   title={t('live.playsWhy', 'Counted once somebody has listened to 65% of the song')}
                 >
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
-                    style={{ background: GLASS, color: INK }}
-                  >
+                  <span className="fb-live-orb h-12 w-12">
                     <Headphones className="h-5 w-5" />
                   </span>
-                  <span className="text-xs font-bold tabular-nums" style={{ color: INK_SOFT }}>
+                  <span className="fb-live-count text-xs">
                     {one.plays ?? '–'}
                   </span>
                 </span>
@@ -760,8 +793,7 @@ export default function RoomScreen({
                   <ReportFlag
                     target={{ kind: 'post', ref: one.id, about: one.who, name: one.by, post: one.id, where: 'live-room' }}
                     onBlocked={() => onClose()}
-                    className="h-12 w-12"
-                    style={{ background: GLASS, color: INK }}
+                    className="fb-live-orb h-12 w-12"
                   />
                 )}
               </div>
@@ -769,23 +801,33 @@ export default function RoomScreen({
 
             <div className="relative flex items-center gap-3 pb-2">
               <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-                style={{ background: GLASS, color: INK }}
+                data-roomplay
+                className="fb-fx-go flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
               >
+                <span aria-hidden className="fb-fx-shine" />
                 {index === at && loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="relative h-6 w-6 animate-spin" />
                 ) : index === at && playing ? (
-                  <Pause className="h-5 w-5" />
+                  <Pause className="relative h-6 w-6" fill="currentColor" />
                 ) : (
-                  <Play className="h-5 w-5" />
+                  <Play className="relative ml-0.5 h-6 w-6" fill="currentColor" />
                 )}
               </span>
+              {/* The title in light — *"moet die skrif op die album ook
+                  amazing lyk"* — with five bars beside the maker's name
+                  that move while the song plays. */}
               <div className="min-w-0">
-                <p className="truncate text-base font-bold" style={{ color: INK }}>
+                <p className="fb-live-title line-clamp-2 text-[1.9rem]">
                   {one.title}
                 </p>
-                <p className="truncate text-sm" style={{ color: INK_SOFT }}>
-                  {one.by}
+                <span aria-hidden className="fb-live-filament my-1.5" />
+                <p className="flex min-w-0 items-center gap-2">
+                  <span className="fb-live-by truncate text-[11px]">{one.by}</span>
+                  {index === at && playing && (
+                    <span aria-hidden className="fb-live-eq shrink-0">
+                      <i /><i /><i /><i /><i />
+                    </span>
+                  )}
                 </p>
               </div>
               {/* The genre, beside the name rather than under the note.
@@ -795,10 +837,7 @@ export default function RoomScreen({
                   it. Absent where there is none — a chip reading "—" is worse
                   than no chip. */}
               {one.genre && (
-                <span
-                  className="ml-auto shrink-0 rounded-full px-3 py-1 text-xs font-bold"
-                  style={{ background: GLASS, color: INK_SOFT }}
-                >
+                <span className="fb-live-chip ml-auto shrink-0 self-start rounded-full px-3 py-1 text-xs font-bold">
                   {one.genre}
                 </span>
               )}
@@ -814,6 +853,22 @@ export default function RoomScreen({
             <p className="relative pt-3 text-xs" style={{ color: INK_DIM }}>
               {index + 1} / {playable.length}
             </p>
+
+            {/* How far through the song, as a filament of light along the
+                foot of the picture. A film keeps its own clock on its own
+                element, which `along` does not follow, so it has none. */}
+            {index === at && !one.video && one.seconds > 0 && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px]"
+                style={{ background: 'rgba(255,255,255,0.12)' }}
+              >
+                <div
+                  className="fb-live-progress"
+                  style={{ width: `${Math.min(100, Math.max(0, (along / (one.seconds || 1)) * 100))}%` }}
+                />
+              </div>
+            )}
           </section>
         ))}
       </div>

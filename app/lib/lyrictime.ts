@@ -472,6 +472,30 @@ export async function exactFor(track: Track, audio: Blob | null): Promise<Timed>
 }
 
 /**
+ * The song LISTENED to — the paid rungs only, for a song going in front of
+ * everybody.
+ *
+ * The owner, 21 October 2026, about posting to the live channel: *"moet dit
+ * betaald standaard die liedjie eers luister, om die lyrics presies op die
+ * image te kry."* `exactFor` takes anything already worked out for the song,
+ * and that includes the free guesses (`phrases`, `sung`, `anchored`), which
+ * is right on somebody's own screen and not good enough for the room. So
+ * this reuses only an answer that came from listening (`aligned` or `heard`),
+ * which costs nothing a second time, and otherwise pays to listen.
+ */
+export async function listenedFor(track: Track, audio: Blob | null): Promise<Timed> {
+  if (!audio) return { lines: [], how: 'none' };
+  const before = remembered(track.id);
+  if (before && (before.how === 'aligned' || before.how === 'heard')) return before;
+  const words = (track.lyrics ?? '').trim();
+  if (words) {
+    const lined = await alignedFor(track, audio, words);
+    if (lined.lines.length) return lined;
+  }
+  return heardFor(track, audio);
+}
+
+/**
  * A measured answer for this song, whichever rung produced it.
  *
  * `spread` is excluded on purpose: it is not a measurement, it is the even

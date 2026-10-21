@@ -369,8 +369,10 @@ let signed = 0;
   const topPanel = ((await room.locator('article').first().innerText()) ?? '').replace(/\s+/g, ' ');
   check('the newest song is the first one in the room',
     topPanel.includes('Karoo Wind'), topPanel.slice(0, 60));
+  /* Case-blind since 21 October 2026: the maker's name is drawn in spaced
+     capitals (`.fb-live-by`), and `innerText` reads what is drawn. */
   check('and it carries the name of the person whose song it is',
-    topPanel.includes('Zoë'), topPanel.slice(0, 60));
+    topPanel.toLowerCase().includes('zoë'), topPanel.slice(0, 60));
 
   /* ── Play opens the room, it does not play under the list ──────────
 
@@ -385,7 +387,7 @@ let signed = 0;
   check('every song panel has a play button', (await panelPlay.count()) === 1);
   await panelPlay.first().click();
   await p.waitForTimeout(1200);
-  const opened = p.locator('div.fixed.inset-0.z-\\[80\\]');
+  const opened = p.locator('div[data-roomscreen]');
   check('pressing play opens the room full screen, where a swipe moves on',
     (await opened.count()) === 1, `${await opened.count()} full-screen views`);
 
@@ -456,7 +458,7 @@ let signed = 0;
   await playRoom.first().click();
   await p.waitForTimeout(1500);
 
-  const screen = p.locator('div.fixed.inset-0.z-\\[80\\]');
+  const screen = p.locator('div[data-roomscreen]');
   check('pressing it opens a full-screen view', (await screen.count()) === 1);
   const box = await screen.first().boundingBox();
   /* The trap that caught the song player and the teleprompter, both times
@@ -537,9 +539,11 @@ let signed = 0;
      panel's markup exists at once and "a 12 is somewhere in the scroller" is
      true before anybody scrolls.
 
-     It has to be reachable. The tab bar is `z-[95]` and this screen is
-     `z-[80]`, so anything near the bottom of it is painted over — the fault
-     she has reported three times in three different rooms. A rectangle in the
+     It has to be reachable. The tab bar is `z-[95]`; this screen was
+     `z-[80]`, so anything near the bottom of it was painted over — the fault
+     she has reported three times in three different rooms. Since 21 October
+     2026 it opens at `z-[100]`, above the bar, and is found by its own
+     `data-roomscreen` rather than by a layer number that can move again. A rectangle in the
      right place proves nothing; `elementFromPoint` is the only thing that
      says what a thumb actually lands on.
 
@@ -761,7 +765,7 @@ let signed = 0;
   await exit.click();
   await p.waitForTimeout(800);
   check('and it closes back into the room',
-    (await p.locator('div.fixed.inset-0.z-\\[80\\]').count()) === 0);
+    (await p.locator('div[data-roomscreen]').count()) === 0);
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

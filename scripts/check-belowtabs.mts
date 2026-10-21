@@ -145,10 +145,10 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
     why: 'full-bleed video; padding would letterbox it — controls unverified, see the note',
     holds: () => true,
   },
-  'app/components/RoomScreen.tsx': {
-    why: 'full-bleed scroller; same as SongScreen — controls unverified',
-    holds: () => true,
-  },
+  /* RoomScreen left this map on 21 October 2026: the live room opens at
+     z-[100], ABOVE the tab bar, so nothing of it sits under the bar to
+     excuse. The owner: *"Die live channel is wat almal sien"* — a room the
+     world watches does not lose its bottom strip to the bar. */
 };
 
 const walk = (dir: string): string[] =>
@@ -249,7 +249,7 @@ const KNOWN: readonly string[] = [
   'app/components/PostStudio.tsx',
   'app/components/PostToLive.tsx',
   'app/components/ProBooth.tsx',
-  'app/components/RoomScreen.tsx',
+  /* RoomScreen left on 21 October 2026 — it now opens above the bar. */
   'app/components/Search.tsx',
   'app/components/SongScreen.tsx',
   'app/components/ThemeStudio.tsx',

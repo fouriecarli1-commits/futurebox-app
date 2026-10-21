@@ -767,6 +767,8 @@ jobs:
         run: npm run check:transparency
       - name: Everything a member writes for somebody else goes past the blocker
         run: npm run check:blockers
+      - name: A song in the live channel carries when each line is sung, and lights it then
+        run: npm run check:livetimed
 
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing

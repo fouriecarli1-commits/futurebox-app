@@ -50,7 +50,6 @@ import { PLATFORMS, FUTUREBOX_TAG } from '../data/social';
 import { buildCaption, loadHandles, shareUrlFor, type Handles } from '../lib/social';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
-import PostToLive from './PostToLive';
 import { getAudio, safeFilename, type Track } from '../lib/library';
 import { accessToken } from '../lib/cloud';
 import { saveSong } from '../lib/songfile';
@@ -60,6 +59,7 @@ export default function ShareRow({
   what,
   hashtags = [],
   track,
+  live,
   file: fileFor,
 }: {
   title: string;
@@ -75,6 +75,18 @@ export default function ShareRow({
    * actually posts rather than opening somebody else's composer.
    */
   track?: Track;
+  /**
+   * The press that posts this song to the live room, handed in by the room
+   * that holds the song (`<PostToLive track={track} />`).
+   *
+   * A slot rather than an import, 21 October 2026: posting now listens to the
+   * song first, which is a paid door, and this row is also used by rooms that
+   * never hold a song (the photo editor shares a film). Importing the door
+   * here put it into every one of those rooms' code, and `check:kidsafe`
+   * rightly counted it as a way to spend there. Only the room with the song
+   * brings it.
+   */
+  live?: React.ReactNode;
   /**
    * The actual thing, for the phone's own share sheet.
    *
@@ -269,9 +281,9 @@ export default function ShareRow({
             </div>
 
             {/* The one thing here that really posts. */}
-            {track && (
+            {track && live && (
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
-                <PostToLive track={track} />
+                {live}
                 <span className="min-w-0 flex-1 text-sm text-zinc-500">
                   {t('share.liveIsReal', 'This one posts. Everything under it opens somebody else’s composer.')}
                 </span>

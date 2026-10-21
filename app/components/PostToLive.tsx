@@ -60,7 +60,7 @@ import { refusalText } from '../lib/apierror';
 import { useBackLayer } from '../lib/backstack';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
-import { planOf } from '../lib/timeline';
+import { listenPrice, wordsForRoom } from '../lib/postwords';
 
 export default function PostToLive({
   track,
@@ -76,6 +76,10 @@ export default function PostToLive({
   const [problem, setProblem] = useState('');
   /** The question is open. Nothing has been posted and nothing is decided. */
   const [asking, setAsking] = useState(false);
+  /** Listen to the song first, so its words land exactly — on unless switched off. */
+  const [listenFirst, setListenFirst] = useState(true);
+  const [heard, setHeard] = useState('');
+  const price = listenPrice(track);
 
   /* The question paints over the whole app, so the phone's Back button has to
      close it rather than leave the room behind it. Without this the press
@@ -87,8 +91,12 @@ export default function PostToLive({
   const post = async (buildOn: boolean) => {
     setAsking(false);
     setProblem('');
+    setHeard('');
     setBusy(true);
     try {
+      /* Listened to first, by default — see `lib/postwords.ts`. */
+      const got = await wordsForRoom(track, listenFirst && price > 0);
+      if (got.why) setHeard(t('live.notListened', 'Posted with the words spread over the song: {why}').replace('{why}', got.why));
       const token = await accessToken();
       const response = await fetch('/api/live', {
         method: 'POST',
@@ -112,7 +120,7 @@ export default function PostToLive({
              reading the room is somebody else.
 
              The owner: *"Die play room moet die liedjie se woorde speel."* */
-          words: planOf(track),
+          words: got.words,
           seconds: track.seconds,
           buildOn,
           /* Sent whichever answer was given, because the room stores it
@@ -166,6 +174,7 @@ export default function PostToLive({
         {done ? t('live.posted', 'In the room') : t('live.toRoom', 'Post to Live')}
       </button>
       {problem && <p className="w-full text-sm text-amber-300 leading-snug">{problem}</p>}
+      {heard && <p className="w-full text-xs text-zinc-400 leading-snug">{heard}</p>}
 
       {asking && (
         <div
@@ -195,6 +204,24 @@ export default function PostToLive({
                 'Your audio file stays yours. It is never copied and never goes into a model — a new song begins from the words, not from your recording.',
               )}
             </p>
+
+            {/* Listen first — on by default, priced, and switchable. */}
+            {price > 0 && (
+              <label data-postlisten className="mt-4 flex items-start gap-2.5 rounded-xl border border-sky-500/30 bg-sky-500/[0.06] p-3 text-sm text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={listenFirst}
+                  onChange={(event) => setListenFirst(event.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-sky-400"
+                />
+                <span>
+                  {t('live.listenFirst', 'Listen to the song first, so the words land exactly on the picture')}
+                  <span className="block text-xs text-zinc-400">
+                    {t('live.listenPrice', '{n} credits · nothing if this song was listened to before').replace('{n}', String(price))}
+                  </span>
+                </span>
+              </label>
+            )}
 
             {/* Two answers, neither of them the default one. The second is not
                 a cancel: both post the song, and the only difference is the

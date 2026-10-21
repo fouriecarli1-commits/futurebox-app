@@ -71,8 +71,17 @@ ok('  the plan lives in one place, not in whichever screen posts',
   /export function planOf\(/.test(plan) &&
     /stored\.length \? stored : partsOf\(track\.lyrics \?\? ''\)/.test(plan),
   'only songs made since plans were kept carry one; without this every older song is silent');
-ok('  the share sheet sends them', /words: planOf\(track\)/.test(post));
-ok('  and so does the room\u2019s own composer', /words: planOf\(track\)/.test(live),
+/* 21 October 2026: both paths now go through `wordsForRoom`, which listens
+   to the song first (paid, on by default) and falls back to `planOf` when it
+   is not listened to or the listening finds nothing. The owner: *"moet dit
+   betaald standaard die liedjie eers luister, om die lyrics presies op die
+   image te kry."* */
+const postwords = readFileSync('app/lib/postwords.ts', 'utf8');
+ok('  one function decides a post\u2019s words, and it still falls back to the plan',
+  /export async function wordsForRoom\(/.test(postwords) && /planOf\(track\)/.test(postwords),
+  'a song that is not listened to must still carry its sections');
+ok('  the share sheet sends them', /wordsForRoom\(track,/.test(post) && /words: got\.words/.test(post));
+ok('  and so does the room\u2019s own composer', /wordsForRoom\(/.test(live) && /words: got\.words/.test(live),
   'a song posted from inside Live carried no words at all');
 ok('    and its genre with them', /genre: track\.genre,/.test(live));
 ok('  the route stores them', /words: words\.length \? words : null/.test(route));
@@ -83,6 +92,8 @@ ok('  and hands them back', /words: Array\.isArray\(post\.words\) \? post\.words
 ok('  the room passes them to the panel', /words: one\.words,/.test(live));
 ok('  and the panel spreads them over the song',
   /timelineOf\(plan, one\?\.seconds \|\| 0\)/.test(room));
+ok('    unless the post carries the times it was heard at, which win',
+  /linesFromParts\(plan\) \?\?/.test(room));
 ok('    and follows the sound rather than a guess',
   /addEventListener\('timeupdate'/.test(room) && /lineAt\(timed, along\)/.test(room));
 

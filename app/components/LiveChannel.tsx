@@ -41,7 +41,9 @@ import { useLang } from '../lib/i18n';
 import { creditLine, type ArtCredit } from '../lib/artcredit';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
-import { planOf, type Part } from '../lib/timeline';
+import { type Part } from '../lib/timeline';
+import { lightDelay, useLit } from '../lib/livelight';
+import { listenPrice, wordsForRoom } from '../lib/postwords';
 import { myVideos, type MyVideo } from '../lib/filmed';
 import Cover from './Cover';
 import SaysDone from './SaysDone';
@@ -263,9 +265,17 @@ function RoomPanel({
    * second copy of the test here is how the badge and the room came to
    * disagree in the first place. */
   const listenable = playable(post);
+  /* The light moves only while the sleeve is on the screen (`livelight.ts`). */
+  const [sleeve, lit] = useLit<HTMLElement>();
 
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+    <article
+      ref={sleeve}
+      data-roompanel
+      data-lit={lit ? '' : undefined}
+      className="fb-live-edge relative overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_0_28px_rgba(56,189,248,0.16),0_18px_40px_-18px_rgba(217,70,239,0.35)]"
+      style={{ '--fb-live-delay': lightDelay(post.sourceId || post.id) } as React.CSSProperties}
+    >
       {/* Tall, and taller than it is wide on a phone. Capped in viewport
           height so two panels are never entirely off the screen at once —
           somebody has to be able to see that there is a next one. */}
@@ -292,18 +302,29 @@ function RoomPanel({
         />
       </button>
 
+      {/* Light over the picture, under the words — the owner, 21 October
+          2026: *"Bring ook bietjie motion en beweging van die lig so elke nou
+          en dan deur die album art."* A slow coloured haze, and a beam that
+          crosses the sleeve every few seconds (`.fb-live-*`, `globals.css`). */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="fb-live-aurora" />
+        <div className="fb-live-beam" />
+      </div>
+
       {/* Over the picture, bottom left, out of the thumb's way on the right. */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 p-4 pb-3"
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0))' }}
       >
-        <p
-          className="truncate text-lg font-black leading-tight"
-          style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
-        >
+        {/* The title in light rather than in ink: *"moet die skrif op die
+            album ook amazing lyk."* Two lines before it gives up, not one —
+            a song's name cut to "Brug om s…" is the first thing the world
+            reads in this room. Room on the right for the rail. */}
+        <p className="fb-live-title line-clamp-2 pr-14 text-[1.7rem]">
           {post.title}
         </p>
-        <p className="truncate text-sm" style={{ color: 'rgba(255,255,255,0.78)' }}>
+        <span aria-hidden className="fb-live-filament mt-2 mb-1.5" />
+        <p className="fb-live-by truncate pr-14 text-[11px]">
           {post.by}
           {post.kind === 'elsewhere'
             ? ` · ${post.platform || t('live.somewhere', 'somewhere')}`
@@ -334,14 +355,7 @@ function RoomPanel({
             no genre to have. A chip reading "—" is worse than no chip. */}
         {post.kind === 'track' && post.genre && (
           <p className="pt-1.5">
-            <span
-              className="inline-block rounded-full px-2.5 py-1 text-xs font-bold"
-              style={{
-                background: 'rgba(255,255,255,0.16)',
-                color: '#ffffff',
-                textShadow: '0 1px 6px rgba(0,0,0,0.6)',
-              }}
-            >
+            <span className="fb-live-chip inline-block rounded-full px-2.5 py-1 text-xs font-bold">
               {post.genre}
             </span>
           </p>
@@ -405,22 +419,14 @@ function RoomPanel({
               : t('live.heartSignIn', 'Sign in to heart it')
           }
           title={signedIn ? undefined : t('live.heartSignIn', 'Sign in to heart it')}
+          data-liveheart
           className="flex flex-col items-center gap-1 disabled:cursor-default"
         >
-          <span
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm transition-transform active:scale-90"
-            style={{
-              background: 'rgba(0,0,0,0.5)',
-              color: post.hearted ? '#34d399' : '#ffffff',
-              opacity: signedIn ? 1 : 0.65,
-            }}
-          >
+          {/* Given, it fills with pink light and bursts once (`globals.css`). */}
+          <span className="fb-live-orb h-12 w-12" style={{ opacity: signedIn ? 1 : 0.65 }}>
             <Heart className="h-5 w-5" fill={post.hearted ? 'currentColor' : 'none'} />
           </span>
-          <span
-            className="text-xs font-bold tabular-nums"
-            style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
-          >
+          <span className="fb-live-count text-xs">
             {post.hearts ?? '–'}
           </span>
         </button>
@@ -438,16 +444,10 @@ function RoomPanel({
           className="flex flex-col items-center gap-1"
           title={t('live.playsWhy', 'Counted once somebody has listened to 65% of the song')}
         >
-          <span
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
-          >
+          <span className="fb-live-orb h-12 w-12">
             <Headphones className="h-5 w-5" />
           </span>
-          <span
-            className="text-xs font-bold tabular-nums"
-            style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
-          >
+          <span className="fb-live-count text-xs">
             {post.plays ?? '–'}
           </span>
         </span>
@@ -467,10 +467,10 @@ function RoomPanel({
             type="button"
             onClick={onOpen}
             aria-label={t('live.listen', 'Listen')}
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+            className="fb-fx-go flex h-14 w-14 items-center justify-center rounded-full"
           >
-            <Play className="ml-0.5 h-5 w-5" />
+            <span aria-hidden className="fb-fx-shine" />
+            <Play className="relative ml-0.5 h-6 w-6" fill="currentColor" />
           </button>
         )}
         {post.kind === 'elsewhere' && post.link && (
@@ -479,8 +479,7 @@ function RoomPanel({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t('live.watch', 'Watch')}
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+            className="fb-live-orb h-12 w-12"
           >
             <Eye className="h-5 w-5" />
           </a>
@@ -490,8 +489,7 @@ function RoomPanel({
         {!post.mine && (
           <ReportFlag
             target={{ kind: 'post', ref: post.id, about: post.who ?? null, name: post.by, post: post.id, where: 'live' }}
-            className="h-10 w-10 backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.75)' }}
+            className="fb-live-orb h-11 w-11"
           />
         )}
         {post.mine && (
@@ -499,8 +497,7 @@ function RoomPanel({
             type="button"
             onClick={() => void onTakeOut()}
             aria-label={t('live.take', 'Take it out')}
-            className="flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.75)' }}
+            className="fb-live-orb h-11 w-11"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -748,6 +745,10 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
     ? tracks.filter((one) => one.title.toLowerCase().includes(looking.trim().toLowerCase()))
     : tracks;
 
+  /** Listen to a song before it goes in, so its words land exactly. On by default. */
+  const [listenFirst, setListenFirst] = useState(true);
+  const [heard, setHeard] = useState('');
+
   const send = async (payload: Record<string, unknown>): Promise<boolean> => {
     setProblem('');
     setBusy(true);
@@ -813,7 +814,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             type="button"
             data-livemode="feed"
             onClick={() => setMode('feed')}
-            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'feed' ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'feed' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
           >
             {t('live.modeFeed', 'Room feed')}
           </button>
@@ -821,7 +822,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             type="button"
             data-livemode="jam"
             onClick={() => setMode('jam')}
-            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'jam' ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'jam' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
           >
             {t('live.modeJam', 'Live jam room')}
           </button>
@@ -886,6 +887,24 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             </button>
           ) : (
             <div className="space-y-1.5">
+              {/* Listen first, so the words land exactly — the owner, 21
+                  October 2026: "moet dit betaald standaard die liedjie eers
+                  luister". On by default, its price on it, and switchable. */}
+              <label data-postlisten className="flex items-start gap-2.5 rounded-xl border border-sky-500/30 bg-sky-500/[0.06] p-3 text-sm text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={listenFirst}
+                  onChange={(event) => setListenFirst(event.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-sky-400"
+                />
+                <span>
+                  {t('live.listenFirst', 'Listen to the song first, so the words land exactly on the picture')}
+                  <span className="block text-xs text-zinc-400">
+                    {t('live.listenEach', '{n} credits a minute of song · nothing for a song listened to before').replace('{n}', '4')}
+                  </span>
+                </span>
+              </label>
+              {heard && <p className="text-xs text-zinc-400">{heard}</p>}
               {/* Every song, not the first six.
 
                   "nie al my liedjies is daar as opsies nie." It was
@@ -928,8 +947,10 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
                       busyLabel={t('live.posting', 'Posting…')}
                       doneLabel={t('live.wasPosted', 'Posted')}
                       className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 shrink-0 disabled:opacity-50"
-                      onDo={() =>
-                        send({
+                      onDo={async () => {
+                        const got = await wordsForRoom(track, listenFirst && listenPrice(track) > 0);
+                        setHeard(got.why ? t('live.notListened', 'Posted with the words spread over the song: {why}').replace('{why}', got.why) : '');
+                        return send({
                           what: 'post',
                           kind: 'track',
                           sourceId: track.id,
@@ -948,11 +969,11 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
                              one answer to what a post's words are, so the
                              two cannot drift apart again. */
                           genre: track.genre,
-                          words: planOf(track),
+                          words: got.words,
                           seconds: track.seconds,
                           style: track.style,
-                        })
-                      }
+                        });
+                      }}
                     />
                   </div>
                 ))}
@@ -1101,7 +1122,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
                     setShowElsewhere(false);
                   }
                 }}
-                className="min-h-[44px] w-full py-2 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold disabled:opacity-50"
+                className="fb-fx-go min-h-[44px] w-full py-2 rounded-xl text-sm font-bold disabled:opacity-50"
               >
                 {t('live.tellThem', 'Tell the room')}
               </button>
@@ -1198,7 +1219,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
               type="button"
               disabled={busy || !draft.trim()}
               onClick={() => void send({ what: 'say', link: draft }).then((done) => { if (done) setDraft(''); })}
-              className="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-500 text-onAccent shrink-0 disabled:opacity-50"
+              className="fb-fx-go min-h-[44px] px-3 py-2 rounded-xl shrink-0 disabled:opacity-50"
               aria-label={t('live.send', 'Send')}
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -1236,7 +1257,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             const first = shown.posts.find(playable);
             if (first) setOpenAt(first.id);
           }}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-onAccent font-bold"
+          className="fb-fx-go flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl font-bold"
         >
           <Play className="h-4 w-4" />
           {t('live.playRoom', 'Play the room')}
