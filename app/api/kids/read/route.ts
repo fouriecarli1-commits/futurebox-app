@@ -29,13 +29,28 @@ import { wavOf } from '@/app/lib/pcmwav';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
-import { castVoices, kidVoice, STORYTELLERS } from '@/app/lib/kidsvoices';
+import { bare, castVoices, kidVoice, STORYTELLERS, type KidVoiceId } from '@/app/lib/kidsvoices';
+import { backupReady, fallsBack, speakTurnsBackup } from '@/app/lib/server/googlevoice';
 import { READ_MOST_CHARS } from '@/app/lib/kidstory';
 import type { Turn } from '@/app/lib/dialogue';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
+
+/**
+ * Google's voice for each persona, when ElevenLabs cannot read the page.
+ * Only the eight voices Google launched with, so a name cannot be one an
+ * account does not have; matched to how each persona is described.
+ */
+const BACKUP_PERSONA: Readonly<Record<KidVoiceId, string>> = {
+  owl: 'Charon', // warm and wise
+  fairy: 'Leda', // soft and sparkly
+  comet: 'Fenrir', // bold and excited
+  ember: 'Zephyr', // playful and giggly
+  bruno: 'Orus', // deep and cuddly
+  pip: 'Puck', // tiny and quick
+};
 
 /** A book's six pages read a few at a time, and a few books an hour. */
 const PAGES = { perMinute: 10, perHour: 80 };
@@ -65,7 +80,11 @@ export async function POST(request: Request): Promise<Response> {
   const allowed = await guard(request, lines.map((one) => one.text).join('\n'), 'speech', caller);
   if (!allowed.ok) return allowed.response;
 
-  if (!configured()) {
+  /* Google reads the page when ElevenLabs cannot — busy, down or not
+     switched on — so a child's book is not silent on a busy evening. Each
+     persona keeps a voice of its own (`BACKUP_PERSONA`). */
+  const viaEleven = configured();
+  if (!viaEleven && !backupReady()) {
     return Response.json({ message: 'The story voices are not switched on yet.' }, { status: 503 });
   }
 
@@ -79,16 +98,35 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  const voices = castVoices(await stockVoices());
-  const turns: Turn[] = lines.map((one) => ({ voiceId: voices[one.who!.id], text: one.text }));
-
+  const lang = body.lang === 'af' ? 'af' : 'en';
   const paid = await charge(request, readCost(characters), 'read');
   if (!paid.ok) return paid.response;
 
-  const said = await converse(turns, body.lang === 'af' ? 'af' : 'en');
+  /** The same page, read by Google. Stage directions like `[giggles]` are
+      taken out: only ElevenLabs' newest model performs them. */
+  const backup = async (): Promise<Response> => {
+    const made = await speakTurnsBackup(
+      lines.map((one) => ({ voice: BACKUP_PERSONA[one.who!.id], text: bare(one.text) })),
+      { language: lang, owner: caller?.id ?? null },
+    );
+    if (!made.ok) {
+      await paid.refund();
+      return Response.json({ message: made.message }, { status: made.status });
+    }
+    return new Response(made.audio, {
+      headers: { 'Content-Type': 'audio/wav', 'Cache-Control': 'no-store', 'X-Model': made.model, 'X-Read-Engine': 'backup' },
+    });
+  };
+  if (!viaEleven) return backup();
+
+  const voices = castVoices(await stockVoices());
+  const turns: Turn[] = lines.map((one) => ({ voiceId: voices[one.who!.id], text: one.text }));
+
+  const said = await converse(turns, lang).catch(() => ({ ok: false as const, status: 0, message: 'The story voices could not be reached.' }));
+  if (!said.ok && fallsBack(said.status) && backupReady()) return backup();
   if (!said.ok) {
     await paid.refund();
-    return Response.json({ message: said.message }, { status: said.status });
+    return Response.json({ message: said.message }, { status: said.status || 502 });
   }
 
   return new Response(new Uint8Array(wavOf(said.spoken.pcm, said.spoken.rate)), {

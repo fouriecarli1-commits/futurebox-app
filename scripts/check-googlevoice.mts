@@ -145,6 +145,33 @@ heard = await hear();
 const theirs = (await heard.json()) as { engine?: string; text?: string };
 ok('a healthy ElevenLabs transcribes, and Google is not asked', heard.status === 200 && theirs.engine !== 'backup' && theirs.text === 'theirs' && askedGoogle === 0);
 
+/* ── A child's story page: /api/kids/read ────────────────────────────── */
+
+const { POST: kidsRead } = await import('../app/api/kids/read/route.ts');
+const page = () => kidsRead(new Request('http://localhost/api/kids/read', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.0.2.${Math.floor(Math.random() * 250)}` },
+  body: JSON.stringify({ lang: 'af', lines: [{ who: 'owl', text: 'Eendag, lank gelede...' }, { who: 'pip', text: '[giggles] Kom ons gaan!' }] }),
+}));
+const voicesAsked: string[] = [];
+const was = globalThis.fetch;
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  const body = String(init?.body ?? '');
+  const named = /"voiceName":"([A-Za-z]+)"/.exec(body);
+  if (named) voicesAsked.push(named[1]);
+  if (/giggles/.test(body) && String(input).includes('aiplatform')) voicesAsked.push('READ-THE-TAG');
+  return was(input, init);
+}) as typeof fetch;
+eleven = 'busy'; voicesAsked.length = 0;
+let story = await page();
+ok('busy: a child\'s page is read by Google, not left silent', story.status === 200 && story.headers.get('X-Read-Engine') === 'backup'
+  && story.headers.get('Content-Type') === 'audio/wav', `status ${story.status}`);
+ok('each persona keeps its own voice, and a stage direction is not read out', voicesAsked.includes('Charon') && voicesAsked.includes('Puck') && !voicesAsked.includes('READ-THE-TAG'), voicesAsked.join(','));
+eleven = 'fine'; voicesAsked.length = 0;
+story = await page();
+ok('a healthy ElevenLabs reads the page, and Google is not asked', story.status === 200 && story.headers.get('X-Read-Engine') !== 'backup' && !voicesAsked.length, `status ${story.status} ${voicesAsked.join(',')}`);
+globalThis.fetch = was;
+
 /* ── The owner's test button: /google → /api/google/voicetest ─────────── */
 
 process.env.POST_SECRET = 'a-test-secret';

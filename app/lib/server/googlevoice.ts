@@ -242,26 +242,55 @@ export async function speakBackup(
   text: string,
   opts: { voice: string; language?: string; owner?: string | null },
 ): Promise<Backed> {
+  return readLines([{ voice: opts.voice, text }], opts);
+}
+
+/**
+ * Several lines, each in its own voice, as one WAV — a story page read by
+ * the storyteller and the characters in turn (`/api/kids/read`).
+ *
+ * Read one line at a time rather than as Google's two-speaker dialogue: a
+ * page can have a storyteller and three characters, and their two-speaker
+ * form would have to give two of them the same voice.
+ */
+export async function speakTurnsBackup(
+  turns: readonly { voice: string; text: string }[],
+  opts: { language?: string; owner?: string | null },
+): Promise<Backed> {
+  return readLines(turns, opts);
+}
+
+/**
+ * Every line cut into pieces, read three at a time, joined in order with a
+ * breath between pieces and a longer one where the speaker changes.
+ */
+async function readLines(
+  lines: readonly { voice: string; text: string }[],
+  opts: { language?: string; owner?: string | null },
+): Promise<Backed> {
   if (!backupReady()) return { ok: false, status: 503, message: BUSY };
-  const micros = text.length * SPEAK_MICROS_PER_CHAR;
+  const characters = lines.reduce((sum, one) => sum + one.text.length, 0);
+  const micros = characters * SPEAK_MICROS_PER_CHAR;
   const refused = await enough('music', micros, opts.owner);
   if (refused) return { ok: false, status: 503, message: BUSY };
 
-  const pieces = piecesOf(text);
+  /* Each piece keeps the line it came from, so the gap after it knows
+     whether the next voice is the same one. */
+  const pieces = lines.flatMap((line, at) => piecesOf(line.text).map((text) => ({ text, voice: line.voice, line: at })));
   const read: Uint8Array[] = new Array(pieces.length);
   let rate = 24000;
   let model = SPEECH_ORDER[0];
   for (let start = 0; start < pieces.length; start += 3) {
     const batch = await Promise.all(
-      pieces.slice(start, start + 3).map((piece) => readPiece(piece, opts.voice, opts.language ?? '')),
+      pieces.slice(start, start + 3).map((piece) => readPiece(piece.text, piece.voice, opts.language ?? '')),
     );
     for (let i = 0; i < batch.length; i += 1) {
       const one = batch[i];
       if (!one.ok) {
         /* The member is refunded by the route; what Google read before the
            failure was still read, and the ceiling has to know about it. */
-        const done = pieces.slice(0, start).reduce((sum, piece) => sum + piece.length, 0)
-          + batch.reduce((sum, other, k) => sum + (other.ok ? pieces[start + k].length : 0), 0);
+        const done = pieces.slice(0, start).reduce((sum, piece) => sum + piece.text.length, 0)
+          + batch.reduce((sum, other, k) => sum + (other.ok ? pieces[start + k].text.length : 0), 0);
         await note('music', done * SPEAK_MICROS_PER_CHAR, `${model}:speak`, opts.owner).catch(() => undefined);
         return { ok: false, status: 503, message: BUSY };
       }
@@ -271,13 +300,17 @@ export async function speakBackup(
     }
   }
 
-  /* A breath between pieces, so a cut at a full stop sounds like one. */
-  const gap = new Uint8Array(Math.round(rate * 0.18) * 2);
-  const length = read.reduce((sum, one) => sum + one.byteLength, 0) + gap.byteLength * (read.length - 1);
+  /* A breath between pieces, so a cut at a full stop sounds like one; a
+     longer one where another voice takes over. */
+  const breath = new Uint8Array(Math.round(rate * 0.18) * 2);
+  const turn = new Uint8Array(Math.round(rate * 0.35) * 2);
+  const gapBefore = (i: number): Uint8Array => (pieces[i].line === pieces[i - 1].line ? breath : turn);
+  let length = read.reduce((sum, one) => sum + one.byteLength, 0);
+  for (let i = 1; i < read.length; i += 1) length += gapBefore(i).byteLength;
   const pcm = new Uint8Array(length);
   let at = 0;
   read.forEach((one, i) => {
-    if (i) { pcm.set(gap, at); at += gap.byteLength; }
+    if (i) { const gap = gapBefore(i); pcm.set(gap, at); at += gap.byteLength; }
     pcm.set(one, at);
     at += one.byteLength;
   });
