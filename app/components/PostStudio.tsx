@@ -7460,7 +7460,7 @@ export default function PostStudio({
           value={Math.round((1 - photoAlpha) * 100)}
           onChange={(event) => setPhotoAlpha(1 - Number(event.target.value) / 100)}
           aria-label={t('post.photoAlpha', 'Transparency')}
-          className="h-9 w-full accent-emerald-400"
+          className="h-11 w-full accent-emerald-400"
         />
         <span className="flex justify-between text-[11px] text-zinc-500">
           <span>{t('post.photoSolid', 'Solid')}</span>

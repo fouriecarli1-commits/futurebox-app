@@ -6549,7 +6549,7 @@ async function smallerFrame(url: string): Promise<string> {
                 slide({ motion: shows(next) ? next : undefined });
               }}
               aria-label={t('edit.solid', 'Transparency')}
-              className="h-9 w-full accent-emerald-400"
+              className="h-11 w-full accent-emerald-400"
             />
             <span className="flex justify-between text-[11px] text-zinc-500">
               <span>{t('post.photoSolid', 'Solid')}</span>

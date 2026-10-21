@@ -4807,7 +4807,7 @@ export default function ProBooth({
                   value={humTweak[key]}
                   data-humdial={key}
                   onChange={(event) => { const v = Number(event.target.value); setHumTweak((was) => ({ ...was, [key]: v })); }}
-                  className="h-8 w-full accent-sky-400"
+                  className="h-11 w-full accent-sky-400"
                 />
                 <span className="text-right tabular-nums text-sky-200">{said(humTweak[key])}</span>
               </label>
