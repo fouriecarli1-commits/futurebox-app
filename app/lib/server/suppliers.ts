@@ -56,6 +56,8 @@
  * what a bill is read against. `check:seam` holds that every one of them has
  * exactly one supplier and that no call goes out without naming one.
  */
+import { BUSY_TRIES, busyOf, noteCrowding, resendable, waitBefore } from './supplierbusy';
+
 export type Capability =
   /** Text read aloud, with or without word timings. */
   | 'speak'
@@ -285,7 +287,7 @@ export function call(
   if (whole(path)) {
     throw new Error('call() takes a path, not a URL — see callGiven');
   }
-  return send(supplier, `${supplier.base}${path}`, init, asPerson);
+  return send(supplier, `${supplier.base}${path}`, init, asPerson, what);
 }
 
 /** Whether this is a whole address rather than a path under a base. */
@@ -340,14 +342,32 @@ export function callGiven(
       `callGiven() refuses ${new URL(url).origin}: not ${supplier.name}'s own host`,
     );
   }
-  return send(supplier, url, init, asPerson);
+  return send(supplier, url, init, asPerson, what);
 }
 
 /**
  * The only place a credential is written and the only place anything is
  * fetched. Both doors come through here so there is one line to get right.
  */
-function send(
+async function send(
+  supplier: Supplier,
+  url: string,
+  init: RequestInit,
+  asPerson: string | undefined,
+  what: Capability,
+): Promise<Response> {
+  /* A busy supplier is asked again a few times; see `supplierbusy.ts` for
+     why, and for what is never asked twice. */
+  for (let attempt = 1; ; attempt += 1) {
+    const response = await sendOnce(supplier, url, init, asPerson);
+    noteCrowding(supplier.id, what, response);
+    if (response.status !== 429 || attempt >= BUSY_TRIES || !resendable(init.body)) return response;
+    if (!(await busyOf(response.clone()))) return response;
+    await new Promise((done) => setTimeout(done, waitBefore(attempt, response)));
+  }
+}
+
+function sendOnce(
   supplier: Supplier,
   url: string,
   init: RequestInit,

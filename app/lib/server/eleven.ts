@@ -390,14 +390,21 @@ export async function complain(response: Response): Promise<Upstream> {
     theirs = raw.slice(0, 300);
   }
 
+  /* Busy is not broke. Their 429 is both "every lane is in use" and "the
+     account is out of credits", and the one sentence for both sent people
+     off to buy credits they had. `send` has already asked again a few times
+     before a busy answer gets here. */
+  const busy = response.status === 429 && /too_many_concurrent_requests|system_busy/.test(raw);
   const known =
     response.status === 401
       ? 'The voice service rejected the key.'
       : response.status === 402
         ? 'This needs a paid ElevenLabs plan.'
-        : response.status === 429
-          ? 'Out of voice credits, or too many requests at once.'
-          : '';
+        : busy
+          ? 'The voice service is very busy right now. Try again in a minute.'
+          : response.status === 429
+            ? 'Out of voice credits, or too many requests at once.'
+            : '';
 
   const lead = (known || `The voice service said no (${response.status})`).replace(/\.$/, '');
   return { ok: false, status: response.status, message: theirs ? `${lead}: ${theirs}` : `${lead}.` };

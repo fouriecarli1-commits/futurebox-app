@@ -739,6 +739,12 @@ jobs:
       - name: Every table says who may reach it through the API
         run: npm run check:sqlgrants
 
+      # ElevenLabs throttle by requests in flight and answer 429 when busy;
+      # their support said those resolve on retry. A busy answer is asked
+      # again a few times, a refusal (out of credits) is not.
+      - name: A busy voice service is asked again; a refusal is not
+        run: npm run check:elevenbusy
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a
