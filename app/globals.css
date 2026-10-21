@@ -3148,6 +3148,11 @@ button[data-liveheart]:active:not(:disabled) {
   }
   html[data-topbar] [data-searchcorner] { display: none; }
   html[data-topbar] [data-sheetsearch] { display: none; }
+  /* The pages outside the studio — help, the terms, the guide, the blog,
+     the presenters' registration — each paint a solid page of the body's own
+     colour over everything, the stage included. On a computer the stage
+     shows through them as it does in the app: every page, the owner said. */
+  html:not([data-fb-mode='light']) main[class~='min-h-screen'][class~='bg-zinc-950'] { background-color: transparent; }
   /* The studio's own strip, which the top bar used to sit on, carries the
      way out of a room; the second one in the room's head is one too many. */
   html[data-topbar] [data-roomback] { display: none; }
