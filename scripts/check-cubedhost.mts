@@ -168,6 +168,11 @@ ok('  and the terms ask the presenter to speak only for a season, which they may
 ok('  and what a presenter receives for it is not on the public sponsorship pages',
   !['app/page.tsx', 'app/components/Placement.tsx', 'app/lib/plans.ts'].some((file) => code(file).includes(PAY.sponsorMonthSaid) || /SPONSOR_MONTH_RAND|sponsorMonth/.test(code(file))));
 
+ok('  and a company can read the rates and write to us without an account, from the landing page as well as the studio',
+  /<SponsorForm region=\{region\} \/>/.test(code('app/components/Landing.tsx')) && /id="sponsors"/.test(code('app/components/Landing.tsx'))
+  && /<SponsorForm region=\{region\} \/>/.test(code('app/page.tsx')) && !/callerFrom/.test(code('app/api/enquiry/route.ts'))
+  && /fetch\('\/api\/enquiry'/.test(code('app/components/Sponsor.tsx')) && !/Seedance/.test(code('app/components/Landing.tsx')));
+
 /* The owner, 22 October 2026: the presenter page and the applications, live,
    from her own You tab. */
 const preview = readFileSync('app/components/CubedHost.tsx', 'utf8');

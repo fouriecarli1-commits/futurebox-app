@@ -11,7 +11,7 @@ import {
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
-  Crown, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
+  Crown, Zap, RefreshCw, Check,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
@@ -53,7 +53,6 @@ import Booth from './components/Booth';
 import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
 import { Counters, Views, useBoard } from './components/Counters';
-import Placement from './components/Placement';
 import PodcastStudio from './components/PodcastStudio';
 import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
@@ -118,7 +117,8 @@ import { sendChildBack } from './lib/kidslock';
 import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
 import { SEE_PLANS_EVENT } from './lib/space';
-import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
+import { TIER_SPECS, TIERS, tierPrice } from './lib/plans';
+import { SponsorForm, SponsorRates } from './components/Sponsor';
 import { startCheckout, loadOwned } from './lib/purchases';
 import { inPlayApp, playAvailable, resumePlayPurchases } from './lib/playbilling';
 import DeskStage from './components/DeskStage';
@@ -1492,31 +1492,10 @@ export default function FutureBoxHome() {
      for the rest of the session. */
   const [scanSaying, setScanSaying] = useState<'picks' | 'another'>('picks');
 
-  // Marketing Contact Form
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactBudget, setContactBudget] = useState('');
-  /**
-   * The rate card as this region reads it, and which rung is selected.
-   *
-   * Held as a derived value rather than as the initial state because the region
-   * is worked out after the first render: a default stored at mount would be a
-   * dollar figure that no longer matches any option, and that stale string —
-   * not the one on screen — is what would have been emailed.
-   */
-  const budgetOptions = SPONSORSHIP.map(
-    (rung) => `${rung.name} — ${sponsorshipPrice(rung, region, lang)}`,
-  );
-  const budget = budgetOptions.indexOf(contactBudget) !== -1 ? contactBudget : budgetOptions[0];
-  const chosenRung = SPONSORSHIP[Math.max(0, budgetOptions.indexOf(budget))];
-  const [contactMessage, setContactMessage] = useState('');
   /** A song the channel asked the timeline to open. Cleared by nothing: it is
       read once per value by `SongSections`, so re-entering the room leaves
       whatever is chosen there alone. */
   const [editSong, setEditSong] = useState<string | null>(null);
-  const [contactSent, setContactSent] = useState(false);
-  const [contactBusy, setContactBusy] = useState(false);
-  const [contactProblem, setContactProblem] = useState<string | null>(null);
 
   // 🎧 COMPREHENSIVE MASTER GENRE & SOUNDBOARD DATA (All Genres & Subgenres)
   const masterGenreSamples: GenreSample[] = [
@@ -2419,48 +2398,6 @@ export default function FutureBoxHome() {
     setAuthModalOpen(true);
   };
 
-  /* The sponsorship brief, sent rather than handed to a mail client.
-     
-     This opened a `mailto:` and then said "sent" — which was not true and
-     could not be. On a phone that link often opens nothing; on a work machine
-     it opens Outlook signed in as somebody else; and either way the message
-     was still sitting unsent in a draft while the screen said it had gone. It
-     also printed the studio's address into every visitor's URL bar.
-
-     It posts to the same route the help page uses now, so a brief actually
-     arrives, with reply-to set to whoever wrote it. */
-  const handleMarketingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (contactBusy) return;
-    setContactBusy(true);
-    setContactProblem(null);
-    try {
-      const response = await fetch('/api/enquiry', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email: contactEmail,
-          name: contactName,
-          where: 'sponsorship',
-          message: `Budget: ${budget}\nWhat that includes: ${chosenRung.gets}\n\n${contactMessage}`,
-        }),
-      });
-      const said = (await response.json().catch(() => ({}))) as {
-        sent?: boolean;
-        message?: string;
-      };
-      if (said.sent) {
-        setContactSent(true);
-        setContactMessage('');
-      } else {
-        setContactProblem(said.message || t('spon.failed', 'That could not be sent. Try again in a moment.'));
-      }
-    } catch {
-      setContactProblem(t('spon.failed', 'That could not be sent. Try again in a moment.'));
-    } finally {
-      setContactBusy(false);
-    }
-  };
 
 
   // One scrollbar, not two: while a modal is open the page behind it must not
@@ -5681,114 +5618,14 @@ export default function FutureBoxHome() {
             <p className="text-xs text-zinc-400 leading-relaxed">
               {t(
                 'foot.blurb',
-                'The premier digital learning platform and Creative AI ecosystem designed for the future of work, intelligence, and artistic creation. Reach thousands of visionary entrepreneurs, AI researchers, and builders worldwide.',
+                'A creative AI studio for South African musicians, podcasters and creators: songs, voices, video and masterclasses in one app, in English and Afrikaans.',
               )}
             </p>
 
-            <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2">
-              <span className="text-[11px] uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
-                <Star className="w-3.5 h-3.5 fill-current" />
-                <span>{t('spon.benefits')}</span>
-              </span>
-              <ul className="text-xs text-zinc-300 space-y-1.5">
-                {SPONSORSHIP.map((rung) => (
-                  <li key={rung.id}>
-                    <span className="font-bold text-white">{t(`spon.${rung.id}.name`, rung.name)}</span>
-                    <span className="text-emerald-400"> · {sponsorshipPrice(rung, region, lang)}</span>
-                    <span className="block text-zinc-400 leading-snug">{t(`spon.${rung.id}.gets`, rung.gets)}</span>
-                  </li>
-                ))}
-              </ul>
-              {/* Said plainly, because it is the reason to sponsor this rather
-                  than buy impressions somewhere with more of them. */}
-              <p className="text-xs text-zinc-500 leading-relaxed pt-1">
-                {t(
-                  'spon.noBanners',
-                  'No banners, no pop-ups, nothing down the sides — there is nothing of that kind to buy here. What a sponsor gets is their name on something worth putting it on, and the counters on this page as the report.',
-                )}
-              </p>
-            </div>
+            <SponsorRates region={region} />
           </div>
 
-          <div className="bg-zinc-900/80 border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-4 shadow-2xl">
-            <div className="flex items-center space-x-2 text-white">
-              <Mail className="w-5 h-5 text-emerald-400" />
-              <h4 className="font-extrabold text-base">{t('home.advertiseWithUs', 'Advertise on FutureBox')}</h4>
-            </div>
-            <p className="text-xs text-zinc-400">{t('spon.intro')}</p>
-
-            <form onSubmit={handleMarketingSubmit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
-                  placeholder="Your Name / Company"
-                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
-                  required
-                />
-                <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder={t('feed.emailAddress')}
-                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2.5">
-                <select
-                  value={budget}
-                  onChange={(e) => setContactBudget(e.target.value)}
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
-                >
-                  {/* Priced in rand, because the audience is. The floor is
-                      deliberately high: it is the filter. */}
-                  {SPONSORSHIP.map((rung) => (
-                    <option key={rung.id} value={`${rung.name} — ${sponsorshipPrice(rung, region, lang)}`}>
-                      {/* The value stays the English name: it is what gets
-                          emailed, and a rung named differently in the letter
-                          from the way it is named in the rate card is how a
-                          quote gets argued about later. */}
-                      {t(`spon.${rung.id}.name`, rung.name)} — {sponsorshipPrice(rung, region, lang)}
-                    </option>
-                  ))}
-                </select>
-
-                {/* The answer to "what do I get", before they have to ask it. */}
-                <Placement rung={chosenRung} who={contactName} />
-              </div>
-
-              <textarea
-                value={contactMessage}
-                onChange={(e) => setContactMessage(e.target.value)}
-                placeholder="Describe your product, campaign goals, or partnership proposal..."
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-hidden focus:border-emerald-500 h-20"
-                required
-              />
-
-              {contactSent && (
-                <div className="p-3 bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs rounded-xl flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>{t('spon.sent', 'Sent. You will get a reply at the address you gave.')}</span>
-                </div>
-              )}
-
-              {contactProblem && (
-                <p className="text-xs text-amber-400 leading-snug">{contactProblem}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={contactBusy}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2 disabled:opacity-50"
-              >
-                {contactBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                <span>{t('spon.send')}</span>
-              </button>
-            </form>
-          </div>
+          <SponsorForm region={region} />
 
         </div>
 

@@ -36,7 +36,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Baby, Check, Cpu, LogIn, Lock, Tags,
+  Baby, Check, Cpu, LogIn, Lock, Megaphone, Tags,
 } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
 import { hasWelcomeVideo } from '../lib/welcomevideo';
@@ -50,6 +50,7 @@ import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
 import ThemeSwitch from './ThemeSwitch';
 import KidsBanner from './KidsBanner';
+import { SponsorForm, SponsorRates } from './Sponsor';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -190,6 +191,7 @@ export default function Landing({
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-300 md:flex" aria-label={t('landing.navPlatform', 'Platform')}>
             <button type="button" onClick={to('pricing')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navPricing', 'Pricing')}</button>
             <button type="button" onClick={to('kids')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navKids', 'Kids')}</button>
+            <button type="button" onClick={to('sponsors')} className="min-h-[44px] transition-colors hover:text-emerald-400" data-landingnavsponsors>{t('landing.navSponsors', 'Advertise')}</button>
             <LanguagePicker compact />
           </nav>
 
@@ -255,7 +257,7 @@ export default function Landing({
               </h1>
 
               <p className="max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg">
-                {t('landing.heroDesc', 'Songs, videos, pictures and voices from the leading AI engines \u2014 Google Veo, Lyria and Gemini, ElevenLabs and Seedance \u2014 in one studio, with a copilot that knows every room.')}
+                {t('landing.heroDesc', 'Songs, videos, pictures and voices from the leading AI engines \u2014 Google Veo, Lyria and Gemini, and ElevenLabs \u2014 in one studio, with a copilot that knows every room.')}
               </p>
 
               <p className="text-sm text-zinc-500">
@@ -542,6 +544,21 @@ export default function Landing({
             {t('welcome.plansSmall', 'Prices are in rand and converted for where you are. A month you have paid for runs to its end even if you cancel on the first day.')}
           </p>
         </section>
+
+        {/* ── For sponsors ──────────────────────────────────────────────
+            The rate card and the enquiry form were in the studio's footer
+            only, behind an account. A company that came here to sponsor
+            something reads the prices and writes to us from this page. */}
+        <section id="sponsors" className={`${GUTTER} scroll-mt-24 border-t border-zinc-800/80 py-24`} data-landingsponsors>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{t('landing.sponsorsTitle', 'Put your name on it')}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-400">{t('landing.sponsorsLead', 'Sponsor a Cubed³ masterclass, a whole season with its presenter, or be the one headline partner across the app.')}</p>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-5xl items-start gap-6 md:grid-cols-2">
+            <SponsorRates region={region} />
+            <SponsorForm region={region} />
+          </div>
+        </section>
       </main>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
@@ -555,6 +572,10 @@ export default function Landing({
         <button type="button" onClick={to('pricing')} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-zinc-400 hover:text-emerald-400">
           <Tags className="h-4 w-4" />
           <span>{t('landing.navPricing', 'Pricing')}</span>
+        </button>
+        <button type="button" onClick={to('sponsors')} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-zinc-400 hover:text-emerald-400">
+          <Megaphone className="h-4 w-4" />
+          <span>{t('landing.navSponsors', 'Advertise')}</span>
         </button>
         <button type="button" onClick={onSignIn} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-emerald-400">
           <LogIn className="h-4 w-4" />
