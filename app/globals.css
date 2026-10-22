@@ -2150,6 +2150,19 @@ html[data-singing] [data-tabbar] { display: none !important; }
   margin: 0 !important;
 }
 
+/* A bench that is one column by nature (the layer list and its tools) opts
+   out of the sideways columns and scrolls down instead. */
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div[data-postnosideways] {
+  flex-direction: column;
+  overflow-y: auto;
+}
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div[data-postnosideways] > * {
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: none;
+  overflow-y: visible;
+}
+
 /* ── The plus on somebody else's loop ──────────────────────────────────
    The owner, 18 October 2026: while somebody in the jam room is looping, a
    small plus pulses on everybody else's screen. It pulses on that loop's own

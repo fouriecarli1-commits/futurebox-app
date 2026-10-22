@@ -9043,7 +9043,11 @@ export default function PostStudio({
   );
   const chosenItem = stackNow.find((one) => one.id === layerOn);
   const layersBench = (
-    <div className="space-y-3" data-postlayers>
+    /* One column, even under the photo on a phone: the list and what the
+       chosen layer can do belong together, and as two sideways columns the
+       names were cut off at the edge (the owner, 22 October 2026: the layers
+       did not work professionally). */
+    <div className="space-y-3" data-postlayers data-postnosideways="">
       <div className="space-y-1.5">
         {layerRow('all', t('post.layerAll', 'All layers'), <Layers className="h-4 w-4" />, null)}
         {/* Front to back, with the photograph at its own place among
