@@ -461,6 +461,7 @@ export const STRINGS: Dict = {
   "pair.draftsOff": { en: "The words stay on the screen they were written on for now — sending them with the turn is being switched on.", af: "Die woorde bly vir eers op die skerm waarop hulle geskryf is — om hulle saam met die beurt te stuur word aangeskakel." },
   "pair.draftsMine": { en: "What you write is kept for them as you go, and goes with the turn.", af: "Wat jy skryf, word vir hulle gehou terwyl jy skryf, en gaan saam met die beurt." },
   "pair.draftsTheirs": { en: "It is their turn to write — their words show up here as they go. Ask for the pen to write yourself.", af: "Dit is hulle beurt om te skryf — hulle woorde wys hier terwyl hulle skryf. Vra vir die pen om self te skryf." },
+  "cover.named": { en: "Write the song’s name on the cover", af: "Skryf die liedjie se naam op die omslag" },
   "sayas.title": { en: "Read your words to me, so they are sung the way you say them", af: "Lees jou woorde vir my voor, sodat hulle gesing word soos jy dit sê" },
   "sayas.how": { en: "Press record and read every line once, in order, the way it must sound. Each line is then written out the way you said it, and that is what the singer reads. Your words stay exactly as you wrote them.", af: "Druk opneem en lees elke reël een keer, in volgorde, soos dit moet klink. Elke reël word dan uitgeskryf soos jy dit gesê het, en dít is wat die sanger lees. Jou woorde bly presies soos jy dit geskryf het." },
   "sayas.record": { en: "Record me reading the words", af: "Neem my op terwyl ek die woorde lees" },

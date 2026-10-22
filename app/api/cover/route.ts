@@ -306,6 +306,7 @@ export async function POST(request: Request): Promise<Response> {
       title: String(body.title ?? ''),
       genre: String(body.genre ?? ''),
       style: String(body.style ?? ''),
+      named: (body as { named?: unknown }).named !== false,
     }),
     /* What she paid, so `eleven_price_check` keeps the row. */
     CREDITS.cover,

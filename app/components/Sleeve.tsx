@@ -193,6 +193,9 @@ export default function Sleeve({
      "a cover nobody collected". `standingOf` turns the three into one word. */
   const [word, setWord] = useState<CoverWord>({});
   const [busy, setBusy] = useState(false);
+  /* The song's name on the sleeve, on unless somebody wants a bare picture
+     (the owner, 22 October 2026 — see `coverPrompt`). */
+  const [named, setNamed] = useState(true);
   const [problem, setProblem] = useState<string | null>(null);
   /* Both `make` and `keep` go through this rather than `setBusy`, so neither
      can start work without pinning the panel that holds its poll. */
@@ -352,6 +355,13 @@ export default function Sleeve({
     }
   };
 
+  const nameToggle = title.trim() ? (
+    <label data-covernamed className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-sm text-zinc-300">
+      <input type="checkbox" checked={named} onChange={(event) => setNamed(event.target.checked)} className="h-4 w-4 accent-emerald-500" />
+      {t('cover.named', 'Write the song’s name on the cover')}
+    </label>
+  ) : null;
+
   const make = async (): Promise<void> => {
     working(true);
     setProblem(null);
@@ -359,7 +369,7 @@ export default function Sleeve({
       const started = await fetch('/api/cover', {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...(await headers()) },
-        body: JSON.stringify({ trackId, title, genre, style }),
+        body: JSON.stringify({ trackId, title, genre, style, named }),
       });
       const opened = (await started.json().catch(() => ({}))) as {
         id?: string;
@@ -481,6 +491,7 @@ export default function Sleeve({
             </p>
           )}
 
+          {nameToggle}
           <div className="flex flex-wrap items-center gap-2">
             {offersKeep(standing) && keepButton}
             <button
@@ -530,6 +541,7 @@ export default function Sleeve({
               {keepButton}
             </>
           )}
+          {nameToggle}
           <button
             type="button"
             onClick={() => void make()}
