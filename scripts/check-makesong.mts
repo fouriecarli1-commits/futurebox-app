@@ -13,7 +13,8 @@
  * Every assertion below was negative-tested: broken on purpose to confirm it
  * fails. A check that cannot fail is decoration.
  */
-import { buildRequest, forPreview, type Body } from '../app/lib/server/musicplan';
+import { buildRequest, fitPlan, forPreview, plannedSeconds, type Body } from '../app/lib/server/musicplan';
+import { readFileSync } from 'node:fs';
 import { singable } from '../app/lib/server/singit.ts';
 import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
 import { shapeSong, planLength } from '../app/lib/songshape';
@@ -212,6 +213,37 @@ check('every mood on the filter has songs behind it',
   MOODS.filter((mood) => !SONG_STARTS.some((one) => one.mood === mood.id)).map((one) => one.id).join(', ') || 'all eight');
 check('and the two lines are two lines, so they land under [Verse] as written',
   SONG_STARTS.every((one) => one.en.first.includes('\n') && one.af.first.includes('\n')));
+
+/* ── The length the price rests on is the length that is made ──────────
+   With words, the engine follows the plan's own part lengths; the body's
+   `seconds` is not read on that path. Twelve short parts at "30 seconds"
+   planned 72, and a long lyric five minutes — priced on the pick, the
+   account paid upstream for the difference. And a free preview kept the
+   whole plan, so every preview was the whole song. */
+const parts = (n: number, each: number): Body => ({
+  style: 'pop',
+  seconds: 30,
+  sections: Array.from({ length: n }, (_, i) => ({ name: `Part ${i + 1}`, lines: ['a line to sing'], seconds: each })),
+});
+check('a plan is measured by its parts, not by the length that was picked', plannedSeconds(parts(12, 6)) === 72);
+const cut = fitPlan(parts(12, 6), 30);
+check('a preview of a long plan is cut to the preview length',
+  plannedSeconds(cut) <= 30 && (cut.sections ?? []).length === 5,
+  `${plannedSeconds(cut)}s in ${(cut.sections ?? []).length} parts`);
+const chunks = (buildRequest(forPreview(parts(12, 6), 30)) as { composition_plan: { chunks: { duration_ms: number }[] } }).composition_plan.chunks;
+check('  and what goes upstream is that length, not the whole song',
+  chunks.reduce((total, one) => total + one.duration_ms, 0) <= 30_000);
+check('a plan that already fits is left alone', (fitPlan(parts(2, 10), 30).sections ?? []).length === 2);
+check('a part that crosses the line is shortened, never below the engine\'s floor',
+  (fitPlan(parts(3, 20), 50).sections ?? []).map((one) => one.seconds).join(',') === '20,20,10');
+const route = readFileSync(new URL('../app/api/music/route.ts', import.meta.url), 'utf8');
+check('the song is charged for the planned length when that is longer',
+  /Math\.max\(body\.seconds \?\? 60, plannedSeconds\(body\)\)/.test(route));
+check('  and a kids song and a ten-minute plan are fitted before anything is asked',
+  /body = fitPlan\(body, length\)/.test(route) && /body = fitPlan\(body, 600\)/.test(route));
+const room = readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8');
+check('  and the button shows the price of the planned length',
+  (room.match(/songCost\(pricedFor\(/g) ?? []).length >= 3 && !/songCost\(seconds, singer\)/.test(room));
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);

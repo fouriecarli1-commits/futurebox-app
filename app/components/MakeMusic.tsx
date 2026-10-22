@@ -486,6 +486,16 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
+  /* The length the price rests on: the plan's when there are words, since
+     that is what the engine makes and what the server charges for — many
+     short parts or a long lyric run past the length picked. A free preview
+     is cut to its own length on the server and priced on that. */
+  const pricedFor = (picked: number): number => {
+    if (wordless || userPlan === 'free') return picked;
+    const planned = splitSections(lyrics, picked)
+      .reduce((total, part) => total + Math.min(120, Math.max(3, Math.round(part.seconds || 20))), 0);
+    return Math.min(600, Math.max(picked, planned));
+  };
   const [weirdness, setWeirdness] = useState(15);
   /* Light to heavy, the owner 14 October 2026: "sliders by everything in make a
      song. Light heavy, en weirdness level." 50 is neither, and adds nothing. */
@@ -1437,7 +1447,7 @@ export default function MakeMusic({
                                 {t(`len.${choice.seconds}.n`, choice.note)}
                               </span>
                               <span className="block pt-0.5 text-xs text-zinc-500">
-                                {songCost(choice.seconds, singer)} {t('video.credits', 'credits')}
+                                {songCost(pricedFor(choice.seconds), singer)} {t('video.credits', 'credits')}
                               </span>
                             </button>
                           ))}
@@ -1724,7 +1734,7 @@ export default function MakeMusic({
               data-makecost
               className="ml-auto flex min-h-[36px] items-center gap-1.5 rounded-full bg-zinc-950/70 px-3 text-xs font-semibold text-zinc-300"
             >
-              {songCost(seconds, singer)} {t('video.credits', 'credits')}
+              {songCost(pricedFor(seconds), singer)} {t('video.credits', 'credits')}
             </span>
           </div>
         </div>
@@ -1913,7 +1923,7 @@ export default function MakeMusic({
               now, and a tick that quietly adds two credits is the surprise
               this app does not do. */}
           <span className="text-sm font-bold opacity-80">
-            · {songCost(seconds, singer) + (wantCover ? CREDITS.cover : 0)}{' '}
+            · {songCost(pricedFor(seconds), singer) + (wantCover ? CREDITS.cover : 0)}{' '}
             {t('video.credits', 'credits')}
           </span>
         </button>

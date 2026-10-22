@@ -28,7 +28,7 @@ import { call, ready } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
-import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
+import { buildRequest, fitPlan, forPreview, plannedSeconds, type Body } from '@/app/lib/server/musicplan';
 import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
 import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
 import { makeSong, saidHeader } from '@/app/lib/server/lyria';
@@ -195,6 +195,9 @@ export async function POST(request: Request): Promise<Response> {
     const kidsPaid = (body as { kids?: unknown }).kids === true && caller !== null && (await kidsCovers(caller.id));
     if (kidsPaid) {
       length = Math.min(body.seconds ?? 60, 60);
+      /* The plan to that minute too: the engine follows the parts' own
+         lengths, not this number. */
+      body = fitPlan(body, length);
     } else {
       // The request goes with it: the address it came from is one of the three
       // things the free allowance is counted against.
@@ -231,8 +234,17 @@ export async function POST(request: Request): Promise<Response> {
          trained on your own songs is part of what a plan buys. */
       if (allowance.kind === 'preview') {
         body = forPreview(body, allowance.seconds);
+      } else if (plannedSeconds(body) > 600) {
+        /* Ten minutes is the engine's ceiling; a plan past it is refused
+           upstream after the charge, so it is cut to it here instead. */
+        body = fitPlan(body, 600);
       }
-      const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
+      /* Priced on what will be made. With words, that is the plan's length,
+         which a long lyric can push past the length that was picked — see
+         `plannedSeconds`. The button shows the same number. */
+      const seconds = allowance.kind === 'preview'
+        ? allowance.seconds
+        : Math.max(body.seconds ?? 60, plannedSeconds(body));
       if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
       length = seconds;
     }

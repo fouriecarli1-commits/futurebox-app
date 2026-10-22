@@ -76,7 +76,49 @@ export interface Body {
  * thing a plan buys. The words are neither.
  */
 export function forPreview(body: Body, seconds: number): Body {
-  return { ...body, seconds, finetuneId: undefined };
+  return { ...fitPlan(body, seconds), finetuneId: undefined };
+}
+
+/**
+ * How long the song that goes upstream will actually be, in seconds.
+ *
+ * With words, the engine is handed a plan and each part carries its own
+ * length — `seconds` on the body is not read at all on that path. So the
+ * length the cost has to rest on is the plan's, and the plan can be longer
+ * than the length that was picked: twelve short parts at "30 seconds" came out
+ * at 72, and a long lyric at five minutes. Priced on the pick, the member paid
+ * for half a minute and the account paid upstream for the rest.
+ */
+export function plannedSeconds(body: Body): number {
+  const sections = body.sections ?? [];
+  if (sections.some((section) => toLines(section.lines ?? []).length > 0)) {
+    const ms = sections.reduce((total, section) => total + clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS), 0);
+    return Math.round(ms / 1000);
+  }
+  return Math.round(clamp((body.seconds || 60) * 1000, MIN_MS, MAX_MS) / 1000);
+}
+
+/**
+ * The plan cut to a length: parts kept in order while they fit, the one that
+ * crosses the line shortened to what is left, the rest dropped.
+ *
+ * A free preview set `seconds` and kept the plan whole — and since the plan is
+ * what the engine follows, every free "preview" was the whole song. Same for a
+ * kids song, which is one minute at one price.
+ */
+export function fitPlan(body: Body, seconds: number): Body {
+  const sections = body.sections ?? [];
+  if (!sections.length || plannedSeconds(body) <= seconds) return { ...body, seconds };
+  const kept: MusicSection[] = [];
+  let used = 0;
+  for (const section of sections) {
+    const length = clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS) / 1000;
+    const left = seconds - used;
+    if (left < SECTION_MIN_MS / 1000) break;
+    kept.push({ ...section, seconds: Math.min(length, left) });
+    used += Math.min(length, left);
+  }
+  return { ...body, seconds, sections: kept.length ? kept : [{ ...sections[0], seconds }] };
 }
 
 const clamp = (value: number, low: number, high: number): number =>
