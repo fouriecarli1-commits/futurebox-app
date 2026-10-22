@@ -2673,6 +2673,17 @@ html[data-fb-mode='light'] [class~="text-zinc-950"]:is([class~="bg-emerald-500"]
     inset 0 0 0 1px rgb(255 255 255 / 0.18),
     0 0 20px -4px rgb(var(--fb-secondary-500) / 0.55);
 }
+/* The same button when it cannot be pressed. Half-opacity green let the room's
+   grid show through it and left dark words on a murky slab — "Make it — 18
+   credits" in the Video desk read as a smudge on a computer. A plain raised
+   grey with readable words says "not now" and still says what it would do. */
+:is(button, a):is([class~="bg-emerald-500"], [class~="bg-emerald-400"]):is([class~="text-onAccent"], [class~="text-zinc-950"], [class~="text-black"]):not([data-kidsroom] *):not([data-booth] *):disabled {
+  opacity: 1;
+  background: rgb(var(--fb-surface-800));
+  color: rgb(var(--fb-surface-400));
+  box-shadow: inset 0 0 0 1px rgb(var(--fb-surface-700));
+  cursor: not-allowed;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .fb-fx-shine { animation: none; transform: translateX(52%); }

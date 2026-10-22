@@ -142,8 +142,11 @@ export default function Queue({
       )}
 
       {/* ── Adding one ─────────────────────────────────────────────────── */}
-      <div className="space-y-2.5">
-        <div className="grid sm:grid-cols-3 gap-2">
+      {/* Sized by its own box, not the screen: on a computer this sits in
+          one of two columns beside the copilot, about 330 pixels, and three
+          to a row cut the date down to "10/22/" and the time to "06:0". */}
+      <div className="space-y-2.5 @container">
+        <div className="grid grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_auto_auto] gap-2">
           <label className="sr-only" htmlFor="queue-platform">
             {t('queue.platform', 'Where it goes')}
           </label>
@@ -151,7 +154,7 @@ export default function Queue({
             id="queue-platform"
             value={platform}
             onChange={(event) => setPlatform(event.target.value)}
-            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
+            className="col-span-2 @lg:col-span-1 min-w-0 min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
           >
             <optgroup label={lang === 'af' ? 'Betaalde Advertensies' : 'Paid Advertising'}>
               <option value="google_ads">Google Ads</option>

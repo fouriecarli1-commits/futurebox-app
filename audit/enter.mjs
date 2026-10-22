@@ -719,9 +719,11 @@ export async function unfold(page) {
      out over the box rather than unfolding the room, and opening them all in
      turn leaves the last one lying over whatever the probe presses next. Nor
      the video editor's shape chip (20 October), which drops a list over the
-     picture. */
+     picture. Nor the song box's "Start from…" (22 October), the plus that
+     gained a label and so started to look like a fold to the text filter
+     below; it pops the picker over the box like the other song-box tools. */
   const shutNow = () =>
-    where.locator('button[aria-expanded="false"]:visible:not([data-maketool]):not([data-pickerbring]):not([data-editorshapepick])').filter({ hasText: /\S/ });
+    where.locator('button[aria-expanded="false"]:visible:not([data-maketool]):not([data-makeplus]):not([data-pickerbring]):not([data-editorshapepick])').filter({ hasText: /\S/ });
 
   /* Press the first one that is still shut; if pressing it changed nothing,
      step past it and try the next.

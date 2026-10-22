@@ -5353,10 +5353,16 @@ export default function FutureBoxHome() {
                     className="hidden md:max-xl:block fixed inset-0 z-40 bg-scrim/60 backdrop-blur-[2px]"
                   />
                 )}
+                {/* 320 wide until 1536, then 384. At 1440 the 384 column left the
+                    room about 740 pixels between it and the rail, and the owner
+                    looked at Adverts and the Video desk on a computer and said
+                    "alles lyk swak en onprofessioneel" — two panels side by side
+                    in that, with a date cut to "10/22/". The copilot's own
+                    lines read as well at 320; the room needed the 64. */}
                 <aside
                   data-copilotaside=""
                   data-copilotsheet={sheeted ? (copilotSheet ? 'open' : 'shut') : undefined}
-                  className={`pb-[var(--bar-clear)] shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem] ${
+                  className={`pb-[var(--bar-clear)] shrink-0 w-full md:w-80 2xl:w-96 md:min-h-0 md:h-auto min-h-[22rem] ${
                     sheeted
                       ? copilotSheet
                         ? 'md:max-xl:fixed md:max-xl:z-50 md:max-xl:top-4 md:max-xl:bottom-0 md:max-xl:right-4 md:max-xl:w-[min(24rem,calc(100vw-2rem))] md:max-xl:flex md:max-xl:flex-col'

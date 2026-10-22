@@ -721,7 +721,12 @@ export default function Campaign({
           and the doors to film it and read it). The page's deploy button,
           sonic logo and voice talent with stock faces are not here; the
           sentence at the foot of the preview says why. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
+      {/* Side by side when the ROOM is wide enough, not the screen: on a
+          1440 computer the room sits between the rail and the copilot, and
+          two panels at 330 pixels each cut the schedule's date and time in
+          half. Stacked until each panel has about 440 pixels of its own. */}
+      <div className="@container">
+      <div className="grid grid-cols-1 gap-4 @4xl:grid-cols-2 @4xl:items-start">
       <aside className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0 @container" data-adsetup>
         <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
           <span>{t('ads.setupTitle', 'Campaign setup')}</span>
@@ -1387,6 +1392,7 @@ export default function Campaign({
           {t('ads.notDeploy', 'No “deploy to Meta or Google Ads” button, no sonic logo and no voice talent with faces: the adverts go out through your own share sheet, and the reading goes to the voice studio, where the voices are real.')}
         </p>
       </main>
+      </div>
       </div>
 
       {/* ── The paid half ───────────────────────────────────────────────
