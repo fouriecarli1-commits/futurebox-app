@@ -54,6 +54,7 @@ import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { presenterCost } from '@/app/lib/credits';
 import { TIER_SPECS } from '@/app/lib/plans';
+import { measuredSeconds } from '@/app/lib/server/audiolen';
 import {
   PRESENTER_AUDIO_MIMES,
   PRESENTER_IMAGE_MIMES,
@@ -188,12 +189,25 @@ export async function POST(request: Request): Promise<Response> {
   const client = admin();
   if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
 
-  /* The clip is as long as the reading, and the reading was measured in the
-     browser where the audio actually is. Clamped, because a number from a
-     client decides a charge: a minute is longer than any advert, and a
-     nonsense value should cost the least rather than the most. */
+  /* The clip is as long as the reading, so the charge is the reading's
+     length — measured from the audio itself where it can be, an MP3's frames
+     or a WAV's header (`measuredSeconds`). It used to be the browser's
+     number, clamped, with a nonsense value costing five seconds: a request
+     saying "5" over a minute's reading paid for five seconds of a
+     minute-long film. The browser's number is now only the fallback for a
+     file nothing can measure, and a number that is not one costs the
+     minute it might be. */
   const said = Number(body.seconds);
-  const seconds = Number.isFinite(said) ? Math.min(60, Math.max(1, Math.round(said))) : 5;
+  const heard = await measuredSeconds(new Blob([Buffer.from(audio.data, 'base64')], { type: audio.mime }));
+  if (heard !== null && heard > 61) {
+    return Response.json(
+      { message: `A presenter reads up to a minute, and this reading is ${Math.round(heard)} seconds. Shorten the script and read it again.` },
+      { status: 400 },
+    );
+  }
+  const seconds = heard !== null
+    ? Math.min(60, Math.max(1, Math.round(heard)))
+    : Number.isFinite(said) ? Math.min(60, Math.max(1, Math.round(said))) : 60;
   const quality: PresenterQuality = body.quality === '480p' ? '480p' : '720p';
 
   const price = presenterCost(seconds);

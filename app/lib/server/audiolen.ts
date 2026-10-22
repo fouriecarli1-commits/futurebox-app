@@ -26,18 +26,24 @@
 
 import { wavSeconds } from '../pcmwav.ts';
 import { mp4Seconds } from '../mp4len.ts';
+import { mp3Seconds } from '../mp3len.ts';
 
 /** How much of each end of a file is read for an MP4's header. */
 const ENDS = 2 * 1024 * 1024;
 
 /**
- * The file's own statement of its length: a WAV's header, or an MP4's
- * `mvhd`, at whichever end it was written. Null for anything else.
+ * The file's own statement of its length: a WAV's header, an MP4's `mvhd`
+ * at whichever end it was written, or an MP3's frames. Null for anything
+ * else — a browser recorder's WebM above all, which does not say.
  */
 export async function measuredSeconds(audio: Blob): Promise<number | null> {
   const head = new Uint8Array(await audio.slice(0, Math.min(audio.size, ENDS)).arrayBuffer());
   const wav = wavSeconds(head.subarray(0, 4096));
   if (wav !== null && wav > 0) return wav;
+  /* An MP4 opens with its `ftyp` box; only then is "mvhd" looked for, so a
+     stray match inside some other file's sound is never read as a length. */
+  const isMp4 = head.length >= 8 && String.fromCharCode(...head.subarray(4, 8)) === 'ftyp';
+  if (!isMp4) return mp3Seconds(head, audio.size);
   const front = mp4Seconds(head);
   if (front !== null) return front;
   if (audio.size <= ENDS) return null;

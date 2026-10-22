@@ -49,11 +49,40 @@ ok('bytes with no header read as nothing, not as a guess', mp4Seconds(new Uint8A
 ok('a stray "mvhd" with a nonsense length is passed over', mp4Seconds(join(new Uint8Array(8), mvhd(0, 1, 4_000_000_000))) === null);
 
 const big = 5 * 1024 * 1024;
-const atEnd = join(new Uint8Array(big), mvhd(0, 600, 600 * 480));
+const ftyp = new Uint8Array([0, 0, 0, 16, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 2, 0]);
+const atEnd = join(ftyp, new Uint8Array(big), mvhd(0, 600, 600 * 480));
+ok('an "mvhd" in a file that does not open as an MP4 is not read as one',
+  (await measuredSeconds(new Blob([join(new Uint8Array(big), mvhd(0, 600, 600 * 480)) as BlobPart]))) === null);
 ok('a camera’s MP4, header at the back, is read from its tail',
   (await measuredSeconds(new Blob([atEnd as BlobPart]))) === 480);
 ok('  and the bill follows it, not the number the browser sent',
   (await billedSeconds(new Blob([atEnd as BlobPart]), 60, 3600)) === 480);
+
+/* ── MP3, which is what the voice engines send ── */
+/** One MPEG-1 Layer III frame at 128 kbit/s, 44.1 kHz, stereo: 417 bytes. */
+const frame = (): Uint8Array => {
+  const one = new Uint8Array(417);
+  one.set([0xff, 0xfb, 0x90, 0x00]);
+  return one;
+};
+const frames = (n: number): Uint8Array => join(...Array.from({ length: n }, frame));
+const cbr = frames(2300);
+const truth = (2300 * 1152) / 44100;
+const cbrSaid = await measuredSeconds(new Blob([cbr as BlobPart]));
+ok('a constant-bitrate MP3 of about a minute reads as about a minute',
+  cbrSaid !== null && Math.abs(cbrSaid - truth) / truth < 0.01, `${cbrSaid} vs ${truth}`);
+const tag = join(new Uint8Array([0x49, 0x44, 0x33, 3, 0, 0, 0, 0, 0x08, 0x00]), new Uint8Array(1024).fill(0xff));
+const tagged = await measuredSeconds(new Blob([join(tag, cbr) as BlobPart]));
+ok('  and an ID3 tag in front, full of 0xFF bytes, is stepped over', tagged !== null && Math.abs(tagged - truth) / truth < 0.01, String(tagged));
+const xingFrame = frame();
+xingFrame.set([0x58, 0x69, 0x6e, 0x67, 0, 0, 0, 1, 0, 0, 0x03, 0xe8], 4 + 32);
+const vbr = await measuredSeconds(new Blob([join(xingFrame, frames(10)) as BlobPart]));
+ok('a variable-bitrate MP3 is read from its Xing frame count', vbr !== null && Math.abs(vbr - (1000 * 1152) / 44100) < 0.001, String(vbr));
+ok('noise is not an MP3', (await measuredSeconds(new Blob([new Uint8Array(8192).fill(7) as BlobPart]))) === null);
+
+const presenter = readFileSync(new URL('../app/api/presenter/route.ts', import.meta.url), 'utf8');
+ok('a presenter is charged for the reading it is sent, measured',
+  /measuredSeconds\(/.test(presenter) && before(presenter, 'measuredSeconds(', 'presenterCost(seconds)'));
 
 const route = readFileSync(new URL('../app/api/dub/route.ts', import.meta.url), 'utf8');
 ok('a dub is charged for the measured length when there is one',
@@ -65,4 +94,4 @@ if (bad) {
   console.error(`\ncheck:medialength — ${bad} assertion(s) failed.\n`);
   process.exit(1);
 }
-console.log('\ncheck:medialength — a WAV or an MP4 is charged by its own length, wherever its header is, and a dub with it.');
+console.log('\ncheck:medialength — a WAV, an MP4 or an MP3 is charged by its own length, and a dub and a presenter with it.');
