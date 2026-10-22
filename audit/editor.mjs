@@ -531,6 +531,59 @@ try {
       (await playheadAt()) === 0,
       `the clock reads ${await playheadAt()} after rewinding`);
 
+    /* ── A playhead that can be held, and the transport ───────────
+
+       The owner, 22 October 2026: *"Die cursor wil nie skuif nie. Daar is nie
+       'n pause en stop button nie."* Dragged with a real mouse, not set by a
+       click: a line that only jumps to where a press lands is the fault. */
+    const knob = p.locator('[data-editorplayknob]');
+    check('the playhead carries a knob to hold', (await knob.count()) === 1);
+    if (await knob.count()) {
+      await knob.scrollIntoViewIfNeeded();
+      const kb = await knob.boundingBox();
+      if (kb) {
+        await p.mouse.move(kb.x + kb.width / 2, kb.y + kb.height / 2);
+        await p.mouse.down();
+        for (let i = 1; i <= 10; i += 1) {
+          await p.mouse.move(kb.x + kb.width / 2 + (perSecond * 1.5 * i) / 10, kb.y + kb.height / 2);
+          await p.waitForTimeout(30);
+        }
+        await p.mouse.up();
+        await p.waitForTimeout(400);
+        const dragged = await playheadAt();
+        check('  and dragging it moves the clock with the hand',
+          Math.abs(dragged - 1.5) < 0.4, `dragged a second and a half and the clock reads ${dragged}s`);
+      }
+    }
+    const ruler = await p.locator('[data-editorruler]').boundingBox();
+    if (ruler) {
+      await p.mouse.move(ruler.x + perSecond * 0.5, ruler.y + ruler.height / 2);
+      await p.mouse.down();
+      await p.mouse.move(ruler.x + perSecond * 1.0, ruler.y + ruler.height / 2, { steps: 5 });
+      await p.mouse.move(ruler.x + perSecond * 2.0, ruler.y + ruler.height / 2, { steps: 5 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const swept = await playheadAt();
+      check('  and sweeping along the ruler scrubs to where the hand stops',
+        Math.abs(swept - 2) < 0.4, `swept to two seconds and the clock reads ${swept}s`);
+    }
+    const playFilm = p.locator('[data-editorplayfilm]');
+    check('the clock has play, pause and stop of its own',
+      (await playFilm.count()) === 1 && (await p.locator('[data-editorstop]').count()) === 1);
+    if (await playFilm.count()) {
+      await p.locator('[data-editorrewind]').click();
+      await playFilm.click();
+      await p.waitForTimeout(1000);
+      check('  and play turns into pause while the film runs',
+        /pause|pouse|stilhou/i.test((await playFilm.getAttribute('aria-label')) ?? ''),
+        (await playFilm.getAttribute('aria-label')) ?? '');
+      await p.locator('[data-editorstop]').click();
+      await p.waitForTimeout(400);
+      check('  and stop stops it and goes back to the start',
+        (await playheadAt()) === 0 && !/pause|pouse|stilhou/i.test((await playFilm.getAttribute('aria-label')) ?? ''),
+        `the clock reads ${await playheadAt()}s, the button says ${await playFilm.getAttribute('aria-label')}`);
+    }
+
     /* ── Fades you pull, rather than set somewhere else ───────────
 
        The owner, 30 September 2026: *"Op die tydlyn kan mens aan die begin en
@@ -2035,8 +2088,11 @@ try {
 
     if ((await shot.count()) && !(await shot.isDisabled())) {
       await shot.click();
-      await p.waitForTimeout(900);
+      /* Waited for rather than slept on: reading the frame waits for the
+         element to settle, and a fixed pause measured the machine, not the
+         room. */
       const shown = p.locator('[data-editorcovershown]');
+      await shown.first().waitFor({ state: 'visible', timeout: 6000 }).catch(() => undefined);
       check('  and pressing it puts a cover on the bench',
         (await shown.count()) === 1,
         `${await shown.count()}`);

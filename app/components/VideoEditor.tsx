@@ -69,7 +69,7 @@ import FileSize from './FileSize';
 import { limitOf } from '../lib/squeeze';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
+  Play, Pause, SkipBack, SkipForward, Square, StepBack, StepForward, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -482,6 +482,9 @@ export const CLIP_MAX_BYTES = 500 * 1024 * 1024;
  * number: they answer different questions.
  */
 export const LYRIC_MAX_BYTES = 64 * 1024 * 1024;
+
+/** A transport button on the clock's own row. */
+const TRANSPORT = 'flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 text-zinc-200';
 
 function seconds(value: number): string {
   const whole = Math.max(0, value);
@@ -1460,6 +1463,8 @@ export default function VideoEditor({
     return { said: null, ghost: false };
   }, [piece, at, edit, bench]);
   const [running, setRunning] = useState(false);
+  /** Set while "Play shot" plays one shot, so its end stops the film. */
+  const onlyShot = useRef<string | null>(null);
   const strip = useRef<HTMLDivElement | null>(null);
 
   /* ── Moving words, on the preview ─────────────────────────────────────
@@ -1795,7 +1800,20 @@ export default function VideoEditor({
       const key = event.key.toLowerCase();
       if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) stepForward(); else stepBack(); return; }
       if (mod && key === 'y') { event.preventDefault(); stepForward(); return; }
-      if (key === ' ' && !mod) { event.preventDefault(); setRunning((was) => !was); return; }
+      if (key === ' ' && !mod) { event.preventDefault(); onlyShot.current = null; setRunning((was) => !was); return; }
+      /* The keys every editor shares: K stops where it is, L plays, Home and
+         End go to either end, and the arrows move one frame (a second with
+         Shift). */
+      if (key === 'k' && !mod) { event.preventDefault(); setRunning(false); return; }
+      if (key === 'l' && !mod) { event.preventDefault(); onlyShot.current = null; setRunning(true); return; }
+      if (key === 'home') { event.preventDefault(); setRunning(false); scrubLatest.current(0); return; }
+      if (key === 'end') { event.preventDefault(); setRunning(false); scrubLatest.current(runs(edit)); return; }
+      if (key === 'arrowleft' || key === 'arrowright') {
+        event.preventDefault();
+        setRunning(false);
+        scrubLatest.current(at + (key === 'arrowleft' ? -1 : 1) * (event.shiftKey ? 1 : 1 / 30));
+        return;
+      }
       if (!piece) return;
       if (key === 'delete' || key === 'backspace') { event.preventDefault(); commit((was) => drop(was, piece.id)); return; }
       if (mod && key === 'c') { copiedShot.current = piece.id; return; }
@@ -1811,7 +1829,7 @@ export default function VideoEditor({
     };
     window.addEventListener('keydown', press);
     return () => window.removeEventListener('keydown', press);
-  }, [piece, at, commit, stepBack, stepForward]);
+  }, [piece, at, edit, commit, stepBack, stepForward]);
 
   /* ── The two red lines, and where they stick ──────────────────────────
 
@@ -2058,6 +2076,8 @@ export default function VideoEditor({
       if (running) setAt(filmSecond(edit, piece.id, v.currentTime));
       if (v.currentTime < piece.to) return;
       if (!running) { v.pause(); return; }
+      /* "Play shot" plays this one shot and stops at its end. */
+      if (onlyShot.current === piece.id) { v.pause(); onlyShot.current = null; setRunning(false); return; }
       const after = edit.pieces[edit.pieces.findIndex((one) => one.id === piece.id) + 1];
       if (!after) { v.pause(); setRunning(false); setAt(runs(edit)); return; }
       wanted.current = after.from;
@@ -2066,6 +2086,90 @@ export default function VideoEditor({
     v.addEventListener('timeupdate', tick);
     return () => v.removeEventListener('timeupdate', tick);
   }, [piece, running, edit]);
+
+  /* ── A playhead that glides, and one you can hold ────────────────────
+
+     The owner, 22 October 2026: *"Die cursor wil nie skuif nie. Daar is nie
+     'n pause en stop button nie. … Onthou om die lag te manage."*
+
+     While the film runs, `at` is only written when the element reports its
+     time, about four times a second — so the line jumped in quarter-second
+     steps. Now a frame loop moves the line and the time readout straight on
+     the page, without asking React to redraw a room this size sixty times a
+     second; `at` still follows at its own pace for everything else.
+
+     And the line can be taken hold of: the ruler and the knob on top of the
+     line follow a finger or the mouse for as long as it is held, one move per
+     frame, not only where the press first landed. */
+  const playheadEl = useRef<HTMLDivElement | null>(null);
+  const runsEl = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    if (!running || !piece) return undefined;
+    let frame = 0;
+    const glide = (): void => {
+      const v = viewer.current;
+      if (v && playheadEl.current) {
+        const second = Math.min(filmSecond(edit, piece.id, v.currentTime), total);
+        playheadEl.current.style.left = `${second * perSecond}px`;
+        if (runsEl.current) runsEl.current.textContent = `${seconds(second)} / ${seconds(total)}`;
+      }
+      frame = requestAnimationFrame(glide);
+    };
+    frame = requestAnimationFrame(glide);
+    return () => cancelAnimationFrame(frame);
+  }, [running, piece, edit, total, perSecond]);
+
+  const scrubLatest = useRef(scrubTo);
+  scrubLatest.current = scrubTo;
+  const scrubDrag = useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const held = event.currentTarget;
+    const lane = (held.closest('[data-editorstripinner]') as HTMLElement | null) ?? held;
+    setRunning(false);
+    onlyShot.current = null;
+    let wantedSecond: number | null = null;
+    let frame = 0;
+    const place = (x: number): void => {
+      wantedSecond = (x - lane.getBoundingClientRect().left) / perSecond;
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        if (wantedSecond !== null) scrubLatest.current(wantedSecond);
+      });
+    };
+    place(event.clientX);
+    try { held.setPointerCapture(event.pointerId); } catch { /* an old browser: the move still lands */ }
+    const move = (e: PointerEvent): void => place(e.clientX);
+    const end = (): void => {
+      held.removeEventListener('pointermove', move);
+      held.removeEventListener('pointerup', end);
+      held.removeEventListener('pointercancel', end);
+    };
+    held.addEventListener('pointermove', move);
+    held.addEventListener('pointerup', end);
+    held.addEventListener('pointercancel', end);
+  }, [perSecond]);
+
+  /* One frame, the unit a cut is made in. */
+  const FRAME = 1 / 30;
+  const playFilm = useCallback((): void => {
+    onlyShot.current = null;
+    if (running) { setRunning(false); return; }
+    if (at >= total - 0.05) scrubTo(0);
+    setRunning(true);
+  }, [running, at, total, scrubTo]);
+  const stopFilm = useCallback((): void => {
+    onlyShot.current = null;
+    setRunning(false);
+    scrubTo(0);
+  }, [scrubTo]);
+  const nudge = useCallback((by: number): void => {
+    onlyShot.current = null;
+    setRunning(false);
+    scrubTo(at + by);
+  }, [at, scrubTo]);
 
   /* Play and pause follow the one flag, so the button and the end of the
      film cannot disagree about whether the film is running. */
@@ -4605,38 +4709,53 @@ async function smallerFrame(url: string): Promise<string> {
                 row the clock already had for its time. Playing the whole
                 film is the play button on the bar below, so it is not here
                 a second time. */}
-            <div className="flex items-center gap-1" data-editorclockbar>
+            <div className="flex flex-wrap items-center gap-1" data-editorclockbar>
               {undoPair}
-              <button
-                type="button"
-                data-editorrewind
-                onClick={() => { setRunning(false); scrubTo(0); }}
-                title={t('edit.rewind', 'Back to the start')}
-                aria-label={t('edit.rewind', 'Back to the start')}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 text-zinc-200"
-              >
-                <SkipBack className="h-4 w-4" />
-              </button>
+              {/* The transport, as every editor has it: to the start, a frame
+                  back, play and pause, stop, a frame on, to the end. */}
+              <div className="flex items-center gap-1" data-editortransport>
+                <button type="button" data-editorrewind onClick={() => { onlyShot.current = null; setRunning(false); scrubTo(0); }} title={t('edit.rewind', 'Back to the start')} aria-label={t('edit.rewind', 'Back to the start')} className={TRANSPORT}>
+                  <SkipBack className="h-4 w-4" />
+                </button>
+                <button type="button" data-editorframeback onClick={() => nudge(-FRAME)} title={t('edit.frameBack', 'One frame back')} aria-label={t('edit.frameBack', 'One frame back')} className={`${TRANSPORT} hidden sm:flex`}>
+                  <StepBack className="h-4 w-4" />
+                </button>
+                <button type="button" data-editorplayfilm onClick={playFilm} aria-pressed={running && !onlyShot.current} title={running ? t('dock.pause', 'Pause') : t('dock.play', 'Play')} aria-label={running ? t('dock.pause', 'Pause') : t('dock.play', 'Play')} className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/60 bg-emerald-500/15 text-emerald-100">
+                  {running ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
+                </button>
+                <button type="button" data-editorstop onClick={stopFilm} title={t('edit.stop', 'Stop, back to the start')} aria-label={t('edit.stop', 'Stop, back to the start')} className={TRANSPORT}>
+                  <Square className="h-3.5 w-3.5" fill="currentColor" />
+                </button>
+                <button type="button" data-editorframeon onClick={() => nudge(FRAME)} title={t('edit.frameOn', 'One frame on')} aria-label={t('edit.frameOn', 'One frame on')} className={`${TRANSPORT} hidden sm:flex`}>
+                  <StepForward className="h-4 w-4" />
+                </button>
+                <button type="button" data-editortoend onClick={() => { onlyShot.current = null; setRunning(false); scrubTo(total); }} title={t('edit.toEnd', 'To the end')} aria-label={t('edit.toEnd', 'To the end')} className={`${TRANSPORT} hidden sm:flex`}>
+                  <SkipForward className="h-4 w-4" />
+                </button>
+              </div>
               {piece ? (
                 <button
                   type="button"
                   data-editorplaypiece
+                  aria-pressed={running && onlyShot.current === piece.id}
                   onClick={() => {
-                    const v = viewer.current;
-                    if (!v) return;
-                    v.currentTime = piece.from;
-                    void v.play();
+                    if (running && onlyShot.current === piece.id) { onlyShot.current = null; setRunning(false); return; }
+                    scrubTo(startsAt(edit, piece.id));
+                    onlyShot.current = piece.id;
+                    setRunning(true);
                   }}
                   title={t('edit.playPiece', 'Play this piece')}
                   className="inline-flex min-h-[44px] min-w-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 text-xs font-semibold text-zinc-200"
                 >
-                  <Play className="h-3.5 w-3.5 shrink-0" />
+                  {running && onlyShot.current === piece.id ? <Pause className="h-3.5 w-3.5 shrink-0" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
                   <span className="truncate">{t('edit.playPieceShort', 'Play shot')}</span>
                   <span className="shrink-0 tabular-nums text-zinc-500" data-editorpiecelen>{seconds(lengthOfPiece(piece))}</span>
                 </button>
               ) : null}
               <span className="ml-auto shrink-0 pl-1 text-xs tabular-nums text-zinc-500" data-editorruns>
-                {seconds(at)} / {seconds(total)}
+                {running
+                  ? <span key="live" ref={runsEl}>{seconds(at)} / {seconds(total)}</span>
+                  : <span key="still">{seconds(at)} / {seconds(total)}</span>}
               </span>
             </div>
 
@@ -4654,7 +4773,7 @@ async function smallerFrame(url: string): Promise<string> {
               style={bench && !onEdge ? { maxHeight: 124, overflowY: 'auto' } : undefined}
               data-editorstrip
             >
-              <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none">
+              <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none" data-editorstripinner>
                 {/* The ruler. A mark every `stepFor` seconds, so a
                     ten-second film is marked every second and a five-minute
                     one every thirty — the alternative is either three marks
@@ -4681,8 +4800,9 @@ async function smallerFrame(url: string): Promise<string> {
                     make the ruler dead in exactly the places a thumb aims at.
                     The booth learnt that one the hard way. */}
                 <div
-                  className="relative h-6 border-b"
-                  style={{ borderColor: 'rgba(16,185,129,0.22)' }}
+                  className="relative h-7 cursor-ew-resize border-b"
+                  style={{ borderColor: 'rgba(16,185,129,0.22)', touchAction: 'none' }}
+                  onPointerDown={scrubDrag}
                   data-editorruler
                 >
                   {Array.from(
@@ -5430,11 +5550,26 @@ async function smallerFrame(url: string): Promise<string> {
                     pointers, so tapping "on the line" still reaches the
                     track underneath and moves it. */}
                 <div
+                  ref={playheadEl}
                   data-editorplayhead
-                  style={{ left: Math.min(at, total) * perSecond }}
+                  style={running ? undefined : { left: Math.min(at, total) * perSecond }}
                   className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
                 >
-                  <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  {/* The knob: the one part of the line that takes a press, so
+                      it can be held and dragged. */}
+                  <span
+                    data-editorplayknob
+                    role="slider"
+                    aria-label={t('edit.playheadKnob', 'The playhead — drag it')}
+                    aria-valuemin={0}
+                    aria-valuemax={Math.round(total * 10) / 10}
+                    aria-valuenow={Math.round(at * 10) / 10}
+                    onPointerDown={scrubDrag}
+                    className="pointer-events-auto absolute -top-0.5 -left-[11px] flex h-7 w-6 cursor-ew-resize items-start justify-center"
+                    style={{ touchAction: 'none' }}
+                  >
+                    <span className="block h-3.5 w-3 rounded-b-md bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                  </span>
                 </div>
               </div>
             </div>
@@ -6470,7 +6605,14 @@ async function smallerFrame(url: string): Promise<string> {
                   <span className="text-sm font-bold text-zinc-200">{t('edit.keyframes', 'Keyframes')}</span>
                   <span className="text-[11px] text-zinc-500">{t('edit.keyHere', 'At the playhead')}: {Math.round(here * 100)}%</span>
                 </div>
-                <p className="text-[11px] text-zinc-500">{t('edit.keyHow', 'Move the playhead, set the picture where it should be at that moment, and it moves smoothly from one keyframe to the next.')}</p>
+                {/* The owner, 22 October 2026: the one-line explanation was not
+                    understood. Said as the four things a person actually does. */}
+                <ol className="list-decimal space-y-1 pl-4 text-xs leading-relaxed text-zinc-400" data-editorkeyhow>
+                  <li>{t('edit.keyStep1', 'Drag the playhead to the moment the movement must start, and press “Keyframe here”.')}</li>
+                  <li>{t('edit.keyStep2', 'With the sliders that appear, put the picture where it must be at that moment: across, up and down, how big, turned, how solid.')}</li>
+                  <li>{t('edit.keyStep3', 'Drag the playhead further along, press “Keyframe here” again, and set the picture for that moment.')}</li>
+                  <li>{t('edit.keyStep4', 'Press play: the picture glides smoothly from one keyframe to the next. Press a ◆ to go back to that keyframe and change it.')}</li>
+                </ol>
                 <div className="flex flex-wrap gap-1.5">
                   {keys.map((one, k) => (
                     <button key={k} type="button" data-editorkeyframe={k} onClick={() => scrubTo(startsAt(edit, piece.id) + one.at * length)} aria-pressed={one === keyOn} className={`min-h-[44px] rounded-lg border px-2.5 text-[11px] font-bold ${one === keyOn ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>

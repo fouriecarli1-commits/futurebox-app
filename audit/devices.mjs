@@ -86,7 +86,11 @@ for (const [name, device] of WANTED) {
 
   await p.locator('button').filter({ hasText: /^Start free$/ }).first().click().catch(() => undefined);
   await p.waitForTimeout(1500);
-  const opens = (await p.locator('input[type="email"]').count()) === 1;
+  /* The sign-in's own address box. The sponsors' enquiry further down the
+     page has one too, and is not the way in. */
+  const opens = (await p.locator('input[type="email"]').evaluateAll(
+    (all) => all.filter((el) => !el.closest('[data-sponsorform]')).length,
+  )) === 1;
 
   /* Anything under 44 pixels either way. A strip that scrolls inside its own
      box is allowed to be wider than the screen; nothing is allowed to be

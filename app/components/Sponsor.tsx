@@ -96,7 +96,7 @@ export function SponsorForm({ region }: { readonly region: Region }): React.Reac
     }
   };
 
-  const field = 'bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500';
+  const field = 'min-h-[44px] bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:border-emerald-500';
 
   return (
     <div className="bg-zinc-900/80 border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-4 shadow-2xl" data-sponsorform>
