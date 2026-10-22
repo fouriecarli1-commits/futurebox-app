@@ -294,6 +294,11 @@ export default function CubedHost(): React.ReactElement {
             </li>
           ))}
         </ul>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-zinc-950/40 p-4" data-hostsponsor>
+          <p className="text-sm text-zinc-400">When a sponsor takes a whole season on your class and you agree to record a short word about their product, you also receive, for every month of that season</p>
+          <p className="mt-1 text-2xl font-black text-zinc-50">{PAY.sponsorMonthSaid}</p>
+          <p className="mt-1 text-xs text-zinc-500">A sponsor that only takes a month shows its logo beside ours on the video, and you are not asked to say anything. Section 9 of the terms has the details.</p>
+        </div>
         <p className="mt-4 text-sm leading-relaxed text-zinc-400">
           Each session is 30 to 45 minutes long. The written offer FutureBox sends before you start confirms these amounts and says when you are paid — into the bank account you give below.
         </p>

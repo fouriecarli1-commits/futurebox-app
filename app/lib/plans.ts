@@ -561,30 +561,38 @@ export interface Sponsorship {
   /**
    * What the price is *for*, which is not the same on every rung.
    *
-   * A masterclass is bought once, a season is bought once, and only the
-   * headline partnership recurs. The page printed "/ month" against all three,
-   * which quietly quadrupled the first two.
+   * Every rung is by the month now. `classMonth` is the season rung: a
+   * month's price, owed for every month the class runs, which the line under
+   * the price has to say or a six-month commitment reads as one month.
    */
-  readonly per: 'class' | 'season' | 'month';
+  readonly per: 'month' | 'classMonth';
   readonly gets: string;
 }
 
+/* The owner, 22 October 2026: three ways in, all by the month.
+ *
+ * A sponsor buys a month, and a recorded class outlives any month, so a
+ * presenter cannot be asked to speak for a sponsor who is only there for
+ * one. The monthly masterclass rung is therefore the sponsor's logo on the
+ * class video beside FutureBox's and nothing said aloud. When the presenter
+ * is asked to talk about the product, it is bought for as long as the class
+ * runs — R15 000 for every month of it, so a six-month class is R90 000. */
 export const SPONSORSHIP: readonly Sponsorship[] = [
   {
     id: 'class',
-    name: 'One masterclass',
-    from: 5_000,
+    name: 'Cubed³ masterclass',
+    from: 12_000,
     to: null,
-    per: 'class',
-    gets: 'Your name on one class, set in the same type as everything else on it.',
+    per: 'month',
+    gets: 'Your logo on one Cubed³ masterclass video, beside the FutureBox logo, for a month.',
   },
   {
     id: 'season',
-    name: 'A season',
-    from: 9_000,
+    name: 'Cubed³ season, with the presenter',
+    from: 15_000,
     to: null,
-    per: 'season',
-    gets: 'A run of classes or episodes, named once at the top of each.',
+    per: 'classMonth',
+    gets: 'Your logo on the masterclass for as long as it runs, and the presenter tells students about your product in a short segment marked as sponsored.',
   },
   {
     id: 'headline',
@@ -592,7 +600,9 @@ export const SPONSORSHIP: readonly Sponsorship[] = [
     from: 25_000,
     to: null,
     per: 'month',
-    gets: 'One a month, named across the whole app — every room, not one page. Nothing that blinks.',
+    /* The owner, 22 October 2026: one company only, never several at once,
+       which is why it costs what it does. */
+    gets: 'The only headline partner: one company at a time, never shared. Named across the whole app — every room, not one page. Nothing that blinks.',
   },
 ];
 
@@ -612,8 +622,8 @@ export function sponsorshipBand(rung: Sponsorship, region: Region): string {
  */
 export function sponsorshipPrice(rung: Sponsorship, region: Region, lang: 'en' | 'af' = 'en'): string {
   const per = {
-    en: { class: 'a class', season: 'a season', month: 'a month' },
-    af: { class: 'per klas', season: 'per seisoen', month: 'per maand' },
+    en: { month: 'a month', classMonth: 'a month, for every month the class runs' },
+    af: { month: 'per maand', classMonth: 'per maand, vir elke maand wat die klas loop' },
   }[lang][rung.per];
   return `${sponsorshipBand(rung, region)} ${per}`;
 }

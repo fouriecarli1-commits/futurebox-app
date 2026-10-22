@@ -14,20 +14,9 @@
  */
 
 import React from 'react';
-import { GraduationCap, Headphones, Star, Trophy } from 'lucide-react';
+import { GraduationCap, Headphones, Star } from 'lucide-react';
 import type { Sponsorship } from '../lib/plans';
 import { useLang } from '../lib/i18n';
-
-/** A line set the way a sponsor credit is really set: quiet, same type, no box. */
-function Credit({ who }: { who: string }): React.ReactElement {
-  const { t } = useLang();
-  return (
-    <span className="text-[11px] text-zinc-400">
-      {t('spon.presentedBy', 'Presented by')}{' '}
-      <span className="text-zinc-200 font-semibold">{who}</span>
-    </span>
-  );
-}
 
 export default function Placement({
   rung,
@@ -47,28 +36,29 @@ export default function Placement({
           .replace('{what}', t(`spon.${rung.id}.name`, rung.name).toLowerCase())}
       </p>
 
-      {rung.id === 'class' && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 space-y-1.5">
-          <GraduationCap className="w-4 h-4 text-emerald-400" />
+      {/* Both Cubed³ rungs put the sponsor's logo on the class video, beside
+          FutureBox's. Only the season rung adds the presenter's own word. */}
+      {(rung.id === 'class' || rung.id === 'season') && (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 space-y-2">
+          <div className="relative aspect-video rounded-lg bg-linear-to-br from-zinc-800 to-zinc-950 border border-zinc-800">
+            <GraduationCap className="absolute inset-0 m-auto w-6 h-6 text-zinc-600" />
+            <span className="absolute top-2 right-2 flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white">
+              FutureBox <span className="text-zinc-500">·</span> <span className="text-emerald-300 truncate max-w-[8rem]">{name}</span>
+            </span>
+          </div>
           <p className="text-xs font-bold text-white leading-snug">
             {t('place.classTitle', 'Building a release-ready track with AI')}
           </p>
-          <p className="text-[11px] text-zinc-500">45 min · Masterclass</p>
-          <Credit who={name} />
-        </div>
-      )}
-
-      {rung.id === 'season' && (
-        <div className="space-y-1.5">
-          {['Making the first track', 'Writing words that sing', 'Getting it heard'].map((title) => (
-            <div key={title} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 flex items-center gap-2.5">
+          <p className="text-[11px] text-zinc-500">{t('place.classMeta', '3 sessions · Cubed³ masterclass')}</p>
+          {rung.id === 'season' && (
+            <p className="flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-2.5 py-1.5 text-[11px] text-zinc-300">
               <Headphones className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-white truncate">{title}</p>
-                <Credit who={name} />
-              </div>
-            </div>
-          ))}
+              <span>
+                <span className="font-semibold text-emerald-300">{t('place.sponsored', 'Sponsored')}</span>{' '}
+                {t('place.presenterWord', '— the presenter on {who}').replace('{who}', name)}
+              </span>
+            </p>
+          )}
         </div>
       )}
 
@@ -81,7 +71,7 @@ export default function Placement({
           <p className="text-sm font-bold text-white leading-snug">
             {t('spon.with', 'with')} {name}
           </p>
-          <p className="text-[11px] text-zinc-500">{t('spon.onePartner', 'One partner a month. Named here, and nowhere else.')}</p>
+          <p className="text-[11px] text-zinc-500">{t('spon.onePartner', 'Only one headline partner at a time. No other company is named here.')}</p>
         </div>
       )}
 

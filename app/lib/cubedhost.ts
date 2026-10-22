@@ -47,17 +47,24 @@ import { CLASSES_IN_A_SERIES, guestRand, randSaid, seriesRand } from './cubed';
  * presenter receives for each one, read from `lib/cubed.ts` so the page and
  * the price in the Cubed³ room cannot disagree.
  */
+/** What a presenter receives for each month of a season sponsorship. */
+export const SPONSOR_MONTH_RAND = 1_500;
+
 export const PAY = {
   price: seriesRand(),
   perStudent: guestRand(),
   priceSaid: randSaid(seriesRand()),
   perStudentSaid: randSaid(guestRand()),
+  /** For each month of a season sponsorship the presenter accepted. The
+      owner, 22 October 2026. A fixed amount in Rand, like the rest. */
+  sponsorMonth: SPONSOR_MONTH_RAND,
+  sponsorMonthSaid: randSaid(SPONSOR_MONTH_RAND),
   /** A few class sizes, worked out, so the number is something to plan with. */
   examples: [10, 50, 100].map((students) => ({ students, said: randSaid(guestRand() * students) })),
 } as const;
 
 /** The terms' version, stored with every signature. Change it when the words change. */
-export const TERMS_VERSION = '2026-10-22.1';
+export const TERMS_VERSION = '2026-10-22.2';
 
 /** The longest any one answer may be. */
 const SHORT = 160;
@@ -574,13 +581,22 @@ export const TERMS: readonly Clause[] = [
       'You record three short teaser videos for the class, in English and in Afrikaans (in English only if you speak English only), and provide six different photographs of yourself.',
       'You give FutureBox permission to use the six photographs, your name, your presenting name and the teasers to promote your Cubed³ class, only in the places you tick in this registration. The class page on FutureBox itself is always included.',
       'The permission lasts for as long as the class is offered on FutureBox, plus twelve months. You do not have to be asked again for each use inside that scope. FutureBox will ask you again, in writing, before any use outside it — another product, a different campaign, a place you did not tick, or after the period ends.',
-      'FutureBox may crop, resize and colour-correct the photographs and place text or branding beside or over them, but will not alter your appearance or use them in a way that suggests you endorse anything other than FutureBox and your class.',
+      'FutureBox may crop, resize and colour-correct the photographs and place text or branding beside or over them, but will not alter your appearance or use them in a way that suggests you endorse anything other than FutureBox, your class and a sponsor you have agreed to under section 9.',
       'You may withdraw this permission at any time by writing to FutureBox. We then stop new uses within thirty days and remove the photographs from places we control where that is reasonably possible. Withdrawal does not affect what was lawfully published before it, or printed material already distributed.',
       'You confirm that you own the photographs or have the photographer’s permission to give FutureBox this use. Where you give a photographer’s name, FutureBox credits them where a credit can reasonably be shown.',
     ],
   },
   {
-    title: '9. Your promises',
+    title: '9. Sponsors',
+    body: [
+      'FutureBox may sell a sponsor a month on your class. The sponsor’s logo is then shown on the class video beside the FutureBox logo for that month. You are not asked to mention the sponsor, and the logo does not say that you endorse it.',
+      `FutureBox may also sell a sponsor a season on your class, for as long as the class runs. Before it accepts one, FutureBox tells you in writing who the sponsor is and what the product is, and you may decline within five working days — for example, if the product conflicts with your values or with another agreement of yours.`,
+      `If you accept, you record one short segment of 30 to 60 seconds about the sponsor’s product, in English and in Afrikaans (in English only if you speak English only), from points the sponsor and FutureBox give you, and in your own words. FutureBox shows it with your class for the whole season, marked as sponsored, and removes it when the season ends. You will not say anything about the product that you do not believe to be true.`,
+      `For every month of a season sponsorship you accepted, you receive ${PAY.sponsorMonthSaid}, paid in the same way and into the same account as your other payments.`,
+    ],
+  },
+  {
+    title: '10. Your promises',
     body: [
       'You are 18 or older. What you present is your own work or you have the right to use it, and it contains no music, footage, logos or material belonging to others that you are not allowed to use.',
       'Nothing you present is defamatory, discriminatory, harmful or unlawful, and nothing you say is presented as professional advice for which you are not qualified.',
@@ -588,14 +604,14 @@ export const TERMS: readonly Clause[] = [
     ],
   },
   {
-    title: '10. FutureBox’s promises',
+    title: '11. FutureBox’s promises',
     body: [
       'FutureBox presents your class with care, credits you as its presenter, and pays you as set out in the written offer.',
       'FutureBox may decline to publish, or remove, a Recording that breaks the law, these terms or FutureBox’s community rules, and will tell you why.',
     ],
   },
   {
-    title: '11. Your personal information',
+    title: '12. Your personal information',
     body: [
       'FutureBox processes the personal information in this registration — and the Recordings and photographs, which show who you are — under the Protection of Personal Information Act 4 of 2013 (POPIA).',
       'We use it to draw up and carry out this agreement, to pay you, to credit you as the presenter and to promote your class as set out above. It is stored securely with our service providers, is seen only by the FutureBox people who need it, and is not sold.',
@@ -604,14 +620,14 @@ export const TERMS: readonly Clause[] = [
     ],
   },
   {
-    title: '12. Ending the agreement',
+    title: '13. Ending the agreement',
     body: [
       'Either of us may end this agreement with thirty days’ written notice. If either of us seriously breaks it and does not put it right within fourteen days of being asked to, the other may end it at once.',
       'After it ends, FutureBox stops selling the class, students who bought it keep their access, and section 8 governs the photographs and teasers.',
     ],
   },
   {
-    title: '13. Signing and the law',
+    title: '14. Signing and the law',
     body: [
       'Ticking that you agree, signing on the pad and pressing “Sign and send” is your electronic signature, under the Electronic Communications and Transactions Act 25 of 2002. FutureBox keeps the date and time you signed and the version of these terms you saw.',
       'This agreement is governed by the law of the Republic of South Africa.',

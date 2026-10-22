@@ -148,6 +148,25 @@ const pad = code('app/components/SignaturePad.tsx');
 ok('the PDF room and the agreement use one signature pad', /import SignaturePad from '\.\/SignaturePad'/.test(pdf) && !/function SignaturePad/.test(pdf) && /import SignaturePad/.test(page));
 ok('  and it takes a picture of a signature, with the paper taken out', /'upload'/.test(pad) && /withoutPaper\(c, W, H\)/.test(pad));
 
+/* The owner, 22 October 2026: sponsors by the month, a logo only; a season
+   with the presenter at R15 000 for every month the class runs; the
+   presenter paid a fixed Rand amount for each month of a season. */
+const { SPONSORSHIP, sponsorshipPrice } = await import('../app/lib/plans.ts');
+const { REGIONS } = await import('../app/lib/pricing.ts');
+const za = REGIONS.find((one) => one.code === 'ZA')!;
+const rungs = Object.fromEntries(SPONSORSHIP.map((rung) => [rung.id, rung]));
+ok('sponsors are offered three ways: a masterclass month, a season with the presenter, and the headline partner',
+  SPONSORSHIP.length === 3 && rungs.class?.from === 12_000 && rungs.class?.per === 'month'
+  && rungs.season?.from === 15_000 && rungs.season?.per === 'classMonth'
+  && rungs.headline?.from === 25_000 && rungs.headline?.per === 'month' && /one company at a time/.test(rungs.headline?.gets ?? '')
+  && /every month the class runs/.test(sponsorshipPrice(rungs.season!, za)));
+ok('  and the terms ask the presenter to speak only for a season, which they may decline, paid in Rand for every month',
+  /title: '9\. Sponsors'/.test(code('app/lib/cubedhost.ts')) && terms.includes(PAY.sponsorMonthSaid)
+  && /may decline within five working days/.test(terms) && /marked as sponsored/.test(terms)
+  && /You are not asked to mention the sponsor/.test(terms) && /data-hostsponsor/.test(page0()));
+ok('  and what a presenter receives for it is not on the public sponsorship pages',
+  !['app/page.tsx', 'app/components/Placement.tsx', 'app/lib/plans.ts'].some((file) => code(file).includes(PAY.sponsorMonthSaid) || /SPONSOR_MONTH_RAND|sponsorMonth/.test(code(file))));
+
 if (bad) {
   console.error(`\ncheck:cubedhost — ${bad} assertion(s) failed.\n`);
   process.exit(1);
