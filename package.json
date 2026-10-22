@@ -108,6 +108,7 @@
     "check:blankguard": "node audit/blankguard.mjs 3123",
     "check:bigphoto": "node audit/bigphoto.mjs 3119",
     "check:boothsideways": "node audit/boothsideways.mjs 3121",
+    "check:boothstudio": "node audit/boothstudio.mjs 3126",
     "check:oops": "node audit/oops.mjs",
     "check:langtrip": "node audit/language.mjs 3018",
     "check:elevenceiling": "tsx scripts/check-elevenceiling.mts",
