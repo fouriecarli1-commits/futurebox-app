@@ -64,6 +64,7 @@ import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
 import { Pencil } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import type { LiveClock } from '../lib/liveclock';
 
 /* ── The booth's own palette ──────────────────────────────────────────── */
 const VOID = '#05060a';
@@ -211,7 +212,10 @@ function ClipName({ name, roomy, onRename }: {
 export default function BoothTimeline({
   lanes,
   total,
-  at,
+  at: atNow,
+  live,
+  playing = false,
+  markers,
   meter,
   snap,
   spans,
@@ -229,6 +233,17 @@ export default function BoothTimeline({
   readonly total: number;
   /** Where the playhead is. */
   readonly at: number;
+  /**
+   * The playhead while it moves, read every frame without a render. See
+   * `lib/liveclock.ts`: `at` only changes a few times a second while
+   * playing, and drawing the line from it would make the line jump back to
+   * the last reading on every render and forward again on the next frame.
+   */
+  readonly live?: LiveClock;
+  /** Whether the clock is running, so the line is drawn from `live`. */
+  readonly playing?: boolean;
+  /** The session's markers, in seconds, drawn as flags on the ruler. */
+  readonly markers?: readonly number[];
   readonly meter: Meter;
   readonly snap: Snap;
   /** The song's sections, where it has been read. Empty is fine. */
@@ -362,6 +377,9 @@ export default function BoothTimeline({
 
   const percent = (seconds: number): number =>
     scaleTotal > 0 ? Math.max(0, Math.min(100, (seconds / scaleTotal) * 100)) : 0;
+  /* Moving, the playhead is wherever the live clock says this instant;
+     stood still, it is the room's own `at`. */
+  const at = playing && live ? live.now() : atNow;
 
   /* ── Dragging ─────────────────────────────────────────────────────────
 
@@ -458,6 +476,51 @@ export default function BoothTimeline({
   /* The axis's own width in pixels. At zoom 1 it is the room, so nothing
      scrolls and the room reads exactly as it did before this existed. */
   const axisWide = Math.max(1, Math.round(room * zoom));
+
+  /* ── The playhead, moved by the clock itself ─────────────────────────
+
+     Every frame while playing, without a render: the line, its head and the
+     clock in the corner are set straight on their elements. The text is set
+     on the node React already owns (`firstChild`), so the next render finds
+     the same node and writes into it rather than into one that was swapped
+     out underneath it. Zoomed in, the view turns the page when the line
+     reaches its edge, so the line never plays off-screen. */
+  const lineRef = useRef<HTMLSpanElement | null>(null);
+  const headRef = useRef<HTMLSpanElement | null>(null);
+  const clockRef = useRef<HTMLSpanElement | null>(null);
+  const placeRef = useRef<HTMLSpanElement | null>(null);
+  const drawn = useRef({ scaleTotal, axisWide, meter, zoom });
+  drawn.current = { scaleTotal, axisWide, meter, zoom };
+  useEffect(() => {
+    if (!live || !playing) return undefined;
+    let second = -1;
+    let place = '';
+    return live.listen((seconds) => {
+      const now = drawn.current;
+      const pct = now.scaleTotal > 0 ? Math.max(0, Math.min(100, (seconds / now.scaleTotal) * 100)) : 0;
+      if (lineRef.current) lineRef.current.style.left = `${pct}%`;
+      if (headRef.current) headRef.current.style.left = `${pct}%`;
+      const whole = Math.floor(seconds);
+      const clockText = clockRef.current?.firstChild;
+      if (whole !== second && clockText) {
+        second = whole;
+        clockText.nodeValue = clock(seconds);
+      }
+      const where = sayPlace(placeAt(seconds, now.meter));
+      const placeText = placeRef.current?.firstChild;
+      if (where !== place && placeText) {
+        place = where;
+        placeText.nodeValue = where;
+      }
+      const box = scroller.current;
+      if (box && now.zoom > 1 && !held.current) {
+        const x = GUTTER + (pct / 100) * now.axisWide;
+        if (x > box.scrollLeft + box.clientWidth - 24 || x < box.scrollLeft + GUTTER) {
+          box.scrollLeft = Math.max(0, x - GUTTER - 24);
+        }
+      }
+    });
+  }, [live, playing]);
   /** What the drag in progress stuck to, for the readout. Null is the grid. */
   const [stuck, setStuck] = useState<Sticky | null>(null);
 
@@ -948,13 +1011,13 @@ export default function BoothTimeline({
         className="flex shrink-0 items-baseline gap-3 px-4 py-2"
         style={{ borderBottom: `1px solid ${EDGE}`, background: PANEL }}
       >
-        <span className="text-2xl font-black tabular-nums tracking-tight" style={{ color: INK }}>
+        <span ref={clockRef} data-clock="" className="text-2xl font-black tabular-nums tracking-tight" style={{ color: INK }}>
           {clock(at)}
         </span>
         <span className="text-xs tabular-nums" style={{ color: INK_DIM }}>
           / {clock(total)}
         </span>
-        <span className="text-xs font-bold tabular-nums" style={{ color: 'rgba(56,189,248,0.9)' }}>
+        <span ref={placeRef} className="text-xs font-bold tabular-nums" style={{ color: 'rgba(56,189,248,0.9)' }}>
           {sayPlace(placeAt(at, meter))}
         </span>
 
@@ -1284,6 +1347,31 @@ export default function BoothTimeline({
                 </span>
               );
             })}
+            {/* The markers, as flags on the ruler: pressed, the line goes
+                there. Numbered in order, which is how a musician says them
+                ("from marker three"). The press is 44 pixels wide around a
+                one-pixel line, so a thumb finds it, and it sits above the
+                ruler's own scrub so pressing it is not a scrub. */}
+            {(markers ?? []).map((one, n) => (
+              <button
+                key={`m${one}`}
+                type="button"
+                data-marker={one.toFixed(3)}
+                aria-label={`${t('daw.markerTo', 'To marker')} ${n + 1} · ${clock(one)}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => { event.stopPropagation(); onSeek(one); }}
+                className="absolute inset-y-0 z-10 w-11"
+                style={{ left: `${percent(one)}%`, transform: 'translateX(-50%)' }}
+              >
+                <span className="absolute inset-y-0 left-1/2 w-px" style={{ background: '#facc15' }} />
+                <span
+                  className="absolute bottom-0 left-1/2 flex h-4 items-center rounded-r px-1 text-[9px] font-black tabular-nums"
+                  style={{ background: '#facc15', color: '#05060a' }}
+                >
+                  {n + 1}
+                </span>
+              </button>
+            ))}
             {/* The sections, on the ruler, where a name can be read once
                 rather than repeated on every lane. */}
             {(spans ?? [])
@@ -2076,10 +2164,13 @@ export default function BoothTimeline({
             style={{ gridColumn: 2, gridRow: `1 / span ${lanes.length + 1}` }}
           >
             <span
+              ref={lineRef}
+              data-playline=""
               className="absolute inset-y-0 w-0.5"
               style={{ left: `${percent(at)}%`, background: HEAD, opacity: 0.85 }}
             />
             <span
+              ref={headRef}
               className="pointer-events-auto absolute top-0 h-7 w-7 touch-none rounded-b-md"
               style={{
                 left: `${percent(at)}%`,

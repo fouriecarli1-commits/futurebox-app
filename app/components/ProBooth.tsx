@@ -10,12 +10,21 @@
  * — each with a level, a place in time, a mute and a solo, and a mix at the end
  * that is theirs rather than the app's.
  *
- * What it deliberately is not: a digital audio workstation. There is no
- * automation, no plugin chain, no bus routing, and pretending otherwise by
- * drawing knobs that do nothing would be worse than leaving them out. What is
- * here is real — every fader, every mute, every offset is in the file that
- * comes out the other end, and `app/lib/session.ts` decides that once so the
- * mixer and the mixdown can never disagree about what you are listening to.
+ * It began as deliberately not a digital audio workstation, and the reason
+ * still holds: pretending to be one by drawing knobs that do nothing would be
+ * worse than leaving them out. What is here is real — every fader, every
+ * mute, every offset, every effect is in the file that comes out the other
+ * end, and `app/lib/session.ts` decides that once so the mixer and the
+ * mixdown can never disagree about what you are listening to.
+ *
+ * On 22 October 2026 the owner asked for it to work and look exactly like a
+ * studio, with every function there. So it now has a studio's transport row
+ * (`BoothTransport`), markers, copy and paste, a mixer with every lane side
+ * by side, a playhead that moves without re-working the room every frame
+ * (`lib/liveclock.ts`), its own pedals and amps (`lib/pedals.ts`), and a
+ * hum that is read note by note onto a piano roll (`HumRoll`). What it still
+ * does not have, and says so rather than drawing it: automation lanes, bus
+ * routing, and a level meter on every lane — the master has the scope.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -69,8 +78,9 @@ import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import { Card, Row } from './BoothCard';
 import SaysDone from './SaysDone';
-import { EDGE, INK_DIM, LIT, PANEL } from '../lib/boothlook';
+import { EDGE, INK, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
+import BoothTransport from './BoothTransport';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
 import BoothAsk from './BoothAsk';
@@ -94,7 +104,9 @@ import {
 import { songCost, type SongEngine } from '../lib/credits';
 import { songEngine } from '../lib/engines';
 import { makeHistory } from '../lib/undo';
-import { notesIn, snapTo } from '../lib/humnotes';
+import { liveClock } from '../lib/liveclock';
+import { heardIn, inKey, keyOf, notesIn, scaleNotes, snapTo, GRIDS, type GridId, type Heard, type HumNote } from '../lib/humnotes';
+import HumRoll, { nameOf } from './HumRoll';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { GROUPS, PLAIN, VOICES, renderHum, voiceById, type Tweak, type VoiceId } from '../lib/huminstrument';
 import AmpFace from './AmpFace';
@@ -304,6 +316,9 @@ export default function ProBooth({
      because a lane brought in from elsewhere is easier to place when the
      session says what it is in. */
   const [meter, setMeter] = useState<Meter>(DEFAULT_METER);
+  /* The markers on the ruler, in seconds, kept in order. Saved with the
+     session — a marker that is gone after a reload is not a marker. */
+  const [markers, setMarkers] = useState<number[]>([]);
   const [clicking, setClicking] = useState(false);
   const [division, setDivision] = useState<DivisionId>('1/1');
   const [clickDb, setClickDb] = useState(-6);
@@ -489,6 +504,10 @@ export default function ProBooth({
   /** The live picture's ear on the master, made with the context. */
   const scopeRef = useRef<AnalyserNode | null>(null);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
+  /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
+     line and clock follow this every frame; `at` follows it a few times a
+     second, so the room is not worked out again sixty times a second. */
+  const live = useMemo(() => liveClock(0), []);
   const startedRef = useRef({ at: 0, from: 0 });
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -611,6 +630,7 @@ export default function ProBooth({
         setLanes(back);
         setMeter(kept.meter);
         setMaster(kept.master);
+        if (kept.markers?.length) setMarkers([...kept.markers]);
         /* The master's trim is worked out from a measurement, and a
            measurement of a mix this room has not rendered yet is not one it
            may claim. So the master comes back set and stale: what she chose,
@@ -649,7 +669,7 @@ export default function ProBooth({
   const writeDown = useCallback(
     (now: readonly Lane[]): Promise<void> => {
       const at = changes.current;
-      return keepSession(song, meter, master, now).then((done) => {
+      return keepSession(song, meter, master, now, markers).then((done) => {
         if (changes.current === at) unsaved.current = false;
         if (done.ok) {
           setSavedAt(Date.now());
@@ -659,7 +679,7 @@ export default function ProBooth({
         }
       });
     },
-    [master, meter, song],
+    [master, meter, song, markers],
   );
   useEffect(() => {
     if (restoring) return undefined;
@@ -816,7 +836,11 @@ export default function ProBooth({
   const stopPlaying = useCallback(() => {
     hush();
     setPlaying(false);
-  }, [hush]);
+    /* Exactly where it stopped, not where the last few-times-a-second
+       reading left it: a pause followed by play has to carry on from the
+       sample it stopped on. */
+    setAt(live.now());
+  }, [hush, live]);
 
   /**
    * Put the playhead somewhere, by hand.
@@ -855,6 +879,7 @@ export default function ProBooth({
   useEffect(() => {
     if (!playing && !recording) return;
     let frame = 0;
+    let told = 0;
     const step = (): void => {
       const ctx = ctxRef.current;
       if (ctx) {
@@ -868,7 +893,13 @@ export default function ProBooth({
         if (span && startedRef.current.at <= ctx.currentTime && now >= span.to - 0.08) {
           play(span.from, 0, startedRef.current.at + (span.to - startedRef.current.from));
         }
-        setAt(Math.max(0, Math.min(total, now)));
+        const here = Math.max(0, Math.min(total, now));
+        live.set(here);
+        const wall = performance.now();
+        if (wall - told >= 200) {
+          told = wall;
+          setAt(here);
+        }
         if (now >= total && !recording) {
           stopPlaying();
           return;
@@ -878,7 +909,12 @@ export default function ProBooth({
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [playing, recording, stopPlaying, total, play]);
+  }, [playing, recording, stopPlaying, total, play, live]);
+  /* Stood still, the clock is wherever the room says — a seek, an undo, a
+     drag of the playhead. */
+  useEffect(() => {
+    if (!playing && !recording) live.set(at);
+  }, [at, playing, recording, live]);
 
   useEffect(
     () => () => {
@@ -2851,8 +2887,117 @@ export default function ProBooth({
      stops, S cuts the open lane at the playhead, and Delete takes out the
      stretch marked on it. Never while somebody is typing in a box. Held in a
      ref so the listener is added once and always calls today's functions. */
-  const keyed = useRef({ stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording });
-  keyed.current = { stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording };
+  /* ── The transport row ─────────────────────────────────────────────────
+
+     See `BoothTransport` for why it exists. Each of these is the room's own
+     function under a studio's name: nothing here plays, records or loops by
+     a route of its own. */
+  const toStart = useCallback((): void => {
+    if (recording) return;
+    seek(0);
+  }, [recording, seek]);
+  /** Stop, and back to where play began. Stopped already, to the very start. */
+  const stopAll = useCallback((): void => {
+    if (recording) { void stopRecording(); return; }
+    if (!playing) { setAt(0); return; }
+    const back = looping && region ? region.from : startedRef.current.from;
+    stopPlaying();
+    setAt(Math.max(0, back));
+  }, [recording, stopRecording, playing, looping, region, stopPlaying]);
+  const recordToggle = useCallback((): void => {
+    if (recording) void stopRecording();
+    else if (!busy && !making) void record();
+  }, [recording, stopRecording, busy, making, record]);
+  /** Loop the marked piece; with nothing marked, four bars from the bar the line is in. */
+  const loopToggle = useCallback((): void => {
+    if (recording) return;
+    if (looping) { setLooping(false); return; }
+    let piece = region;
+    if (!piece || piece.to - piece.from < 0.25) {
+      const bar = barSeconds(sane(meter));
+      const first = Math.max(0, Math.floor(live.now() / bar) * bar);
+      piece = { from: first, to: Math.min(Math.max(total, first + bar), first + bar * 4) };
+      setRegion(piece);
+    }
+    setLooping(true);
+    loopSpan.current = piece;
+    if (!playing) {
+      setAt(piece.from);
+      play(piece.from);
+    }
+  }, [recording, looping, region, meter, live, total, playing, play]);
+  /** The click on or off — and, while playing, from this moment rather than the next play. */
+  const clickToggle = useCallback((): void => {
+    const next = !clicking;
+    setClicking(next);
+    if (!playing && !recording) return;
+    if (!next) { metronomeRef.current?.stop(); return; }
+    const beat = clicker();
+    if (!beat) return;
+    beat.setVolume(clickDb);
+    beat.start(sane(meter), division, startedRef.current.at - startedRef.current.from, live.now());
+  }, [clicking, playing, recording, clicker, clickDb, meter, division, live]);
+
+  /* Markers: one press sets one where the line is, or takes away the one it
+     stands on. A tenth of a second is "on it": a thumb cannot do better on a
+     three-minute song, and two markers that close are one. */
+  const markerAt = markers.find((one) => Math.abs(one - at) < 0.1);
+  const markerToggle = useCallback((): void => {
+    const here = live.now();
+    setMarkers((was) => {
+      const near = was.find((one) => Math.abs(one - here) < 0.1);
+      if (near !== undefined) return was.filter((one) => one !== near);
+      return [...was, Math.round(here * 1000) / 1000].sort((a, b) => a - b);
+    });
+  }, [live]);
+  const toMarker = useCallback((way: -1 | 1): void => {
+    const here = live.now();
+    const next = way > 0
+      ? markers.find((one) => one > here + 0.05)
+      : [...markers].reverse().find((one) => one < here - 0.05);
+    if (next !== undefined) seek(next);
+    else if (way < 0) seek(0);
+  }, [markers, live, seek]);
+
+  /* ── Copy, paste, duplicate ───────────────────────────────────────────
+     A lane is a track and its one clip at once, so a copy is a new lane:
+     pasted where the line is, or duplicated straight after the original so
+     it carries on from where it ends — a chorus played twice. The sound is
+     not copied (a lane's audio is never changed in place, only replaced), so
+     a copy costs nothing however long the take. */
+  const clip = useRef<Lane | null>(null);
+  const [hasClip, setHasClip] = useState(false);
+  const copyLane = useCallback((): void => {
+    const lane = lanes.find((one) => one.id === picked);
+    if (!lane) return;
+    clip.current = lane;
+    setHasClip(true);
+  }, [lanes, picked]);
+  const placeCopy = useCallback((from: Lane, where: number): void => {
+    remember(t('undo.copy', 'the copy'));
+    const made: Lane = {
+      ...from,
+      id: `lane-copy-${Date.now()}`,
+      name: `${from.name} · ${t('daw.copyName', 'copy')}`,
+      at: Math.max(0, where),
+      muted: false,
+      soloed: false,
+      backing: undefined,
+    };
+    setLanes((was) => [...was, made]);
+    setPicked(made.id);
+    setStale(true);
+  }, [remember, t]);
+  const pasteLane = useCallback((): void => {
+    if (clip.current) placeCopy(clip.current, live.now());
+  }, [placeCopy, live]);
+  const duplicateLane = useCallback((): void => {
+    const lane = lanes.find((one) => one.id === picked);
+    if (lane) placeCopy(lane, lane.at + lengthOf(lane));
+  }, [lanes, picked, placeCopy]);
+
+  const keyed = useRef({ stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording, toStart, recordToggle, loopToggle, clickToggle, markerToggle, toMarker, copyLane, pasteLane, duplicateLane });
+  keyed.current = { stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording, toStart, recordToggle, loopToggle, clickToggle, markerToggle, toMarker, copyLane, pasteLane, duplicateLane };
   useEffect(() => {
     const press = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement | null;
@@ -2862,7 +3007,20 @@ export default function ProBooth({
       const key = event.key.toLowerCase();
       if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) now.stepForward(); else now.stepBack(); return; }
       if (mod && key === 'y') { event.preventDefault(); now.stepForward(); return; }
-      if (mod) return;
+      /* Copy, paste and duplicate the open lane — but only when nothing is
+         selected on the page, so copying a sentence still copies it. */
+      const selecting = Boolean(window.getSelection?.()?.toString());
+      if (mod && key === 'c' && !selecting) { now.copyLane(); return; }
+      if (mod && key === 'v') { event.preventDefault(); now.pasteLane(); return; }
+      if (mod && key === 'd') { event.preventDefault(); now.duplicateLane(); return; }
+      if (mod || event.altKey) return;
+      if (key === 'home') { event.preventDefault(); now.toStart(); return; }
+      if (key === 'r') { now.recordToggle(); return; }
+      if (key === 'l') { now.loopToggle(); return; }
+      if (key === 'k') { now.clickToggle(); return; }
+      if (key === 'm') { now.markerToggle(); return; }
+      if (key === ',') { now.toMarker(-1); return; }
+      if (key === '.') { now.toMarker(1); return; }
       if (key === ' ' && !(target && target.closest('button'))) {
         event.preventDefault();
         /* Mid-take, Space ends the take. It used to stop the song and leave
@@ -3423,8 +3581,121 @@ export default function ProBooth({
      applied identically to what you hear and to what comes out. Drawing a
      compressor that only ran in one of those two places would make the file
      differ from the approval, invisibly. */
+  /* ── The mixer: every lane side by side ─────────────────────────────
+
+     The owner, 22 October 2026, asked for every function a studio has. A lane's
+     level and pan were on that lane's own row only, one lane at a time, so
+     balancing a mix meant opening, nudging and closing each lane in turn —
+     with no way to see two levels at once. A mixer is the view where they
+     are all up together: a fader, a pan, mute and solo per lane, and a way
+     into that lane's effects. Every control is the same field the lane row
+     sets, through the same `change`, so the two can never disagree. A
+     double press on a fader puts it back to where it started. */
+  const mixer = (
+    <Card
+      wide
+      icon={<Sliders className="h-4 w-4" />}
+      title={t('daw.mixerTitle', 'Mixer')}
+      what={t('daw.mixerWhat', 'Every lane side by side: its level, where it sits left to right, mute and solo. Press a fader twice to put it back to 100.')}
+    >
+      {/* Strips that wrap onto another row rather than slide out of
+          sight past the edge: on a phone three sit side by side, on a desk a
+          dozen. */}
+      <div data-mixer className="grid grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-2">
+        {lanes.map((lane) => {
+          const db = lane.gain > 0 ? 20 * Math.log10(lane.gain) : -Infinity;
+          return (
+            <div
+              key={lane.id}
+              data-strip={lane.id}
+              className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border px-1.5 py-2"
+              style={{ borderColor: picked === lane.id ? LIT : EDGE, background: 'rgba(255,255,255,0.02)' }}
+            >
+              <button
+                type="button"
+                onClick={() => setPicked(lane.id)}
+                className="min-h-[44px] w-full truncate rounded-lg px-1 text-[11px] font-bold"
+                style={{ color: picked === lane.id ? LIT : INK }}
+                title={lane.name}
+              >
+                {lane.name}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={150}
+                value={Math.round(lane.gain * 100)}
+                data-stripfader={lane.id}
+                onChange={(event) => change(lane.id, { gain: Number(event.target.value) / 100 })}
+                onDoubleClick={() => change(lane.id, { gain: 1 })}
+                aria-label={`${t('pro.level', 'Level')} · ${lane.name}`}
+                className="h-36 w-11 accent-sky-500 touch-manipulation"
+                style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
+              />
+              <span className="text-[10px] tabular-nums" style={{ color: INK_DIM }}>
+                {Number.isFinite(db) ? `${db > 0 ? '+' : ''}${db.toFixed(1)} dB` : '−∞'}
+              </span>
+              <input
+                type="range"
+                min={-100}
+                max={100}
+                value={Math.round((lane.pan ?? 0) * 100)}
+                data-strippan={lane.id}
+                onChange={(event) => change(lane.id, { pan: Number(event.target.value) / 100 })}
+                onDoubleClick={() => change(lane.id, { pan: 0 })}
+                aria-label={`${t('daw.pan', 'Left or right')} · ${lane.name}`}
+                className="h-11 w-full accent-sky-500 touch-manipulation"
+              />
+              <span className="text-[10px] tabular-nums" style={{ color: INK_DIM }}>
+                {Math.abs(lane.pan ?? 0) < 0.01
+                  ? t('daw.centre', 'centre')
+                  : `${(lane.pan ?? 0) < 0 ? 'L' : 'R'} ${Math.round(Math.abs(lane.pan ?? 0) * 100)}`}
+              </span>
+              <div className="grid w-full grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  aria-pressed={lane.muted}
+                  aria-label={`${t('daw.mute', 'Mute')} · ${lane.name}`}
+                  onClick={() => change(lane.id, { muted: !lane.muted })}
+                  className="h-11 rounded-lg border text-xs font-black"
+                  style={lane.muted
+                    ? { borderColor: '#f87171', background: 'rgba(248,113,113,0.18)', color: '#fecaca' }
+                    : { borderColor: EDGE, color: INK_DIM }}
+                >
+                  {t('pro.mute', 'M')}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={lane.soloed}
+                  aria-label={`${t('daw.solo', 'Solo')} · ${lane.name}`}
+                  onClick={() => change(lane.id, { soloed: !lane.soloed })}
+                  className="h-11 rounded-lg border text-xs font-black"
+                  style={lane.soloed
+                    ? { borderColor: '#fbbf24', background: 'rgba(251,191,36,0.18)', color: '#fde68a' }
+                    : { borderColor: EDGE, color: INK_DIM }}
+                >
+                  {t('pro.solo', 'S')}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setPicked(lane.id); setDeskOpen('effects'); }}
+                className="h-11 w-full rounded-lg border text-[11px] font-bold"
+                style={{ borderColor: lane.fx && Object.keys(lane.fx).length ? LIT : EDGE, color: lane.fx && Object.keys(lane.fx).length ? LIT : INK_DIM }}
+              >
+                {t('daw.fx', 'Effects')}
+                {lane.fx && Object.keys(lane.fx).length ? ` · ${Object.keys(lane.fx).length}` : ''}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+
   const mixDesk = (
     <>
+      {mixer}
       {exportCard}
       <Card
         icon={<Gauge className="h-4 w-4" />}
@@ -4289,6 +4560,49 @@ export default function ProBooth({
      `check:neurie` drives both on a hum it synthesises itself. Nothing here
      does any of that work, which is why there is so little of it. */
   const [humSnap, setHumSnap] = useState(true);
+  /* ── How the notes are put right, before anyone touches one ─────────────
+
+     The owner, 22 October 2026: *"Gaan die Hum funksie na, as daardie baie fyn,
+     genuanseerd, en baie baie goed verfyn word … dan kan dit ons selling
+     point word."* Three choices a musician makes about a hummed line, each
+     one a thing that was decided for her before:
+
+       · the grid — sixteenths, eighths, triplets — and how hard the notes
+         are pulled onto it (`humFeel`): all the way is tight, half way keeps
+         the push and drag of the hum and only tidies it;
+       · the key — every note as hummed, the key heard in the hum
+         (`keyOf`), or the session's key major or minor. A note outside it
+         goes the way the voice was leaning (`inKey`), never just the nearest;
+       · and then any single note, by hand, on the roll (`HumRoll`). */
+  const [humGrid, setHumGrid] = useState<GridId>('1/16');
+  const [humFeel, setHumFeel] = useState(1);
+  const [humKey, setHumKey] = useState<'off' | 'heard' | 'major' | 'minor'>('off');
+  /** What was read from the take, so the roll, the preview and the lane all use one reading. */
+  const [humRead, setHumRead] = useState<{ readonly sign: string; readonly heard: Heard; readonly seconds: number; readonly at: number } | null>(null);
+  /** The notes as changed by hand on the roll, or null while nobody has. */
+  const [humEdited, setHumEdited] = useState<HumNote[] | null>(null);
+  /** Each hand change, so the roll has an undo of its own. */
+  const [humBack, setHumBack] = useState<HumNote[][]>([]);
+  /* ── Takes ─────────────────────────────────────────────────────────────
+     A retake no longer throws the last one away. Each hum recorded in the
+     card is a take; the one before is muted and kept, and the takes sit in a
+     row to be listened to and chosen between — which is how a studio does
+     it, and the only way to know the new one is better. */
+  const [humTakes, setHumTakes] = useState<string[]>([]);
+  const humArmed = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const armed = humArmed.current;
+    if (!armed) return;
+    const fresh = lanes.find((one) => !one.backing && !armed.has(one.id));
+    if (!fresh) return;
+    humArmed.current = null;
+    setHumTakes((was) => (was.includes(fresh.id) ? was : [...was, fresh.id]));
+    setPicked(fresh.id);
+  }, [lanes]);
+  const recordHum = useCallback((): void => {
+    humArmed.current = new Set(lanesNow.current.map((one) => one.id));
+    void record();
+  }, [record]);
 
   /* ── Which lane gets played ────────────────────────────────────────────
  
@@ -4343,16 +4657,89 @@ export default function ProBooth({
     node.start();
   }, [context, hushHum]);
 
+  /* What the take is, as a string: a reading of one cut of a lane is not a
+     reading of the same lane cut somewhere else. */
+  const humSign = humLane
+    ? `${humLane.id}:${humLane.at}:${humLane.from ?? ''}:${humLane.to ?? ''}:${humLane.repeat ?? 1}:${humLane.audio.length}:${humLane.amped?.name ?? ''}`
+    : '';
+  const songRoot = Math.max(0, (KEYS as readonly string[]).indexOf(meter.key));
+  const heardKey = useMemo(() => (humRead ? keyOf(humRead.heard.notes) : null), [humRead]);
+  const humScale = humKey === 'heard' && heardKey
+    ? scaleNotes(heardKey.root, heardKey.minor)
+    : humKey === 'major' || humKey === 'minor'
+      ? scaleNotes(songRoot, humKey === 'minor')
+      : null;
+  /** Notes as heard, put in key and on the grid as the card is set. */
+  const shapeHum = useCallback((raw: readonly HumNote[], at: number): HumNote[] => {
+    let out = [...raw];
+    if (humKey === 'heard') {
+      const found = keyOf(raw);
+      if (found) out = inKey(out, found.root, found.minor);
+    } else if (humKey === 'major' || humKey === 'minor') {
+      out = inKey(out, songRoot, humKey === 'minor');
+    }
+    return humSnap ? snapTo(out, meter.bpm, { grid: humGrid, strength: humFeel, offset: at }) : out;
+  }, [humKey, songRoot, humSnap, meter.bpm, humGrid, humFeel]);
+  const humShaped = useMemo(
+    () => (humRead ? shapeHum(humRead.heard.notes, humRead.at) : null),
+    [humRead, shapeHum],
+  );
+  /* A choice changed after a hand edit starts again from the reading: the
+     hand edits were made on the old grid or key. The roll's own undo brings
+     them back. */
+  const humEditedNow = useRef<HumNote[] | null>(null);
+  humEditedNow.current = humEdited;
+  useEffect(() => {
+    const was = humEditedNow.current;
+    if (!was) return;
+    setHumBack((back) => [...back.slice(-30), was]);
+    setHumEdited(null);
+  }, [shapeHum]);
+  const humNotes = humEdited ?? humShaped;
+
+  /** Read the take now: the notes, the voice's line and the key. */
+  const readHum = useCallback((): { source: AudioBuffer; heard: Heard; at: number } | null => {
+    const ctx = context();
+    if (!humLane || !ctx) return null;
+    const source = playsOf(humLane, ctx);
+    const heard = heardIn(source.getChannelData(0), source.sampleRate);
+    setHumRead({ sign: humSign, heard, seconds: source.duration, at: humLane.at });
+    setHumEdited(null);
+    setHumBack([]);
+    return { source, heard, at: humLane.at };
+  }, [humLane, humSign, context]);
+  /* A new take, or the same take cut differently, is read again when it is
+     next asked for — not the old reading passed off as this one. */
+  useEffect(() => {
+    if (humRead && humRead.sign !== humSign) { setHumRead(null); setHumEdited(null); setHumBack([]); }
+  }, [humSign, humRead]);
+  const editHum = useCallback((next: HumNote[]): void => {
+    setHumBack((back) => [...back.slice(-30), humEdited ?? humShaped ?? []]);
+    setHumEdited(next);
+  }, [humEdited, humShaped]);
+  const undoHumEdit = useCallback((): void => {
+    if (!humBack.length) return;
+    setHumEdited(humBack[humBack.length - 1]);
+    setHumBack(humBack.slice(0, -1));
+  }, [humBack]);
+
   /** The hum's sound and the notes heard in it, or why there are none. */
   const humHeard = useCallback((piece?: { audio: AudioBuffer; at: number }) => {
-    const lane = piece ? null : humLane;
-    const ctxNow = lane ? context() : null;
-    const source = piece?.audio ?? (lane && ctxNow ? playsOf(lane, ctxNow) : lane?.audio) ?? null;
-    if (!source) return null;
-    const heard = notesIn(source.getChannelData(0), source.sampleRate);
-    const notes = humSnap ? snapTo(heard, meter.bpm) : heard;
-    return { source, notes, at: piece?.at ?? lane?.at ?? 0 };
-  }, [humLane, humSnap, meter.bpm, context]);
+    if (piece) {
+      /* A marked piece from the timeline's AI magic: read on the spot, put
+         right the way the card is set. */
+      const heard = notesIn(piece.audio.getChannelData(0), piece.audio.sampleRate);
+      return { source: piece.audio, notes: shapeHum(heard, piece.at), at: piece.at };
+    }
+    const ctx = context();
+    if (!humLane || !ctx) return null;
+    if (humRead && humRead.sign === humSign && humNotes) {
+      return { source: playsOf(humLane, ctx), notes: humNotes, at: humLane.at };
+    }
+    const fresh = readHum();
+    if (!fresh) return null;
+    return { source: fresh.source, notes: shapeHum(fresh.heard.notes, fresh.at), at: fresh.at };
+  }, [humLane, humRead, humSign, humNotes, readHum, shapeHum, context]);
 
   /** The hum on its own, before anything is made of it. */
   const listenToHum = useCallback((): void => {
@@ -4381,17 +4768,63 @@ export default function ProBooth({
     soundOut(buffer, 'part');
   }, [humSounding, humHeard, humVoices, humTweak, context, hushHum, soundOut, t]);
 
-  /** Take the hum again: the one that was wrong goes, and the microphone opens. */
+  /** Take the hum again: the one before is muted and kept as a take, and the microphone opens. */
   const retakeHum = useCallback((): void => {
     if (!humLane || recording) return;
     hushHum();
     remember(t('undo.retake', 'the retake'));
-    const gone = humLane.id;
-    setLanes((was) => was.filter((one) => one.id !== gone));
-    setPicked((was) => (was === gone ? null : was));
+    const before = humLane.id;
+    setLanes((was) => was.map((one) => (one.id === before ? { ...one, muted: true } : one)));
+    setHumTakes((was) => (was.includes(before) ? was : [before, ...was]));
     setStale(true);
-    void record();
-  }, [humLane, recording, hushHum, record, remember, t]);
+    recordHum();
+  }, [humLane, recording, hushHum, recordHum, remember, t]);
+
+  /** One note, as the first picked instrument plays it — for the roll. */
+  const auditionNote = useCallback((note: HumNote): void => {
+    const ctx = context();
+    const voice = voiceById(humVoices[0] ?? 'keys');
+    if (!ctx || !voice) return;
+    const long = Math.min(1.2, Math.max(0.15, note.to - note.from));
+    const played = renderHum([{ ...note, from: 0.02, to: 0.02 + long, loud: Math.max(0.6, note.loud) }], voice, long + 0.1, ctx.sampleRate, humTweak);
+    const buffer = ctx.createBuffer(1, played.length, ctx.sampleRate);
+    buffer.getChannelData(0).set(played);
+    soundOut(buffer, 'part');
+  }, [context, humVoices, humTweak, soundOut]);
+
+  /* ── To a studio instrument model ─────────────────────────────────────
+     The on-device instruments are arithmetic; the instrument models on the
+     voice sheet are trained on real players and cost credits. Sent the raw
+     hum, they also play the breaths, the scoops and the notes the reader got
+     wrong. Sent THIS — the corrected notes, played as a clean tone with
+     nothing else in it — they play exactly the line on the roll. The guide
+     lands as a lane of its own and the sheet opens on it, with its price. */
+  const humToModel = useCallback((): void => {
+    const got = humHeard();
+    const ctx = context();
+    const flute = voiceById('flute');
+    if (!got || !ctx || !flute || !got.notes.length) {
+      setProblem(t('hum.nothing', 'Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.'));
+      return;
+    }
+    const played = renderHum(got.notes, flute, got.source.duration, got.source.sampleRate, PLAIN);
+    const buffer = ctx.createBuffer(1, played.length, got.source.sampleRate);
+    buffer.getChannelData(0).set(played);
+    const guide: Lane = {
+      id: `hum-guide-${Date.now()}`,
+      name: `${humLane?.name ?? t('hum.from', 'hummed')} · ${t('hum.guide', 'guide')}`,
+      audio: buffer,
+      at: got.at,
+      gain: 1,
+      muted: true,
+      soloed: false,
+      notes: got.notes,
+    };
+    remember(t('hum.guide', 'guide'));
+    setLanes((was) => [...was, guide]);
+    setStale(true);
+    playAs(guide);
+  }, [humHeard, context, humLane, remember, t, playAs]);
 
   /**
    * The hum, played as instruments — one lane per instrument picked.
@@ -4608,7 +5041,7 @@ export default function ProBooth({
         title={t('hum.title', 'Hum it, and have it played')}
         what={t(
           'hum.what',
-          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. No credits and no limit — none of it leaves this device.',
+          'Record yourself humming or tapping the rhythm on a lane, see the notes and put them right, pick an instrument, and it comes back played. The instruments here cost no credits and none of it leaves this device; the studio model at the end says its price.',
         )}
       >
         <div className="space-y-3" data-humcard>
@@ -4634,7 +5067,7 @@ export default function ProBooth({
             ) : (
               <button
                 type="button"
-                onClick={() => void record()}
+                onClick={recordHum}
                 disabled={busy || making}
                 data-humrecord
                 className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-bold text-onAccent disabled:opacity-50"
@@ -4672,9 +5105,177 @@ export default function ProBooth({
                 </button>
               </div>
             )}
+            {/* The takes, to choose between. Pressing one makes it the one
+                the notes are read from; "Listen to my hum" plays it. */}
+            {(() => {
+              const takes = humTakes.filter((id) => lanes.some((one) => one.id === id));
+              if (takes.length < 2) return null;
+              return (
+                <div className="flex flex-wrap gap-1.5" data-humtakes>
+                  {takes.map((id, n) => (
+                    <button
+                      key={id}
+                      type="button"
+                      data-humtake={id}
+                      aria-pressed={humLane?.id === id}
+                      onClick={() => { hushHum(); setPicked(id); }}
+                      className={`min-h-[44px] rounded-xl border px-3 text-xs font-bold ${
+                        humLane?.id === id ? 'border-sky-400 bg-sky-500/15 text-sky-100' : 'border-zinc-700 bg-zinc-900 text-zinc-400'
+                      }`}
+                    >
+                      {t('hum.take', 'Take')} {n + 1}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
-          {/* ── 2. Pick the sound ─────────────────────────────────────────
+          {/* ── 2. The notes, seen and put right ──────────────────────────
+              What was heard, on a piano roll over the line the voice itself
+              sang, with the grid and the key chosen here and any one note
+              moved by hand. Nothing below reads the hum again: the preview,
+              the lane and the studio model all play these notes. */}
+          <div className="space-y-2" data-humnotes>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('hum.step2notes', '2 · See the notes, and put them right')}
+            </p>
+            {!humRead || humRead.sign !== humSign ? (
+              <button
+                type="button"
+                data-humread
+                disabled={!humLane || recording || busy}
+                onClick={() => {
+                  const got = readHum();
+                  if (got && !got.heard.notes.length) {
+                    setProblem(t('hum.nothing', 'Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.'));
+                  }
+                }}
+                className="fb-fx-booth-tile inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold text-sky-100 disabled:opacity-50"
+              >
+                <Music2 className="h-4 w-4" />
+                {t('hum.read', 'Show the notes')}
+              </button>
+            ) : (
+              <>
+                <p className="text-[11px] leading-snug text-zinc-400" data-humsummary>
+                  {`${humNotes?.length ?? 0} ${t('roll.notes', 'notes')}`}
+                  {heardKey && heardKey.sure > 0.15
+                    ? ` · ${t('hum.heardIn', 'heard in')} ${nameOf(heardKey.root + 60).replace(/-?\d+$/, '')} ${heardKey.minor ? t('fx.scaleMinor', 'Minor') : t('fx.scaleMajor', 'Major')}`
+                    : ''}
+                  {Math.abs(humRead.heard.tuningCents) >= 10
+                    ? ` · ${t('hum.tunedBy', 'hummed')} ${Math.abs(humRead.heard.tuningCents)} ${t('roll.cents', 'cents')} ${humRead.heard.tuningCents > 0 ? t('hum.sharp', 'sharp') : t('hum.flat', 'flat')}, ${t('hum.tunedFix', 'allowed for')}`
+                    : ''}
+                </p>
+                <HumRoll
+                  notes={humNotes ?? []}
+                  onChange={editHum}
+                  seconds={humRead.seconds}
+                  contour={humRead.heard.pitch}
+                  beat={60 / Math.max(1, meter.bpm)}
+                  barBeats={meter.beats}
+                  offset={humRead.at}
+                  step={humSnap ? (60 / Math.max(1, meter.bpm)) * (GRIDS.find((one) => one.id === humGrid)?.beat ?? 0.25) : 0}
+                  scale={humScale}
+                  onAudition={auditionNote}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    data-humundo
+                    disabled={!humBack.length}
+                    onClick={undoHumEdit}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200 disabled:opacity-40"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                    {t('hum.undoEdit', 'Undo that change')}
+                  </button>
+                  <button
+                    type="button"
+                    data-humfresh
+                    disabled={!humEdited}
+                    onClick={() => { if (humEdited) { setHumBack((back) => [...back.slice(-30), humEdited]); setHumEdited(null); } }}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200 disabled:opacity-40"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {t('hum.fresh', 'As it was heard')}
+                  </button>
+                </div>
+              </>
+            )}
+
+            <label data-tidycard className="flex items-start gap-2.5 text-xs text-zinc-400">
+              <input
+                type="checkbox"
+                checked={humSnap}
+                data-humsnap
+                onChange={(event) => setHumSnap(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-sky-500"
+              />
+              <span>
+                {t('hum.snap', 'Put it on the click')}
+                <span className="block text-[11px] leading-snug text-zinc-600">
+                  {t(
+                    'hum.snapWhy',
+                    'A hummed rhythm is never quite in time. Off is for a part that swings or drifts on purpose.',
+                  )}
+                </span>
+              </span>
+            </label>
+            {humSnap && (
+              <>
+                <div className="grid grid-cols-5 gap-1" role="group" aria-label={t('hum.grid', 'The grid')} data-humgrid>
+                  {GRIDS.map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      aria-pressed={humGrid === one.id}
+                      onClick={() => setHumGrid(one.id)}
+                      className={`min-h-[44px] rounded-lg border text-xs font-bold tabular-nums ${
+                        humGrid === one.id ? 'border-sky-400 bg-sky-500/15 text-sky-100' : 'border-zinc-700 bg-zinc-900 text-zinc-400'
+                      }`}
+                    >
+                      {one.id}
+                    </button>
+                  ))}
+                </div>
+                <label className="grid grid-cols-[minmax(0,7rem)_1fr_2.75rem] items-center gap-2 text-xs text-zinc-300">
+                  <span className="truncate">{t('hum.feel', 'Loose · tight')}</span>
+                  <input
+                    type="range"
+                    min={0.25}
+                    max={1}
+                    step={0.05}
+                    value={humFeel}
+                    data-humfeel
+                    onChange={(event) => setHumFeel(Number(event.target.value))}
+                    className="h-11 w-full accent-sky-400"
+                  />
+                  <span className="text-right tabular-nums text-sky-200">{Math.round(humFeel * 100)}%</span>
+                </label>
+              </>
+            )}
+            <label className="flex flex-col gap-1 text-xs text-zinc-300">
+              <span>{t('hum.keyTo', 'Keep the notes to a key')}</span>
+              <select
+                value={humKey}
+                data-humkey
+                onChange={(event) => setHumKey(event.target.value as typeof humKey)}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+              >
+                <option value="off">{t('hum.keyOff', 'Every note as hummed')}</option>
+                <option value="heard" disabled={!heardKey}>
+                  {heardKey
+                    ? `${t('hum.keyHeard', 'The key heard in the hum')}: ${nameOf(heardKey.root + 60).replace(/-?\d+$/, '')} ${heardKey.minor ? t('fx.scaleMinor', 'Minor') : t('fx.scaleMajor', 'Major')}`
+                    : t('hum.keyHeardNone', 'The key heard in the hum (show the notes first)')}
+                </option>
+                <option value="major">{`${t('hum.keySong', 'The song’s key')}: ${meter.key} ${t('fx.scaleMajor', 'Major')}`}</option>
+                <option value="minor">{`${t('hum.keySong', 'The song’s key')}: ${meter.key} ${t('fx.scaleMinor', 'Minor')}`}</option>
+              </select>
+            </label>
+          </div>
+
+          {/* ── 3. Pick the sound ─────────────────────────────────────────
               One column, not two. The owner, 9 October 2026: *"Dit lyk nie goed
               nie."* This desk is already two columns wide on a phone, so a
               grid of two inside one of them gave each button about forty
@@ -4700,7 +5301,7 @@ export default function ProBooth({
               {t('hum.toVoice', 'Sing my hum as a voice part')}
             </button>
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-              {t('hum.step2', '2 · Pick the sound')}
+              {t('hum.step3pick', '3 · Pick the sound')}
             </p>
             {/* ── Under headings, because there are thirteen of them now ──
 
@@ -4750,25 +5351,6 @@ export default function ProBooth({
             </div>
           </div>
 
-          <label data-tidycard className="flex items-start gap-2.5 text-xs text-zinc-400">
-            <input
-              type="checkbox"
-              checked={humSnap}
-              data-humsnap
-              onChange={(event) => setHumSnap(event.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-sky-500"
-            />
-            <span>
-              {t('hum.snap', 'Put it on the click')}
-              <span className="block text-[11px] leading-snug text-zinc-600">
-                {t(
-                  'hum.snapWhy',
-                  'A hummed rhythm is never quite in time. Off is for a part that swings or drifts on purpose.',
-                )}
-              </span>
-            </span>
-          </label>
-
           {/* ── 3. Hear it, and set it until it sounds right ───────────────
               The owner, 21 October 2026: *"dan die instrument kies, en dan
               daai klank kan verstel totdat dit klink soos dit moet."* Heard
@@ -4777,7 +5359,7 @@ export default function ProBooth({
               each one is the instrument as it comes. */}
           <div className="space-y-2" data-humshape>
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-              {t('hum.step3shape', '3 · Hear it, and shape it')}
+              {t('hum.step4shape', '4 · Hear it, and shape it')}
             </p>
             <button
               type="button"
@@ -4825,7 +5407,7 @@ export default function ProBooth({
           {/* ── 4. Keep it ─────────────────────────────────────────────── */}
           <div className="space-y-1.5">
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-              {t('hum.step4', '4 · Put it on a lane')}
+              {t('hum.step5', '5 · Put it on a lane')}
             </p>
             <button
               type="button"
@@ -4840,6 +5422,22 @@ export default function ProBooth({
                 : humVoices.length > 1
                   ? `${t('hum.keepMany', 'Put them on')} ${humVoices.length} ${t('hum.lanes', 'lanes')}`
                   : t('hum.keep', 'Put it on a lane')}
+            </button>
+            {/* Or the same notes, played by an instrument model trained on a
+                real player. That one costs credits, and says how many here
+                and again on the sheet before anything is spent. */}
+            <button
+              type="button"
+              data-hummodel
+              onClick={humToModel}
+              disabled={!humLane || humming || busy || recording || making}
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+            >
+              <Guitar className="h-4 w-4 shrink-0" />
+              <span className="line-clamp-2 text-center leading-tight">
+                {t('hum.toModel', 'These notes, played by a studio instrument model')}
+                {humLane ? ` · ${perMinute(humRead?.seconds ?? pieceSeconds(humLane), CREDITS.sing)} ${t('video.credits', 'credits')}` : ''}
+              </span>
             </button>
           </div>
         </div>
@@ -5472,6 +6070,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'mix' ? null : 'mix'))}
             title={t('pro.deskTone', 'Mixer & Levels')}
+            aria-label={t('pro.deskTone', 'Mixer & Levels')}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Sliders className="h-3.5 w-3.5" />
@@ -5480,6 +6079,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'tracks' ? null : 'tracks'))}
             title={t('pro.deskMeter', 'Tempo & Tracks')}
+            aria-label={t('pro.deskMeter', 'Tempo & Tracks')}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Gauge className="h-3.5 w-3.5" />
@@ -5488,6 +6088,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'effects' ? null : 'effects'))}
             title={t('pro.deskLayout', 'Effects & Tone')}
+            aria-label={t('pro.deskLayout', 'Effects & Tone')}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Settings className="h-3.5 w-3.5" />
@@ -5573,12 +6174,47 @@ export default function ProBooth({
         <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
           {/* The sound, live. Not on a phone held sideways: there the
               timeline needs every pixel of a short screen. */}
+          {/* The transport, over the music where a hand reaches for it. Not
+              on a phone held sideways, where the rail carries play and the
+              timeline needs every pixel of a short screen. */}
+          {!sideways && (
+            <BoothTransport
+              recording={recording}
+              looping={looping}
+              clicking={clicking}
+              countBars={countBars}
+              bpm={meter.bpm}
+              signature={`${meter.beats}/${meter.unit}`}
+              keyName={meter.key}
+              markerHere={markerAt !== undefined}
+              hasMarkers={markers.length > 0}
+              onMarker={markerToggle}
+              onPrevMarker={() => toMarker(-1)}
+              onNextMarker={() => toMarker(1)}
+              onStart={toStart}
+              onStop={stopAll}
+              onRecord={recordToggle}
+              onLoop={loopToggle}
+              onClick={clickToggle}
+              onTempo={() => setDeskOpen('tracks')}
+              onMixer={() => setDeskOpen('mix')}
+              lanePicked={Boolean(picked)}
+              hasClip={hasClip}
+              onCopy={copyLane}
+              onPaste={pasteLane}
+              onDuplicate={duplicateLane}
+              busy={busy || making}
+            />
+          )}
           {!sideways && <BoothScope ear={scopeRef} playing={playing} />}
           <BoothTimeline
+            markers={markers}
             onMarks={findMarks}
             lanes={lanes}
             total={canvas}
             at={at}
+            live={live}
+            playing={playing || recording}
             meter={meter}
             snap={snap}
             spans={Object.values(known).flatMap((one) => one.spans ?? [])}

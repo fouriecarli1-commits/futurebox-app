@@ -144,6 +144,8 @@ export interface KeptSession {
   readonly meter: Meter;
   readonly master: Master;
   readonly lanes: readonly KeptLane[];
+  /** The session's markers, in seconds. Absent on entries from before them. */
+  readonly markers?: readonly number[];
 }
 
 /** What a save did. `full` is a quota that is out, which needs saying. */
@@ -211,6 +213,9 @@ export async function keepSession(
     notes?: readonly HumNote[];
     amped?: { name: string; audio: AudioBuffer };
   }[],
+  /* The markers on the ruler. Last and optional, so every caller that
+     does not have any is unchanged. */
+  markers: readonly number[] = [],
 ): Promise<Kept> {
   const db = await open();
   if (!db) return { ok: false, why: 'unavailable' };
@@ -223,6 +228,7 @@ export async function keepSession(
       savedAt: Date.now(),
       meter,
       master,
+      ...(markers.length ? { markers: [...markers] } : {}),
       lanes: lanes.map((lane) => ({
         id: lane.id,
         name: lane.name,

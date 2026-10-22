@@ -1,5 +1,59 @@
 # TONE3000 opstel — stap vir stap
 
+## Stand op 22 Oktober 2026 — lees dit eerste
+
+Die eienaar het gevra: *"Ons moet ook nog tone3000 uit figure om te werk vir
+probooth. of ons moet ons eie pedals, en amp modellers iewers kry."* Albei is
+nou nagegaan.
+
+**Wat klaar is in die kode.** Die hele OAuth-handdruk (`/api/tone3000/start`,
+`/api/tone3000/callback`, `/api/tone3000/tone`), die PKCE-paar, die
+`state`-toets, die token-stoor, die aflaai van 'n `.nam` en die bewys dat ons
+enjin hom laai — alles onder `check:tone3000` en `check:tone3000route`. Die
+eie amp-katalogus (`AmpCatalogue`, `supabase/amps.sql`) waarin sy self
+captures van TONE3000 oplaai met die maker en die lisensie, is ook klaar.
+
+**Wat doelbewus nie aan is nie.** Die **Browse TONE3000**-knoppie in
+ProBooth. Op 11 Oktober het sy besluit: *"Ons kan nie deur hulle website werk
+nie"* — en die katalogus het sy plek gevat. Die knoppie terugsit is 'n
+uur se kode, maar dit mag nie **gepubliseer** word voordat hulle dit
+goedgekeur het nie (sien "Die kommersiële terme" in `docs/TONE3000-API.md`).
+
+**Wat net sy kan doen, as die deur na hulle toe wel moet oopgaan:**
+
+1. **Die kommersiële ooreenkoms en hul sign-off.** Hul terme: *"Commercial
+   integrations must be reviewed and signed off by TONE3000 before they are
+   publicly published or announced."* Hulle vra 'n skermopname van 'n
+   werkende integrasie; daarna besluit hulle. Geen kode vervang dit nie.
+2. **Al drie terugkeeradresse** by hul **Allowed Redirect URIs**, een per
+   reël — op 6 Oktober het die reis op die `www`-adres gefaal met
+   *"redirect_uri not registered for this client"*:
+   `https://futurebox.studio/api/tone3000/callback`,
+   `https://www.futurebox.studio/api/tone3000/callback` en
+   `https://futurebox-app.vercel.app/api/tone3000/callback`.
+3. **`NEXT_PUBLIC_TONE3000_CLIENT_ID`** in Vercel (Production en Preview),
+   en dan **Redeploy**. Net die publishable key; die secret key en die
+   legacy key bly op hul bladsy.
+4. **`supabase/tone3000.sql`** in die Supabase SQL Editor laat loop.
+   `supabase/WATKORT.sql` sê of `tone3000_pending` en `tone3000_tokens` daar
+   is.
+5. **Hul amptelike logo-lêers** van hul aflaai-skakel af (ontwerpvereiste 7:
+   die volle logo eers, dan die T3K-merk). Die proxy hier blokkeer
+   `tone3000.com`, so ek kan hulle nie self gaan haal nie, en 'n nagemaakte
+   logo is presies wat hulle verbied.
+6. **Die drie vrae** onder 1.5 hieronder (lisensie, `architecture`, waar
+   `model_url` leef) — hulle antwoord bepaal hoe die lys gefiltreer word.
+
+**En intussen werk die booth sonder hulle.** Die rack het nou sy eie
+pedals en versterkers wat niemand se capture of rekening nodig het nie
+(`lib/pedals.ts`, onder `check:pedals`): overdrive, distortion, fuzz, 'n
+versterker met clean/crunch/lead en 'n bass/middle/treble tone stack, twee
+kabinette, flanger, phaser, en nege rigs wat 'n hele pedaalbord met een druk
+stel.
+
+---
+
+
 Hierdie een is vir die eienaar, voor haar rekenaar, met niks oop nie.
 
 Dit is in drie dele: **by TONE3000 gaan haal**, **in Vercel insit**, en

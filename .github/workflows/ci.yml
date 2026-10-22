@@ -938,6 +938,13 @@ jobs:
       - name: The effect rack is in the file, not only in the ear
         run: npm run check:boothfx
 
+      # The booth's own pedals and amps: each drive adds harmonics as its
+      # knob turns, the fuzz is lopsided, each amp voicing is dirtier than the
+      # last, the cabinets roll off the fizz, and the rack builds them in a
+      # pedalboard's order. Needs no capture and no third party.
+      - name: The booth's own pedals and amps do what their names say
+        run: npm run check:pedals
+
       # A model asked for a fader between 0 and 1.5 will mostly answer inside
       # that range, and "mostly" is not a property you can build a fader on.
       # The rules live in a lib so they run here without an API key.
@@ -1507,6 +1514,13 @@ jobs:
       # alone reads as one held note.
       - name: A hum becomes the rhythm that was hummed
         run: npm run check:neurie
+
+      # The melody of a hum, read the way a person hums: legato with no gap,
+      # vibrato a semitone wide, scoops and falls, a slide, a breath, a tune
+      # hummed sharp and drifting flat, accents, room noise, and the octave
+      # of a pure "mmm". Every hum is synthesised at known pitches and times.
+      - name: A hum is heard the way a person hums it
+        run: npm run check:humpitch
 
       # A story becomes pages, each page is charged its own reading, and the
       # pictures turn when the voice does rather than on a fixed interval.
@@ -2174,7 +2188,7 @@ jobs:
           - group: doors two
             probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
-            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
+            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
             probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk
           - group: rooms

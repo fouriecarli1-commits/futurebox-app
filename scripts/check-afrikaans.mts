@@ -94,6 +94,9 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* Pedals a guitarist names the same in Afrikaans: nobody says anything
+     else for a fuzz, a flanger or a phaser. */
+  'Fuzz', 'Flanger', 'Phaser',
   /* The owner, 12 October 2026: 'Verbeter Afrikaans' on the feedback button in
      both English and Afrikaans sides so Afrikaans speakers using the English
      UI recognise the pronunciation feedback control immediately. */
