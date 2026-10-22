@@ -2167,7 +2167,7 @@ jobs:
           - group: doors
             probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground
           - group: doors two
-            probes: check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
+            probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
@@ -2185,7 +2185,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:contrastdark check:contrastlight check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout check:launchwalk check:playlistname check:filmwalk
+            probes: check:selfie check:contrast check:contrastdark check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout check:launchwalk check:playlistname check:filmwalk
     steps:
       - uses: actions/checkout@v4
 
