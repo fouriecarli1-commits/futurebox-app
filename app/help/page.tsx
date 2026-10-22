@@ -37,34 +37,18 @@ export default function Help(): React.ReactElement {
           <h1 className="text-4xl font-black text-white tracking-tight">Help</h1>
           <p className="text-base text-zinc-400 leading-relaxed">
             How the studio works, what a thing costs, what the terms actually say — and, when it
-            needs a person, the way to one.
+            needs a person, the way to one. Every room and what a press costs is in{' '}
+            <Link href="/guide" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">the guide</Link>.
           </p>
         </header>
 
         <HelpDesk />
 
-        {/* Standing on their own rather than inside a sentence, so they are
-            sized as things a thumb hits: 44px is the floor everywhere else in
-            this app and a link is not exempt from it. */}
+        {/* Help, the guide, terms and privacy are in the site footer under
+            every page, so they are not repeated here. What stays is what only
+            this page offers. Standing on their own so they are sized as
+            things a thumb hits: 44px is the floor everywhere in this app. */}
         <nav className="flex flex-wrap gap-x-5 border-t border-zinc-800 pt-4 text-sm">
-          <Link
-            href="/guide"
-            className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-          >
-            The guide
-          </Link>
-          <Link
-            href="/terms"
-            className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-          >
-            Terms
-          </Link>
-          <Link
-            href="/privacy"
-            className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-          >
-            Privacy
-          </Link>
           {/* The language screen, which nothing in the app linked to.
 
               `check:bereikbaar` found it. It prints what the app thinks the

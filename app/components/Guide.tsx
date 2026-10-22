@@ -207,20 +207,6 @@ export default function Guide(): React.ReactElement {
         </dl>
       </section>
 
-      <nav className="flex flex-wrap gap-x-5 border-t border-zinc-800 pt-4 text-sm">
-        <Link href="/help" className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-          {t('foot.help', 'Help')}
-        </Link>
-        <Link href="/terms" className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-          {t('foot.terms', 'Terms')}
-        </Link>
-        <Link href="/privacy" className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-          {t('foot.privacy', 'Privacy')}
-        </Link>
-        <Link href="/legal" className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-          {t('foot.who', 'Who we are')}
-        </Link>
-      </nav>
     </div>
   );
 }
