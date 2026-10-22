@@ -461,6 +461,8 @@ export const STRINGS: Dict = {
   "pair.draftsOff": { en: "The words stay on the screen they were written on for now — sending them with the turn is being switched on.", af: "Die woorde bly vir eers op die skerm waarop hulle geskryf is — om hulle saam met die beurt te stuur word aangeskakel." },
   "pair.draftsMine": { en: "What you write is kept for them as you go, and goes with the turn.", af: "Wat jy skryf, word vir hulle gehou terwyl jy skryf, en gaan saam met die beurt." },
   "pair.draftsTheirs": { en: "It is their turn to write — their words show up here as they go. Ask for the pen to write yourself.", af: "Dit is hulle beurt om te skryf — hulle woorde wys hier terwyl hulle skryf. Vra vir die pen om self te skryf." },
+  "make.pairWatchingCopilot": { en: "It is their turn to write, so the copilot cannot put anything into the song yet. Ask for the pen at the top, then ask the copilot again.", af: "Dit is hulle beurt om te skryf, so die copilot kan nog niks in die liedjie sit nie. Vra bo vir die pen, en vra dan weer vir die copilot." },
+  "make.wordsMoved": { en: "Your words were in the sound box, where they are not sung. They are in the words box now — check them, then press Make again.", af: "Jou woorde was in die klank-boks, waar dit nie gesing word nie. Hulle is nou in die woorde-boks — kyk na hulle en druk dan weer Maak." },
   "make.pairWatching": { en: "Their turn — ask for the pen at the top to write.", af: "Hulle beurt — vra bo vir die pen om te skryf." },
   "collab.someone": { en: "Someone", af: "Iemand" },
   "collab.noHandle": { en: "(no @handle yet)", af: "(nog geen @gebruikersnaam nie)" },

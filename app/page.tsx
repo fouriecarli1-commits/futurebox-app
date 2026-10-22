@@ -29,6 +29,7 @@ import PairStrip from './components/PairStrip';
 import { loadPairs, readyToMake, saveDraft, type Pair } from './lib/pairs';
 import { draftFor, sameDraft, timeOf, type SongDraft } from './lib/pairdraft';
 import { collabCredit } from './lib/collabcredit';
+import { wordsOutOfStyle } from './lib/stylewords';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -2106,9 +2107,23 @@ export default function FutureBoxHome() {
       /* Updater form: the reply lands seconds after the question, and a
          spread of the canvas as it was when asked put back whatever was
          typed in between. */
-      if (action.kind === 'set_title') setCanvas((was) => ({ ...was, title: action.value }));
-      if (action.kind === 'set_style') setCanvas((was) => ({ ...was, style: action.value }));
-      if (action.kind === 'set_lyrics') setCanvas((was) => ({ ...was, lyrics: action.value }));
+      /* Not into a shared song while it is the other person's turn: their
+         next save would put their copy over it — see `pairGuard` in
+         MakeMusic. And words sent as the style go where they are sung
+         (`lib/stylewords.ts`). */
+      const theirTurn = Boolean(pairHere && pairHere.surface === 'make' && !pairHere.mine && pairHere.drafts !== false);
+      if (!theirTurn) {
+        if (action.kind === 'set_title') setCanvas((was) => ({ ...was, title: action.value }));
+        if (action.kind === 'set_style') {
+          const parted = wordsOutOfStyle(action.value);
+          setCanvas((was) => ({
+            ...was,
+            style: parted.lyrics ? (parted.style || was.style) : parted.style,
+            lyrics: parted.lyrics && !was.lyrics.trim() ? parted.lyrics : was.lyrics,
+          }));
+        }
+        if (action.kind === 'set_lyrics') setCanvas((was) => ({ ...was, lyrics: action.value }));
+      }
       if (action.kind === 'generate') {
         goToRoom('make');
         setMakeSignal((n) => n + 1);

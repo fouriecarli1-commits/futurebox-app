@@ -15,6 +15,7 @@
  */
 import { buildRequest, fitPlan, forPreview, plannedSeconds, type Body } from '../app/lib/server/musicplan';
 import { readFileSync } from 'node:fs';
+import { before } from './order.mts';
 import { singable } from '../app/lib/server/singit.ts';
 import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
 import { shapeSong, planLength } from '../app/lib/songshape';
@@ -244,6 +245,26 @@ check('  and a kids song and a ten-minute plan are fitted before anything is ask
 const room = readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8');
 check('  and the button shows the price of the planned length',
   (room.match(/songCost\(pricedFor\(/g) ?? []).length >= 3 && !/songCost\(seconds, singer\)/.test(room));
+
+/* ── Words in the sound box are moved to where they are sung ───────────
+   The owner, 22 October 2026, in a collab: two songs with no words, the
+   second after the copilot "put the lyrics above the style". */
+const { wordsOutOfStyle } = await import('../app/lib/stylewords.ts');
+const stuffed = wordsOutOfStyle('Warm acoustic pop, female vocal\n\n[Verse 1]\nDie pad is lank\nOns stap saam\n\n[Koor]\nHou vas');
+check('lyrics written into the style are taken out of it',
+  stuffed.lyrics.startsWith('[Verse 1]') && /Hou vas/.test(stuffed.lyrics) && stuffed.style === 'Warm acoustic pop, female vocal',
+  JSON.stringify(stuffed));
+check('  and a style with no section markers is left alone, line breaks and all',
+  wordsOutOfStyle('dark synthwave\nslow, 80 bpm\nmale vocal').lyrics === '');
+check('  and markers with nothing under them are not lyrics', wordsOutOfStyle('pop\n[Verse]\n[Chorus]').lyrics === '');
+const makeRoom = readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8');
+check('Make moves them to the words box before anything is charged, and says so',
+  /const misplaced = wordless && !singItYourself \? wordsOutOfStyle\(canvas\.style\)/.test(makeRoom)
+  && before(makeRoom, 'const misplaced', 'engines.generateAudio('));
+check('  and the copilot sending words as the sound puts them in the words box',
+  /set_sound: \(value\) => \{\s*\/\*[\s\S]*?wordsOutOfStyle\(value\.trim\(\)\)/.test(makeRoom));
+check('while it is the other person’s turn, the copilot cannot write into the shared song',
+  /useCopilotOps\('make', pairGuard\(\{/.test(makeRoom) && /DRAFT_OPS = \['reset', 'set_song_title', 'set_words', 'add_section', 'set_sound', 'set_feeling', 'set_about'\]/.test(makeRoom));
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);

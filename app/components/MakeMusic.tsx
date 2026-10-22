@@ -56,6 +56,7 @@ import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
 import { useCopilotOps } from '../lib/copilotactions';
+import { wordsOutOfStyle } from '../lib/stylewords';
 import { useOpenCard } from '../lib/opencard';
 import PromptCards from './PromptCards';
 import { MOODS, type Mood } from '../data/songstarts';
@@ -231,7 +232,26 @@ export default function MakeMusic({
   const landedInMake = (card: { arrived: () => void }): void => {
     card.arrived();
   };
-  useCopilotOps('make', {
+  /* ── The copilot waits its turn too ────────────────────────────────
+
+     In a pair room the words box is read-only while the other person holds
+     the pen, but the copilot wrote straight into the song: its verse sat on
+     this screen until their next save put their copy over it, and nothing
+     said it had gone. Then the box was empty when the pen came back, and
+     the song was made with nobody singing. While it is their turn, what the
+     copilot would write into the song says why it cannot instead. */
+  const DRAFT_OPS = ['reset', 'set_song_title', 'set_words', 'add_section', 'set_sound', 'set_feeling', 'set_about'];
+  const pairGuard = (ops: Record<string, (value: string) => void>): Record<string, (value: string) => void> => (
+    watching
+      ? Object.fromEntries(Object.entries(ops).map(([name, run]) => [
+        name,
+        DRAFT_OPS.includes(name)
+          ? () => setStatus(t('make.pairWatchingCopilot', 'It is their turn to write, so the copilot cannot put anything into the song yet. Ask for the pen at the top, then ask the copilot again.'))
+          : run,
+      ]))
+      : ops
+  );
+  useCopilotOps('make', pairGuard({
     /* ── Start again, and mean it ─────────────────────────────────────
 
        The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n reset
@@ -287,8 +307,16 @@ export default function MakeMusic({
       landedInMake(wordsCard);
     },
     set_sound: (value) => {
-      setCanvas((was) => ({ ...was, style: value.trim() }));
-      landedInMake(soundCard);
+      /* Words sent as the sound are put where they are sung — see
+         `lib/stylewords.ts`. Into an empty words box only: a sheet already
+         written there is the person's, and is not replaced from here. */
+      const parted = wordsOutOfStyle(value.trim());
+      setCanvas((was) => ({
+        ...was,
+        style: parted.lyrics ? (parted.style || was.style) : parted.style,
+        lyrics: parted.lyrics && !was.lyrics.trim() ? parted.lyrics : was.lyrics,
+      }));
+      landedInMake(parted.lyrics ? wordsCard : soundCard);
     },
     /* ── The feeling, asked for rather than picked ────────────────────
 
@@ -339,7 +367,7 @@ export default function MakeMusic({
         Math.abs(one.seconds - want) < Math.abs(best.seconds - want) ? one : best);
       setSeconds(near.seconds);
     },
-  });
+  }));
 
   /**
    * The wand: one press that fills a card in.
@@ -859,6 +887,17 @@ export default function MakeMusic({
       const gate = check('publish.release', userPlan);
       if (!gate.allowed) {
         setStatus(gate.reason);
+        return;
+      }
+      /* Words in the sound box are never sung, and a song made with them
+         there comes back with nobody singing (the owner, 22 October 2026).
+         Moved to the words box and shown, before anything is charged, so
+         the person sees them land and presses again. */
+      const misplaced = wordless && !singItYourself ? wordsOutOfStyle(canvas.style) : null;
+      if (misplaced?.lyrics) {
+        setCanvas((was) => ({ ...was, lyrics: misplaced.lyrics, style: misplaced.style || was.style }));
+        landedInMake(wordsCard);
+        setStatus(t('make.wordsMoved', 'Your words were in the sound box, where they are not sung. They are in the words box now — check them, then press Make again.'));
         return;
       }
       /* Two people making it together: not until both said yes. The copilot
