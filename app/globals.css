@@ -3647,3 +3647,8 @@ button[data-liveheart]:active:not(:disabled) {
   }
   .fb-fx-tile:hover { transform: none; }
 }
+
+/* A member's device: the front page waits, unseen, while the app decides who
+   is here — see the note in layout.tsx. Lifted by page.tsx, and by itself
+   after five seconds so a slow network never leaves a blank page. */
+html[data-signedin="1"] [data-landing] { visibility: hidden; }

@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import './globals.css';
 import localFont from 'next/font/local';
 import type { Metadata, Viewport } from 'next';
@@ -171,7 +172,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fredoka.variable} ${bubblegum.variable} ${jakarta.variable}`}>
+    <html lang="en" className={`${fredoka.variable} ${bubblegum.variable} ${jakarta.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Before anything is painted: does this browser hold a sign-in? The
+            owner, 22 October 2026, back from Help: the signed-out front page
+            flashed up for a split second before the studio — the server
+            sends the front page, and the app only learns who is here once it
+            runs. With a sign-in on the device the front page waits hidden
+            until the app has decided; `page.tsx` lifts it if the sign-in
+            turns out to be gone. */}
+        <Script src="/signedin.js" strategy="beforeInteractive" />
+      </head>
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
         <LanguageProvider>
           {/* Listening before any room draws. See the note in the component:

@@ -275,7 +275,11 @@ export default function VideoTemplatesPicker({
           'Each one sets the shape, one look across every shot, transitions, a title and sign-off.',
         )}
       </p>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* As many columns as the BENCH has room for, not the screen: on a
+          computer the bench is a side panel, and three columns sized by the
+          window squeezed every card to one word a line (the owner's
+          screenshot, 22 October 2026). */}
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(16rem, 1fr))' }} data-editorstartgrid>
         {STARTS.map((start) => {
           const isSelected = selectedStartId === start.id;
           const sameShape = currentShape === start.shape;

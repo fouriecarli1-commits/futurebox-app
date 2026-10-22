@@ -650,6 +650,8 @@ export default function FutureBoxHome() {
        so somebody signing back in to an old account does not re-accept. */
     void cloud.settleAgreed();
     cloud.currentAccount().then((account) => {
+      /* Nobody is signed in after all: the front page may show. */
+      if (!account) document.documentElement.removeAttribute('data-signedin');
       if (!live) return;
       /* And again once the account is known, whether or not the address
          carried the arrival mark: Google, or Supabase falling back to the
@@ -691,6 +693,7 @@ export default function FutureBoxHome() {
          a question asked before it, not somebody signing in. */
       if (account && Date.now() - leftAt.current < JUST_LEFT_MS) return;
       setUser(account ? { ...account, followers: 1 } : null);
+      if (!account) document.documentElement.removeAttribute('data-signedin');
       if (account) {
         sayHello();
         /* The account, and nothing about the screen.
@@ -2385,6 +2388,7 @@ export default function FutureBoxHome() {
        lands inside the room the last one left. */
     forgetWhere();
     setUser(null);
+    document.documentElement.removeAttribute('data-signedin');
     departed();
     await cloud.signOut().catch(() => undefined);
   };
