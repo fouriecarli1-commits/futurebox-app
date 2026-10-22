@@ -165,13 +165,16 @@ export default function StartPicker({
           buttons above a list on a phone, and the list is the point. One row,
           like theirs — the feelings first, because that is how most songs
           start, then the families of sound. */}
-      <div className="flex shrink-0 gap-1.5 overflow-x-auto px-3 pb-2" data-pickershelves>
+      <div className={`flex shrink-0 gap-1.5 overflow-x-auto px-3 pb-2 ${foot ? 'hidden' : ''}`} data-pickershelves>
         {chip('all', t('pick.all', 'All'), {})}
         {MOODS.map((one) => chip(one.id, lang === 'af' ? one.af : one.en, { 'data-shelf': one.id }))}
         {GENRE_CATEGORIES.filter((one) => one !== 'All').map((one) => chip(one, one, { 'data-family': one }))}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto border-t border-zinc-800" data-starts="">
+      {/* Out of the way while an upload or the words box is open: both sat
+          under the list in a box of fixed height and opened out of sight, so
+          "say the sound in your own words" looked as if it did nothing. */}
+      <div className={`min-h-0 flex-1 overflow-y-auto border-t border-zinc-800 ${foot ? 'hidden' : ''}`} data-starts="">
         {starts.length > 0 && (
           <>
             <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
@@ -261,7 +264,7 @@ export default function StartPicker({
 
       {/* Start from a song of your own or a photograph, or say the sound in
           your own words. One open at a time: either is taller than the list. */}
-      <div className="shrink-0 border-t border-zinc-800 p-2">
+      <div className={`border-t border-zinc-800 p-2 ${foot ? 'flex min-h-0 flex-1 flex-col overflow-y-auto' : 'shrink-0'}`}>
         <button
           type="button"
           data-pickerbring
@@ -272,7 +275,7 @@ export default function StartPicker({
           <Upload className="h-4 w-4 text-emerald-400" />
           {t('pick.bring', 'Upload a song or a photo to start from')}
         </button>
-        {foot === 'bring' && <div className="max-h-[40vh] space-y-3 overflow-y-auto p-2">{upload}</div>}
+        {foot === 'bring' && <div className="space-y-3 p-2" data-pickerfoot="bring">{upload}</div>}
         <button
           type="button"
           data-pickerbring
@@ -284,7 +287,7 @@ export default function StartPicker({
           <PenLine className="h-4 w-4 text-emerald-400" />
           {t('pick.find', 'Say the sound in your own words')}
         </button>
-        {foot === 'find' && <div className="max-h-[40vh] overflow-y-auto p-2">{finder}</div>}
+        {foot === 'find' && <div className="p-2" data-pickerfoot="find">{finder}</div>}
       </div>
     </div>
   );

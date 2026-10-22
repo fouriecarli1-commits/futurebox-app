@@ -1743,11 +1743,16 @@ export default function MakeMusic({
               /* A solid disc, like every round button here: an outlined
                  plus in pale ink vanished into the box on the light theme
                  (check:playbutton measured 1.01:1). */
-              className={`flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-onAccent hover:bg-emerald-400 ${
+              /* Said, not only drawn. The owner, 22 October 2026: *"Daai plus
+                 in make a song is so weggesteek. Dit wys niks wat dit gaan
+                 doen nie."* A round plus alone says nothing about songs to
+                 start from, an upload or a style in your own words. */
+              className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-emerald-500 pl-2.5 pr-3.5 text-sm font-bold text-onAccent hover:bg-emerald-400 ${
                 pop === 'plus' ? 'ring-2 ring-emerald-300 ring-offset-2 ring-offset-zinc-900' : ''
               }`}
             >
               <Plus className="h-5 w-5" />
+              {t('make.plusLabel', 'Start from…')}
             </button>
             {([
               ['length', Clock, `${t(`len.${seconds}`, LENGTH_CHOICES.find((one) => one.seconds === seconds)?.label ?? `${seconds}s`)}`],
@@ -1846,6 +1851,8 @@ export default function MakeMusic({
                 sayAs={canvas.sayAs}
                 canWrite={!watching}
                 onSayAs={(next) => setCanvas((was) => ({ ...was, sayAs: next }))}
+                onMake={busy || (pairGate && !pairGate.ready) ? undefined : () => { void make(); }}
+                makeCost={`${songCost(pricedFor(seconds), singer) + (wantCover ? CREDITS.cover : 0)} ${t('video.credits', 'credits')}`}
               />
             )}
             <p className="pt-1 text-sm text-zinc-500">
