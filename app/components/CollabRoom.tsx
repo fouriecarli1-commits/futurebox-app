@@ -193,8 +193,19 @@ export default function CollabRoom({
     };
   }, [open]);
 
+  /* The newest message into view — inside the conversation's own box, and
+     only that box. `scrollIntoView` moves every scrolling thing above it as
+     well, so on a computer the whole room slid 617 pixels down the moment
+     it opened and its own heading started out of sight. The first load
+     lands on the newest at once; a new message after that glides there. */
+  const shownBefore = useRef(0);
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const was = shownBefore.current;
+    shownBefore.current = said.length;
+    const list = bottom.current?.parentElement;
+    if (!list) return;
+    if (was === 0) list.scrollTop = list.scrollHeight;
+    else list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
   }, [said.length]);
 
   const reply = useCallback(
