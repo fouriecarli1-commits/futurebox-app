@@ -36,11 +36,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Camera, Check, CheckCircle2, ChevronDown, ClipboardCopy, Clock, FileVideo, Film, Link2, Loader2, Lock,
-  PenLine, Sparkles, Trash2, UploadCloud,
+  Landmark, PenLine, Sparkles, Trash2, UploadCloud, Wallet,
 } from 'lucide-react';
 import SignaturePad, { type Signed } from './SignaturePad';
 import {
-  COMPANY, EMPTY_DETAILS, PHOTO_USES, PROCESS, RECORDING_TIPS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION,
+  ACCOUNT_TYPES, COMPANY, EMPTY_DETAILS, PAY, PHOTO_USES, PROCESS, RECORDING_TIPS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION,
   MOST_LINKS, NO_TRANSFER, WAYS, problemsWith, slotOf, transferSaid, type HostDetails, type PhotoUse, type SlotId, type Transfer,
 } from '../lib/cubedhost';
 
@@ -267,6 +267,38 @@ export default function CubedHost(): React.ReactElement {
         </ol>
       </section>
 
+      {/* ── The amounts ──
+          The owner, 22 October 2026: "Maak seker die cubed application het
+          bedrae breakdown". The price and what the presenter receives per
+          student, in Rand, read from `PAY` so this card and the agreement say
+          the same thing. Never a share or a percentage. */}
+      <section className={CARD} data-hostpay>
+        <p className={LEAD}>What you earn</p>
+        <h2 className="mt-2 flex items-center gap-2 text-2xl font-black text-zinc-50"><Wallet className="h-6 w-6 text-sky-300" /> The amounts</h2>
+        <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-zinc-950/50 p-4">
+            <dt className="text-sm text-zinc-400">A student pays for your whole masterclass — all three sessions</dt>
+            <dd className="mt-1 text-3xl font-black text-zinc-50" data-hostprice>{PAY.priceSaid}</dd>
+          </div>
+          <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4">
+            <dt className="text-sm text-emerald-100/80">You receive, for every student who buys it</dt>
+            <dd className="mt-1 text-3xl font-black text-emerald-50" data-hostyours>{PAY.perStudentSaid}</dd>
+          </div>
+        </dl>
+        <p className="mt-5 text-sm font-semibold text-zinc-200">What that comes to</p>
+        <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+          {PAY.examples.map((one) => (
+            <li key={one.students} className="flex items-baseline justify-between gap-3 rounded-xl border border-white/10 bg-zinc-950/40 px-4 py-3 text-sm">
+              <span className="text-zinc-400">{one.students} students</span>
+              <span className="font-bold text-zinc-100">{one.said}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+          Each session is 30 to 45 minutes long. The written offer FutureBox sends before you start confirms these amounts and says when you are paid — into the bank account you give below.
+        </p>
+      </section>
+
       {/* ── How it works ── */}
       <section className={CARD}>
         <p className={LEAD}>How it works</p>
@@ -362,6 +394,28 @@ export default function CubedHost(): React.ReactElement {
           <div className="grid gap-4 sm:grid-cols-2">
             {text('phone', 'Mobile number', { type: 'tel', placeholder: '+27 …' })}
             {text('altEmail', 'Another email address', { type: 'email', optional: true, hint: `Your invitation went to ${state.email}.` })}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-8 space-y-4" disabled={isSigned} data-hostbank>
+          <legend className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-zinc-400"><Landmark className="h-4 w-4" /> Where you are paid</legend>
+          <p className="text-sm text-zinc-400">Your bank details, for the payments. Seen only by FutureBox.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {text('bankHolder', 'Account holder', { placeholder: 'The name the account is in' })}
+            {text('bankName', 'Bank', { placeholder: 'e.g. Capitec, FNB, Standard Bank' })}
+            {text('bankAccount', 'Account number', { hint: 'For a bank outside South Africa, your IBAN.' })}
+            {text('bankBranch', 'Branch code', { hint: 'A universal branch code is fine. Outside South Africa, the SWIFT code.' })}
+          </div>
+          <div>
+            <p className="mb-2 text-sm font-semibold text-zinc-200">Type of account</p>
+            <div className="grid gap-2 sm:grid-cols-3" data-hostchoice="bankType">
+              {ACCOUNT_TYPES.map((one) => (
+                <button key={one.id} type="button" disabled={isSigned} aria-pressed={details.bankType === one.id} onClick={() => set('bankType', one.id)} className={`min-h-[48px] rounded-2xl border px-4 text-sm font-semibold ${details.bankType === one.id ? 'border-sky-400 bg-sky-500/15 text-sky-50' : 'border-zinc-700 text-zinc-300'} disabled:opacity-60`}>
+                  {one.label}
+                </button>
+              ))}
+            </div>
+            {problem('bankType')}
           </div>
         </fieldset>
 

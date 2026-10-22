@@ -24,8 +24,10 @@ import {
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import {
-  COMPANY, PHOTO_USES, SLOTS, TERMS, WAYS, type HostDetails, type Transfer,
+  ACCOUNT_TYPES, COMPANY, PHOTO_USES, SLOTS, TERMS, WAYS, type HostDetails, type Transfer,
 } from '../lib/cubedhost';
+
+const ACCOUNT_LABEL: Record<string, string> = Object.fromEntries(ACCOUNT_TYPES.map((one) => [one.id, one.label]));
 
 interface Line {
   readonly id: string; readonly email: string; readonly note: string; readonly createdAt: string;
@@ -299,6 +301,7 @@ function Agreement({ full }: { readonly full: Full }): React.ReactElement {
     ['VAT number', d.vatNumber || '—'],
     ['Address', [d.street, d.suburb, d.city, d.province, d.postalCode, d.country].filter(Boolean).join(', ')],
     ['Mobile', d.phone],
+    ['Bank account', d.bankAccount ? [d.bankHolder, d.bankName, `${ACCOUNT_LABEL[d.bankType as string] ?? ''} account ${d.bankAccount}`.trim(), d.bankBranch ? `branch ${d.bankBranch}` : ''].filter(Boolean).join(', ') : '—'],
     ['Email', [full.email, d.altEmail].filter(Boolean).join(', ')],
     ['Presenting name', d.stageName],
     ['Class (working title)', d.classTitle],

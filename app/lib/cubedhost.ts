@@ -26,19 +26,38 @@
  *
  * ── What is NOT here ─────────────────────────────────────────────────────
  *
- * The share of the takings. `lib/cubed.ts` keeps the number for the written
- * offer; the owner, 12 October 2026: *"Die Cubed classes kan nie die
- * winsverdeling wys tussen my en die persoon wat die klas aanbied nie."*
- * The terms say the fee is in the written offer, and `check:cubedhost`
- * refuses this file if a percentage creeps in. Bank details are not taken
- * either: they are not needed to draw the agreement up, and a form reached
- * by a link is the wrong place to collect them.
+ * The share of the takings as a share. The owner, 12 October 2026: *"Die
+ * Cubed classes kan nie die winsverdeling wys tussen my en die persoon wat
+ * die klas aanbied nie."* On 22 October she asked for the amounts on this
+ * page, and chose how: the class's price and what the presenter receives
+ * for every student, in Rand, on their own invite page — never a
+ * percentage, never FutureBox's half. `check:cubedhost` refuses a share
+ * written in words. And since that same day the page takes bank details,
+ * because she asked for a place to fill them in: they are kept with the
+ * rest of the registration, seen only behind the owner's door.
  */
 
-import { CLASSES_IN_A_SERIES } from './cubed';
+import { CLASSES_IN_A_SERIES, guestRand, randSaid, seriesRand } from './cubed';
+
+/**
+ * The amounts a presenter is shown, in Rand.
+ *
+ * The owner, 22 October 2026: *"Maak seker die cubed application het bedrae
+ * breakdown"* — answered with the price a student pays and what the
+ * presenter receives for each one, read from `lib/cubed.ts` so the page and
+ * the price in the Cubed³ room cannot disagree.
+ */
+export const PAY = {
+  price: seriesRand(),
+  perStudent: guestRand(),
+  priceSaid: randSaid(seriesRand()),
+  perStudentSaid: randSaid(guestRand()),
+  /** A few class sizes, worked out, so the number is something to plan with. */
+  examples: [10, 50, 100].map((students) => ({ students, said: randSaid(guestRand() * students) })),
+} as const;
 
 /** The terms' version, stored with every signature. Change it when the words change. */
-export const TERMS_VERSION = '2026-10-21.2';
+export const TERMS_VERSION = '2026-10-22.1';
 
 /** The longest any one answer may be. */
 const SHORT = 160;
@@ -46,6 +65,14 @@ const LONG = 1200;
 
 export type Entity = 'person' | 'company';
 export type Languages = 'both' | 'english';
+export type AccountType = 'cheque' | 'savings' | 'business';
+
+/** The kinds of bank account the payment form offers. */
+export const ACCOUNT_TYPES: readonly { readonly id: AccountType; readonly label: string }[] = [
+  { id: 'cheque', label: 'Cheque / current' },
+  { id: 'savings', label: 'Savings' },
+  { id: 'business', label: 'Business' },
+];
 
 /** Where the six photographs may be used. The first is the class itself and cannot be left out. */
 export const PHOTO_USES = [
@@ -75,6 +102,12 @@ export interface HostDetails {
   readonly country: string;
   readonly phone: string;
   readonly altEmail: string;
+  /** Where the presenter is paid. Seen only by FutureBox. */
+  readonly bankHolder: string;
+  readonly bankName: string;
+  readonly bankAccount: string;
+  readonly bankBranch: string;
+  readonly bankType: AccountType | '';
   readonly stageName: string;
   readonly classTitle: string;
   readonly classAbout: string;
@@ -92,7 +125,7 @@ export const EMPTY_DETAILS: HostDetails = {
   legalName: '', idNumber: '', birthDate: '', nationality: 'South African', entity: 'person',
   companyName: '', companyReg: '', companyRole: '', taxNumber: '', vatNumber: '',
   street: '', suburb: '', city: '', province: '', postalCode: '', country: 'South Africa',
-  phone: '', altEmail: '', stageName: '', classTitle: '', classAbout: '', bio: '', socials: '',
+  phone: '', altEmail: '', bankHolder: '', bankName: '', bankAccount: '', bankBranch: '', bankType: '', stageName: '', classTitle: '', classAbout: '', bio: '', socials: '',
   languages: '', recordSelf: null, editSelf: null, photoUses: ['app'], photoCredit: '', signedName: '',
 };
 
@@ -123,6 +156,11 @@ export function cleanDetails(raw: unknown): HostDetails {
     country: text(given.country, 60),
     phone: text(given.phone, 24),
     altEmail: text(given.altEmail, 120),
+    bankHolder: text(given.bankHolder, 120),
+    bankName: text(given.bankName, 80),
+    bankAccount: text(given.bankAccount, 40).replace(/[\s-]+/g, ''),
+    bankBranch: text(given.bankBranch, 20).replace(/\s+/g, ''),
+    bankType: ACCOUNT_TYPES.some((one) => one.id === given.bankType) ? (given.bankType as AccountType) : '',
     stageName: text(given.stageName, 80),
     classTitle: text(given.classTitle, 120),
     classAbout: text(given.classAbout, LONG),
@@ -199,6 +237,13 @@ export function problemsWith(d: HostDetails, today = new Date()): Record<string,
   need('phone', 'A mobile number we can reach you on.');
   if (d.phone && !/^\+?[0-9 ()-]{9,20}$/.test(d.phone)) out.phone = 'That does not look like a phone number.';
   if (d.altEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.altEmail)) out.altEmail = 'That does not look like an email address.';
+  need('bankHolder', 'The name the bank account is in.');
+  need('bankName', 'Your bank.');
+  need('bankAccount', 'Your account number.');
+  if (d.bankAccount && !/^[A-Za-z0-9]{5,34}$/.test(d.bankAccount)) out.bankAccount = 'An account number is five to thirty-four digits (letters too, for an IBAN).';
+  need('bankBranch', 'The branch code — or the SWIFT code, for a bank outside South Africa.');
+  if (d.bankBranch && !/^[A-Za-z0-9]{4,11}$/.test(d.bankBranch)) out.bankBranch = 'A branch code is digits; a SWIFT code is eight or eleven letters and digits.';
+  if (!d.bankType) out.bankType = 'Choose the kind of account.';
   need('stageName', 'The name the public will see on your class.');
   need('classTitle', 'A working title for your class.');
   need('classAbout', 'A few lines about what your class teaches.');
@@ -383,7 +428,7 @@ export const STEPS: readonly Step[] = [
   {
     n: 3,
     title: `The ${CLASSES_IN_A_SERIES} sessions`,
-    length: 'About 15 to 30 minutes per session',
+    length: '30 to 45 minutes per session',
     intro: 'This is the class itself. Every session has the same shape: first a short introduction to the session — which session it is, what it covers and what the student will be able to do by the end — and then the content. The three sessions follow the Cubed³ arc: what it is, how it is done, and what is next.',
     sessions: [
       {
@@ -483,6 +528,7 @@ export const TERMS: readonly Clause[] = [
     title: '2. What a Cubed³ class is',
     body: [
       `A Cubed³ class is one masterclass made of ${CLASSES_IN_A_SERIES} sessions: what it is, how it is done, and what is next. With it come the welcome and introduction, the ice breaker, your favourite FutureBox feature and your closing words, as described on this page (together, “the Recordings”).`,
+      'Each of the sessions is 30 to 45 minutes long, as finished and published.',
     ],
   },
   {
@@ -517,8 +563,9 @@ export const TERMS: readonly Clause[] = [
   {
     title: '7. Payment',
     body: [
-      'You are paid a share of what the class earns on FutureBox, as set out in the written offer FutureBox sends you before you start. The offer also says when and how payment is made.',
-      'Payment details are collected separately when the offer is accepted, not on this page. You are responsible for your own tax, and for VAT if you are registered for it.',
+      `A student pays ${PAY.priceSaid} for your whole masterclass — all ${CLASSES_IN_A_SERIES} sessions. For every student who buys it, you receive ${PAY.perStudentSaid}.`,
+      'The written offer FutureBox sends you before you start confirms these amounts and says when payment is made.',
+      'Payment is made into the bank account you give on this page. If it changes, tell FutureBox in writing; a payment made into the account you gave is a payment made. You are responsible for your own tax, and for VAT if you are registered for it.',
     ],
   },
   {

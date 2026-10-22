@@ -9,7 +9,10 @@
  * shown on a page.
  *
  * What this holds:
- *   1. No share, percentage or split appears anywhere a presenter reads.
+ *   1. No share, percentage or split appears anywhere a presenter reads —
+ *      only, since 22 October 2026 and at the owner's choice, the price and
+ *      what the presenter receives per student, in Rand. Never FutureBox's
+ *      own amount, which with the other two would be the split spelled out.
  *   2. The terms say every recording is in English and Afrikaans, unless the
  *      presenter speaks English only.
  *   3. The key in a link is kept only as a hash, travels after the `#`, and a
@@ -25,9 +28,9 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import {
-  PHOTO_USES, PROCESS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION, cleanDetails, cleanTransfer, problemsWith, saIdOk,
+  PAY, PHOTO_USES, PROCESS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION, cleanDetails, cleanTransfer, problemsWith, saIdOk,
 } from '../app/lib/cubedhost.ts';
-import { CLASSES_IN_A_SERIES } from '../app/lib/cubed.ts';
+import { CLASSES_IN_A_SERIES, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -35,6 +38,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) bad += 1;
 };
 const code = (path: string): string => withoutComments(readFileSync(path, 'utf8'));
+const page0 = (): string => code('app/components/CubedHost.tsx');
 
 /* ── 1. No split ── */
 const READ = [
@@ -44,7 +48,7 @@ const READ = [
 /* Two ways a split could reach a presenter: the numbers `lib/cubed.ts` keeps
    for the written offer, imported into a page or a route; or a share typed
    into the words they read. Both are looked for. */
-const imported = READ.filter((file) => /GUEST_SHARE|HOUSE_SHARE|guestRand|splitAsSaid|GUEST_TERMS/.test(code(file)));
+const imported = READ.filter((file) => /GUEST_SHARE|HOUSE_SHARE|splitAsSaid|GUEST_TERMS/.test(code(file)));
 ok('no presenter page or route reads the split kept for the written offer', imported.length === 0, imported.join(', '));
 const words = [
   ...TERMS.flatMap((clause) => [clause.title, ...clause.body]),
@@ -56,7 +60,29 @@ const quoted = /\d+\s*%|per\s*cent|percent|\bsixty\b|\bforty\b|60\s*\/\s*40|\bsp
 ok('  and no share or percentage is written into anything a presenter reads', !quoted,
   `${quoted?.[0]} — the owner: "Die Cubed classes kan nie die winsverdeling wys"`);
 const terms = TERMS.flatMap((clause) => [clause.title, ...clause.body]).join('\n');
-ok('  the terms point to the written offer for the fee instead', /written offer/.test(terms) && /share of what the class earns/.test(terms));
+/* The owner, 22 October 2026: "Maak seker die cubed application het bedrae
+   breakdown" — and, asked how, "Rand per sale". */
+ok('the presenter sees the price and what they receive per student, in Rand',
+  PAY.priceSaid === randSaid(seriesRand()) && PAY.perStudentSaid === randSaid(guestRand())
+  && /data-hostprice/.test(page0()) && /data-hostyours/.test(page0()) && terms.includes(PAY.perStudentSaid) && terms.includes(PAY.priceSaid));
+const house = randSaid(seriesRand() - guestRand());
+ok('  but never what FutureBox keeps, which beside the other two is the split spelled out',
+  !`${words}\n${page0()}`.includes(house), house);
+ok('  and the written offer still confirms it', /written offer/.test(terms));
+
+/* The owner, the same day: "asook plek vir bankbesonderhede invul". */
+const noBank = problemsWith(cleanDetails({}));
+ok('the page takes bank details, and they are needed to sign',
+  /data-hostbank/.test(page0()) && ['bankHolder', 'bankName', 'bankAccount', 'bankBranch', 'bankType'].every((key) => key in noBank));
+const banked = cleanDetails({ bankHolder: 'A Person', bankName: 'Capitec', bankAccount: '1234 567 890', bankBranch: '470010', bankType: 'savings' });
+ok('  an account number is kept without its spaces, and a made-up account type is dropped',
+  banked.bankAccount === '1234567890' && cleanDetails({ bankType: 'gold' }).bankType === '' && !('bankAccount' in problemsWith(banked)));
+ok('  and the owner’s copy of the agreement carries them', /\['Bank account', d\.bankAccount/.test(code('app/components/CubedHosts.tsx')));
+ok('  and the terms say payment goes into that account', /bank account you give on this page/.test(terms));
+
+/* "Elke sessie moet tussen 30-45 min lank wees." */
+ok('each session is 30 to 45 minutes, on the step and in the terms',
+  STEPS.find((step) => step.n === 3)?.length === '30 to 45 minutes per session' && /30 to 45 minutes long/.test(terms));
 
 /* ── 2. Languages ── */
 ok('the terms say every recording is made in English and in Afrikaans', /recorded twice, once in each language/.test(terms) && /English and in Afrikaans/.test(terms));
