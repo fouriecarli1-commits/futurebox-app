@@ -167,6 +167,8 @@ interface GenreSample {
  * merely missing two environment variables.
  */
 const LOCAL_ACCOUNT = 'futurebox.account.v1';
+/** The shared room she walked into through the collab desk, for this tab. */
+const PAIR_CHOSEN_KEY = 'futurebox.pairroom.v1';
 
 /* Loaded only when it is opened: it brings the PDF libraries with it. */
 const PdfRoom = dynamic(() => import('./components/PdfRoom'), { ssr: false });
@@ -819,7 +821,27 @@ export default function FutureBoxHome() {
     });
     return () => { alive = false; };
   }, [pairSignal]);
-  const pairHere = pairs.find((one) => one.surface === studioTab) ?? null;
+  /* Which shared room she walked into, through the collab — and only that.
+
+     The owner, 22 October 2026: *"Toe ek op collab gewerk het in make a song,
+     wanneer ek uit collab gegaan het en op die regte make a song gedruk het,
+     dan het collab se window weer oopgemaak in make a song. Dit moenie so
+     maak nie."* A pair room used to be any pair whose room matched the one on
+     screen, so once a song room was shared, every Make a song was the shared
+     one. Now it is the shared room only when entered from the collab desk;
+     every other way into a room runs through `goToRoom`, which lets go of
+     it. Kept for the tab, so a reload inside the shared room stays in it. */
+  const [pairChosen, setPairChosenState] = useState<string | null>(() => {
+    try { return typeof window === 'undefined' ? null : window.sessionStorage.getItem(PAIR_CHOSEN_KEY); } catch { return null; }
+  });
+  const setPairChosen = useCallback((id: string | null) => {
+    setPairChosenState(id);
+    try {
+      if (id) window.sessionStorage.setItem(PAIR_CHOSEN_KEY, id);
+      else window.sessionStorage.removeItem(PAIR_CHOSEN_KEY);
+    } catch { /* storage off: it lasts until the page is left, which is fine */ }
+  }, []);
+  const pairHere = pairs.find((one) => one.id === pairChosen && one.surface === studioTab) ?? null;
   /* The one exception to "re-read on a signal": in a room two people share,
      the other person's turn, their yes and their words all arrive without
      anybody here pressing anything. It was only polled in the song room and
@@ -856,6 +878,22 @@ export default function FutureBoxHome() {
     () => draftFor('make', canvas),
     [canvas],
   );
+  /* Her own song, kept aside while she works in the shared room and given
+     back when she leaves it: the shared room writes the other person's words
+     into the same form, and her own Make a song is not theirs. */
+  const canvasNow = useRef(canvas);
+  canvasNow.current = canvas;
+  const soloCanvas = useRef<typeof canvas | null>(null);
+  const pairWas = useRef(pairChosen);
+  useEffect(() => {
+    const was = pairWas.current;
+    pairWas.current = pairChosen;
+    if (!was && pairChosen) soloCanvas.current = canvasNow.current;
+    else if (was && !pairChosen && soloCanvas.current) {
+      setCanvas(soloCanvas.current);
+      soloCanvas.current = null;
+    }
+  }, [pairChosen]);
   useEffect(() => {
     if (!pairDraftRoom?.draft || !pairDraftRoom.draftAt) return;
     if (pairDraftRoom.draftAt === draftMine.current || pairDraftRoom.draftAt === draftTaken.current) return;
@@ -1179,6 +1217,9 @@ export default function FutureBoxHome() {
   }, [studioTab, atDoor, uploadModalOpen]);
 
   const goToRoom = useCallback((id: SurfaceId, why: Errand | null = null) => {
+    /* Any way into a room is the room on your own, unless the collab desk
+       says otherwise straight after (`onOpenPair`). */
+    setPairChosen(null);
     setStudioTab(id);
     setErrand(why);
     setAtDoor(false);
@@ -1196,7 +1237,7 @@ export default function FutureBoxHome() {
        the one funnel every way into a room runs through. A room recorded at
        three of sixteen call sites is a record of the three. */
     noteWhere({ inStudio: true, room: id, atDoor: false });
-  }, [toTheTop]);
+  }, [toTheTop, setPairChosen]);
 
   /* ── Back from the till, into the room she paid from ────────────────
 
@@ -4694,7 +4735,7 @@ export default function FutureBoxHome() {
                 opened in a pair mode. A strip in nine places is nine places
                 for it to go stale. */}
             {pairHere && (
-              <PairStrip pair={pairHere} unread={pairsUnread} song={pairHere.surface === 'make' ? songDraft : null} onChanged={() => setPairSignal((n) => n + 1)} />
+              <PairStrip pair={pairHere} unread={pairsUnread} song={pairHere.surface === 'make' ? songDraft : null} onChanged={() => setPairSignal((n) => n + 1)} onLeave={() => setPairChosen(null)} />
             )}
 
             {studioTab === 'voice_studio' && (
@@ -5175,6 +5216,7 @@ export default function FutureBoxHome() {
                   onOpenPair={(pair) => {
                     setPairSignal((n) => n + 1);
                     goToRoom(pair.surface);
+                    setPairChosen(pair.id);
                     /* And the copilot in there is told it is not one person
                        working alone.
 

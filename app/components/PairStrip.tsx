@@ -27,7 +27,7 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { Check, Copy, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
+import { Check, Copy, Handshake, Link2, Loader2, LogOut, PenLine, Send } from 'lucide-react';
 import { approve, pen as movePen, setPays, shareLink, type Pair } from '../lib/pairs';
 import type { SongDraft } from '../lib/pairdraft';
 import { HANDLE_PLATFORMS, CARRIES_A_NUMBER } from '../lib/sociallink';
@@ -38,7 +38,14 @@ export default function PairStrip({
   unread = false,
   song = null,
   onChanged,
+  onLeave,
 }: {
+  /**
+   * Back to the room on your own. The shared room is kept — the other person
+   * is still in it, and the collab desk opens it again — this only stops
+   * drawing it here, with her own song given back.
+   */
+  readonly onLeave?: () => void;
   /** The song so far, handed over with the turn (Make a song only). */
   readonly song?: SongDraft | null;
   readonly pair: Pair;
@@ -81,6 +88,18 @@ export default function PairStrip({
             <span data-pairhandle className="ml-1 text-sky-300">@{pair.withHandle.replace(/^@/, '')}</span>
           )}
         </p>
+
+        {onLeave && (
+          <button
+            type="button"
+            data-pairleave
+            onClick={onLeave}
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-300 hover:text-white"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            {t('pair.leave', 'Leave the collab')}
+          </button>
+        )}
 
         {/* Whose turn, in a sentence. The greyed-out version of this was the
             thing to avoid: somebody pressing a control that does nothing and

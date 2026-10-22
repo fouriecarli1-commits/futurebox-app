@@ -66,6 +66,18 @@ ok('nobody can put the whole bill on somebody else: "I pay it all" is always the
 ok('  and changing who pays clears both ticks', /update\(\{ pays, ok_a: false, ok_b: false \}\)/.test(pairs));
 ok('  and the strip offers the two choices in Make a song', /data-pairpaysbutton/.test(read('app/components/PairStrip.tsx')));
 
+/* ── The shared room only when walked into ──────────────────────────
+   The owner, 22 October 2026: leaving the collab and pressing the ordinary
+   Make a song opened the collab window again. */
+const page = read('app/page.tsx');
+ok('the shared room is the one entered from the collab desk, not any pair for the room',
+  /pairs\.find\(\(one\) => one\.id === pairChosen && one\.surface === studioTab\)/.test(page));
+ok('  and every other way into a room lets go of it',
+  /const goToRoom = useCallback\(\(id: SurfaceId, why: Errand \| null = null\) => \{[\s\S]{0,200}setPairChosen\(null\);/.test(page)
+  && /goToRoom\(pair\.surface\);\s*setPairChosen\(pair\.id\);/.test(page));
+ok('  and the strip has a way out, which gives her own song back',
+  /data-pairleave/.test(read('app/components/PairStrip.tsx')) && /setCanvas\(soloCanvas\.current\)/.test(page));
+
 const sql = read('supabase/pairs.sql');
 ok('who pays is a column the table can hold, half by default', /add column if not exists pays text not null default 'half'/.test(sql)
   && /check \(pays in \('half', 'a', 'b'\)\)/.test(sql));

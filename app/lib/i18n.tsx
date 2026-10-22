@@ -482,6 +482,7 @@ export const STRINGS: Dict = {
   "pair.give": { en: "Hand over the turn", af: "Gee die beurt oor" },
   "pair.giveAsked": { en: "Hand it over \u2014 they asked", af: "Gee dit oor \u2014 hulle het gevra" },
   "pair.ask": { en: "Ask for the turn", af: "Vra vir die beurt" },
+  "pair.leave": { en: "Leave the collab", af: "Verlaat die collab" },
   "pair.paysLabel": { en: "Who pays", af: "Wie betaal" },
   "pair.paysHalf": { en: "Half each", af: "Elk die helfte" },
   "pair.paysMe": { en: "I pay it all", af: "Ek betaal alles" },

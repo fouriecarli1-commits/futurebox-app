@@ -194,7 +194,9 @@ ok('  and they read as different things',
   'one label over two asks gets one answer');
 
 ok('the strip is drawn over the room somebody is in, and only that one',
-  /pairs\.find\(\(one\) => one\.surface === studioTab\)/.test(page) && /<PairStrip/.test(page),
+  /* And only the one walked into through the collab desk: a song room once
+     shared is not shared every time it opens (the owner, 22 October 2026). */
+  /pairs\.find\(\(one\) => one\.id === pairChosen && one\.surface === studioTab\)/.test(page) && /<PairStrip/.test(page),
   'a strip that followed you everywhere would be a claim that is false in eight rooms out of nine');
 
 ok('  and opening a room goes into it',
