@@ -1673,6 +1673,18 @@ export const STRINGS: Dict = {
     en: "That file is larger than 500MB. Trim it on your phone first, or bring it in in pieces.",
     af: "Daardie lêer is groter as 500MB. Knip dit eers op jou foon, of bring dit in stukke in.",
   },
+  "edit.nothingDesk": {
+    en: "Nothing on the clock yet. Drop clips here, or bring them in above — each one lands as a block you can cut.",
+    af: "Nog niks op die klok nie. Los knipsels hier, of bring hulle bo in — elkeen land as ’n blok wat jy kan sny.",
+  },
+  "edit.dropNow": {
+    en: "Let go and they go on the clock",
+    af: "Los hulle en hulle gaan op die klok",
+  },
+  "edit.lanePicture": { en: "Picture", af: "Beeld" },
+  "edit.laneWords": { en: "Words", af: "Woorde" },
+  "edit.laneSound": { en: "Sound", af: "Klank" },
+  "edit.laneMusic": { en: "Music", af: "Musiek" },
   "edit.nothing": {
     en: "Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.",
     af: "Nog niks op die klok nie. Bring ’n knipsel in en dit verskyn hier as ’n blok wat jy kan sny.",

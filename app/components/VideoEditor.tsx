@@ -2604,6 +2604,8 @@ async function smallerFrame(url: string): Promise<string> {
     }
   };
 
+  /** A file being dragged over the empty timeline on a computer. */
+  const [dropping, setDropping] = useState(false);
   const bringIn = useCallback(async (
     files: FileList | readonly File[] | null,
     /* Where this material came from, carried from the door rather than
@@ -4694,9 +4696,56 @@ async function smallerFrame(url: string): Promise<string> {
               {shotPanel}
             </div>
 
-            <p className="text-sm leading-relaxed" style={{ color: INK_DIM }} data-editorempty>
+            <p className="text-sm leading-relaxed lg:hidden" style={{ color: INK_DIM }} data-editorempty>
               {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
             </p>
+
+            {/* ── The timeline before there is anything on it, on a computer ──
+
+                The owner, 22 October 2026, looking at this room on a computer:
+                *"Gaan kyk na hoe video editors lyk"*. Every desk editor opens
+                on its tracks — an empty ruler and empty lanes — so the place
+                where the film will be is the first thing seen, not a paragraph
+                about it. Drop clips straight onto it, as in any of them; the
+                drop goes through `bringIn`, the same door as the button. A
+                phone keeps the one line above: four empty lanes on a phone
+                are a screenful of nothing. */}
+            <div
+              className={`hidden lg:block rounded-2xl border transition-colors ${dropping ? 'border-emerald-400' : ''}`}
+              style={{ borderColor: dropping ? undefined : 'rgba(16,185,129,0.25)', background: 'rgba(2,6,23,0.55)' }}
+              data-editoremptyclock
+              onDragOver={(event) => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDropping(true); } }}
+              onDragLeave={() => setDropping(false)}
+              onDrop={(event) => { event.preventDefault(); setDropping(false); void bringIn(event.dataTransfer.files); }}
+            >
+              <div className="flex items-end border-b pl-36 pr-3 pt-2 text-[11px] tabular-nums" style={{ borderColor: 'rgba(16,185,129,0.18)', color: INK_DIM }} aria-hidden>
+                {Array.from({ length: 13 }, (_, i) => (
+                  <span key={i} className="flex-1 border-l pb-1 pl-1" style={{ borderColor: 'rgba(16,185,129,0.25)' }}>
+                    {`0:${String(i * 5).padStart(2, '0')}`}
+                  </span>
+                ))}
+              </div>
+              {([
+                ['V1', t('edit.lanePicture', 'Picture'), Film],
+                ['T1', t('edit.laneWords', 'Words'), Type],
+                ['A1', t('edit.laneSound', 'Sound'), Volume2],
+                ['A2', t('edit.laneMusic', 'Music'), ListMusic],
+              ] as const).map(([code, name, Icon]) => (
+                <div key={code} className="flex h-12 items-stretch border-b last:border-b-0" style={{ borderColor: 'rgba(16,185,129,0.12)' }}>
+                  <span className="flex w-36 shrink-0 items-center gap-2 border-r px-3 text-xs font-bold" style={{ borderColor: 'rgba(16,185,129,0.18)', color: INK }}>
+                    <span className="rounded px-1 text-[10px]" style={{ background: 'rgba(52,211,153,0.16)', color: LIT }}>{code}</span>
+                    <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: INK_DIM }} />
+                    <span className="truncate">{name}</span>
+                  </span>
+                  <span className="flex-1" />
+                </div>
+              ))}
+              <p className="border-t px-3 py-2.5 text-center text-sm" style={{ borderColor: 'rgba(16,185,129,0.18)', color: dropping ? LIT : INK_DIM }} data-editoremptydesk>
+                {dropping
+                  ? t('edit.dropNow', 'Let go and they go on the clock')
+                  : t('edit.nothingDesk', 'Nothing on the clock yet. Drop clips here, or bring them in above — each one lands as a block you can cut.')}
+              </p>
+            </div>
           </div>
         ) : (
           <div ref={setClockBox} className="space-y-1.5" data-editorclock>

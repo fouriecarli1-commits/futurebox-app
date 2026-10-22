@@ -284,6 +284,28 @@ try {
     return Array.from(new Uint8Array(buf));
   });
 
+  /* ── The empty timeline on a computer (22 October 2026) ─────────────
+     Desk editors open on their tracks. Four named lanes under a ruler, and
+     a file held over them lights the place to let go — the drop itself is
+     `bringIn`, the same door the button above goes through. */
+  const emptyClock = p.locator('[data-editoremptyclock]');
+  check('on a computer the empty film shows its timeline: a ruler and four lanes',
+    (await emptyClock.isVisible().catch(() => false))
+      && /Picture[\s\S]*Words[\s\S]*Sound[\s\S]*Music/.test((await emptyClock.innerText().catch(() => '')) || ''),
+    'an empty editor on a desk is its tracks, not a paragraph');
+  if (made) {
+    await emptyClock.evaluate((el, bytes) => {
+      const data = new DataTransfer();
+      data.items.add(new File([new Uint8Array(bytes)], 'held.webm', { type: 'video/webm' }));
+      el.dispatchEvent(new DragEvent('dragover', { dataTransfer: data, bubbles: true, cancelable: true }));
+    }, made.slice(0, 64));
+    await p.waitForTimeout(200);
+    check('  and a clip held over it says where to let go',
+      /Let go/.test((await p.locator('[data-editoremptydesk]').innerText().catch(() => '')) || ''),
+      'a drop target that does not answer a file over it looks like one that does not take drops');
+    await emptyClock.evaluate((el) => el.dispatchEvent(new DragEvent('dragleave', { bubbles: true })));
+  }
+
   if (!made) {
     console.log('  --  this browser cannot record webm; the walk below is skipped rather than faked.');
   } else {
