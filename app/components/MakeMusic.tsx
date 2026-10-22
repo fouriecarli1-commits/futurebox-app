@@ -1833,9 +1833,15 @@ export default function MakeMusic({
               />
               {!watching && <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />}
             </span>
-            {/* Afrikaans words, read aloud first, are sung as they were said. */}
-            {(looksAfrikaans(lyrics) || singWanted === 'af') && !singItYourself && (
+            {/* Afrikaans words, read aloud first, are sung as they were said.
+
+                Offered for any song not set to English, folded into one
+                button until the words read as Afrikaans. It used to appear
+                only once the box held enough Afrikaans to be recognised, so
+                the owner, in a collab room, could not find it at all. */}
+            {singWanted !== 'en' && !singItYourself && (
               <SayItFirst
+                folded={!(looksAfrikaans(lyrics) || singWanted === 'af')}
                 lyrics={lyrics}
                 sayAs={canvas.sayAs}
                 canWrite={!watching}

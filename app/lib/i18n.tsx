@@ -472,6 +472,8 @@ export const STRINGS: Dict = {
   "sayas.clear": { en: "Clear my reading", af: "Vee my lesing uit" },
   "sayas.all": { en: "Every line will be sung as you read it. Change a spelling if one word still sounds wrong:", af: "Elke reël sal gesing word soos jy dit gelees het. Verander ’n spelling as een woord steeds verkeerd klink:" },
   "sayas.some": { en: "Some lines changed since you read them — read it again so they are covered too.", af: "Party reëls het verander sedert jy dit gelees het — lees dit weer sodat hulle ook gedek is." },
+  "sayas.folded": { en: "Singing in Afrikaans? Read your words aloud first, so they are sung the way you say them", af: "Sing jy in Afrikaans? Lees eers jou woorde hardop, sodat dit gesing word soos jy dit sê" },
+  "sayas.empty": { en: "Write your words in the box above, then read them aloud here so they are sung the way you say them.", af: "Skryf jou woorde in die boks hierbo, en lees dit dan hier hardop sodat dit gesing word soos jy dit sê." },
   "sayas.tipsOpen": { en: "How to record", af: "Hoe om op te neem" },
   "sayas.tipsTitle": { en: "How to read it so it comes out right", af: "Hoe om dit te lees sodat dit reg uitkom" },
   "sayas.tipsClose": { en: "Close", af: "Maak toe" },

@@ -27,6 +27,8 @@ interface Props {
   readonly onSayAs: (next: Record<string, string> | undefined) => void;
   /** False while it is the other person's turn in a collab. */
   readonly canWrite: boolean;
+  /** One button until it is wanted: the words do not read as Afrikaans yet. */
+  readonly folded?: boolean;
 }
 
 /** The lines that get sung, once each, in order. */
@@ -35,20 +37,36 @@ export const sungLinesOf = (lyrics: string): string[] =>
 
 const MIMES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
 
-export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite }: Props): React.ReactElement | null {
+export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = false }: Props): React.ReactElement | null {
   const { t } = useLang();
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [tips, setTips] = useState(false);
+  const [opened, setOpened] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
 
   useEffect(() => () => recorder.current?.stream.getTracks().forEach((track) => track.stop()), []);
 
   const lines = sungLinesOf(lyrics);
-  if (!lines.length) return null;
   const covered = lines.filter((line) => sayAs?.[line]);
+  if (folded && !opened && !covered.length) {
+    return (
+      <button type="button" data-sayasopen onClick={() => setOpened(true)} className="mt-3 flex min-h-[44px] w-full items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 text-left text-sm font-semibold text-emerald-200">
+        <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        {t('sayas.folded', 'Singing in Afrikaans? Read your words aloud first, so they are sung the way you say them')}
+      </button>
+    );
+  }
+  if (!lines.length) {
+    return (
+      <p data-sayas data-sayasempty className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 text-sm text-zinc-300">
+        <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        {t('sayas.empty', 'Write your words in the box above, then read them aloud here so they are sung the way you say them.')}
+      </p>
+    );
+  }
 
   const send = async (blob: Blob): Promise<void> => {
     setBusy(true);
