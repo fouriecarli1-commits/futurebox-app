@@ -164,6 +164,12 @@
   --radius-3xl: var(--fb-radius-3xl);
 
   --font-sans: var(--fb-font-sans);
+  /* No typewriter. `font-mono` was the system's monospace — Menlo, Courier
+     — on eighty-odd labels, handles and clocks, and it is the look the owner
+     called the old theme when Hooks still wore it (22 October 2026). The
+     app's own face, with figures of one width (below), keeps what mono was
+     there for: a clock that does not shiver as it counts. */
+  --font-mono: var(--fb-font-sans);
 
   --default-transition-duration: var(--fb-motion);
 }
@@ -3676,3 +3682,6 @@ button[data-liveheart]:active:not(:disabled) {
    is here — see the note in layout.tsx. Lifted by page.tsx, and by itself
    after five seconds so a slow network never leaves a blank page. */
 html[data-signedin="1"] [data-landing] { visibility: hidden; }
+
+/* The other half of `--font-mono` above: figures that keep their width. */
+.font-mono { font-variant-numeric: tabular-nums; }
