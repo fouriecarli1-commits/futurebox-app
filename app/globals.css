@@ -3399,6 +3399,14 @@ button[data-liveheart]:active:not(:disabled) {
     filter: drop-shadow(0 0 22px rgb(56 189 248 / 0.35));
     animation: fb-desk-shine 8s ease-in-out infinite;
   }
+  /* The chrome is light drawn on a dark page; on the light theme it vanished
+     into the paper, so there the headline keeps the theme's own ink. */
+  html[data-fb-mode='light'] .fb-desk-title {
+    color: rgb(var(--fb-ink));
+    background: none;
+    filter: none;
+    animation: none;
+  }
   .fb-desk-eq { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
   .fb-desk-eq i {
     display: block;
