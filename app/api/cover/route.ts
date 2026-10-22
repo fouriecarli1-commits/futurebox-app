@@ -241,6 +241,17 @@ export async function GET(request: Request): Promise<Response> {
      The collecting itself is `PUT`, below. A GET that writes is how the
      copying ended up somewhere only a poll could reach it. */
   if (trackId && !id) {
+    /* A bought piece first, the same rule as the grid above: it is the one
+       that was paid for and putting it on is the later act. This branch only
+       ever looked at made covers, so the panel on a song wearing a bought
+       piece showed no picture and no credit — the owner, 22 October 2026:
+       *"Ek sien nogsteeds nie die kunstenaar se naam en die kunswerk se naam
+       op die gekoopte kunswerke nie."* */
+    const bought = await boughtSleeves(client, [{ owner: caller.id, track: String(trackId) }], LINK_SECONDS);
+    const boughtUrl = bought.urls[String(trackId)];
+    if (boughtUrl) {
+      return Response.json({ state: 'done', url: boughtUrl, kept: true, bought: true, credit: bought.credits[String(trackId)] ?? null });
+    }
     const { data } = await client.storage.from(BUCKET).list(caller.id, {
       search: `${trackId}.cover.png`,
       limit: 1,

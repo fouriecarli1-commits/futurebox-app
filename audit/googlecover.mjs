@@ -32,6 +32,7 @@ const SONG = {
 };
 
 let made = false;
+let bought = false;
 let posted = null;
 let polled = 0;
 
@@ -56,7 +57,9 @@ const { browser, page, problems } = await enter({
       if (/[?&]id=/.test(url)) polled += 1;
       const body = /[?&]tracks=/.test(url)
         ? '{"covers":{}}'
-        : made ? JSON.stringify({ state: 'done', url: PIXEL, kept: true }) : '{"state":"none","pending":false}';
+        : bought
+          ? JSON.stringify({ state: 'done', url: PIXEL, kept: true, bought: true, credit: { title: 'Rooi Aarde', by: 'Lize Botha' } })
+          : made ? JSON.stringify({ state: 'done', url: PIXEL, kept: true }) : '{"state":"none","pending":false}';
       return route.fulfill({ status: 200, contentType: 'application/json', body });
     });
   },
@@ -92,6 +95,27 @@ try {
     said.slice(0, 300));
   check('  and nothing waits on a job that does not exist', polled === 0, `${polled} poll(s)`);
   check('  and the picture is on the panel', (await page.locator(`img[src="${PIXEL}"]`).count()) > 0);
+
+  /* ── A piece bought from an artist ──────────────────────────────────
+     The owner, 22 October 2026: the artist's name and the piece's name were
+     still missing on a bought cover. The panel on the song is where she
+     looks, and it now carries the credit on the picture. */
+  bought = true;
+  await page.reload();
+  await page.waitForTimeout(1500);
+  await toRoom(page, 'Make');
+  await page.waitForTimeout(800);
+  const card2 = page.locator('div').filter({ hasText: SONG.title }).filter({ has: coverButton }).last();
+  const cover2 = card2.locator('button').filter({ hasText: /^(Cover art|Omslagkuns)$/ }).first();
+  if ((await cover2.getAttribute('aria-expanded')) !== 'true') await cover2.click();
+  const tag = card2.locator('[data-arttag]').first();
+  await tag.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  const credit = (await tag.textContent().catch(() => '')) ?? '';
+  check('a bought cover carries the piece’s name and its artist on the picture',
+    credit.includes('Rooi Aarde') && credit.includes('Lize Botha'), credit || 'no credit drawn');
+  check('  and offers no "Another" that would draw a cover the bought one hides',
+    (await card2.locator('button').filter({ hasText: /^(Another|Nog een) \u2014/ }).count()) === 0,
+    (await card2.locator('button').filter({ hasText: /^(Another|Nog een) \u2014/ }).allTextContents()).join(' | ') + ' // tags: ' + (await card2.locator('[data-arttag]').count()));
 } catch (error) {
   problems.push(String(error));
   console.log(`  FAIL ${error}`);

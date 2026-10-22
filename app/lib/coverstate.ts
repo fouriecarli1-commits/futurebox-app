@@ -42,6 +42,10 @@ export interface CoverWord {
   readonly kept?: boolean | null;
   /** Was a cover paid for and never collected? */
   readonly pending?: boolean | null;
+  /** A piece bought from an artist, worn by the song — not one we made. */
+  readonly bought?: boolean | null;
+  /** Whose piece it is, when it is bought: drawn on the picture. */
+  readonly credit?: { readonly title: string; readonly by: string } | null;
 }
 
 export type Standing =

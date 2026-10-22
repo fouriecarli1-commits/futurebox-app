@@ -183,6 +183,16 @@ for (const [file, sign] of [
   ok(`  and ${file} hands it the credit`, sign.test(read(join('app', 'components', file))));
 }
 
+/* The owner, 22 October 2026: the credit was still missing where she looks
+   — the cover panel on the song itself, whose one-song lookup only ever
+   found covers we made. */
+const coverRoute = read(join('app', 'api', 'cover', 'route.ts'));
+ok('the one-song cover lookup finds a bought piece first, with its credit',
+  /boughtSleeves\(client, \[\{ owner: caller\.id, track: String\(trackId\) \}\]/.test(coverRoute)
+  && /bought: true, credit: bought\.credits\[String\(trackId\)\]/.test(coverRoute));
+ok('  and the cover panel draws that credit on the picture',
+  /word\.bought === true && <ArtTag credit=\{word\.credit\} \/>/.test(read(COVER_PANEL)));
+
 if (bad) {
   console.error(`\ncheck:ownart — ${bad} assertion(s) failed. A cover is generated or bought.`);
   process.exit(1);

@@ -107,6 +107,7 @@ import {
 } from '../lib/coverstate';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
+import { ArtTag } from './Cover';
 
 export default function Sleeve({
   trackId,
@@ -245,7 +246,7 @@ export default function Sleeve({
         const data = (await response.json()) as CoverWord & { state?: string };
         if (!alive) return;
         if (data.state === 'done' && data.url) {
-          setWord({ url: data.url, kept: data.kept });
+          setWord({ url: data.url, kept: data.kept, bought: data.bought, credit: data.credit });
           return;
         }
         if (data.pending !== true) return;
@@ -478,12 +479,18 @@ export default function Sleeve({
           {/* Nothing over the artwork. It is the one thing on this panel
               worth looking at, and a button parked in the corner of it
               covers whatever the picture put there. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={url}
-            alt={t('cover.alt', 'Cover art for this song')}
-            className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
-          />
+          {/* The bought piece wears its credit here too, as it does in the
+              channel and the live room: it is part of the agreement with
+              the artist. */}
+          <div className="relative" data-sleevepicture>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt={t('cover.alt', 'Cover art for this song')}
+              className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
+            />
+            {word.bought === true && <ArtTag credit={word.credit} />}
+          </div>
 
           {/* ── Said only when the server said so ──────────────────────
  
@@ -504,6 +511,14 @@ export default function Sleeve({
             </p>
           )}
 
+          {word.bought === true ? (
+            /* A bought piece is not ours to redraw or delete from here:
+               "Another" would draw a made cover the bought one hides, and
+               "Take it off" only ever removed made covers. The art market
+               is where a piece is changed. */
+            <Note>{t('cover.boughtNote', 'Bought from the art market. To wear a different piece, choose it there.')}</Note>
+          ) : (
+          <>
           {nameToggle}
           <div className="flex flex-wrap items-center gap-2">
             {offersKeep(standing) && keepButton}
@@ -532,6 +547,8 @@ export default function Sleeve({
               cover per song and a new one overwrites it — there is no way
               back to the picture on screen once another is drawn. */}
           <Note>{t('cover.againWarns', 'Another draws a new one and replaces this. There is no way back to this picture.')}</Note>
+          </>
+          )}
           {/* Still a choice once a machine has drawn one. Somebody looking at
               a cover they are not happy with is exactly who this is for. */}
           {realArt}
