@@ -637,10 +637,35 @@ export function themeVariables(theme: Theme): Record<string, string> {
   return vars;
 }
 
+/**
+ * The accents as a dark theme draws them, as `--fb-<family>-dk-<stop>`.
+ *
+ * Some rooms are dark on every theme — the booth, the video editor, the You
+ * page, Cubed — and they keep the person's accent. On a light theme that
+ * accent's text stops are solved for a light page, so `text-emerald-300` is
+ * a deep green; in a dark room it was dark green on near-black (the video
+ * editor's "9:16" at 2.4:1, a ProBooth heading at 1.9:1). Those rooms read
+ * these instead (globals.css, "Accents in a dark room"). The same maths as
+ * every dark preset: the theme's own accents on its first dark surface.
+ */
+export function darkRoomAccents(theme: Theme): Record<string, string> {
+  const dark = SURFACES.find((one) => one.mode === 'dark');
+  if (!dark) return {};
+  const vars = themeVariables({ ...theme, surface: dark.id });
+  const out: Record<string, string> = {};
+  for (const family of ['primary', 'secondary', 'highlight', 'tertiary', 'danger']) {
+    for (const stop of STOPS) {
+      const value = vars[`--fb-${family}-${stop}`];
+      if (value) out[`--fb-${family}-dk-${stop}`] = value;
+    }
+  }
+  return out;
+}
+
 export function applyTheme(theme: Theme): void {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  for (const [key, value] of Object.entries(themeVariables(theme))) {
+  for (const [key, value] of Object.entries({ ...themeVariables(theme), ...darkRoomAccents(theme) })) {
     root.style.setProperty(key, value);
   }
   const surface = SURFACES.find((s) => s.id === theme.surface) ?? SURFACES[0];

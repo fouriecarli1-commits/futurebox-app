@@ -43,7 +43,11 @@ const THEMES = {
     radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full',
   },
   /* The daylight twin of the default, 13 October 2026: what the switch on
-     the home page turns on. `THEME=prolight` walks every page in it. */
+     the home page turns on. `THEME=prolight` walks every page in it, and is
+     `check:contrastlight` in CI since 22 October 2026, when it found 82
+     pieces of text below AA at a computer's width — dark-green words in the
+     rooms that stay dark, white words on bright buttons — that no run had
+     ever measured because no run used this theme. */
   prolight: {
     surface: 'daylight', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet',
     radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full',

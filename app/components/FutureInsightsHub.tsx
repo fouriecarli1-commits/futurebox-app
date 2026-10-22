@@ -225,7 +225,7 @@ export default function FutureInsightsHub({
               }}
               className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                 isSelected
-                  ? 'border border-emerald-400 bg-emerald-950 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
+                  ? 'border border-emerald-400 bg-emerald-500/15 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
                   : 'border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
               }`}
             >
