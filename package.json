@@ -44,6 +44,7 @@
     "check:sideborder": "tsx scripts/check-sideborder.mts",
     "check:cardtone": "tsx scripts/check-cardtone.mts",
     "check:dubpath": "tsx scripts/check-dubpath.mts",
+    "check:medialength": "tsx scripts/check-medialength.mts",
     "check:pixelguard": "tsx scripts/check-pixelguard.mts",
     "check:applechart": "tsx scripts/check-applechart.mts",
     "check:sqlgrants": "tsx scripts/check-sqlgrants.mts",

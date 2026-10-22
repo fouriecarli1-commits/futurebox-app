@@ -25,6 +25,25 @@
  */
 
 import { wavSeconds } from '../pcmwav.ts';
+import { mp4Seconds } from '../mp4len.ts';
+
+/** How much of each end of a file is read for an MP4's header. */
+const ENDS = 2 * 1024 * 1024;
+
+/**
+ * The file's own statement of its length: a WAV's header, or an MP4's
+ * `mvhd`, at whichever end it was written. Null for anything else.
+ */
+export async function measuredSeconds(audio: Blob): Promise<number | null> {
+  const head = new Uint8Array(await audio.slice(0, Math.min(audio.size, ENDS)).arrayBuffer());
+  const wav = wavSeconds(head.subarray(0, 4096));
+  if (wav !== null && wav > 0) return wav;
+  const front = mp4Seconds(head);
+  if (front !== null) return front;
+  if (audio.size <= ENDS) return null;
+  const tail = new Uint8Array(await audio.slice(Math.max(ENDS, audio.size - ENDS)).arrayBuffer());
+  return mp4Seconds(tail);
+}
 
 /** Nothing is charged as less than this, so a two-second clip still costs. */
 const FLOOR = 20;
@@ -44,8 +63,7 @@ const FLOOR = 20;
  * so there is nothing to defend here.
  */
 export async function knownSeconds(audio: Blob, stated: number): Promise<number | null> {
-  const head = new Uint8Array(await audio.slice(0, 4096).arrayBuffer());
-  const exact = wavSeconds(head);
+  const exact = await measuredSeconds(audio);
   if (exact !== null && exact > 0) return exact;
   return Number.isFinite(stated) && stated > 0 ? stated : null;
 }
@@ -55,9 +73,7 @@ export async function billedSeconds(
   stated: number,
   ceiling: number,
 ): Promise<number> {
-  // Enough for the header and any chunks in front of the samples.
-  const head = new Uint8Array(await audio.slice(0, 4096).arrayBuffer());
-  const exact = wavSeconds(head);
+  const exact = await measuredSeconds(audio);
   if (exact !== null && exact > 0) return Math.min(Math.max(exact, FLOOR), ceiling);
 
   const said = Number.isFinite(stated) && stated > 0 ? stated : ceiling;

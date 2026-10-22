@@ -41,6 +41,7 @@ import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { configured, dub, dubState, dubSubtitles, dubTranscript, dubbed } from '@/app/lib/server/eleven';
 import { dubCost } from '@/app/lib/credits';
+import { measuredSeconds } from '@/app/lib/server/audiolen';
 import { charge, refund } from '@/app/lib/server/credits';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
@@ -120,7 +121,24 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const seconds = Math.max(0, Math.round(Number(form.get('seconds')) || 0));
+  /* The length the price rests on is the file's own, when the file says it.
+
+     Dubbing is the dearest call in the app, charged by the minute, and this
+     took the browser's number as given — a request saying "60" over a
+     ten-minute film paid for one minute and the account paid upstream for
+     ten. A WAV or an MP4 states its length in its header (`measuredSeconds`),
+     which is every film the editor exports; only for anything else is the
+     browser's number used, and with neither there is nothing to price. */
+  const claimed = Number(form.get('seconds'));
+  const stated = Number.isFinite(claimed) && claimed > 0 ? Math.round(claimed) : 0;
+  const measured = await measuredSeconds(file);
+  const seconds = measured !== null ? Math.round(measured) : stated;
+  if (seconds <= 0) {
+    return Response.json(
+      { message: langOf(request) === 'af' ? 'Ons kon nie sien hoe lank dit is nie. Probeer dit weer.' : 'We could not tell how long it is. Try again.' },
+      { status: 400 },
+    );
+  }
   const title = String(form.get('title') ?? '').slice(0, 200);
   const speakers = Math.min(10, Math.max(0, Math.round(Number(form.get('speakers')) || 0)));
 

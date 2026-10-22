@@ -717,6 +717,11 @@ jobs:
       - name: The dub transcript is on the live endpoint
         run: npm run check:dubpath
 
+      # Dubbing is charged by the minute and took the browser's number for
+      # the length. A WAV or an MP4 states its own, front or back.
+      - name: A file is charged by its own length when it says it
+        run: npm run check:medialength
+
       # The ceiling on a chosen picture measured file size while its own
       # comment said it existed to stop a phone browser running out of memory.
       # A 200MP photo is 12MB on disk and 800MB open: it passed, and killed the
