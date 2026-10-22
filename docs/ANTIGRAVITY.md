@@ -120,7 +120,7 @@ npm run check:notcut            # in 'n ander
 |---|---|
 | `check:theme` | elke kleur volg die tema; geen letterlike kleur sonder 'n rede |
 | `check:notcut` | geen naam of opskrif word afgesny — op 'n 390px foon **en** 'n 1512px skerm, in albei tale; geen paneel skuif sywaarts nie |
-| `check:contrast` | elke stukkie teks teen wat werklik agter dit geverf is — elke kamer, elke oortjie, én die elf bladsye buite die ateljee (Cubed, die gids, hulp, die kinderkamer, storiemodus, die blog, regs, privaatheid, terme, die uitspraakhokkie); `check:contrastdark` is dieselfde loop op die donker tema, en `check:contrastlight` op die ligte een (op 'n rekenaar se breedte) |
+| `check:contrast` | elke stukkie teks teen wat werklik agter dit geverf is — elke kamer, elke oortjie, én die elf bladsye buite die ateljee (Cubed, die gids, hulp, die kinderkamer, storiemodus, die blog, regs, privaatheid, terme, die uitspraakhokkie); `check:contrastdark` is dieselfde loop op die donker tema, en `check:contrastlight` en `check:contrastlightphone` op die ligte een, op 'n rekenaar en op 'n foon |
 | `check:wide` en `check:widetablet` | niks loop van die glas af nie — elke kamer en elke bladsy op 390px en op 1024px met 'n muis |
 | `check:taalbladsye` | die bladsye buite die ateljee praat die taal wat gekies is, en net daardie een |
 | `check:kappies` | hoofletters en opskrifte |

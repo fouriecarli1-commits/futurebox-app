@@ -252,6 +252,7 @@
     "check:contrast": "node audit/contrast.mjs",
     "check:contrastdark": "THEME=futurebox node audit/contrast.mjs",
     "check:contrastlight": "THEME=prolight node audit/contrast.mjs",
+    "check:contrastlightphone": "PHONE=1 THEME=prolight node audit/contrast.mjs",
     "check:devices": "node audit/devices.mjs",
     "check:copilotbar": "node audit/copilotbar.mjs",
     "check:signup": "node audit/signupcode.mjs",

@@ -2620,7 +2620,12 @@ html[data-fb-mode='light'] .fb-fx-panel { box-shadow: 0 18px 40px -24px rgb(var(
 html[data-fb-mode='light'] .fb-fx-tile { box-shadow: 0 8px 20px -14px rgb(var(--fb-secondary-700) / 0.45) !important; }
 html[data-fb-mode='light'] :is(.fb-fx-lead, .fb-fx-chip, .fb-fx-tag) { color: rgb(var(--fb-secondary-800)) !important; }
 html[data-fb-mode='light'] .fb-fx-lens svg { color: rgb(var(--fb-secondary-700)) !important; filter: none; }
-html[data-fb-mode='light'] .fb-fx-bar button[aria-current='page'] { color: rgb(var(--fb-secondary-700)) !important; }
+/* The tab you are on takes a text stop, which the theme solves for AA on a
+   light page — 700 is a fixed shade and measured 3.8:1 under "Spotlight" on a
+   phone. A text stop is also the one a dark room swaps for its bright twin,
+   so on You, where the bar goes dark, the label stays light. Not the
+   computer's top bar, which is dark on every theme and draws its own. */
+html[data-fb-mode='light'] .fb-fx-bar button[aria-current='page']:not([data-desktab]) { color: rgb(var(--fb-secondary-300)) !important; }
 /* Those darker inks are for a light page. A room that stays dark on every
    theme keeps the bright ones ("Copilot" over the editor was 3.2:1). */
 html[data-fb-mode='light'] :is([data-cubed], [data-booth], [data-accountroom], [data-cuttingroom], [data-cutshell], [data-gallery], body:has([data-accountroom], [data-cubed])) :is(.fb-fx-lead, .fb-fx-chip, .fb-fx-tag) { color: rgb(var(--fb-secondary-300)) !important; }

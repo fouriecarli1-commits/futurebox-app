@@ -55,8 +55,13 @@ const THEMES = {
 };
 const THEME = process.env.THEME ?? '';
 if (THEME && !THEMES[THEME]) throw new Error(`no such theme preset here: ${THEME}`);
+/* `PHONE=1` walks it at a phone's size with a finger instead of a mouse —
+   the computer's layout and the phone's are different rules, and a theme
+   that reads on one has not been measured on the other. */
+const PHONE = process.env.PHONE === '1';
 const { browser, page } = await enter({
   at: server.url,
+  ...(PHONE ? { width: 390, height: 844, touch: true } : {}),
   before: THEME
     ? (p) => p.addInitScript((stored) => {
         /* v3 is the key `lib/theme.ts` reads today; v2 is kept so an older

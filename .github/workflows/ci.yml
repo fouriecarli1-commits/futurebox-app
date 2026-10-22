@@ -2179,7 +2179,7 @@ jobs:
           - group: whole
             probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:copilotsheet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview
           - group: whole two
-            probes: check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
+            probes: check:contrastlightphone check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
           # what they click: `selfie` films a take against Chromium's fake
           # camera, and `contrast` reads the computed colour of every piece of
