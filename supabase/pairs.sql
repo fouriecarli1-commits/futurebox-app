@@ -156,3 +156,21 @@ exception when duplicate_object then null; end $$;
 alter table public.pairs
   add column if not exists draft jsonb,
   add column if not exists draft_at timestamptz;
+
+-- ── A collab song in the live room is credited to both ──────────────────
+--
+-- the owner, 22 October 2026: *"Met die collab liedjies moet by artist staan,
+-- Collab en die twee mense se handle name."* A song made in a pair room is
+-- posted with the pair's id; the live room reads the two people from this
+-- table and prints "Collab · @een & @twee" (`lib/collabcredit.ts`). Only when
+-- the poster is really one of the two — the server checks before it writes.
+--
+-- Here and not only in live.sql, because live.sql has already been run on the
+-- project and this is the file being re-run for `pays` above. Skipped quietly
+-- on a project that has no live room yet; live.sql adds it there.
+
+do $$ begin
+  if to_regclass('public.live_posts') is not null then
+    alter table public.live_posts add column if not exists pair uuid;
+  end if;
+end $$;

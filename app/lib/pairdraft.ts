@@ -69,3 +69,13 @@ export const draftText = (draft: SongDraft | null, note = ''): string =>
 /** True when two drafts say the same thing, so an unchanged one is not sent again. */
 export const sameDraft = (one: SongDraft | null, two: SongDraft | null): boolean =>
   JSON.stringify(one) === JSON.stringify(two);
+
+/**
+ * A draft's time as a number, so two spellings of one moment compare equal:
+ * the save answers `…123Z`, the room reads back `…123+00:00`. Zero for
+ * anything that is not a time, which is older than every real one.
+ */
+export const timeOf = (at: string): number => {
+  const ms = Date.parse(at);
+  return Number.isFinite(ms) ? ms : 0;
+};

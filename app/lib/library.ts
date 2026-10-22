@@ -89,6 +89,12 @@ export interface Track {
    */
   readonly by?: string;
   /**
+   * The pair room a song was made in, when two people made it together. Its
+   * `by` is then "Collab · @one & @two" (`lib/collabcredit.ts`), and a post
+   * of it to the live room says the same, built from the pair on the server.
+   */
+  readonly pair?: string;
+  /**
    * The cover, when it was painted by one of our artists rather than
    * generated.
    *

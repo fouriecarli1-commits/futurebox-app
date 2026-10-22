@@ -136,6 +136,9 @@ export default function PostToLive({
              en dan die kunstenaar se naam en art naam appear."* */
           artTitle: track.art?.title ?? '',
           artBy: track.art?.by ?? '',
+          /* A song two people made: the pair it was made in. The room names
+             both of them from the pair itself — see `lib/collabcredit.ts`. */
+          ...(track.pair ? { pair: track.pair } : {}),
         }),
       });
       if (!response.ok) {

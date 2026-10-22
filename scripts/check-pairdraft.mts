@@ -19,7 +19,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) failures += 1;
 };
 
-const { draftFor, DRAFT_LIMITS, sameDraft } = await import('../app/lib/pairdraft.ts');
+const { draftFor, DRAFT_LIMITS, sameDraft, timeOf } = await import('../app/lib/pairdraft.ts');
 
 const song = draftFor('make', { title: 'Somer', lyrics: '[Verse 1]\nHier', style: 'folk', about: 'home', feeling: 'love', extra: 'dropped' });
 ok('a song draft keeps its fields', song?.title === 'Somer' && song?.lyrics.startsWith('[Verse 1]') && song?.feeling === 'love');
@@ -47,7 +47,39 @@ ok('the other page re-reads the room whenever a pair room is open — not only o
 ok('  and at once when the tab comes back', /visibilitychange', again/.test(page));
 ok('the holder keeps the song in the room as it is written', /saveDraft\(id, songDraft\)/.test(page) && /pairDraftRoom\?\.mine/.test(page));
 ok('the other side takes each new version once, never its own back',
-  /draftAt === draftMine\.current/.test(page) && /setCanvas\(\(was\) => \(\{ \.\.\.was, \.\.\.came \}\)\)/.test(page));
+  /at <= draftSeen\.current\) return/.test(page) && /setCanvas\(\(was\) => \(\{ \.\.\.was, \.\.\.came \}\)\)/.test(page));
+/* The owner, 22 October 2026: "dan spring die skrywer na 'n ander plek, en
+   dit delete dan wat voorheen getik was". The save answered `…Z` and the room
+   read back `…+00:00`, so the page never knew its own save and took it back
+   over every word typed since. */
+ok('a draft time is compared as a time, so two spellings of one moment are one moment',
+  timeOf('2026-10-22T02:00:00.123Z') === timeOf('2026-10-22T02:00:00.123+00:00') && timeOf('nonsense') === 0);
+ok('  and the page compares times, never the strings', /timeOf\(pairDraftRoom\.draftAt\)/.test(page) && !/draftAt === draft/.test(page));
+ok('  and the room reads its time back in the one spelling', /draftAt: drafts && row\.draft_at \? new Date\(row\.draft_at\)\.toISOString\(\)/.test(route));
+ok('the hand holding the pen never takes its own save back over what it typed since',
+  /if \(pairDraftRoom\.mine && draftWrote\.current\) return;/.test(page));
+const makeForm = read('app/components/MakeMusic.tsx');
+ok('while it is their turn, the words cannot be typed into only to be written over',
+  (makeForm.match(/readOnly=\{watching\}/g) ?? []).length >= 3 && /watching: !pairHere\.mine/.test(page) && /data-pairwatching/.test(makeForm));
+
+/* The owner, 22 October 2026: "Met die collab liedjies moet by artist staan,
+   Collab en die twee mense se handle name." */
+const { collabCredit } = await import('../app/lib/collabcredit.ts');
+ok('a collab song is credited "Collab" and both handles, the maker first',
+  collabCredit('@zoe', 'thabo') === 'Collab · @zoe & @thabo' && collabCredit(' zoe ', '') === 'Collab · @zoe' && collabCredit('', '') === 'Collab');
+const madeHere = read('app/components/MakeMusic.tsx');
+ok('  and the song made in the pair room carries it as its artist',
+  /pairGate\?\.credit \? \{ by: pairGate\.credit, pair: pairGate\.id \}/.test(madeHere)
+  && /credit: collabCredit\(artistHandle, pairHere\.withHandle\)/.test(page));
+ok('  and keeps it through the cloud sync, which does not store it',
+  /if \(!here\?\.pair\) return track;/.test(read('app/lib/cloud.ts')));
+const live = read('app/api/live/route.ts');
+ok('  and the live room credits both, built from the pair rather than from what the browser sent',
+  /\.from\('pairs'\)\.select\('id, a, b'\)\.eq\('id', body\.pair\)/.test(live)
+  && /row\.a === caller\.id \|\| row\.b === caller\.id/.test(live)
+  && /collabCredit\(handles\.get\(post\.owner\)/.test(live)
+  && /pair: track\.pair/.test(read('app/components/PostToLive.tsx')));
+ok('  and a project without the column still takes the post', /if \(error && pair && NO_COLUMN\.test/.test(live));
 
 const strip = read('app/components/PairStrip.tsx');
 ok('the turn is handed over with the song', /movePen\(pair\.id, 'give', song,/.test(strip));

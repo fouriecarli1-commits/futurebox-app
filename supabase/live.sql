@@ -196,3 +196,9 @@ alter table public.live_posts
 -- Albei is `if not exists`, so albei loop is veilig. Loop net een.
 alter table public.live_posts
   add column if not exists words jsonb;
+
+-- 'n Liedjie wat twee mense saam in 'n collab gemaak het: die pair se id, sodat
+-- die kamer albei se handles kan wys — "Collab · @een & @twee". Ook in
+-- pairs.sql, vir die projek waar hierdie lêer reeds geloop is.
+alter table public.live_posts
+  add column if not exists pair uuid;

@@ -169,7 +169,7 @@ export async function GET(request: Request): Promise<Response> {
         okTheirs: approvals ? Boolean(row.a === caller.id ? row.ok_b : row.ok_a) : false,
         drafts,
         draft: drafts ? draftFor(row.surface, row.draft) : null,
-        draftAt: drafts ? row.draft_at ?? '' : '',
+        draftAt: drafts && row.draft_at ? new Date(row.draft_at).toISOString() : '',
         /* The note left with the turn, kept in the same column as the song
            (`draft.note`), and whose it is — each side shows the other's. */
         note: drafts ? cleanNote((row.draft as { note?: unknown } | null)?.note) : '',

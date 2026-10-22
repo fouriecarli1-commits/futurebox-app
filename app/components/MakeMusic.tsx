@@ -160,7 +160,19 @@ export default function MakeMusic({
    * approved it yet, and if not, the sentence saying what is missing
    * (`readyToMake` in `lib/pairs.ts`). The button waits for it.
    */
-  pairGate?: { readonly id: string; readonly ready: boolean; readonly why: string } | null;
+  pairGate?: {
+    readonly id: string;
+    readonly ready: boolean;
+    readonly why: string;
+    /**
+     * True while the other person holds the pen. Their words are written
+     * into this form as they type, so anything typed here would be put
+     * under on their next save — the fields are read-only instead.
+     */
+    readonly watching?: boolean;
+    /** The artist line for a song made here together: "Collab · @one & @two". */
+    readonly credit?: string;
+  } | null;
   /** After a song is made in a pair room, so the cleared ticks are re-read. */
   onPairMade?: () => void;
 
@@ -182,8 +194,12 @@ export default function MakeMusic({
      a box holding only blank lines or only [Chorus] markers has no words in
      it, and looks full. */
   const wordless = splitSections(lyrics).length === 0;
-  const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
-  const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
+  const watching = Boolean(pairGate?.watching);
+  /* Updater form throughout: the wand, the lyric helper and the copilot
+     answer seconds after they are asked, and a spread of the canvas as it
+     was then put back whatever had been typed in the meantime. */
+  const setTitle = (value: string) => { if (!watching) setCanvas((was) => ({ ...was, title: value })); };
+  const setLyrics = (value: string) => { if (!watching) setCanvas((was) => ({ ...was, lyrics: value })); };
 
   /* ── What can be put in this room from somewhere else ────────────────
  
@@ -396,11 +412,15 @@ export default function MakeMusic({
         return;
       }
       if (what === 'words') {
-        const now = canvas.lyrics.trimEnd();
-        setLyrics(now ? `${now}\n\n${first}` : first);
+        setCanvas((was) => {
+          const now = was.lyrics.trimEnd();
+          return { ...was, lyrics: now ? `${now}\n\n${first}` : first };
+        });
       } else {
-        const now = canvas.style.trim();
-        setCanvas({ ...canvas, style: now ? `${now}, ${first}` : first });
+        setCanvas((was) => {
+          const now = was.style.trim();
+          return { ...was, style: now ? `${now}, ${first}` : first };
+        });
       }
     } catch {
       setWandProblem(t('wand.offline', 'Could not reach the app’s server.'));
@@ -958,6 +978,9 @@ export default function MakeMusic({
             ? { parts: plan, plannedSeconds: plan.reduce((total, part) => total + part.seconds, 0) }
             : {}),
           ...(remixOf ? { remixOf: remixOf.id } : {}),
+          /* Made by two people: both named as the artist, not only whoever
+             pressed the button. */
+          ...(pairGate?.credit ? { by: pairGate.credit, pair: pairGate.id } : {}),
         };
 
         const next = [track, ...tracks];
@@ -1296,7 +1319,11 @@ export default function MakeMusic({
               )}
             </div>
           ) : (
-            <div data-makeverses className="p-3">
+            <div
+              data-makeverses
+              aria-disabled={watching || undefined}
+              className={`p-3 ${watching ? 'pointer-events-none opacity-60' : ''}`}
+            >
               <VerseWriter
                 lyrics={lyrics}
                 onLyricsChange={setLyrics}
@@ -1714,6 +1741,7 @@ export default function MakeMusic({
             <input
               id="song-name"
               value={title}
+              readOnly={watching}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('make.namePlaceholder')}
               className="mt-1.5 w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
@@ -1723,7 +1751,7 @@ export default function MakeMusic({
           <div>
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-zinc-300">{t('make.words')}</span>
-              {wandReady && (
+              {wandReady && !watching && (
                 <button
                   type="button"
                   aria-label={t('wand.words', 'Write the next part for me')}
@@ -1739,15 +1767,18 @@ export default function MakeMusic({
             <span className="relative block">
               <textarea
                 value={lyrics}
+                readOnly={watching}
                 onChange={(e) => setLyrics(e.target.value)}
                 placeholder={t('make.wordsPlaceholder')}
                 rows={8}
                 className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
-              <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />
+              {!watching && <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />}
             </span>
             <p className="pt-1 text-sm text-zinc-500">
-              {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
+              {watching
+                ? <span data-pairwatching>{t('make.pairWatching', 'Their turn — ask for the pen at the top to write.')}</span>
+                : engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
             </p>
             <div className="pt-2">
               <LyricHelp title={title} style={canvas.style} lyrics={lyrics} onLyrics={setLyrics} onStyle={(value) => setCanvas((was) => ({ ...was, style: value }))} />
@@ -1787,7 +1818,8 @@ export default function MakeMusic({
             <span className="relative block">
               <textarea
                 value={canvas.style}
-                onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
+                readOnly={watching}
+                onChange={(e) => { const value = e.target.value; if (!watching) setCanvas((was) => ({ ...was, style: value })); }}
                 placeholder={t('make.soundPlaceholder')}
                 /* Three lines: at two, a phone cut the example through the
                    middle of its third ("…or paste something the copilot
@@ -1795,7 +1827,7 @@ export default function MakeMusic({
                 rows={3}
                 className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
-              <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, style: withSaid(was.style, said) }))} className="absolute bottom-2 right-2" />
+              {!watching && <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, style: withSaid(was.style, said) }))} className="absolute bottom-2 right-2" />}
             </span>
             <p className="pt-1 text-sm text-zinc-500">{t('make.soundNote')}</p>
           </div>

@@ -1226,7 +1226,16 @@ export async function syncChannel(
     if (audio) await pushTrack(track, audio);
   }
 
-  const merged = remote.slice();
+  /* The row holds what every device needs; a few things a song carries are
+     only ever on the device that made it — a collab song's "Collab · @one &
+     @two" and the pair it came from among them. The account's copy wins on
+     everything it holds, and this device's copy keeps those. */
+  const mine = new Map(local.map((track) => [track.id, track] as const));
+  const merged = remote.map((track) => {
+    const here = mine.get(track.id);
+    if (!here?.pair) return track;
+    return { ...track, pair: here.pair, ...(here.by ? { by: here.by } : {}) };
+  });
   const seen: Record<string, true> = { ...remoteIds };
   local.forEach((track) => {
     if (!seen[track.id]) {

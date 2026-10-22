@@ -27,7 +27,8 @@ import CollabRoom from './components/CollabRoom';
 import CollabDesk from './components/CollabDesk';
 import PairStrip from './components/PairStrip';
 import { loadPairs, readyToMake, saveDraft, type Pair } from './lib/pairs';
-import { draftFor, sameDraft, type SongDraft } from './lib/pairdraft';
+import { draftFor, sameDraft, timeOf, type SongDraft } from './lib/pairdraft';
+import { collabCredit } from './lib/collabcredit';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -872,8 +873,20 @@ export default function FutureBoxHome() {
      and never its own back: `draftMine` is when this page last wrote it. */
   const pairDraftRoom = pairHere?.surface === 'make' && pairHere.drafts !== false ? pairHere : null;
   const draftSent = useRef<SongDraft | null>(null);
-  const draftMine = useRef('');
-  const draftTaken = useRef('');
+  /* The newest version this page has written or taken, as a time, and
+     whether this page has written to the room since it walked in.
+
+     Compared as times, not as text. The save answers with JavaScript's
+     `…123Z` and the room reads back Postgres's `…123+00:00` — the same
+     moment spelled two ways — so a string match never once recognised a
+     page's own save. Every re-read after a save took it back as if the
+     other person had sent it: the words as they were two seconds ago, put
+     over whatever had been typed since, with the cursor thrown to the end.
+     The owner, 22 October 2026: "dan spring die skrywer na 'n ander plek,
+     en dit delete dan wat voorheen getik was". */
+  const draftSeen = useRef(0);
+  const draftWrote = useRef(false);
+  const draftRoomId = useRef('');
   const songDraft = useMemo(
     () => draftFor('make', canvas),
     [canvas],
@@ -895,21 +908,37 @@ export default function FutureBoxHome() {
     }
   }, [pairChosen]);
   useEffect(() => {
-    if (!pairDraftRoom?.draft || !pairDraftRoom.draftAt) return;
-    if (pairDraftRoom.draftAt === draftMine.current || pairDraftRoom.draftAt === draftTaken.current) return;
-    draftTaken.current = pairDraftRoom.draftAt;
+    if (!pairDraftRoom) return;
+    if (draftRoomId.current !== pairDraftRoom.id) {
+      draftRoomId.current = pairDraftRoom.id;
+      draftSeen.current = 0;
+      draftWrote.current = false;
+      draftSent.current = null;
+    }
+    if (!pairDraftRoom.draft || !pairDraftRoom.draftAt) return;
+    /* Only ever forward: a re-read that left before the last save landed
+       carries an older version, and an older version is never news. */
+    const at = timeOf(pairDraftRoom.draftAt);
+    if (at <= draftSeen.current) return;
+    draftSeen.current = at;
     const came = pairDraftRoom.draft;
+    /* The hand holding the pen is the only one that writes the room's
+       copy, so once this page has written, anything newer is its own save
+       coming back — never somebody else's words to take. */
+    if (pairDraftRoom.mine && draftWrote.current) return;
     draftSent.current = came;
+    if (sameDraft(came, draftFor('make', canvasNow.current))) return;
     setCanvas((was) => ({ ...was, ...came }));
   }, [pairDraftRoom]);
   useEffect(() => {
     if (!pairDraftRoom?.mine || !songDraft || sameDraft(songDraft, draftSent.current)) return;
     const id = pairDraftRoom.id;
     const wait = window.setTimeout(() => {
+      draftWrote.current = true;
       void saveDraft(id, songDraft).then((said) => {
         if ('at' in said) {
           draftSent.current = songDraft;
-          draftMine.current = said.at;
+          draftSeen.current = Math.max(draftSeen.current, timeOf(said.at));
         }
       });
     }, 2_000);
@@ -918,7 +947,12 @@ export default function FutureBoxHome() {
   const makeGate = pairHere?.surface === 'make'
     ? (() => {
       const said = readyToMake(pairHere);
-      return { id: pairHere.id, ready: said.ready, why: said.whyKey ? t(said.whyKey, said.why) : said.why };
+      return {
+        id: pairHere.id,
+        ready: said.ready,
+        why: said.whyKey ? t(said.whyKey, said.why) : said.why,
+        watching: !pairHere.mine && pairHere.drafts !== false,
+      };
     })()
     : null;
 
@@ -2069,9 +2103,12 @@ export default function FutureBoxHome() {
         else copilotBus.handoff(where, action.op, action.value);
         return;
       }
-      if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
-      if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
-      if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
+      /* Updater form: the reply lands seconds after the question, and a
+         spread of the canvas as it was when asked put back whatever was
+         typed in between. */
+      if (action.kind === 'set_title') setCanvas((was) => ({ ...was, title: action.value }));
+      if (action.kind === 'set_style') setCanvas((was) => ({ ...was, style: action.value }));
+      if (action.kind === 'set_lyrics') setCanvas((was) => ({ ...was, lyrics: action.value }));
       if (action.kind === 'generate') {
         goToRoom('make');
         setMakeSignal((n) => n + 1);
@@ -5023,7 +5060,7 @@ export default function FutureBoxHome() {
                 setCanvas={setCanvas}
                 makeSignal={makeSignal}
                 engineReady={engineReady}
-                pairGate={makeGate}
+                pairGate={makeGate && pairHere ? { ...makeGate, credit: collabCredit(artistHandle, pairHere.withHandle) } : makeGate}
                 onPairMade={() => setPairSignal((n) => n + 1)}
                 onMade={(track) => {
                   setMadeTrack(track);

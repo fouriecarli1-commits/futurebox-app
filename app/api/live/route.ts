@@ -40,6 +40,10 @@ import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { storageId } from '@/app/lib/server/ownedpath';
 import { creditFrom } from '@/app/lib/artcredit';
 import { blockedBy, whoOf } from '@/app/lib/server/who';
+import { collabCredit } from '@/app/lib/collabcredit';
+
+/** A project where a column this file writes has not been added yet. */
+const NO_COLUMN = /42703|PGRST204|column .* does not exist|could not find .* column/i;
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,6 +81,8 @@ const NOT_SET_UP = {
 interface PostRow {
   id: string;
   owner: string;
+  /** The pair room a song was made in by two people (`supabase/live.sql`). */
+  pair?: string | null;
   kind: 'track' | 'episode' | 'elsewhere' | 'video';
   source_id: string;
   title: string;
@@ -274,9 +280,31 @@ export async function GET(request: Request): Promise<Response> {
     new Set([...(posts ?? []).map((p) => p.owner), ...(says ?? []).map((s) => s.owner)]),
   );
   const names = new Map<string, string>();
+  /* ── A song two people made ───────────────────────────────────────────
+
+     Credited to both by handle: "Collab · @one & @two". Built here from the
+     pair row, never from a line the poster's browser sent, so a post can
+     only ever name somebody who was really in the room with its maker. */
+  const pairOf = new Map<string, string>();
+  const pairIds = Array.from(new Set(((posts ?? []) as PostRow[]).map((one) => one.pair).filter((id): id is string => typeof id === 'string' && id.length > 0)));
+  if (pairIds.length) {
+    /* Unread, the post is credited to its poster as it always was: a song
+       still under a name, never under nobody's. */
+    const { data: rows, error: pairsError } = await client.from('pairs').select('id, a, b').in('id', pairIds);
+    for (const row of (pairsError ? [] : rows ?? []) as { id: string; a: string; b: string }[]) {
+      for (const post of (posts ?? []) as PostRow[]) {
+        if (post.pair !== row.id) continue;
+        if (post.owner === row.a) pairOf.set(post.id, row.b);
+        else if (post.owner === row.b) pairOf.set(post.id, row.a);
+      }
+    }
+    for (const other of pairOf.values()) if (!owners.includes(other)) owners.push(other);
+  }
+  const handles = new Map<string, string>();
   if (owners.length) {
     const { data: who } = await client.from('creators').select('owner, handle, name').in('owner', owners);
     for (const one of who ?? []) {
+      handles.set(one.owner as string, ((one.handle as string) ?? '').trim());
       /* The recording name if there is one, the handle otherwise.
 
          A handle is an address and a name is what goes on a release. Beside a
@@ -486,7 +514,9 @@ export async function GET(request: Request): Promise<Response> {
         link: post.link,
         startsAt: post.starts_at,
         at: post.created_at,
-        by: names.get(post.owner) || 'someone',
+        by: pairOf.has(post.id)
+          ? collabCredit(handles.get(post.owner), handles.get(pairOf.get(post.id) ?? ''))
+          : names.get(post.owner) || 'someone',
         mine: caller ? post.owner === caller.id : false,
         /* Which member, as a key that is not their account (`server/who.ts`),
            so a block on this phone hides all their posts at once. */
@@ -620,6 +650,7 @@ export async function POST(request: Request): Promise<Response> {
     platform?: string;
     link?: string;
     startsAt?: string;
+    pair?: string;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -924,7 +955,15 @@ export async function POST(request: Request): Promise<Response> {
     if (!data) return Response.json({ message: 'That episode is not yours.' }, { status: 404 });
   }
 
-  const { error } = await client.from('live_posts').insert({
+  /* A song made in a pair room is posted as theirs together — only when
+     the caller really is one of the two. Anything else is quietly a post by
+     the caller alone: the song is still theirs to post. */
+  let pair: string | null = null;
+  if (kind === 'track' && typeof body.pair === 'string' && /^[0-9a-f-]{36}$/i.test(body.pair)) {
+    const { data: row } = await client.from('pairs').select('id, a, b').eq('id', body.pair).maybeSingle();
+    if (row && (row.a === caller.id || row.b === caller.id)) pair = row.id as string;
+  }
+  const post = {
     owner: caller.id,
     kind,
     source_id: sourceId,
@@ -961,7 +1000,14 @@ export async function POST(request: Request): Promise<Response> {
        have lost the one string that makes the permission worth anything.
        Bounded, since it goes in a row and comes back out to everybody. */
     style: String(body.style ?? '').slice(0, 300),
-  });
+  };
+  const withPair: typeof post & { pair?: string } = pair ? { ...post, pair } : post;
+  let { error } = await client.from('live_posts').insert(withPair);
+  /* A project where `live.sql` has not been re-run has no `pair` column:
+     the song still goes in, credited to its poster, rather than not at all. */
+  if (error && pair && NO_COLUMN.test(`${error.code ?? ''} ${error.message ?? ''}`)) {
+    ({ error } = await client.from('live_posts').insert(post));
+  }
   /* ── A video refused by the room is not the room being off ────────────
 
      The owner, three times: *"Video werk steeds nie in live nie."* Three rounds

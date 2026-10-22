@@ -125,7 +125,7 @@ export default function PairStrip({
             ? t('pair.draftsOff', 'The words stay on the screen they were written on for now — sending them with the turn is being switched on.')
             : pair.mine
               ? t('pair.draftsMine', 'What you write is kept for them as you go, and goes with the turn.')
-              : t('pair.draftsTheirs', 'What they write shows up here as they go.')}
+              : t('pair.draftsTheirs', 'It is their turn to write — their words show up here as they go. Ask for the pen to write yourself.')}
         </p>
       )}
 
