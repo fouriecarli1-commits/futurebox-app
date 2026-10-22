@@ -889,7 +889,16 @@ export function renderHum(
   const last = notes.reduce((most, one) => Math.max(most, one.to), 0);
   const total = Math.max(seconds ?? 0, last) + 0.4 + tweak.room * 1.2;
   const out = new Float32Array(Math.max(1, Math.round(total * rate)));
-  for (const note of notes) play(out, voice, note, rate, tweak);
+  /* In a take that is mostly SUNG, a note with no pitch is a breath, a
+     consonant or a lip smack — and a pitched instrument used to play every
+     one of them as a middle C. In a take that is mostly tapped, the taps
+     are the rhythm she meant, and they are played as before. */
+  const sung = notes.filter((one) => one.midi !== null).length;
+  const skipUnpitched = voice.pitched && sung > 0 && sung * 2 >= notes.length;
+  for (const note of notes) {
+    if (skipUnpitched && note.midi === null) continue;
+    play(out, voice, note, rate, tweak);
+  }
   if (tweak.room > 0) roomAround(out, rate, tweak.room);
 
   /* Soft clipping rather than hard, the same as `renderSketch` does: notes

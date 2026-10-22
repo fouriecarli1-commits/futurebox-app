@@ -369,6 +369,7 @@
     "check:skootdiepte": "tsx scripts/check-skootdiepte.mts",
     "check:knipvenster": "tsx scripts/check-knipvenster.mts",
     "check:neurie": "tsx scripts/check-neurie.mts",
+    "check:humpitch": "tsx scripts/check-humpitch.mts",
     "check:storie": "tsx scripts/check-storie.mts",
     "check:kinderverhaal": "tsx scripts/check-kinderverhaal.mts",
     "check:kinderliedjie": "tsx scripts/check-kinderliedjie.mts",

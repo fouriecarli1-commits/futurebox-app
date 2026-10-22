@@ -1508,6 +1508,13 @@ jobs:
       - name: A hum becomes the rhythm that was hummed
         run: npm run check:neurie
 
+      # The melody of a hum, read the way a person hums: legato with no gap,
+      # vibrato a semitone wide, scoops and falls, a slide, a breath, a tune
+      # hummed sharp and drifting flat, accents, room noise, and the octave
+      # of a pure "mmm". Every hum is synthesised at known pitches and times.
+      - name: A hum is heard the way a person hums it
+        run: npm run check:humpitch
+
       # A story becomes pages, each page is charged its own reading, and the
       # pictures turn when the voice does rather than on a fixed interval.
       # Also that the picture is asked for with no lettering in it, which is
