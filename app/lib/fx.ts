@@ -77,6 +77,11 @@
  * Nothing in the panel is an artist's impression of the sound.
  */
 
+import {
+  cabinetImpulse, driveCurve, knobDb, stagesOf, valveCurve,
+  type AmpSettings, type DriveKind, type DriveSettings, type SweepSettings,
+} from './pedals';
+
 /* ── What a lane's rack is ─────────────────────────────────────────────── */
 
 export interface EqSettings {
@@ -179,6 +184,15 @@ export interface Fx {
   readonly chorus?: WobbleSettings;
   readonly delay?: DelaySettings;
   readonly reverb?: ReverbSettings;
+  /* The pedals and the amp — see `lib/pedals.ts`. In the chain they sit
+     where a guitarist's board puts them: after the gate, before the EQ. */
+  readonly overdrive?: DriveSettings;
+  readonly distortion?: DriveSettings;
+  readonly fuzz?: DriveSettings;
+  readonly amp?: AmpSettings;
+  /* And two more of the sweeping kind, after the tremolo. */
+  readonly flanger?: SweepSettings;
+  readonly phaser?: SweepSettings;
 }
 
 /** What a rack with nothing switched on looks like. */
@@ -316,6 +330,22 @@ export function responseOf(
   return out;
 }
 
+/** One biquad, set. */
+function filterOf(
+  ctx: BaseAudioContext,
+  type: BiquadFilterType,
+  hz: number,
+  q: number,
+  db = 0,
+): BiquadFilterNode {
+  const node = ctx.createBiquadFilter();
+  node.type = type;
+  node.frequency.value = hz;
+  node.Q.value = q;
+  node.gain.value = db;
+  return node;
+}
+
 function eqNodes(ctx: BaseAudioContext, eq: EqSettings): BiquadFilterNode[] {
   const low = ctx.createBiquadFilter();
   low.type = 'lowshelf';
@@ -451,6 +481,90 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
     }
   }
 
+  /* ── The pedalboard ─────────────────────────────────────────────────
+     Each drive: a filter that decides what gets clipped, the clipper, a
+     filter that takes the DC a lopsided clip leaves, the tone, the level. */
+  const drives: readonly DriveKind[] = ['overdrive', 'distortion', 'fuzz'];
+  for (const kind of drives) {
+    const settings = fx[kind];
+    if (!settings) continue;
+    const into = ctx.createGain();
+    let end: AudioNode = into;
+    const link = (node: AudioNode): void => { end.connect(node); end = node; };
+    /* The overdrive cuts the low end before clipping, which is its mid hump
+       and why it stays tight in front of an amp; the others clip nearly the
+       whole range. */
+    link(filterOf(ctx, 'highpass', kind === 'overdrive' ? 420 : kind === 'distortion' ? 90 : 60, 0.6));
+    const shaper = ctx.createWaveShaper();
+    shaper.curve = driveCurve(kind, settings.drive);
+    shaper.oversample = '4x';
+    link(shaper);
+    link(filterOf(ctx, 'highpass', 25, 0.7));
+    if (kind === 'fuzz') {
+      /* The scoop, and a tilt either side of it: the tone knob of the big
+         fuzzes is a see-saw, not a treble cut. */
+      link(filterOf(ctx, 'peaking', 900, 0.7, -7));
+      link(filterOf(ctx, 'lowshelf', 500, 0.7, -knobDb(settings.tone, 9)));
+      link(filterOf(ctx, 'highshelf', 1500, 0.7, knobDb(settings.tone, 9)));
+    } else {
+      link(filterOf(ctx, 'lowpass', 900 * 2 ** (Math.max(0, Math.min(1, settings.tone)) * 3.2), 0.7));
+    }
+    const level = ctx.createGain();
+    level.gain.value = 0.5 * 10 ** (Math.max(-24, Math.min(12, settings.level)) / 20);
+    link(level);
+    stages.push({ into, out: end });
+  }
+
+  if (fx.amp) {
+    const amp = fx.amp;
+    const into = ctx.createGain();
+    let end: AudioNode = into;
+    const link = (node: AudioNode): void => { end.connect(node); end = node; };
+    /* The input: a guitar amp does not pass the lowest octave, and a lead
+       amp passes even less of it, which is what keeps high gain from
+       turning to mud. */
+    link(filterOf(ctx, 'highpass', amp.voice === 'lead' ? 110 : amp.voice === 'crunch' ? 90 : 70, 0.7));
+    stagesOf(amp.voice, amp.gain).forEach((gain, n) => {
+      const valve = ctx.createWaveShaper();
+      valve.curve = valveCurve(gain);
+      valve.oversample = '4x';
+      link(valve);
+      /* Between stages: the top rolled off a little, as the valve's own
+         capacitance does; after the first stage of a lead amp the low end
+         is tightened again, and a crunch amp pushes its middle. */
+      link(filterOf(ctx, 'lowpass', 9000, 0.7));
+      if (n === 0 && amp.voice === 'lead') link(filterOf(ctx, 'highpass', 160, 0.7));
+      if (n === 0 && amp.voice === 'crunch') link(filterOf(ctx, 'peaking', 800, 0.8, 3));
+    });
+    /* The tone stack. */
+    link(filterOf(ctx, 'lowshelf', 120, 0.7, knobDb(amp.bass)));
+    link(filterOf(ctx, 'peaking', 650, 0.7, knobDb(amp.mid)));
+    link(filterOf(ctx, 'highshelf', 3200, 0.7, knobDb(amp.treble)));
+    /* The power stage: a gentle squash, then presence. */
+    const power = ctx.createWaveShaper();
+    power.curve = valveCurve(1.2);
+    power.oversample = '2x';
+    link(power);
+    link(filterOf(ctx, 'highshelf', 4500, 0.7, knobDb(amp.presence, 8)));
+    if (amp.cabinet !== 'none') {
+      const box = ctx.createConvolver();
+      const impulse = cabinetImpulse(amp.cabinet, ctx.sampleRate);
+      const buffer = ctx.createBuffer(1, impulse.length, ctx.sampleRate);
+      buffer.getChannelData(0).set(impulse);
+      box.buffer = buffer;
+      link(box);
+    }
+    /* Made up so the amp at twelve o'clock is about as loud as the pedals
+       and a little over the dry lane — measured, not guessed: a speaker
+       cabinet takes most of the top off and with it about fifteen decibels,
+       and one clean valve stage gives less level than three driven ones. */
+    const master = ctx.createGain();
+    master.gain.value = 0.5 * 10 ** (Math.max(-24, Math.min(12, amp.master)) / 20)
+      * (amp.cabinet === 'none' ? 0.5 : 2.5) * (amp.voice === 'clean' ? 2 : 1);
+    link(master);
+    stages.push({ into, out: end });
+  }
+
   if (fx.eq) for (const filter of eqNodes(ctx, fx.eq)) add(filter);
 
   for (const [kind, settings] of [
@@ -557,6 +671,76 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
     lfo.connect(swing).connect(wobble.gain);
     running.push(lfo);
     add(wobble);
+  }
+
+  if (fx.flanger) {
+    /* A very short delay whose length sweeps, mixed back with the sound it
+       came from: the two cancel at a comb of frequencies that slides up and
+       down — the jet. Some of the delayed sound goes round again, which
+       makes the comb's teeth sharper. Five milliseconds in the middle so
+       the loop stays above the shortest delay a Web Audio cycle allows. */
+    const settings = fx.flanger;
+    const into = ctx.createGain();
+    const out = ctx.createGain();
+    const dry = ctx.createGain();
+    dry.gain.value = 1 - Math.max(0, Math.min(1, settings.mix)) * 0.5;
+    into.connect(dry).connect(out);
+    const late = ctx.createDelay(0.03);
+    late.delayTime.value = 0.005;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = Math.max(0.02, settings.rate);
+    const swing = ctx.createGain();
+    swing.gain.value = 0.0022 * Math.max(0, Math.min(1, settings.depth));
+    lfo.connect(swing).connect(late.delayTime);
+    running.push(lfo);
+    const again = ctx.createGain();
+    again.gain.value = Math.max(0, Math.min(0.9, settings.feedback));
+    const wet = ctx.createGain();
+    wet.gain.value = Math.max(0, Math.min(1, settings.mix));
+    into.connect(late);
+    late.connect(again).connect(late);
+    late.connect(wet).connect(out);
+    stages.push({ into, out });
+  }
+
+  if (fx.phaser) {
+    /* Six all-pass filters in a row shift the phase of the sound without
+       changing its level; mixed back with the sound, the shifted copy
+       cancels it in a few notches, and an oscillator sweeps the filters so
+       the notches move. */
+    const settings = fx.phaser;
+    const into = ctx.createGain();
+    const out = ctx.createGain();
+    const dry = ctx.createGain();
+    dry.gain.value = 1 - Math.max(0, Math.min(1, settings.mix)) * 0.5;
+    into.connect(dry).connect(out);
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = Math.max(0.02, settings.rate);
+    const swing = ctx.createGain();
+    swing.gain.value = 700 * Math.max(0, Math.min(1, settings.depth));
+    lfo.connect(swing);
+    running.push(lfo);
+    let end: AudioNode = into;
+    let first: BiquadFilterNode | null = null;
+    for (let n = 0; n < 6; n += 1) {
+      const pass = filterOf(ctx, 'allpass', 900, 0.5);
+      swing.connect(pass.frequency);
+      end.connect(pass);
+      end = pass;
+      first ??= pass;
+    }
+    if (settings.feedback > 0 && first) {
+      /* A cycle in Web Audio needs a delay in it; the shortest there is. */
+      const hold = ctx.createDelay(0.01);
+      hold.delayTime.value = 0;
+      const again = ctx.createGain();
+      again.gain.value = Math.max(0, Math.min(0.85, settings.feedback));
+      end.connect(hold).connect(again).connect(first);
+    }
+    const wet = ctx.createGain();
+    wet.gain.value = Math.max(0, Math.min(1, settings.mix));
+    end.connect(wet).connect(out);
+    stages.push({ into, out });
   }
 
   const output = ctx.createGain();

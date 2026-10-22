@@ -938,6 +938,13 @@ jobs:
       - name: The effect rack is in the file, not only in the ear
         run: npm run check:boothfx
 
+      # The booth's own pedals and amps: each drive adds harmonics as its
+      # knob turns, the fuzz is lopsided, each amp voicing is dirtier than the
+      # last, the cabinets roll off the fizz, and the rack builds them in a
+      # pedalboard's order. Needs no capture and no third party.
+      - name: The booth's own pedals and amps do what their names say
+        run: npm run check:pedals
+
       # A model asked for a fader between 0 and 1.5 will mostly answer inside
       # that range, and "mostly" is not a property you can build a fader on.
       # The rules live in a lib so they run here without an API key.

@@ -42,6 +42,10 @@ import {
   type Fx, type EqSettings, type VocoderChord,
 } from '../lib/fx';
 import { TUNE_DEFAULT, type TuneHow, type TuneScale } from '../lib/tuner';
+import {
+  PEDAL_DEFAULTS, RIGS, driveCurve, valveCurve,
+  type AmpVoice, type Cabinet, type DriveKind,
+} from '../lib/pedals';
 import { useLang } from '../lib/i18n';
 
 const PANEL = '#0b0d14';
@@ -65,6 +69,12 @@ const HUES: Record<string, number> = {
   gate: 120,
   vocoder: 280,
   tuner: 45,
+  overdrive: 48,
+  distortion: 15,
+  fuzz: 320,
+  amp: 35,
+  flanger: 250,
+  phaser: 290,
 };
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
@@ -912,9 +922,112 @@ export default function BoothFx({
       <p className="pt-1 text-[11px] leading-snug" style={{ color: INK_DIM }}>
         {t(
           'fx.whatIsHere',
-          'Everything here is in the file as well as in your ears — the mixdown renders the same chain. The voice tuner rewrites the lane itself when you press it, and Undo puts it back. The amp modeler is on the lane itself, under Track controls.',
+          'Everything here is in the file as well as in your ears — the mixdown renders the same chain. The voice tuner rewrites the lane itself when you press it, and Undo puts it back. The pedals and the amp below are built in; an amp capture of your own goes on the lane itself, under Track controls.',
         )}
       </p>
+
+      {/* ── The pedalboard: rigs, three drives and an amp ──────────────
+          The owner, 22 October 2026: *"ons moet ons eie pedals, en amp
+          modellers iewers kry."* Built here from the same nodes as the rest
+          of the rack, so they need nobody's capture and nobody's account
+          (`lib/pedals.ts`). A rig sets the whole board at once; every dial
+          is then the rack's own. */}
+      <div data-pedalboard className="rounded-2xl border p-3.5" style={{ borderColor: lit(HUES.amp, 0.35), background: 'rgba(255,255,255,0.02)' }}>
+        <p className="text-xs font-black uppercase tracking-wider" style={{ color: lit(HUES.amp) }}>
+          {t('rig.title', 'Guitar and bass rigs')}
+        </p>
+        <p className="pb-2 text-[11px] leading-snug" style={{ color: INK_DIM }}>
+          {t('rig.what', 'A whole pedalboard and amp in one press. Built into the booth: no capture to download and no credits.')}
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" data-rigs>
+          {RIGS.map((rig) => (
+            <button
+              key={rig.id}
+              type="button"
+              data-rig={rig.id}
+              onClick={() => { onWhole?.('preset'); onChange({ ...rig.fx }); }}
+              className="flex min-h-[44px] min-w-0 flex-col items-start justify-center rounded-xl border border-white/10 bg-zinc-900/60 px-2.5 py-1.5 text-left transition-all hover:border-amber-400/50"
+            >
+              <span className="truncate text-xs font-black text-zinc-100">{t(rig.says[0], rig.says[1])}</span>
+              <span className="line-clamp-2 text-[10px] leading-snug text-zinc-400">{t(rig.what[0], rig.what[1])}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {([
+        ['overdrive', t('fx.overdrive', 'Overdrive'), t('fx.overdriveWhat', 'Breaks up in the middle and stays tight in the low end. In front of an amp it pushes it; on its own it is a warm crunch.')],
+        ['distortion', t('fx.distortion', 'Distortion'), t('fx.distortionWhat', 'Harder and squarer than the overdrive, with more sustain. The rock pedal.')],
+        ['fuzz', t('fx.fuzz', 'Fuzz'), t('fx.fuzzWhat', 'The oldest and roughest: huge gain, a lopsided clip and the middle scooped out.')],
+      ] as const).map(([kind, name, what]) => {
+        const settings = fx[kind] ?? PEDAL_DEFAULTS[kind];
+        const setDrive = (next: Partial<typeof settings>): void => set(kind, { ...settings, ...next });
+        return (
+          <Unit key={kind} id={kind} name={name} what={what} on={Boolean(fx[kind])}
+            onToggle={() => toggle(kind, PEDAL_DEFAULTS[kind])}>
+            <Bend points={driveCurve(kind as DriveKind, settings.drive)} hue={HUES[kind]} unitId={name} />
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Dial label={t('fx.driveAmount', 'Drive')} value={settings.drive} min={0} max={1} step={0.01} hue={HUES[kind]}
+                onChange={(drive) => setDrive({ drive })} />
+              <Dial label={t('fx.driveTone', 'Tone')} value={settings.tone} min={0} max={1} step={0.01} hue={HUES[kind]}
+                onChange={(tone) => setDrive({ tone })} />
+              <Dial label={t('fx.trim', 'Level')} value={settings.level} min={-24} max={12} step={0.5} unit=" dB" hue={HUES[kind]}
+                onChange={(level) => setDrive({ level })} />
+            </div>
+          </Unit>
+        );
+      })}
+
+      {(() => {
+        const amp = fx.amp ?? PEDAL_DEFAULTS.amp;
+        const setAmp = (next: Partial<typeof amp>): void => set('amp', { ...amp, ...next });
+        const voices: readonly [AmpVoice, string][] = [
+          ['clean', t('amp.clean', 'Clean')],
+          ['crunch', t('amp.crunch', 'Crunch')],
+          ['lead', t('amp.lead', 'Lead')],
+        ];
+        const cabs: readonly [Cabinet, string][] = [
+          ['none', t('amp.noCab', 'No cabinet')],
+          ['open', t('amp.openCab', 'Open 1×12')],
+          ['closed', t('amp.closedCab', 'Closed 4×12')],
+        ];
+        const stages = amp.voice === 'clean' ? 1 : amp.voice === 'crunch' ? 2 : 3;
+        return (
+          <Unit id="amp" name={t('fx.amp', 'Amp')} what={t('fx.ampWhat', 'A valve amp in the booth: one, two or three gain stages, bass, middle and treble, presence, and a speaker cabinet. No capture needed.')}
+            on={Boolean(fx.amp)} onToggle={() => toggle('amp', PEDAL_DEFAULTS.amp)}>
+            <Bend points={valveCurve(1 + amp.gain * 6 * stages)} hue={HUES.amp} unitId="Amp" />
+            {([['voice', voices], ['cabinet', cabs]] as const).map(([field, list]) => (
+              <div key={field} className="grid grid-cols-3 gap-1.5" role="group" data-ampchoice={field}>
+                {list.map(([id, label]) => {
+                  const on = amp[field] === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setAmp({ [field]: id } as Partial<typeof amp>)}
+                      className="min-h-[44px] rounded-xl border px-2 text-xs font-bold"
+                      style={on
+                        ? { borderColor: lit(HUES.amp), background: lit(HUES.amp, 0.18), color: INK }
+                        : { borderColor: EDGE, color: INK_DIM }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Dial label={t('amp.gain', 'Gain')} value={amp.gain} min={0} max={1} step={0.01} hue={HUES.amp} onChange={(gain) => setAmp({ gain })} />
+              <Dial label={t('amp.bass', 'Bass')} value={amp.bass} min={0} max={1} step={0.01} hue={HUES.amp} onChange={(bass) => setAmp({ bass })} />
+              <Dial label={t('fx.mid', 'Middle')} value={amp.mid} min={0} max={1} step={0.01} hue={HUES.amp} onChange={(mid) => setAmp({ mid })} />
+              <Dial label={t('amp.treble', 'Treble')} value={amp.treble} min={0} max={1} step={0.01} hue={HUES.amp} onChange={(treble) => setAmp({ treble })} />
+              <Dial label={t('amp.presence', 'Presence')} value={amp.presence} min={0} max={1} step={0.01} hue={HUES.amp} onChange={(presence) => setAmp({ presence })} />
+              <Dial label={t('amp.master', 'Master')} value={amp.master} min={-24} max={12} step={0.5} unit=" dB" hue={HUES.amp} onChange={(master) => setAmp({ master })} />
+            </div>
+          </Unit>
+        );
+      })()}
 
       {/* 0. Gate — first on the desk, as on any desk. */}
       <Unit
@@ -1097,6 +1210,31 @@ export default function BoothFx({
                 onChange={(rate) => set(id, { ...settings, rate })} />
               <Dial label={t('fx.depth', 'Depth')} value={settings.depth} min={0} max={1} step={0.01} hue={HUES[id]}
                 onChange={(depth) => set(id, { ...settings, depth })} />
+            </div>
+          </Unit>
+        );
+      })}
+
+      {/* Flanger and phaser: the two sweeping ones a pedalboard has. */}
+      {([
+        ['flanger', t('fx.flanger', 'Flanger'), t('fx.flangerWhat', 'A jet-plane sweep: a very short echo that slides, mixed back with the sound.')],
+        ['phaser', t('fx.phaser', 'Phaser'), t('fx.phaserWhat', 'A slow, liquid swirl: notches that move up and down through the sound.')],
+      ] as const).map(([id, name, what]) => {
+        const settings = fx[id] ?? PEDAL_DEFAULTS[id];
+        const setSweep = (next: Partial<typeof settings>): void => set(id, { ...settings, ...next });
+        return (
+          <Unit key={id} id={id} name={name} what={what} on={Boolean(fx[id])}
+            onToggle={() => toggle(id, PEDAL_DEFAULTS[id])}>
+            <Bend points={wobbleLine(settings.depth)} hue={HUES[id]} diagonal={false} unitId={name} />
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Dial label={t('fx.rate', 'Speed')} value={settings.rate} min={0.05} max={5} step={0.05} unit=" Hz" hue={HUES[id]}
+                onChange={(rate) => setSweep({ rate })} />
+              <Dial label={t('fx.depth', 'Depth')} value={settings.depth} min={0} max={1} step={0.01} hue={HUES[id]}
+                onChange={(depth) => setSweep({ depth })} />
+              <Dial label={t('fx.feedback', 'Repeats')} value={settings.feedback} min={0} max={0.85} step={0.01} hue={HUES[id]}
+                onChange={(feedback) => setSweep({ feedback })} />
+              <Dial label={t('fx.mix', 'How much')} value={settings.mix} min={0} max={1} step={0.01} hue={HUES[id]}
+                onChange={(mix) => setSweep({ mix })} />
             </div>
           </Unit>
         );
