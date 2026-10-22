@@ -58,6 +58,8 @@ export interface Body {
    * together. Both must have approved first — see `pairgate.ts`.
    */
   pair?: string;
+  /** Written line to spoken spelling, from the member's own reading (`sayas.ts`). */
+  sayAs?: Record<string, string>;
 }
 
 /**
@@ -176,6 +178,14 @@ export function buildRequest(body: Body): Record<string, unknown> {
   const afrikaans = respelling()
     && looksAfrikaans(sections.flatMap((section) => section.lines).join('\n'));
 
+  /* A line the member read aloud goes as they said it (`sayas.ts`); any
+     other line as before — the word list on an Afrikaans song, as written
+     otherwise. The reading wins because it is a whole line from a mouth,
+     and the word list is a guess at some of its words. */
+  const said = body.sayAs ?? {};
+  const sungLines = (lines: string[]): string[] =>
+    lines.map((line) => said[line.trim()] ?? (afrikaans ? singableLines([line])[0] : line));
+
   if (anyWords) {
     // A backing track to sing over is still a structured song: same sections,
     // same lengths, no voice. Dropping to the plain-prompt path would have lost
@@ -210,7 +220,7 @@ export function buildRequest(body: Body): Record<string, unknown> {
              copy that leaves the building. */
           text: wordless || section.lines.length === 0
             ? `[${section.name}]`
-            : `[${section.name}]\n${(afrikaans ? singableLines(section.lines) : section.lines).join('\n')}`,
+            : `[${section.name}]\n${sungLines(section.lines).join('\n')}`,
           duration_ms: clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS),
           // The first chunk's styles set the whole song, so it carries the full
           // list and later chunks carry a shorter one. That is the SDK's own

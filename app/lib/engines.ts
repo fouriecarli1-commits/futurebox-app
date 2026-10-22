@@ -96,6 +96,12 @@ export interface AudioRequest {
   readonly finetuneId?: string;
   /** The pair room it is made from, when two people make it together. */
   readonly pair?: string;
+  /**
+   * How each line is to be sung, from the member reading it aloud —
+   * written line to spoken spelling (`lib/server/sayas.ts`). The words
+   * shown and released stay the written ones.
+   */
+  readonly sayAs?: Readonly<Record<string, string>>;
   /** Told what is happening, as it happens. Optional; nothing depends on it. */
   readonly onStage?: (stage: Stage) => void;
 }
@@ -347,6 +353,7 @@ export const engines: Engines = {
         instrumental: Boolean(request.instrumental) || sections.length === 0,
         finetuneId: request.finetuneId || undefined,
         pair: request.pair || undefined,
+        sayAs: request.sayAs && Object.keys(request.sayAs).length ? request.sayAs : undefined,
         }),
       });
     } catch (error) {

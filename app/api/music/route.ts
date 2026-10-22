@@ -29,6 +29,7 @@ import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, fitPlan, forPreview, plannedSeconds, type Body } from '@/app/lib/server/musicplan';
+import { cleanSayAs } from '@/app/lib/server/sayas';
 import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
 import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
 import { makeSong, saidHeader } from '@/app/lib/server/lyria';
@@ -115,10 +116,14 @@ export async function POST(request: Request): Promise<Response> {
   // and every sung line — because a request whose style is innocent and whose
   // chorus is not is still that request. Refused here rather than after the
   // charge, so a refusal costs nobody anything.
+  /* How each line is to be sung, from the member's reading: only for lines
+     that are in this song, bounded, and screened with everything else. */
+  body = { ...body, sayAs: cleanSayAs(body.sayAs, (body.sections ?? []).flatMap((section) => section.lines ?? [])) };
   const asked = [
     body.style ?? '',
     body.prompt ?? '',
     ...(body.sections ?? []).flatMap((section) => section.lines ?? []),
+    ...Object.values(body.sayAs ?? {}),
   ]
     .filter(Boolean)
     .join('\n');

@@ -57,6 +57,7 @@ import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
 import { useCopilotOps } from '../lib/copilotactions';
 import { wordsOutOfStyle } from '../lib/stylewords';
+import SayItFirst from './SayItFirst';
 import { useOpenCard } from '../lib/opencard';
 import PromptCards from './PromptCards';
 import { MOODS, type Mood } from '../data/songstarts';
@@ -86,6 +87,13 @@ export interface Canvas {
   feeling?: Mood | null;
   /** Their own words for what the song is about. */
   about?: string;
+  /**
+   * How each line is to be sung, from reading the song aloud — written line
+   * to spoken spelling (`SayItFirst`, `lib/server/sayas.ts`). On the canvas
+   * so it travels with the song: into a collab's shared draft, and to
+   * whoever presses Make.
+   */
+  sayAs?: Record<string, string>;
 }
 
 /** Where Easy or Extensive is remembered. */
@@ -953,6 +961,7 @@ export default function MakeMusic({
             instrumental: singItYourself,
             finetuneId: ownSound || undefined,
             pair: pairGate?.id,
+            sayAs: canvas.sayAs,
             onStage: setStage,
           });
           if (pairGate) onPairMade?.();
@@ -1824,6 +1833,15 @@ export default function MakeMusic({
               />
               {!watching && <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />}
             </span>
+            {/* Afrikaans words, read aloud first, are sung as they were said. */}
+            {(looksAfrikaans(lyrics) || singWanted === 'af') && !singItYourself && (
+              <SayItFirst
+                lyrics={lyrics}
+                sayAs={canvas.sayAs}
+                canWrite={!watching}
+                onSayAs={(next) => setCanvas((was) => ({ ...was, sayAs: next }))}
+              />
+            )}
             <p className="pt-1 text-sm text-zinc-500">
               {watching
                 ? <span data-pairwatching>{t('make.pairWatching', 'Their turn — ask for the pen at the top to write.')}</span>

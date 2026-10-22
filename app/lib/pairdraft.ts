@@ -25,6 +25,8 @@ export interface SongDraft {
   readonly style: string;
   readonly about: string;
   readonly feeling: Mood | null;
+  /** How each line is sung, from the holder reading it aloud (`sayas.ts`). Only when there is one. */
+  readonly sayAs?: Readonly<Record<string, string>>;
 }
 
 /** Room enough for a long song with every section written out, and no more. */
@@ -32,6 +34,17 @@ export const DRAFT_LIMITS = { title: 200, lyrics: 20_000, style: 2_000, about: 2
 
 const text = (value: unknown, most: number): string =>
   (typeof value === 'string' ? value : '').slice(0, most);
+
+/** A say-as map, cleaned: strings only, bounded, at most eighty lines. Nothing when empty. */
+const sayAsOf = (raw: unknown): { sayAs?: Record<string, string> } => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [line, as] of Object.entries(raw as Record<string, unknown>).slice(0, 80)) {
+    if (typeof as !== 'string' || !line.trim() || !as.trim()) continue;
+    out[line.trim().slice(0, 200)] = as.trim().slice(0, 200);
+  }
+  return Object.keys(out).length ? { sayAs: out } : {};
+};
 
 /** The rooms whose work travels with the turn. */
 export const DRAFT_ROOMS: readonly SurfaceId[] = ['make'];
@@ -52,6 +65,7 @@ export function draftFor(surface: SurfaceId | string, raw: unknown): SongDraft |
     style: text(given.style, DRAFT_LIMITS.style),
     about: text(given.about, DRAFT_LIMITS.about),
     feeling,
+    ...sayAsOf(given.sayAs),
   };
 }
 
@@ -64,7 +78,7 @@ export const cleanNote = (raw: unknown): string =>
 
 /** Everything in a draft a person typed, as one text to screen. */
 export const draftText = (draft: SongDraft | null, note = ''): string =>
-  [draft?.title, draft?.style, draft?.about, draft?.lyrics, note].filter(Boolean).join('\n');
+  [draft?.title, draft?.style, draft?.about, draft?.lyrics, ...Object.values(draft?.sayAs ?? {}), note].filter(Boolean).join('\n');
 
 /** True when two drafts say the same thing, so an unchanged one is not sent again. */
 export const sameDraft = (one: SongDraft | null, two: SongDraft | null): boolean =>

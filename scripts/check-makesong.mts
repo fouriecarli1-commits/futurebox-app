@@ -266,6 +266,39 @@ check('  and the copilot sending words as the sound puts them in the words box',
 check('while it is the other person’s turn, the copilot cannot write into the shared song',
   /useCopilotOps\('make', pairGuard\(\{/.test(makeRoom) && /DRAFT_OPS = \['reset', 'set_song_title', 'set_words', 'add_section', 'set_sound', 'set_feeling', 'set_about'\]/.test(makeRoom));
 
+/* ── Read it aloud, and it is sung the way it was said ────────────────
+   The owner, 22 October 2026: "Is daar nie 'n manier dat iemand hulle
+   liedjie se woorde vooraf kan rekord … om die uitspraak reg te kry nie?" */
+const { linesIn, cleanSayAs } = await import('../app/lib/server/sayas.ts');
+const answer = (lines: unknown) => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ lines }) }] } }] });
+check('the listener’s answer is taken only with a line for every line asked',
+  JSON.stringify(linesIn(answer(['Dee pahd', 'Ons stup']), 2)) === '["Dee pahd","Ons stup"]'
+  && linesIn(answer(['Dee pahd']), 2) === null && linesIn(answer(['Dee pahd', '']), 2) === null && linesIn({}, 1) === null);
+check('a reading can only respell lines that are in the song',
+  JSON.stringify(cleanSayAs({ 'Die pad is lank': 'Dee pahd iss lunk', 'Something else': 'x', 'Ons': 5 }, ['Die pad is lank', 'Ons']))
+    === '{"Die pad is lank":"Dee pahd iss lunk"}');
+const readSong = buildRequest({
+  style: 'pop',
+  sections: [{ name: 'Verse', lines: ['Die pad is lank', 'Ek is baie lief vir jou'], seconds: 20 }],
+  sayAs: { 'Die pad is lank': 'Dee pahd iss lunk' },
+} as Body) as { composition_plan: { chunks: { text: string }[] } };
+const sungText = readSong.composition_plan.chunks[0]?.text ?? '';
+check('a line read aloud goes to the engine as it was said, and the rest as before',
+  sungText.includes('Dee pahd iss lunk') && !sungText.includes('Die pad is lank') && /lief|leef/.test(sungText), sungText);
+const musicRoute = readFileSync(new URL('../app/api/music/route.ts', import.meta.url), 'utf8');
+check('  and the music route cleans it and screens it with everything else',
+  /sayAs: cleanSayAs\(body\.sayAs/.test(musicRoute) && /\.\.\.Object\.values\(body\.sayAs \?\? \{\}\)/.test(musicRoute));
+const { draftFor } = await import('../app/lib/pairdraft.ts');
+check('  and it travels in a collab’s shared draft to whoever presses Make',
+  JSON.stringify(draftFor('make', { lyrics: 'a', sayAs: { a: 'ah' } })?.sayAs) === '{"a":"ah"}'
+  && draftFor('make', { lyrics: 'a' })?.sayAs === undefined);
+const songForm = readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8');
+check('  and the song form offers it on an Afrikaans song, passes it on, and only to whoever holds the pen',
+  /<SayItFirst/.test(songForm) && /canWrite=\{!watching\}/.test(songForm) && /sayAs: canvas\.sayAs/.test(songForm));
+const sayRoute = readFileSync(new URL('../app/api/sayas/route.ts', import.meta.url), 'utf8');
+check('  and the listening route needs a signed-in member, a brake and the screen',
+  /refuseIfTooMany\('sayas'/.test(sayRoute) && /Sign in first/.test(sayRoute) && /await guard\(request, lines\.join/.test(sayRoute));
+
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);
   process.exit(1);
