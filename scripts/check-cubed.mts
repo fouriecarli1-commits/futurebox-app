@@ -49,7 +49,7 @@ import { withoutComments } from './prose.mts';
 import { before } from './order.mts';
 import {
   CLASSES_IN_A_SERIES, GUEST_SHARE, GUEST_TERMS, HOUSE_SHARE, SERIES,
-  minutesOf, seriesById, splitAsSaid,
+  SESSION_MINUTES, minutesOf, seriesById, splitAsSaid,
 } from '../app/lib/cubed.ts';
 import { createHash } from 'node:crypto';
 import {
@@ -93,7 +93,7 @@ ok('  and they are numbered one, two, three',
 ok('  and each part says what it is for',
   SERIES.every((one) => one.parts.every((part) =>
     part.outcome[0].trim().length > 20 && part.outcome[1].trim().length > 20
-    && part.minutes > 0)),
+    && part.minutes >= SESSION_MINUTES.least && part.minutes <= SESSION_MINUTES.most)),
   'a class with no outcome is a lecture, and the whole shape of three is'
   + ' that each one leaves somebody able to do something');
 

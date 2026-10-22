@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import {
-  ACCOUNT_TYPES, COMPANY, PHOTO_USES, SLOTS, TERMS, WAYS, type HostDetails, type Transfer,
+  ACCOUNT_TYPES, COMPANY, PHOTO_USES, SLOTS, TERMS, TERMS_VERSION, WAYS, type HostDetails, type Transfer,
 } from '../lib/cubedhost';
 
 const ACCOUNT_LABEL: Record<string, string> = Object.fromEntries(ACCOUNT_TYPES.map((one) => [one.id, one.label]));
@@ -245,6 +245,14 @@ export default function CubedHosts(): React.ReactElement {
               {open.signed_at && <button type="button" className={BTN} onClick={() => window.print()}><Printer className="h-4 w-4" /> Print or save the agreement</button>}
               <button type="button" className={`${BTN} text-rose-300`} onClick={() => { void remove(); }}><Trash2 className="h-4 w-4" /> Delete</button>
             </div>
+            {/* Signed before the page carried the amounts and the bank details
+                (22 October 2026): the agreement on file has neither, so it
+                says so, and says the one press that fixes it. */}
+            {open.signed_at && open.terms_version !== TERMS_VERSION && (
+              <p data-hostsoldterms className="mt-3 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                Signed against older terms{open.terms_version ? ` (version ${open.terms_version})` : ''}, before the amounts and bank details were on the page{open.details.bankAccount ? '' : ' — there are no bank details on file'}. Press Reopen for changes, and the presenter adds them and signs the current terms with the same link.
+              </p>
+            )}
             {fresh && (
               <div className="mt-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/[0.06] p-4">
                 <p className="text-sm font-semibold">A new link — the old one no longer works:</p>

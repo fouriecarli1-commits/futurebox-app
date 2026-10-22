@@ -79,6 +79,8 @@ ok('  an account number is kept without its spaces, and a made-up account type i
   banked.bankAccount === '1234567890' && cleanDetails({ bankType: 'gold' }).bankType === '' && !('bankAccount' in problemsWith(banked)));
 ok('  and the owner’s copy of the agreement carries them', /\['Bank account', d\.bankAccount/.test(code('app/components/CubedHosts.tsx')));
 ok('  and the terms say payment goes into that account', /bank account you give on this page/.test(terms));
+ok('  and a registration signed on older terms, without them, says so in the owner’s inbox',
+  /open\.terms_version !== TERMS_VERSION/.test(code('app/components/CubedHosts.tsx')) && /data-hostsoldterms/.test(code('app/components/CubedHosts.tsx')));
 
 /* "Elke sessie moet tussen 30-45 min lank wees." */
 ok('each session is 30 to 45 minutes, on the step and in the terms',

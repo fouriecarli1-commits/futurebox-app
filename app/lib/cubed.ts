@@ -107,8 +107,15 @@ export interface Part {
   readonly title: readonly [en: string, af: string];
   /** What somebody can do after this one that they could not before. */
   readonly outcome: readonly [en: string, af: string];
+  /**
+   * How long it runs. Between `SESSION_MINUTES` — the owner, 22 October 2026:
+   * *"Elke sessie moet tussen 30-45 min lank wees."*
+   */
   readonly minutes: number;
 }
+
+/** The shortest and longest a Cubed³ session may be, in minutes. */
+export const SESSION_MINUTES = { least: 30, most: 45 } as const;
 
 export interface Series {
   /** The url: `/cubed#<id>`. Lower case, dashes. */
@@ -158,7 +165,7 @@ export const SERIES: readonly Series[] = [
           'You know what the three classes are for and which one you are in.',
           'Jy weet waarvoor die drie klasse is en in watter een jy is.',
         ],
-        minutes: 12,
+        minutes: 35,
       },
       {
         part: 2,
@@ -167,7 +174,7 @@ export const SERIES: readonly Series[] = [
           'You can do the thing yourself, start to finish, once.',
           'Jy kan die ding self doen, van begin tot end, een keer.',
         ],
-        minutes: 24,
+        minutes: 45,
       },
       {
         part: 3,
@@ -176,7 +183,7 @@ export const SERIES: readonly Series[] = [
           'You know where this is going and what to build next, starting tomorrow.',
           'Jy weet waarheen dit gaan en wat jy volgende moet bou, van môre af.',
         ],
-        minutes: 18,
+        minutes: 30,
       },
     ],
   },
