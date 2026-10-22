@@ -38,6 +38,7 @@ import { loadMakes } from '../lib/makes';
 import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
+import OwnerCubed from './OwnerCubed';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
@@ -249,6 +250,9 @@ export default function Account({
 
       <div className="mx-auto w-full max-w-6xl space-y-6 p-4 lg:p-8">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">{t('account.pageTitle', 'My profile & creator account')}</h1>
+
+        {/* The owner's Cubed³ desk. Renders nothing for anybody else. */}
+        <OwnerCubed />
 
         {/* ── The banner: who, and the wallet with its refill ──────────── */}
         <div className="rounded-2xl p-5" style={PROFILE_GLASS} data-accountbanner>

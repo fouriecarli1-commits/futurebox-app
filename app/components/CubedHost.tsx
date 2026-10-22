@@ -39,6 +39,7 @@ import {
   Landmark, PenLine, Sparkles, Trash2, UploadCloud, Wallet,
 } from 'lucide-react';
 import SignaturePad, { type Signed } from './SignaturePad';
+import { accessToken } from '../lib/cloud';
 import {
   ACCOUNT_TYPES, COMPANY, EMPTY_DETAILS, PAY, PHOTO_USES, PROCESS, RECORDING_TIPS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION,
   MOST_LINKS, NO_TRANSFER, WAYS, problemsWith, slotOf, transferSaid, type HostDetails, type PhotoUse, type SlotId, type Transfer,
@@ -102,7 +103,22 @@ export default function CubedHost(): React.ReactElement {
   const [said, setSaid] = useState('');
   const touched = useRef(false);
 
-  useEffect(() => { setKey(keyFromAddress()); }, []);
+  /* The owner's preview, from the You tab or the inbox: the page exactly as a
+     presenter sees it, with nothing saved, signed or sent. Opened only for the
+     owner, because the amounts on it are a presenter's business. */
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#preview') {
+      setPreview(true);
+      void accessToken().then(async (token) => {
+        const answer = token ? await fetch('/api/cubed/hosts?peek=1', { headers: { Authorization: `Bearer ${token}` } }) : null;
+        if (!answer?.ok) { setFailed('This preview is for the owner. Sign in with the owner’s account first, then open it again.'); return; }
+        setState({ email: 'the presenter’s email address', details: EMPTY_DETAILS, savedAt: null, signedAt: null, signature: null, links: {}, files: {} });
+      }).catch(() => setFailed('The page could not reach FutureBox. Check your connection and reload.'));
+      return;
+    }
+    setKey(keyFromAddress());
+  }, []);
 
   const ask = useCallback(async (method: string, body?: unknown, query = ''): Promise<Response> => fetch(`/api/cubed/host${query}`, {
     method,
@@ -128,13 +144,13 @@ export default function CubedHost(): React.ReactElement {
 
   /* What is typed is kept a moment after typing stops. */
   useEffect(() => {
-    if (!state || isSigned || !touched.current) return undefined;
+    if (!state || isSigned || !touched.current || preview) return undefined;
     setSaving('saving');
     const wait = setTimeout(() => {
       void ask('PUT', { details }).then((answer) => setSaving(answer.ok ? 'saved' : 'failed'), () => setSaving('failed'));
     }, 1200);
     return () => clearTimeout(wait);
-  }, [details, state, isSigned, ask]);
+  }, [details, state, isSigned, ask, preview]);
 
   const set = <K extends keyof HostDetails>(field: K, value: HostDetails[K]): void => {
     touched.current = true;
@@ -164,6 +180,7 @@ export default function CubedHost(): React.ReactElement {
     }
     if (!agreed) { setSaid('Read the terms to the end and tick that you agree.'); return; }
     if (!signed) { setSaid('Sign on the pad first.'); return; }
+    if (preview) { setSaid('This is a preview, so nothing was signed or sent. A presenter who signs here gets an upload block under each of the steps below.'); return; }
     setSending(true);
     setSaid('');
     try {
@@ -243,6 +260,11 @@ export default function CubedHost(): React.ReactElement {
 
   return (
     <Frame>
+      {preview && (
+        <p className="sticky top-2 z-50 mb-4 rounded-2xl border border-amber-400/50 bg-amber-500/15 p-3 text-center text-sm font-bold text-amber-100 backdrop-blur" data-hostpreview>
+          Preview — this is what a presenter sees. Nothing you type here is saved, signed or sent.
+        </p>
+      )}
       {/* ── Welcome ── */}
       <section className="relative overflow-hidden rounded-3xl border border-sky-400/25 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(56,189,248,0.18),transparent_55%),radial-gradient(120%_120%_at_100%_100%,rgba(217,70,239,0.16),transparent_55%)] p-6 sm:p-9">
         <p className={LEAD}>Cubed³ · Presenter registration</p>

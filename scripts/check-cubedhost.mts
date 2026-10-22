@@ -27,6 +27,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
+import { before } from './order.mts';
 import {
   PAY, PHOTO_USES, PROCESS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION, cleanDetails, cleanTransfer, problemsWith, saIdOk,
 } from '../app/lib/cubedhost.ts';
@@ -166,6 +167,22 @@ ok('  and the terms ask the presenter to speak only for a season, which they may
   && /You are not asked to mention the sponsor/.test(terms) && /data-hostsponsor/.test(page0()));
 ok('  and what a presenter receives for it is not on the public sponsorship pages',
   !['app/page.tsx', 'app/components/Placement.tsx', 'app/lib/plans.ts'].some((file) => code(file).includes(PAY.sponsorMonthSaid) || /SPONSOR_MONTH_RAND|sponsorMonth/.test(code(file))));
+
+/* The owner, 22 October 2026: the presenter page and the applications, live,
+   from her own You tab. */
+const preview = readFileSync('app/components/CubedHost.tsx', 'utf8');
+ok('the owner can preview the presenter page, and only the owner',
+  /location\.hash === '#preview'/.test(preview) && /\/api\/cubed\/hosts\?peek=1/.test(preview)
+  && /!answer\?\.ok\) \{ setFailed\(/.test(preview) && /data-hostpreview/.test(preview));
+ok('  and the preview saves, signs and sends nothing',
+  /!touched\.current \|\| preview\) return undefined/.test(preview)
+  && before(preview, "if (preview) { setSaid(", "const answer = await ask('POST'"));
+const desk = code('app/components/OwnerCubed.tsx');
+ok('  and the You tab carries a desk for it that only the owner sees, kept live',
+  /<OwnerCubed \/>/.test(code('app/components/Account.tsx')) && /\/api\/cubed\/hosts\?peek=1/.test(desk)
+  && /if \(!peek\.ok/.test(desk) && /setInterval/.test(desk) && /\/cubed\/host#preview/.test(desk) && /href="\/cubed\/hosts"/.test(desk));
+ok('  and the inbox reads itself again while it is on screen',
+  /setInterval\(\(\) => \{ void tick\(\); \}, 15_000\)/.test(code('app/components/CubedHosts.tsx')) && /data-hostslive/.test(code('app/components/CubedHosts.tsx')));
 
 if (bad) {
   console.error(`\ncheck:cubedhost — ${bad} assertion(s) failed.\n`);

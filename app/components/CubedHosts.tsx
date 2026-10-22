@@ -19,7 +19,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ArrowLeft, Check, ClipboardCopy, Download, ExternalLink, Link2, Loader2, Printer, RefreshCw, RotateCcw,
+  ArrowLeft, Check, ClipboardCopy, Download, ExternalLink, Eye, Link2, Loader2, Printer, RefreshCw, RotateCcw,
   Send, ShieldOff, ShieldCheck, Trash2,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
@@ -110,6 +110,29 @@ export default function CubedHosts(): React.ReactElement {
   }, []);
   useEffect(() => { if (token) void load(); }, [token, load]);
 
+  /* Live. The owner, 22 October 2026: she wants to watch the applications
+     come in. Every fifteen seconds while the page is on screen, the list and
+     the registration that is open are read again; a hidden tab asks nothing. */
+  const [checkedAt, setCheckedAt] = useState<Date | null>(null);
+  const openId = open?.id;
+  useEffect(() => {
+    if (!token) return undefined;
+    const tick = async (): Promise<void> => {
+      if (document.visibilityState !== 'visible') return;
+      await load();
+      if (openId) {
+        const answer = await ask('GET', `?id=${openId}`);
+        if (answer.ok) setOpen(await answer.json() as Full);
+      }
+      setCheckedAt(new Date());
+    };
+    setCheckedAt(new Date());
+    const every = window.setInterval(() => { void tick(); }, 15_000);
+    const back = (): void => { void tick(); };
+    document.addEventListener('visibilitychange', back);
+    return () => { window.clearInterval(every); document.removeEventListener('visibilitychange', back); };
+  }, [token, load, ask, openId]);
+
   const openOne = async (id: string): Promise<void> => {
     setFresh('');
     const answer = await ask('GET', `?id=${id}`);
@@ -161,6 +184,7 @@ export default function CubedHosts(): React.ReactElement {
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <a href="/cubed" className="inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-zinc-300"><ArrowLeft className="h-4 w-4" /> Cubed³</a>
           <p className="text-sm font-black">Presenter inbox</p>
+          <a href="/cubed/host#preview" className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-sky-400/40 bg-sky-500/10 px-4 text-xs font-bold text-sky-100" data-hostspreview><Eye className="h-4 w-4" /> Presenter page</a>
         </div>
       </header>
 
@@ -203,7 +227,14 @@ export default function CubedHosts(): React.ReactElement {
         ) : lines.length > 0 && (
           <section className={CARD}>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xl font-black">Registrations</h2>
+              <div>
+                <h2 className="text-xl font-black">Registrations</h2>
+                {checkedAt && (
+                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-emerald-300" data-hostslive>
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" aria-hidden /> Live · checked {checkedAt.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </p>
+                )}
+              </div>
               <button type="button" className={BTN} onClick={() => { void load(); }} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></button>
             </div>
             <ul className="mt-4 divide-y divide-white/5">
