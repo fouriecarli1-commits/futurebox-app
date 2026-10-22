@@ -113,6 +113,7 @@ export default function Sleeve({
   title,
   genre,
   style,
+  words = '',
   onRealArt,
   onWorking,
   onShort,
@@ -122,6 +123,8 @@ export default function Sleeve({
   title: string;
   genre: string;
   style: string;
+  /** The song's words, so the cover can show what the song is about. */
+  words?: string;
   /**
    * Draw the cover as soon as this opens, without waiting to be asked.
    *
@@ -369,14 +372,24 @@ export default function Sleeve({
       const started = await fetch('/api/cover', {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...(await headers()) },
-        body: JSON.stringify({ trackId, title, genre, style, named }),
+        body: JSON.stringify({ trackId, title, genre, style, named, words: words.slice(0, 1200) }),
       });
       const opened = (await started.json().catch(() => ({}))) as {
         id?: string;
         message?: string;
         needsCredits?: boolean;
         recoverable?: boolean;
+        state?: string;
+        url?: string;
+        kept?: boolean;
       };
+      /* Google's picture engine draws the cover inside the one request and
+         saves it before answering, so there is nothing to wait for: the
+         picture is here and already the song's cover. */
+      if (started.ok && opened.state === 'done' && opened.url) {
+        setWord({ url: opened.url, kept: opened.kept });
+        return;
+      }
       if (!started.ok || !opened.id) {
         if (opened.needsCredits) onShort?.(opened);
         setProblem(opened.message ?? t('cover.failed', 'The cover could not be made.'));

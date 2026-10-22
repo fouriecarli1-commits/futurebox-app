@@ -862,6 +862,7 @@ export default function Channel({
                     title={track.title}
                     genre={track.genre}
                     style={track.style ?? ''}
+                    words={track.lyrics}
                     onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
                     /* Already pinned here — this panel mounts on `sleeveFor`
                        alone and nothing else closes it. Passed anyway, and

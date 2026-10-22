@@ -569,6 +569,19 @@ exactly as it was — no commit, no waiting for me. A single word that comes
 out wrong is better reported than switched off: it is one line in
 `app/lib/server/singit.ts`.
 
+### 12c. `COVER_ENGINE` — leave it unset
+
+**`COVER_ENGINE` — leave it empty. Set it to `eleven` only if you want album
+covers drawn by ElevenLabs again instead of Google.**
+
+The owner, 22 October 2026: a song made in Gemini comes back with a cover
+that shows the song, title and all. Covers now go through Google's image
+model (the same one the photo rooms use, so nothing new to switch on): it
+reads the song's words, draws one picture that tells the story, letters the
+title on it, and keeps it on the song in the same call. If Google's picture
+engine is not switched on, covers fall back to ElevenLabs by themselves.
+`COVER_ENGINE=eleven` and a redeploy puts covers on ElevenLabs without a commit.
+
 ### 13. The two engines behind a flag — and one of them is settled
 
 **`ELEVEN_SEEDANCE_READY` — leave it empty. It is not for sale on Pro.**

@@ -16,7 +16,7 @@
  * rides in the draft to whoever presses Make.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2, Mic, Square, Trash2, Volume2 } from 'lucide-react';
+import { Info, Loader2, Mic, Square, Trash2, Volume2, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import { splitSections } from '../lib/engines';
@@ -40,6 +40,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite }: Props):
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
+  const [tips, setTips] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
 
@@ -112,10 +113,43 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite }: Props):
 
   return (
     <div data-sayas className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5">
-      <p className="flex items-center gap-2 text-sm font-bold text-zinc-100">
-        <Volume2 className="h-4 w-4 text-emerald-300" />
-        {t('sayas.title', 'Read your words to me, so they are sung the way you say them')}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-bold text-zinc-100">
+          <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
+          {t('sayas.title', 'Read your words to me, so they are sung the way you say them')}
+        </p>
+        <button
+          type="button"
+          data-sayastipsopen
+          aria-expanded={tips}
+          aria-controls="sayas-tips"
+          onClick={() => setTips((open) => !open)}
+          className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-xs font-semibold text-zinc-300 hover:border-emerald-500 hover:text-emerald-200"
+        >
+          <Info className="h-4 w-4" /> {t('sayas.tipsOpen', 'How to record')}
+        </button>
+      </div>
+      {/* The owner, 22 October 2026: *"'n pop out information wat verduidelik
+          hoe dit opgeneem moet word, mense moet normaal praat en dit normaal
+          uitspreek"*. A reading that is sung, slowed down or spelled out is
+          written down that way too, and then sung that way. */}
+      {tips && (
+        <div id="sayas-tips" role="region" data-sayastips aria-label={t('sayas.tipsOpen', 'How to record')} className="mt-3 rounded-xl border border-emerald-400/40 bg-zinc-950 p-3.5 shadow-lg">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-bold text-emerald-200">{t('sayas.tipsTitle', 'How to read it so it comes out right')}</p>
+            <button type="button" data-sayastipsclose onClick={() => setTips(false)} aria-label={t('sayas.tipsClose', 'Close')} className="-m-2 inline-flex h-11 w-11 items-center justify-center rounded-xl text-zinc-400 hover:text-zinc-100">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-zinc-300">
+            <li>{t('sayas.tipNormal', 'Speak normally, the way you would say it to a friend. Do not sing it and do not slow down.')}</li>
+            <li>{t('sayas.tipPronounce', 'Pronounce every word normally, the way it is said in your language. Do not stretch it out or spell it letter by letter.')}</li>
+            <li>{t('sayas.tipOrder', 'Read every line once, from top to bottom. Do not skip a line or repeat one.')}</li>
+            <li>{t('sayas.tipQuiet', 'Find a quiet spot and hold the phone about a hand’s width from your mouth.')}</li>
+            <li>{t('sayas.tipStop', 'A short pause between lines is fine. Press stop when you have read the last line.')}</li>
+          </ul>
+        </div>
+      )}
       <p className="mt-1 text-sm text-zinc-400">
         {t('sayas.how', 'Press record and read every line once, in order, the way it must sound. Each line is then written out the way you said it, and that is what the singer reads. Your words stay exactly as you wrote them.')}
       </p>

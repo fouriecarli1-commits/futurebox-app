@@ -2103,6 +2103,7 @@ export default function MakeMusic({
                       title={track.title}
                       genre={track.genre}
                       style={track.style ?? ''}
+                      words={track.lyrics}
                       onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
                       startNow={coverFor === track.id}
                       /* Pinned while it draws. This panel is mounted on

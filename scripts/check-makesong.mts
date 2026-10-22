@@ -298,6 +298,10 @@ check('  and the song form offers it on an Afrikaans song, passes it on, and onl
 const sayRoute = readFileSync(new URL('../app/api/sayas/route.ts', import.meta.url), 'utf8');
 check('  and the listening route needs a signed-in member, a brake and the screen',
   /refuseIfTooMany\('sayas'/.test(sayRoute) && /Sign in first/.test(sayRoute) && /await guard\(request, lines\.join/.test(sayRoute));
+const sayPanel = readFileSync(new URL('../app/components/SayItFirst.tsx', import.meta.url), 'utf8');
+check('  and it explains how to read: speak normally, pronounce normally, every line once, in order',
+  /data-sayastipsopen/.test(sayPanel) && /data-sayastips\b/.test(sayPanel)
+  && /sayas\.tipNormal/.test(sayPanel) && /sayas\.tipPronounce/.test(sayPanel) && /sayas\.tipOrder/.test(sayPanel));
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);

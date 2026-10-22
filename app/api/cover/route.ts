@@ -48,7 +48,10 @@ import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
-import { checkCover, configured, coverPrompt, startCover } from '@/app/lib/server/cover';
+import { checkCover, configured, coverPrompt, songCoverPrompt, startCover } from '@/app/lib/server/cover';
+import { configured as pictureOn, makePicture, PER_PICTURE, workingImage } from '@/app/lib/server/picture';
+import { enough, note } from '@/app/lib/server/googlespend';
+import { CHOSEN } from '@/app/lib/server/google';
 import { storageId } from '@/app/lib/server/ownedpath';
 import { boughtSleeves } from '@/app/lib/server/boughtcover';
 import { claimRefund, markFailed, markKept, pending, remember } from '@/app/lib/server/coverkeep';
@@ -94,6 +97,14 @@ type Client = NonNullable<ReturnType<typeof admin>>;
  * be tidy would be the worse trade. What must not happen — and did, until
  * today — is a screen that takes that answer and calls it saved anyway.
  */
+/** The one write into storage, for both engines. True when it landed. */
+async function putCover(client: Client, owner: string, trackId: string, bytes: ArrayBuffer | Buffer, type: string): Promise<boolean> {
+  const put = await client.storage
+    .from(BUCKET)
+    .upload(coverPath(owner, trackId), bytes, { contentType: type, upsert: true });
+  return !put.error;
+}
+
 async function keepIt(
   client: Client,
   owner: string,
@@ -105,10 +116,7 @@ async function keepIt(
   try {
     const file = await fetch(from);
     if (!file.ok) throw new Error('download');
-    const put = await client.storage
-      .from(BUCKET)
-      .upload(path, await file.arrayBuffer(), { contentType: 'image/png', upsert: true });
-    if (put.error) throw put.error;
+    if (!(await putCover(client, owner, trackId, await file.arrayBuffer(), 'image/png'))) throw new Error('upload');
   } catch {
     return { url: from, kept: false };
   }
@@ -291,8 +299,43 @@ export async function POST(request: Request): Promise<Response> {
   // The style words came from a person and reach an image model, so they go
   // through the same gate everything else does. A named artist in a style
   // field is exactly as much of a problem on a sleeve as in a song.
-  const allowed = await guard(request, `${body.title ?? ''} ${body.style ?? ''}`.trim(), 'video', caller);
+  const words = String((body as { words?: unknown }).words ?? '').slice(0, 1200);
+  const allowed = await guard(request, `${body.title ?? ''} ${body.style ?? ''}\n${words}`.trim(), 'video', caller);
   if (!allowed.ok) return allowed.response;
+
+  /* ── Through Google's image model, when it is on ──────────────────────
+
+     The owner, 22 October 2026: a song made in Gemini comes back with a
+     cover that shows the song, title and all, and she asked for this one to
+     go through the same machine. Google answers with the picture itself, so
+     there is no job to wait on: it is drawn, kept on the song and handed
+     back in one call. `COVER_ENGINE=eleven` puts covers back on the other
+     engine without a commit. */
+  if (pictureOn() && (process.env.COVER_ENGINE ?? '').trim().toLowerCase() !== 'eleven') {
+    const client = admin();
+    if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
+    const room = await enough('image', PER_PICTURE, caller.id);
+    if (room) return Response.json({ error: room.code, message: room.message }, { status: 429 });
+    const paid = await charge(request, CREDITS.cover, 'cover', `cover:${trackId}:${Date.now()}`);
+    if (!paid.ok) return paid.response;
+    const made = await makePicture(songCoverPrompt({
+      title: String(body.title ?? ''),
+      genre: String(body.genre ?? ''),
+      style: String(body.style ?? ''),
+      words,
+      named: (body as { named?: unknown }).named !== false,
+    }), undefined, '1:1');
+    if (!made.ok) {
+      await paid.refund();
+      return Response.json({ message: `The cover could not be drawn: ${made.message}` }, { status: made.status >= 400 ? made.status : 502 });
+    }
+    void note('image', PER_PICTURE, workingImage ?? CHOSEN.image, caller.id);
+    if (!(await putCover(client, caller.id, trackId, made.image, made.type || 'image/png'))) {
+      await paid.refund();
+      return Response.json({ message: 'The cover was drawn but could not be saved, so nothing was charged. Try again.' }, { status: 503 });
+    }
+    return Response.json({ state: 'done', url: await link(client, coverPath(caller.id, trackId)), kept: true, engine: 'google' });
+  }
 
   if (!configured()) {
     return Response.json({ message: 'Cover art is not switched on for this app yet.' }, { status: 503 });

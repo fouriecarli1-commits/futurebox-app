@@ -113,6 +113,38 @@ export function coverPrompt(input: { title: string; genre: string; style: string
     .join(' ');
 }
 
+/**
+ * The cover as Google's image model is asked for it: the song itself.
+ *
+ * The owner, 22 October 2026: *"Wanneer 'n liedjie op gemini gemaak word,
+ * dan gooi hy dadelik dit uit met 'n relevante album art wat die liedjie
+ * uitbeeld, met 'n titel op."* So this one is told what the song is about —
+ * its words, cut short — and asked for a scene that captures its story and
+ * feeling, not a literal drawing of every line, with the title lettered on
+ * it the way her own code asks: quoted, exact, stylized and readable.
+ */
+export function songCoverPrompt(input: { title: string; genre: string; style: string; words?: string; named?: boolean }): string {
+  const feel = [input.genre, input.style].filter(Boolean).join(', ').slice(0, 300);
+  const title = input.title.replace(/["“”\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+  const named = input.named !== false && Boolean(title);
+  /* Section markers out, lines joined: the model reads what the song says,
+     not how the sheet is laid out. */
+  const words = (input.words ?? '')
+    .split('\n').map((line) => line.trim()).filter((line) => line && !/^\[[^\]]*\]$/.test(line))
+    .join(' / ').slice(0, 900);
+  return [
+    'Create a professional, striking album cover for this song, square, the kind a label would release.',
+    feel ? `The music is: ${feel}.` : '',
+    words ? `The song's words, to show you what it is about (it may be in Afrikaans): ${words}` : '',
+    'Capture the song\'s story and feeling in one strong image — a scene, place or symbol that fits it — rather than illustrating every line.',
+    'Cinematic lighting, rich colour, high detail, a clear focal point.',
+    named
+      ? `Letter the title "${title}" on the cover, spelled exactly like that, in highly stylized, unique and readable typography that belongs to the image. No other text, no logos, no watermarks.`
+      : 'No text, no letters, no logos, no watermarks.',
+    'No real, recognisable people or celebrities.',
+  ].filter(Boolean).join(' ');
+}
+
 export type Started =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly status: number; readonly message: string };
