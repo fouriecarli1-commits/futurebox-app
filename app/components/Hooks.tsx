@@ -828,7 +828,7 @@ export default function Hooks({
           </div>
           <div className="min-w-0">
             <h4 className="text-base font-extrabold text-white tracking-tight leading-tight">
-              {t('hooks.title')} <span className="text-zinc-400 font-mono text-xs uppercase tracking-wider">{t('hooks.andDrops', '& drops')}</span>
+              {t('hooks.title')} <span className="text-zinc-400 text-xs uppercase tracking-wider">{t('hooks.andDrops', '& drops')}</span>
             </h4>
             <p className="text-[11px] text-zinc-400 truncate">{t('hooks.tagline', 'The bit of your song worth posting.')}</p>
           </div>
@@ -867,7 +867,7 @@ export default function Hooks({
         <aside className={`${PANEL} space-y-3 min-w-0`} data-hooksources>
           <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase text-white">
             <span>{t('hooks.fromTitle', 'What are we cutting from?')}</span>
-            <span className="text-[10px] text-emerald-300 font-mono">{sources} {t('hooks.tracks', 'TRACKS')}</span>
+            <span className="text-[10px] text-emerald-300">{sources} {t('hooks.tracks', 'TRACKS')}</span>
           </div>
           <p className="text-xs text-zinc-400 leading-relaxed">{t('hooks.sub')}</p>
           <p className="text-xs text-zinc-500">
@@ -883,14 +883,14 @@ export default function Hooks({
               >
                 <span className="truncate flex items-center gap-2"><Music className="w-3.5 h-3.5 shrink-0" />{track.title}</span>
                 {selected?.id === track.id && (
-                  <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+                  <span className="text-[10px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded shrink-0">{t('hooks.active', 'ACTIVE')}</span>
                 )}
               </button>
             ))}
             {video && (
               <span className={SOURCE_ON}>
                 <span className="truncate flex items-center gap-2"><Film className="w-3.5 h-3.5 shrink-0" />{video.name}</span>
-                <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+                <span className="text-[10px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded shrink-0">{t('hooks.active', 'ACTIVE')}</span>
               </span>
             )}
             {/* Songs the room is open on. In the same list as her own, because
@@ -913,7 +913,7 @@ export default function Hooks({
                   </span>
                 </span>
                 {shared?.id === post.id && (
-                  <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+                  <span className="text-[10px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded shrink-0">{t('hooks.active', 'ACTIVE')}</span>
                 )}
               </button>
             ))}
@@ -1016,21 +1016,21 @@ export default function Hooks({
                   ? `${cuttingFrom} — ${t('hooks.stereoWave', 'stereo waveform')}`
                   : t('hooks.noneYet', 'Nothing on the table yet')}
               </h2>
-              <p className="text-[11px] text-emerald-300 font-mono">
+              <p className="text-[11px] text-emerald-300">
                 {peaks
                   ? `${formatMoment(peaks.seconds)} · ${hooks.length} ${hooks.length === 1 ? t('hooks.regionFound', 'moment found in the sound') : t('hooks.regionsFound', 'moments found in the sound')}`
                   : t('hooks.pickToDraw', 'Pick one of your songs and it is drawn here.')}
               </p>
             </div>
             {chosen && (
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-extrabold text-emerald-300 font-mono shrink-0">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-extrabold text-emerald-300 shrink-0">
                 {chosen.score >= strongest - 0.001 ? t('hooks.strongest') : `${Math.round(chosen.score * 100)}% ${t('hooks.ofStrongest', 'of the strongest')}`}
               </span>
             )}
           </div>
 
           <div className="bg-black/70 rounded-xl border border-white/10 p-3 sm:p-4 relative overflow-hidden">
-            <div className="flex justify-between text-[10px] text-zinc-500 font-mono mb-2">
+            <div className="flex justify-between text-[10px] text-zinc-500 mb-2">
               {ruler.map((mark, at) => <span key={at}>{mark}</span>)}
             </div>
             <div className="relative h-44 sm:h-48 w-full">
@@ -1049,12 +1049,12 @@ export default function Hooks({
                     aria-pressed={lit}
                     title={reasonFor(hook)}
                   >
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono self-start truncate max-w-full ${look_.tag}`}>{regionName(hook)}</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded self-start truncate max-w-full ${look_.tag}`}>{regionName(hook)}</span>
                     <span className="text-center">
                       <span className="block text-[11px] font-extrabold text-white leading-tight">{formatMoment(hook.startSeconds)}</span>
-                      <span className={`block text-[9px] font-mono ${look_.ink}`}>{hook.seconds}s</span>
+                      <span className={`block text-[10px] ${look_.ink}`}>{hook.seconds}s</span>
                     </span>
-                    <span className="text-[8px] text-zinc-300 font-mono self-end">{Math.round(hook.score * 100)}%</span>
+                    <span className="text-[10px] text-zinc-300 self-end">{Math.round(hook.score * 100)}%</span>
                   </button>
                 );
               })}
@@ -1064,7 +1064,7 @@ export default function Hooks({
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono mt-3 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-[10px] text-zinc-500 mt-3 pt-2 border-t border-white/5">
               <span>{t('hooks.aspectNote', '9:16 · cut in this browser')}</span>
               <span>{t('hooks.noFade', 'No fade: the clip starts on the moment')}</span>
             </div>
@@ -1148,7 +1148,7 @@ export default function Hooks({
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="text-base font-bold text-white">
-                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded mr-2 align-middle ${look_.tag}`}>{regionName(hook)}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded mr-2 align-middle ${look_.tag}`}>{regionName(hook)}</span>
                         {t('hooks.at')} {formatMoment(hook.startSeconds)}
                       </p>
                       {hook.score >= 0.99 && (
@@ -1250,7 +1250,7 @@ export default function Hooks({
         <aside className={`${PANEL} space-y-3`} data-hookexports>
           <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase text-white">
             <span>{t('hooks.presetsTitle', 'Export presets')}</span>
-            <span className="text-[10px] text-emerald-300 font-mono">{clip ? t('hooks.presetReady', 'READY') : t('hooks.presetWaiting', 'CUT ONE')}</span>
+            <span className="text-[10px] text-emerald-300">{clip ? t('hooks.presetReady', 'READY') : t('hooks.presetWaiting', 'CUT ONE')}</span>
           </div>
           {/* Three places a hook goes, and the honest thing about them: they
               all take the same upright file. A preset here sets the length
@@ -1275,7 +1275,7 @@ export default function Hooks({
             >
               <span className="min-w-0">
                 <span className="block text-xs font-bold text-white">{name}</span>
-                <span className="block text-[9px] text-zinc-400 font-mono">{sub}</span>
+                <span className="block text-[10px] text-zinc-400">{sub}</span>
               </span>
               <span className="text-[10px] font-bold text-emerald-300 shrink-0">{t('hooks.secondsArrow', '{n}s →').replace('{n}', String(length))}</span>
             </button>
