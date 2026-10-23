@@ -69,7 +69,7 @@ const fromBase64 = (text: string): ArrayBuffer => {
   return bytes.buffer;
 };
 
-export default function JamLooper({ ctx, stream, padTap, onToBooth }: {
+export default function JamLooper({ ctx, stream, padTap, onToBooth, out, onState }: {
   /** The room's AudioContext, made on the first press. */
   readonly ctx: () => AudioContext;
   /** The microphone, when the stage is open. */
@@ -78,6 +78,13 @@ export default function JamLooper({ ctx, stream, padTap, onToBooth }: {
   readonly padTap: React.MutableRefObject<((pad: Pad) => void) | null>;
   /** Opens the Booth, where the loop waits for ProBooth. Absent: no button. */
   readonly onToBooth?: () => void;
+  /**
+   * Where the loop plays into: the room's own bus, which the stage listens to
+   * so your character moves to your loop. Absent: straight to the speakers.
+   */
+  readonly out?: () => AudioNode;
+  /** Told whenever the loop starts, stops, changes tempo or gains a layer. */
+  readonly onState?: (state: { playing: boolean; bpm: number; layers: number }) => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [bpm, setBpm] = useState<number>(DEFAULT_BPM);
@@ -113,12 +120,16 @@ export default function JamLooper({ ctx, stream, padTap, onToBooth }: {
     let node = gains.current.get(id);
     if (!node) {
       node = audio.createGain();
-      node.connect(audio.destination);
+      node.connect(out ? out() : audio.destination);
       gains.current.set(id, node);
     }
     node.gain.value = live.current.muted.has(id) ? 0 : 1;
     return node;
-  }, [ctx]);
+  }, [ctx, out]);
+
+  /* The stage reads this: whether the loop plays, at what tempo, and how
+     many layers — a layer more is a drop, and the character jumps. */
+  useEffect(() => { onState?.({ playing, bpm, layers: layers.length }); }, [onState, playing, bpm, layers.length]);
 
   /* ── A recording, decoded once and kept ──────────────────────────── */
   const decode = useCallback(async (layer: Layer): Promise<void> => {

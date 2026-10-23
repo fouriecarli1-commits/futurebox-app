@@ -3647,3 +3647,88 @@ button[data-liveheart]:active:not(:disabled) {
   }
   .fb-fx-tile:hover { transform: none; }
 }
+
+/* ── Jam characters ────────────────────────────────────────────────────────
+   The owner, 22 October 2026: in the live jam room somebody hides completely
+   behind an animated character. The drawings are `JamCharacter.tsx`; this is
+   how they move. Three groups, three kinds of motion, so none of them has to
+   share a transform with another:
+
+     .jc-bounce   the beat of a loop (`.jc-beat`) and the jump of a drop
+                  (`.jc-drop`), set by class on any element above the drawing
+     .jc-rig      loudness: `--lvl`, 0 to 1, lifts and swells the body
+     .jc-breathe  its own breathing, always (a ghost floats instead)
+
+   The mouth opens, the glow brightens and the floor lights up with `--lvl`
+   too. Under reduced motion the breathing, blinking, beat and jump stop; the
+   glow still follows the sound, because that is information, not motion. */
+@property --lvl { syntax: '<number>'; inherits: true; initial-value: 0; }
+.jc { display: block; width: 100%; height: 100%; overflow: visible; }
+.jc .jc-c { fill: var(--jc); }
+.jc .jc-d { fill: color-mix(in oklab, var(--jc) 55%, #05050a); }
+.jc .jc-l { fill: color-mix(in oklab, var(--jc) 45%, #ffffff); }
+.jc .jc-k { fill: #0b0b16; }
+.jc .jc-glass { fill: #070b18; }
+.jc .jc-rim { stroke: var(--jc); stroke-width: 2.5; }
+.jc .jc-line { stroke: color-mix(in oklab, var(--jc) 55%, #05050a); stroke-width: 3; stroke-linecap: round; }
+.jc .jc-band { fill: none; stroke: var(--jc); stroke-width: 6; stroke-linecap: round; }
+.jc .jc-stripe, .jc .jc-brow, .jc .jc-chev {
+  fill: none; stroke: color-mix(in oklab, var(--jc) 55%, #05050a); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+}
+.jc .jc-teeth { fill: none; stroke: #94a3b8; stroke-width: 1.4; }
+.jc .jc-edge { fill: none; stroke: #ffffff; stroke-opacity: 0.45; stroke-width: 1.2; stroke-linejoin: round; }
+.jc .jc-grid { fill: none; stroke: #ffffff; stroke-opacity: 0.12; stroke-width: 1; }
+.jc .jc-ring { fill: none; stroke: color-mix(in oklab, var(--jc) 55%, #05050a); stroke-width: 2.5; }
+.jc .jc-shine { filter: drop-shadow(0 0 3px var(--jc)); }
+.jc .jc-aura { opacity: calc(0.18 + var(--lvl) * 0.7); transition: opacity 90ms linear; }
+.jc .jc-floor {
+  fill: var(--jc);
+  opacity: calc(0.12 + var(--lvl) * 0.55);
+  transform-box: fill-box; transform-origin: center;
+  transform: scaleX(calc(0.8 + var(--lvl) * 0.35));
+}
+.jc .jc-rig {
+  transform-origin: 60px 110px;
+  transform: translateY(calc(var(--lvl) * -7px)) scale(calc(1 + var(--lvl) * 0.05));
+}
+.jc .jc-breathe { transform-origin: 60px 110px; animation: jc-breathe 3.4s ease-in-out infinite; }
+.jc .jc-float { animation: jc-float 3.8s ease-in-out infinite; }
+.jc .jc-eyes {
+  transform-box: fill-box; transform-origin: center;
+  animation: jc-blink 5.2s infinite; animation-delay: var(--jc-wink, 0s);
+}
+.jc .jc-mouth {
+  transform-box: fill-box; transform-origin: center;
+  transform: scaleY(calc(0.45 + var(--lvl) * 1.6)) scaleX(calc(1 + var(--lvl) * 0.25));
+}
+.jc .jc-jaw { transform: translateY(calc(var(--lvl) * 7px)); }
+.jc .jc-sway { transform-box: fill-box; transform-origin: 50% 100%; animation: jc-sway 2.6s ease-in-out infinite; }
+.jc .jc-sway-back { animation-direction: reverse; }
+.jc .jc-lamp { animation: jc-lamp 1.8s ease-in-out infinite; }
+.jc .jc-burst { fill: none; stroke: var(--jc); stroke-width: 3; opacity: 0; transform-origin: 60px 62px; }
+.jc-still .jc-breathe, .jc-still .jc-float, .jc-still .jc-eyes, .jc-still .jc-sway, .jc-still .jc-lamp { animation: none; }
+
+.jc-beat .jc-bounce { transform-origin: 60px 110px; animation: jc-beat var(--jc-beat, 0.6s) ease-out infinite; }
+.jc-drop .jc-bounce { transform-origin: 60px 110px; animation: jc-drop 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 1; }
+.jc-drop .jc-burst { animation: jc-burst 0.9s ease-out 1; }
+
+@keyframes jc-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(0.99, 1.03); } }
+@keyframes jc-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes jc-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } 97% { transform: scaleY(1); } }
+@keyframes jc-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes jc-lamp { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes jc-beat { 0% { transform: translateY(0) scale(1.03, 0.97); } 30% { transform: translateY(-4px) scale(1); } 100% { transform: translateY(0); } }
+@keyframes jc-drop {
+  0% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-16px) scale(1.08) rotate(-6deg); }
+  50% { transform: translateY(0) scale(1.06, 0.92) rotate(3deg); }
+  75% { transform: translateY(-5px) scale(1) rotate(0); }
+  100% { transform: translateY(0); }
+}
+@keyframes jc-burst { 0% { opacity: 0.9; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.5); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .jc .jc-breathe, .jc .jc-float, .jc .jc-eyes, .jc .jc-sway, .jc .jc-lamp,
+  .jc-beat .jc-bounce, .jc-drop .jc-bounce, .jc-drop .jc-burst { animation: none; }
+  .jc .jc-rig { transform: none; }
+}

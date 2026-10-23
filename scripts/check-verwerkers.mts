@@ -381,6 +381,7 @@ const KEPT: Record<string, string> = {
   events: 'tally',
   live_here: 'live visitor count',
   live_loops: 'a loop in the jam room',
+  live_jammers: 'character on the jam room',
   addon_customers: 'purchases',
   addon_grants: 'purchases',
   addons: 'purchases',

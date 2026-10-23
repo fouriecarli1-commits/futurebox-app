@@ -417,6 +417,7 @@
     "check:tryon": "tsx scripts/check-tryon.mts",
     "check:adlink": "tsx scripts/check-adlink.mts",
     "check:looper": "tsx scripts/check-looper.mts",
+    "check:jamcharacters": "tsx scripts/check-jamcharacters.mts",
     "check:squeeze": "tsx scripts/check-squeeze.mts",
     "check:smartcrop": "tsx scripts/check-smartcrop.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",

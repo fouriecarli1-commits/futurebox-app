@@ -19,6 +19,7 @@ import { admin, callerFrom } from '@/app/lib/server/account';
 import { cleanLoop } from '@/app/lib/looper';
 import { refuseIfTooMany } from '@/app/lib/server/brake';
 import { wrote } from '@/app/lib/server/wrote';
+import { jamNameOf } from '@/app/lib/server/jamname';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,12 +30,6 @@ const STALE_MS = 15_000;
 const BEATS = { perMinute: 40, perHour: 1200 };
 
 const noStore = { 'Cache-Control': 'no-store' };
-
-async function nameOf(client: NonNullable<ReturnType<typeof admin>>, owner: string): Promise<string> {
-  const { data } = await client.from('creators').select('name, handle').eq('owner', owner).maybeSingle();
-  const row = data as { name?: string | null; handle?: string | null } | null;
-  return (row?.name || (row?.handle ? `@${row.handle}` : '') || '').slice(0, 40);
-}
 
 export async function GET(request: Request): Promise<Response> {
   const client = admin();
@@ -94,7 +89,7 @@ export async function POST(request: Request): Promise<Response> {
   const now = new Date().toISOString();
   const row = {
     owner: caller.id,
-    name: await nameOf(client, caller.id),
+    name: await jamNameOf(client, caller.id),
     bpm: loop.bpm,
     layers: loop.layers.length,
     loop,
