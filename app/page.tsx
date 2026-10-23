@@ -4695,11 +4695,26 @@ export default function FutureBoxHome() {
                       <ArrowLeft className="w-4 h-4 text-emerald-400" />
                       <span>{t('room.backToAll', 'Alle Kamers')}</span>
                     </button>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-extrabold text-zinc-300 truncate">
-                        {ROOM_META[studioTab]?.label}
-                      </span>
-                    </div>
+                    {/* The room's own heading, not a caption. It was the
+                        name alone in twelve-pixel type beside a full-size
+                        button, which on a computer read as a bar somebody
+                        forgot to finish — "alles lyk swak en
+                        onprofessioneel", the owner, 22 October 2026. */}
+                    {(() => {
+                      const meta = ROOM_META[studioTab];
+                      const Icon = meta?.icon ?? Sparkles;
+                      return (
+                        <div className="flex items-center gap-3 min-w-0" data-roomhead>
+                          <span className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-base font-extrabold leading-tight text-white truncate">{meta?.label}</span>
+                            {meta?.hint && <span className="block text-xs leading-snug text-zinc-400 truncate">{meta.hint}</span>}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     <button
                       type="button"
                       onClick={goToCopilot}
