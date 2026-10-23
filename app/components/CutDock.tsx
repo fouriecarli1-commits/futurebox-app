@@ -566,7 +566,23 @@ export default function CutDock({
      sideways. One row, so the picture and the clock get the height back. */
   return (
     <>
-      {sheet}
+      {/* ── The bench floats over the film on a phone ─────────────────────
+          The owner, 23 October 2026, after the photo editor's panel was
+          docked solid: *"Die video editor se funksies moet dalk meer in die
+          skerm in kom, die agtergrond moet weg, en die buttons moet bietjie
+          deurskynend wees."* So here, and only here, the bench is not a
+          panel in the column: it stands over the film from the bar up to
+          just past the middle of the screen, with no floor behind it, and
+          each control is a slightly see-through tile (`[data-cutfloat]` in
+          globals.css). A zero-height anchor above the bar is what it hangs
+          from, so the film and the clock keep the whole column. */}
+      {sheet ? (
+        <div className="relative shrink-0">
+          <div data-cutfloat="" className="absolute inset-x-0 bottom-0 z-20 flex h-[58dvh] flex-col">
+            {sheet}
+          </div>
+        </div>
+      ) : null}
       <div
         data-cutdock=""
         className="flex shrink-0 items-center gap-1 px-3"

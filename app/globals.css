@@ -3770,3 +3770,29 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   .jc-beat .jc-bounce, .jc-drop .jc-bounce, .jc-drop .jc-burst { animation: none; }
   .jc .jc-rig { transform: none; }
 }
+
+/* ── The cutting room's bench, floating over the film on a phone ─────────
+   The owner, 23 October 2026: "die agtergrond moet weg, en die buttons moet
+   bietjie deurskynend wees." No floor behind the bench — the film shows
+   through — and every control a slightly see-through dark tile with a dark
+   edge on its words, so it reads over any picture. `CutDock.tsx` hangs it
+   from an anchor above the bar; this is only its paint. */
+/* Clear where the film is (the top third), darkening over the clock and the
+   transport beneath it so the bench's lower tiles do not tangle with the
+   lane's own words. The film stays visible; the clutter does not. */
+[data-cutfloat] { background: linear-gradient(to bottom, rgba(10, 12, 16, 0) 0%, rgba(10, 12, 16, 0.78) 38%, rgba(10, 12, 16, 0.92) 100%); }
+[data-cutfloat] > div { max-height: none !important; height: 100%; }
+[data-cutfloat] [data-desk] { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+[data-cutfloat] [data-desk] > header { background: rgba(10, 12, 16, 0.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+[data-cutfloat] [data-desk] :is(div, section, fieldset) { background: transparent !important; box-shadow: none !important; }
+[data-cutfloat] [data-desk] :is(p, span, label, h3, h4, legend) { text-shadow: 0 0 2px #000, 0 1px 3px #000; }
+[data-cutfloat] [data-desk] :is(button, select, textarea, input[type="text"], input[type="number"], input[type="search"], a[href]) {
+  background: rgba(19, 26, 34, 0.74) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.16) inset !important;
+}
+[data-cutfloat] [data-desk] :is(button[aria-pressed="true"], button[data-picked="true"]) {
+  background: rgba(52, 211, 153, 0.34) !important;
+  box-shadow: 0 0 0 1.5px rgba(52, 211, 153, 0.8) inset !important;
+}
