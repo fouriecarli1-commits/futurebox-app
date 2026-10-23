@@ -213,7 +213,6 @@ const KNOWN: readonly string[] = [
   'app/components/BarcodeGeneratorModal.tsx',
   'app/components/ElementsBrowserModal.tsx',
   'app/components/FontCombinationsModal.tsx',
-  'app/components/ProDawStudio.tsx',
   'app/components/StudioMagicSuiteModal.tsx',
   'app/components/VideoAppsModal.tsx',
   'app/components/Account.tsx',
