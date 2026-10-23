@@ -282,16 +282,19 @@ ok('  and taking it off forgets the clip made with it',
   + ' clip of something she has just changed');
 
 ok('  and the clip is only ever sent a closing frame beside an opening one',
-  /\.\.\.\(shotEnd \? \{ endImage: await smallerFrame\(shotEnd\) \} : \{\}\)/.test(editor)
-  && /if \(!shotPic \|\| !words \|\| shotBusy\) return;/.test(editor),
+  /* `opening` and `closing` since 22 October 2026: the restyle bench hands
+     its own two frames to `makeItMove`, so the function reads them as
+     "the bench's, or the ones it was given" before this gate. Same gate. */
+  /\.\.\.\(closing \? \{ endImage: await smallerFrame\(closing\) \} : \{\}\)/.test(editor)
+  && /if \(!opening \|\| !words \|\| shotBusy\) return;/.test(editor),
   'the button is already gated on the opening frame, which is what makes the'
   + ' spread above safe — and that gate is asserted here so it cannot quietly'
   + ' go');
 
 ok('  and both frames are shrunk before they travel',
-  /image: await smallerFrame\(shotPic\)/.test(editor)
-  && /endImage: await smallerFrame\(shotEnd\)/.test(editor)
-  && !/endImage: shotEnd\b/.test(editor),
+  /image: await smallerFrame\(opening\)/.test(editor)
+  && /endImage: await smallerFrame\(closing\)/.test(editor)
+  && !/endImage: (shotEnd|closing)\b/.test(editor),
   'the frames she looks at are 2K; two of those as base64 is well past what'
   + ' the platform carries, and the engine renders at its own size anyway');
 

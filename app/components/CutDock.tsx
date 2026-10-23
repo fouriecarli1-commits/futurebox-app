@@ -42,8 +42,8 @@
 
 import React, { useEffect } from 'react';
 import {
-  Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, Play, Scissors,
-  SkipBack, SkipForward, Type, Wand2,
+  Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, PersonStanding, Play, Scissors,
+  SkipBack, SkipForward, Sparkles, Type, Wand2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
@@ -55,6 +55,7 @@ import { CUT_LOOK, EDGE, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/c
 export type Bench =
   /* The cutting room's. */
   | 'clip' | 'film' | 'folder' | 'looks' | 'motion' | 'words' | 'sound' | 'mark'
+  | 'characters' | 'restyle'
   /* The photo editor's. One union rather than a generic parameter: the ids
      are a closed set either way, and a type that has to be threaded through
      `DeskSheet` and every handler to say the same thing is a cost paid on
@@ -90,6 +91,20 @@ export interface BenchSpec {
    * kyk. Selfs die ruler kan nie links en regs geskuif word nie."*
    */
   readonly low?: boolean;
+  /**
+   * The opposite of `low`: a bench whose result IS a picture, drawn inside
+   * the bench, so on a phone it takes most of the screen rather than a
+   * third, and at a desk a wider column. The characters and restyle benches
+   * show a character sheet and a before-and-after, and a third of a phone
+   * is a picture the size of a stamp.
+   */
+  readonly tall?: boolean;
+  /**
+   * What the sheet says above this bench about money, where the room's own
+   * line is not true of it. The room's line says the cutting costs nothing,
+   * which is right everywhere but the two benches that draw.
+   */
+  readonly paidLine?: readonly [string, string];
 }
 
 function BenchButton({
@@ -187,7 +202,7 @@ function BenchButton({
  * looked like it did nothing. All three are about one shot, so all three
  * wait for one.
  */
-const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'motion', 'words']);
+const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'motion', 'words', 'restyle']);
 
 /** Either side of the transport: the shot you picked, and the whole film. */
 const UPPER: readonly BenchSpec[] = [
@@ -222,6 +237,36 @@ const LOWER: readonly BenchSpec[] = [
       'cut.folderWhat',
       'Clips off this device, and everything you have already made in the studio — pick from either and it lands on the clock.',
     ],
+  },
+  /* The owner, 22 October 2026 (translated): *"Can we put a studio like that in
+     the video editor, so animated characters can be made in the video studio
+     and eventually used in the video? … it must be visible everywhere that
+     we are the pioneers and forward thinkers."* Next to the way in, so they
+     are on the first screen of the bar on a phone rather than at the end of
+     a strip nobody slides. */
+  {
+    id: 'characters',
+    icon: <PersonStanding className="h-5 w-5" />,
+    label: ['cut.characters', '3D characters'],
+    what: [
+      'cut.charactersWhat',
+      'Characters in a 3D look, drawn by AI from your words — animated film, game hero, claymation, android, hologram — kept in your cast and made to move in a shot.',
+    ],
+    paid: true,
+    tall: true,
+    paidLine: ['cut.paidFuture', 'Drawing costs credits, and every button that draws or makes a shot says its price on it.'],
+  },
+  {
+    id: 'restyle',
+    icon: <Sparkles className="h-5 w-5" />,
+    label: ['cut.restyle', 'AI restyle'],
+    what: [
+      'cut.restyleWhat',
+      'The frame you are on, redrawn in a world of the future, and a new shot made from it that lands next to the original.',
+    ],
+    paid: true,
+    tall: true,
+    paidLine: ['cut.paidFuture', 'Drawing costs credits, and every button that draws or makes a shot says its price on it.'],
   },
   {
     id: 'looks',
@@ -372,11 +417,12 @@ export default function CutDock({
          rekenaar se skerm". A wider column is the cheapest honest fix: the
          same controls, a third less scrolling, and nothing moved. */
       className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[34dvh]'} ${
-        atDesk ? 'w-[400px] shrink-0 2xl:w-[520px]' : ''
+        atDesk ? (here.tall ? 'w-[440px] shrink-0 2xl:w-[560px]' : 'w-[400px] shrink-0 2xl:w-[520px]') : ''
       }`}
       style={atDesk
         ? { borderLeft: `1px solid ${EDGE}` }
-        : here.low && !edge ? { maxHeight: '30dvh' } : undefined}
+        : here.low && !edge ? { maxHeight: '30dvh' }
+          : here.tall && !edge ? { maxHeight: '64dvh' } : undefined}
     >
     <DeskSheet
       icon={here.icon}
@@ -384,7 +430,7 @@ export default function CutDock({
       what={t(here.what[0], here.what[1])}
       paid={here.paid}
       paidSays={t('dock.paidSays', 'Some of this costs credits.')}
-      paidLine={paidLine ?? t(
+      paidLine={here.paidLine ? t(here.paidLine[0], here.paidLine[1]) : paidLine ?? t(
         'cut.paidHere',
         'All of the cutting uses no credits. Putting the finished film together is the one press that spends, and it shows the bill before it does.',
       )}
