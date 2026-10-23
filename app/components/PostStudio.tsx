@@ -10749,7 +10749,11 @@ export default function PostStudio({
               data-postunder
               data-neon
               className="flex min-h-0 shrink-0 flex-col"
-              style={{ height: stripsUp ? STRIP_LEAST + 4 : 'min(46dvh, 420px)' }}
+              /* Up to the middle of the page. The owner, 23 October 2026,
+                 looking at the docked panel: "die pop out van die funksies
+                 moet bietjie groter wees, dalk tot die middel van die
+                 bladsy." Half the screen for the tool, half for the picture. */
+              style={{ height: stripsUp ? STRIP_LEAST + 4 : '50dvh' }}
             >
               {stripsUp
                 ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
