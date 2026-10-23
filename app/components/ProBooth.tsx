@@ -3626,6 +3626,10 @@ export default function ProBooth({
                 max={150}
                 value={Math.round(lane.gain * 100)}
                 data-stripfader={lane.id}
+                /* A desk fader stands upright and is tall on purpose; held
+                   to the 44-pixel floor, not to the one-height rule for a
+                   row of buttons (check:tidybars). */
+                data-tidycard=""
                 onChange={(event) => change(lane.id, { gain: Number(event.target.value) / 100 })}
                 onDoubleClick={() => change(lane.id, { gain: 1 })}
                 aria-label={`${t('pro.level', 'Level')} · ${lane.name}`}

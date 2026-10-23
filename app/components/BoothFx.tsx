@@ -945,6 +945,9 @@ export default function BoothFx({
               key={rig.id}
               type="button"
               data-rig={rig.id}
+              /* Two lines, the rig and what it sounds like: a card, like
+                 the hum voices above, not a one-line bar. */
+              data-tidycard=""
               onClick={() => { onWhole?.('preset'); onChange({ ...rig.fx }); }}
               className="flex min-h-[44px] min-w-0 flex-col items-start justify-center rounded-xl border border-white/10 bg-zinc-900/60 px-2.5 py-1.5 text-left transition-all hover:border-amber-400/50"
             >
