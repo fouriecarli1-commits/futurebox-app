@@ -87,7 +87,10 @@ import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, shows, type Ease,
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
-import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
+import { CAST_LIMIT, loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
+import CharacterBench, { type CharacterPut } from './CharacterBench';
+import RestyleBench, { type RestyleMove } from './RestyleBench';
+import { asDataUrl, frameOfClip, intoShape } from '../lib/shotframes';
 import { useAtDesk } from '../lib/atdesk';
 import Pictures from './Pictures';
 import BrandKit from './BrandKit';
@@ -170,7 +173,7 @@ import { GLOWS, glowOf, haloPasses } from '../lib/postglow';
 import { soundOf,
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
   aspectOf, shapeOf,
-  add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
+  add, addAfter, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
   captionAt, cutOut, cutSong, heard, move, runs, songSecond, split, splitHere, startsAt,
   trim,
   wordsReach,
@@ -2287,6 +2290,16 @@ export default function VideoEditor({
   const shotSince = useRef<number>(0);
   const [shotReady, setShotReady] = useState<string | null>(null);
   const [shotSaid, setShotSaid] = useState('');
+  /* The piece a made clip lands beside, and which bench started it.
+
+     A restyled scene is a new version of a shot already on the clock, so it
+     goes straight after that shot rather than at the end of the film — the
+     owner asked for the new look to be "in the video", and beside the original
+     is where she can play one against the other. `shotBy` is which bench
+     the job, its sentence and its finished clip belong to, so the restyle
+     bench does not show the shot bench's news as its own. */
+  const [shotNextTo, setShotNextTo] = useState<string | null>(null);
+  const [shotBy, setShotBy] = useState<'shot' | 'restyle'>('shot');
 
   /* ── A clip, tapped ─────────────────────────────────────────────────────
 
@@ -2558,10 +2571,35 @@ async function smallerFrame(url: string): Promise<string> {
   return sheet.toDataURL('image/jpeg', 0.9);
 }
 
-  /** Start the clip. The frame goes with it; the words say what moves. */
-  const makeItMove = async (): Promise<void> => {
-    const words = shotWords.trim();
-    if (!shotPic || !words || shotBusy) return;
+  /**
+   * Start the clip. The frame goes with it; the words say what moves.
+   *
+   * `given` is the restyle bench's shot: its frames, words, length and grade,
+   * handed over whole rather than written into this bench's state first and
+   * read back, because a state set and read in the same press reads the
+   * value from before the press. They ARE written into this bench's state as
+   * well, so the wand shows the same shot if she opens it.
+   */
+  const makeItMove = async (given?: RestyleMove): Promise<void> => {
+    const words = (given?.words ?? shotWords).trim();
+    const opening = given ? given.start : shotPic;
+    const closing = given ? given.end : shotEnd;
+    const seconds = given?.seconds ?? shotSeconds;
+    const grade = given?.grade ?? shotGrade;
+    if (!opening || !words || shotBusy) return;
+    if (given) {
+      setShotPic(given.start);
+      setShotEnd(given.end);
+      setShotWords(given.words);
+      setShotSeconds(given.seconds);
+      setShotGrade(given.grade);
+      setDrawInto('start');
+    }
+    /* Where the clip lands when it is kept: beside the shot it restyles, or
+       at the end for a shot made from nothing. */
+    setShotNextTo(given?.nextTo ?? null);
+    setShotBy(given ? 'restyle' : 'shot');
+    setShotReady(null);
     setShotBusy('move');
     setShotSaid('');
     try {
@@ -2575,18 +2613,18 @@ async function smallerFrame(url: string): Promise<string> {
         body: JSON.stringify({
           prompt: words,
           aspect: clipAspect,
-          seconds: shotSeconds,
-          grade: shotGrade,
+          seconds,
+          grade,
           /* Silent on purpose, and it is not a saving to be sorry about: the
              app's own voices are Afrikaans and the video models are
              English-first, so the line is laid over afterwards. */
           speak: false,
-          image: await smallerFrame(shotPic),
+          image: await smallerFrame(opening),
           /* The frame it has to arrive at, where there is one. Only ever
              beside the opening frame: Veo reads `lastFrame` only with an
              `image`, and `suits()` on the server refuses the pair rather
              than letting the engine drop it in silence. */
-          ...(shotEnd ? { endImage: await smallerFrame(shotEnd) } : {}),
+          ...(closing ? { endImage: await smallerFrame(closing) } : {}),
         }),
       });
       const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };
@@ -2613,6 +2651,10 @@ async function smallerFrame(url: string): Promise<string> {
        arrive here as the same `File`, and by the time the bill is drawn there
        is nothing left to tell them apart. See `lib/filmrights.ts`. */
     came: Came = 'device',
+    /* A piece already on the clock to put the new ones straight after,
+       rather than at the end — a restyled shot lands beside the shot it was
+       made from. See `addAfter`. */
+    after: string | null = null,
   ) => {
     if (!files?.length) return;
     setProblem('');
@@ -2703,11 +2745,89 @@ async function smallerFrame(url: string): Promise<string> {
           holds: length,
         });
       }
-      if (arrived.length) commit((was) => arrived.reduce(add, was));
+      if (arrived.length) {
+        commit((was) => arrived.reduce((film, one, k) => (after
+          /* Each after the one before it, so two arrive in the order sent. */
+          ? addAfter(film, one, k === 0 ? after : arrived[k - 1].id)
+          : add(film, one)), was));
+      }
     } finally {
       setBusy(null);
     }
   }, [commit, t]);
+
+  /** The made clip, onto the clock — beside the shot it restyles, where it restyles one. A press, never an effect: see the poll above. */
+  const keepShot = useCallback(async (): Promise<void> => {
+    const url = shotReady;
+    if (!url) return;
+    try {
+      const got = await fetch(url);
+      const blob = await got.blob();
+      const file = new File([blob], 'made-shot.mp4', { type: blob.type || 'video/mp4' });
+      await bringIn([file], 'made', shotNextTo);
+      setShotReady(null);
+      setShotSaid(shotNextTo
+        ? t('future.restyle.onClock', 'On the clock, straight after the original. Play one against the other and keep the one you like.')
+        : t('edit.shotOnClock', 'On the clock. Draw another frame to make the next one.'));
+      setShotNextTo(null);
+    } catch {
+      setShotSaid(t('edit.shotNoKeep', 'That clip could not be put on the clock. It is still in your videos.'));
+    }
+  }, [bringIn, shotNextTo, shotReady, t]);
+
+  /* ── The two benches that draw the future ─────────────────────────────
+
+     The owner, 22 October 2026 (translated): *"Can we put a studio like that in
+     the video editor, so animated characters can be made in the video
+     studio and eventually used in the video?"* The characters and restyle
+     benches are where they are made; these are the doors back into the shot
+     bench, which is the one place in this room that makes a clip move. One
+     bench that animates, rather than three, so a price or a rule cannot
+     drift between them. */
+
+  /** A character, onto the shot bench as its opening frame or as a ticked cast member. */
+  const putCharacter = useCallback(async (what: CharacterPut): Promise<void> => {
+    if (what.as === 'frame') {
+      const framed = await intoShape(what.picture, clipAspect);
+      setShotPic(framed);
+      setShotSaid(t('future.char.asOpeningSaid', 'Your character is the opening frame. Change the words if you like, then make it move.'));
+    } else {
+      /* A new frame, drawn with them in it: the room for references is the
+         room with no frame on the bench, and they go first so a full row
+         does not push them off. */
+      setShotPic(null);
+      setCastOn((was) => [what.member.path, ...was.filter((one) => one !== what.member.path)].slice(0, roomForRefs(false)));
+      setShotSaid(t('future.char.tickedSaid', '{name} is ticked in the shot. Change the words if you like, then draw the frame.').replace('{name}', what.member.name));
+    }
+    setShotEnd(null);
+    setDrawInto('start');
+    setShotReady(null);
+    setShotWords(what.words);
+    setShotBy('shot');
+    setBench(null);
+    /* Over a film the shot bench lives in the wand sheet; on an empty clock
+       it is on the opening. Either way it is scrolled to, so the press lands
+       somewhere she can see. */
+    if (edit.pieces.length > 0) setWandOpen(true);
+    requestAnimationFrame(() => {
+      (wandRef.current ?? document.querySelector('[data-editorshot]'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [clipAspect, edit.pieces.length, t]);
+
+  /** The frame at the playhead, framed as the film frames it. */
+  const grabHere = useCallback(async (): Promise<string | null> => {
+    const node = viewer.current;
+    if (!node || !piece) return null;
+    const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
+    return shot ? asDataUrl(shot) : null;
+  }, [piece, shape]);
+
+  /** The last frame of a piece, read from its own material. */
+  const grabEndOf = useCallback(async (id: string): Promise<string | null> => {
+    const one = edit.pieces.find((each) => each.id === id);
+    if (!one) return null;
+    return frameOfClip(one.clip, Math.max(one.from, one.to - 0.05), shape.width, shape.height, one.fill ?? false);
+  }, [edit.pieces, shape]);
 
   /* ── Google Veo Video AI Frame Animation ─────────────────────────── */
   const animateFrameWithVeo = useCallback(async (presetWords?: string) => {
@@ -3805,21 +3925,7 @@ async function smallerFrame(url: string): Promise<string> {
           <button
             type="button"
             data-editorshotkeep
-            onClick={() => {
-              const url = shotReady;
-              void (async () => {
-                try {
-                  const got = await fetch(url);
-                  const blob = await got.blob();
-                  const file = new File([blob], 'made-shot.mp4', { type: blob.type || 'video/mp4' });
-                  await bringIn([file], 'made');
-                  setShotReady(null);
-                  setShotSaid(t('edit.shotOnClock', 'On the clock. Draw another frame to make the next one.'));
-                } catch {
-                  setShotSaid(t('edit.shotNoKeep', 'That clip could not be put on the clock. It is still in your videos.'));
-                }
-              })();
-            }}
+            onClick={() => { void keepShot(); }}
             className={SMALL}
           >
             {t('edit.shotKeep', 'Put it on the clock')}
@@ -5997,6 +6103,33 @@ async function smallerFrame(url: string): Promise<string> {
            and then not found for exactly that reason. */
         waiting={(piece && lyrics[piece.id]?.length) || sungIsGood ? 'words' : null}
       >
+        {bench === 'characters' && (
+          <CharacterBench
+            onPut={(what) => { void putCharacter(what); }}
+            castFull={cast.length >= CAST_LIMIT}
+          />
+        )}
+
+        {bench === 'restyle' && piece && (
+          <RestyleBench
+            pieceId={piece.id}
+            pieceName={piece.name}
+            where={seconds(at)}
+            pieceSeconds={lengthOfPiece(piece)}
+            grab={grabHere}
+            grabEnd={grabEndOf}
+            /* Any live job holds its button, whichever bench started it:
+               one clip at a time is being made, and a second press would
+               orphan the first one's poll. */
+            job={shotJob}
+            ready={shotBy === 'restyle' ? shotReady : null}
+            said={shotBy === 'restyle' ? shotSaid : ''}
+            moving={shotBusy === 'move'}
+            onMove={(move) => { void makeItMove(move); }}
+            onKeep={() => { void keepShot(); }}
+          />
+        )}
+
         {bench === 'folder' && (
           <div className="space-y-3">
           <Note>

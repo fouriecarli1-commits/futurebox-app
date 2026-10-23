@@ -1167,6 +1167,24 @@ export function add(edit: Edit, piece: Piece): Edit {
 }
 
 /**
+ * A piece put straight after another one.
+ *
+ * For a shot that is a new version of one already on the clock — a scene
+ * restyled into another world. It belongs beside the shot it was made from,
+ * where she can play one against the other and drop whichever she does not
+ * want, not at the end of a three-minute film where she has to go and find
+ * it. An `after` that is no longer there (she deleted the original while the
+ * new one was being made) puts it at the end, like `add`.
+ */
+export function addAfter(edit: Edit, piece: Piece, after: string): Edit {
+  if (!edit.pieces.some((one) => one.id === after)) return add(edit, piece);
+  return {
+    ...edit,
+    pieces: edit.pieces.flatMap((one) => (one.id === after ? [one, piece] : [one])),
+  };
+}
+
+/**
  * One edge of a piece's window, moved.
  *
  * `at` is a position in the FILE, because that is what an edge of a window is —
