@@ -260,7 +260,6 @@ const CHECK_LIGHT = '#e7e7ea';
 const CHECK_DARK = '#c8c8ce';
 
 /** The least height a tool's controls get under the photo on a phone. */
-const UNDER_LEAST = 200;
 
 /** The least height a bar that acts on the photograph gets on a phone. */
 const STRIP_LEAST = 170;
@@ -6894,8 +6893,13 @@ export default function PostStudio({
                 if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
               }}
               onPointerCancel={() => { pixelDown.current = false; pixelLast.current = null; }}
-              className="w-full rounded-xl border border-zinc-800"
-              style={{ touchAction: 'none', cursor: 'crosshair' }}
+              /* Fits the docked panel's height (23 October 2026) rather than
+                 the column's width: a square pad as wide as the column was
+                 taller than the panel, and the half under its edge could not
+                 be rubbed. Width follows from the height, so the pad keeps
+                 the picture's shape and every part of it is in reach. */
+              className="mx-auto max-w-full rounded-xl border border-zinc-800"
+              style={{ touchAction: 'none', cursor: 'crosshair', maxHeight: 'min(30dvh, 240px)', width: 'auto' }}
             />
             <div className={RY}>
               <button type="button" data-postpixelreset onClick={() => { finishPixel(false); startPixel(); }} className={LEEG}>
@@ -9771,7 +9775,9 @@ export default function PostStudio({
       /* While a bar acts on the photograph on a phone, the photograph makes
          room for it, so none of it is under the bar — a story is as tall as
          the screen, and the bar lay over its foot. */
-      const keep = !upright ? 0 : stripsUp ? STRIP_LEAST + 4 : brushUp ? UNDER_LEAST + 4 : 0;
+      /* Nothing lies over the photograph any more (23 October 2026): the
+         panel is docked under it, so the stage's own box is all photo. */
+      const keep = 0;
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
       setFitted({ w, h: Math.floor(w / ratio), room: box.height });
@@ -10728,39 +10734,28 @@ export default function PostStudio({
               >
                 {toolSheet}
               </div>
-            ) : panelUp && (stripsUp || toolSheet || copilotSheet) && (
-              <div
-                data-postpop
-                data-postunder
-                /* The magic touch is aimed by tapping the photo, so the empty
-                   parts of the panel let a tap through to it where the two
-                   overlap; only its buttons and fields catch one. */
-                data-passthrough={bench === 'magic' || stripsUp ? 'yes' : undefined}
-                data-neon
-                className="absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col"
-                /* Up to the middle of the photograph. The owner, 15 October
-                   2026: "Die scrolling bar onder moet 'n bietjie groter.
-                   Beweeg die hele ding op tot in die middel van die
-                   prent." The photo sits at the top (pt-2, 8 pixels), so
-                   its middle is 8 + half its height down the stage. */
-                /* Not while a bar acts ON the photograph — picking a line or a
-                   thing out of it, cropping, tracing, moving words: then the
-                   whole photograph is what the thumb is for, and the bar keeps
-                   to the space under it. Grab's boxes in the lower half could
-                   not be tapped through a panel lying over them. */
-                style={{
-                  height: !fitted ? UNDER_LEAST
-                    : stripsUp ? Math.max(STRIP_LEAST, fitted.room - fitted.h - 20)
-                      : brushUp ? Math.max(UNDER_LEAST, fitted.room - fitted.h - 20)
-                      : Math.max(UNDER_LEAST, Math.round(fitted.room - 8 - fitted.h / 2)),
-                }}
-              >
-                {stripsUp
-                  ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
-                  : copilotSheet ?? toolSheet}
-              </div>
-            )}
+            ) : null}
           </div>
+          {/* ── The tool's controls, docked under the photograph ──────────
+              The owner, 23 October 2026: *"Die buttons gaan halfpad oor die
+              skerm en is deurskynend. Dis tans baie onprakties."* So the
+              panel is no longer laid over the photograph: it is a solid
+              bench under it, the photograph shrinks to sit above it, and
+              every button has a floor. The way every desk editor's phone
+              app does it — picture on top, a dark panel of controls below. */}
+          {panelUp && !(saveFull && toolSheet) && (stripsUp || toolSheet || copilotSheet) && (
+            <div
+              data-postpop
+              data-postunder
+              data-neon
+              className="flex min-h-0 shrink-0 flex-col"
+              style={{ height: stripsUp ? STRIP_LEAST + 4 : 'min(46dvh, 420px)' }}
+            >
+              {stripsUp
+                ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
+                : copilotSheet ?? toolSheet}
+            </div>
+          )}
           <nav
             data-cutdock=""
             data-cutbenchrow=""

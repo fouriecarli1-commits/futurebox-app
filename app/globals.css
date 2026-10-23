@@ -2065,12 +2065,12 @@ html[data-singing] [data-tabbar] { display: none !important; }
    button the photograph shows through. So the panel is frosted dark glass —
    the photograph still shows through it, blurred, so nothing jumps — and
    every button is solid, with the neon kept as its edge. */
+/* Solid since 23 October 2026 — the owner: "die buttons ... is deurskynend.
+   Dis tans baie onprakties." The panel is docked under the photograph now,
+   nothing shows through it, and the glass went with the overlap. */
 [data-postpop][data-neon] {
-  background: rgba(8, 11, 16, 0.76) !important;
-  backdrop-filter: blur(16px) saturate(1.1);
-  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  background: #0b0f14 !important;
   border-top: 1px solid rgba(57, 255, 20, 0.35);
-  border-radius: 18px 18px 0 0;
   padding: 6px 8px;
 }
 [data-postpop][data-neon] :is(div, section, aside, header, fieldset) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }

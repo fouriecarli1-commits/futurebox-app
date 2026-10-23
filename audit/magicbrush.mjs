@@ -261,8 +261,14 @@ try {
   await page.locator('[data-postpixelstart]').click();
   await page.waitForTimeout(300);
   check('the pixel eraser has Erase and Restore', (await page.locator('[data-postpixelmode]').count()) === 2);
-  const pad = await page.locator('[data-postpixelcanvas]').boundingBox();
+  /* Measured fresh for every sweep, after the pad is scrolled into view:
+     the pad sits in a docked panel now (23 October 2026) and pressing a
+     mode button can scroll its column, so a box taken once before the
+     presses pointed at where the pad used to be. */
   const sweep = async (fy, from, to) => {
+    const canvas = page.locator('[data-postpixelcanvas]');
+    await canvas.scrollIntoViewIfNeeded();
+    const pad = await canvas.boundingBox();
     await page.mouse.move(pad.x + pad.width * from, pad.y + pad.height * fy);
     await page.mouse.down();
     await page.mouse.move(pad.x + pad.width * to, pad.y + pad.height * fy, { steps: 8 });

@@ -46,15 +46,24 @@ try {
   await page.locator('[data-poststudio] input[type=file]').first().setInputFiles('public/welcome-cover.jpg');
   await page.waitForTimeout(1500);
 
-  /* ── The tools reach up to the middle of the photograph ─────────────── */
+  /* ── The tools sit UNDER the photograph, not over it ──────────────────
+     Until 23 October 2026 a tool's panel reached up to the middle of the
+     photograph. The owner, looking at it: "Die buttons gaan halfpad oor die
+     skerm en is deurskynend. Dis tans baie onprakties." So the panel is
+     docked below the picture now, solid, and the picture shrinks above it:
+     the two never overlap, and the photograph is still a photograph. */
   const reach = await page.evaluate(() => {
     const panel = document.querySelector('[data-postunder]')?.getBoundingClientRect();
     const photo = document.querySelector('[data-postcanvas]')?.getBoundingClientRect();
-    return panel && photo ? { top: panel.top, middle: photo.top + photo.height / 2, tall: panel.height } : null;
+    const bg = panel ? getComputedStyle(document.querySelector('[data-postunder]')).backgroundColor : '';
+    return panel && photo ? { top: panel.top, bottom: photo.bottom, tall: panel.height, photoTall: photo.height, bg } : null;
   });
-  check('a tool opens with its top at the middle of the photograph',
-    reach !== null && Math.abs(reach.top - reach.middle) <= 4,
+  check('a tool opens docked under the photograph, never over it',
+    !!reach && reach.top >= reach.bottom - 1 && reach.tall >= 170 && reach.photoTall >= 150,
     JSON.stringify(reach));
+  check('  and its panel is solid, not glass',
+    !!reach && !/rgba\([^)]*,\s*0?\.\d+\)/.test(reach.bg) && reach.bg !== 'rgba(0, 0, 0, 0)',
+    reach?.bg ?? 'no panel');
   await pic.click();
   await page.waitForTimeout(400);
 
