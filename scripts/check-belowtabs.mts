@@ -89,6 +89,12 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
     why: 'the sleep playlist’s dark screen over the kids page, which has no tab bar; a tap brings the room back',
     holds: (s) => /data-kidsdim/.test(s) && !/<TabBar/.test(s),
   },
+  /* The gallery wall, 23 October 2026: a kept piece opened big over the
+     kids page, with Save and the grown-up-gated bin. No tab bar there. */
+  'app/components/KidsGallery.tsx': {
+    why: 'a kept piece opened big over the kids page, which has no tab bar; Close and Back shut it',
+    holds: (s) => /data-kidspiecesheet/.test(s) && !/<TabBar/.test(s),
+  },
   'app/components/Landing.tsx': {
     why: 'the signed-out front door; the fixed layer is the ambient background, pointer-events-none',
     holds: (s) => /pointer-events-none fixed inset-0 z-0/.test(s) && !/<TabBar/.test(s),
@@ -240,6 +246,7 @@ const KNOWN: readonly string[] = [
   'app/components/ArtMarket.tsx',
   'app/components/KidsRoom.tsx',
   'app/components/KidsSleep.tsx',
+  'app/components/KidsGallery.tsx',
   'app/components/Landing.tsx',
   'app/components/OutOfCredits.tsx',
   /* The post studio, 6 October 2026. Written down rather than counted, so

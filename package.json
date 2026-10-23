@@ -507,6 +507,7 @@
     "check:reportwalk": "node audit/reports.mjs 3378",
     "check:kidsdrumwalk": "node audit/kidsdrums.mjs 3379",
     "check:kidseditwalk": "node audit/kidsedit.mjs 3380",
+    "check:kidsgallerywalk": "node audit/kidsgallery.mjs 3381",
     "check:photoscreen": "node audit/photo.mjs 3011",
     "check:cast": "node audit/cast.mjs 3015",
     "check:kitseach": "tsx scripts/check-kitseach.mts",
