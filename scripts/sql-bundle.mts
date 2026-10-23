@@ -127,6 +127,9 @@ export const ORDER = [
   /* Loops in the live jam room — one table, service_role alone, standing on
      `auth.users`. See the file's own header. */
   'liveloops',
+  /* Who is on the jam room's stage, as which character — one table,
+     service_role alone, standing on `auth.users`. See the file's own header. */
+  'livejammers',
   /* Cubed³ presenters — one table, service_role alone, and one private
      bucket for their videos and photographs. Stands on `auth.users` and the
      storage schema. See the file's own header. */
@@ -261,6 +264,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
   liveloops:
     'Loops in die live jam room: een ry per persoon wat nou loop, met die loop self daarin. Terwyl iemand loop, pols \u2019n plussie op almal anders se skerm, en ’n druk daarop sit daardie loop in jou eie. Sonder dit werk die looper steeds op jou eie toestel, maar niemand in die kamer sien jou loop nie.',
+  livejammers:
+    'Wie op die jam room se verhoog is, en as watter karakter: een ry per persoon wat nou in die kamer is, met die karakter en kleur wat hulle gekies het. Sonder dit beweeg jou karakter steeds op jou eie toestel, maar niemand in die kamer sien jou op die verhoog nie.',
   cubedhosts:
     'Die Cubed³-aanbieders se registrasies: een ry per uitnodiging met hulle besonderhede, handtekening en wanneer hulle geteken het, en ’n privaat emmer vir hulle video’s en foto’s. Sonder dit maak die eienaar se aanbieder-inkassie nie skakels nie en kan ’n aanbieder nie registreer of oplaai nie.',
   designs:

@@ -1894,6 +1894,12 @@ jobs:
       - name: A loop from the room is cleaned before it is kept
         run: npm run check:looper
 
+      # The jam room's characters: somebody hides completely behind one. A
+      # look is two words from fixed lists, nothing asks for a camera, the
+      # name on a tile is the server's, and the character moves to the bus.
+      - name: Nobody in the jam room is shown but as their character
+        run: npm run check:jamcharacters
+
       # The compressor every way out shares: a file is made to fit the size
       # chosen, quality first and pixels only when it must.
       - name: A file is made to fit the size she chose
