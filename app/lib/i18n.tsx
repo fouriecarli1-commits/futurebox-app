@@ -764,7 +764,7 @@ export const STRINGS: Dict = {
   "canvas.pickWhat": { en: "a kind of video to start from", af: "’n soort video om mee te begin" },
   "video.pickWhat": { en: "a look for this music video", af: "’n voorkoms vir hierdie musiekvideo" },
   "cost.free": { en: "No credits", af: "Geen krediete" },
-  "rail.campaign": { en: "Adverts", af: "Advertensies" },
+  "rail.campaign": { en: "Adverts", af: "Adver\u00ADtensies" },
   "rail.campaign.hint": { en: "Written, then filmed", af: "Geskryf, dan verfilm" },
   "rail.albumart": { en: "Album art", af: "Album kunswerk" },
   /* Her words, 20 September 2026: *"Album kunswerk. Regte kunstenaars,
@@ -2352,6 +2352,10 @@ export const STRINGS: Dict = {
   "post.whole": { en: "The whole picture", af: "Die hele prent" },
   "post.centre": { en: "Centre it", af: "Sit dit in die middel" },
   "post.closer": { en: "How close", af: "Hoe naby" },
+  "post.dragLoose": {
+    en: "The whole picture is loose: drag it anywhere in the frame, and slide How close to make it bigger or smaller.",
+    af: "Die hele prent is los: sleep dit enige plek in die raam, en skuif Hoe naby om dit groter of kleiner te maak.",
+  },
   "post.dragIt": { en: "Drag the picture above to choose what shows.", af: "Sleep die prent hierbo om te kies wat wys." },
   "post.noDrag": { en: "The whole picture fits, so there is nothing to move. Go closer to choose a part of it.", af: "Die hele prent pas, so daar is niks om te skuif nie. Gaan nader om \u2019n deel daarvan te kies." },
   "post.gap": { en: "Some of the frame is background rather than photograph. That is what \u201cthe whole picture\u201d does \u2014 with the background off, it is the picture on nothing.", af: "Van die raam is agtergrond eerder as foto. Dit is wat \u201cdie hele prent\u201d doen \u2014 met die agtergrond af is dit die prent op niks." },
@@ -2682,9 +2686,16 @@ export const STRINGS: Dict = {
     en: "Could not reach the app\u2019s server. Check your connection and try again.",
     af: "Kon nie by die toep se bediener uitkom nie. Kyk na jou verbinding en probeer weer.",
   },
-  "rail.sound": { en: "Sound trainer", af: "Klankafrigter" },
+  "rail.sound": { en: "Sound trainer", af: "Klank\u00ADafrigter" },
   "rail.sound.hint": { en: "Train your sound and vibe, and stay consistent", af: "Rig jou klank en gevoel af, en bly konsekwent" },
-  "rail.voice": { en: "Voice cloning", af: "Stemkloning" },
+  /* The soft hyphens (U+00AD) in the room names below are where a name MAY
+     break on a narrow tile, with a hyphen drawn: Afrikaans builds compounds,
+     and the owner's phone, a notch above the default text size, showed
+     "Stemkloni / ng" and "Videolesse / naar" — `break-words` had broken them
+     wherever it ran out of room. Invisible unless the break is needed.
+     `audit/afwrap.mjs` walks every door and room for the next one. Probes
+     that read a room's name through `toRoom` strip the character. */
+  "rail.voice": { en: "Voice cloning", af: "Stem\u00ADkloning" },
   "rail.voice.hint": { en: "Clone it once, use it anywhere", af: "Kloon dit een keer, gebruik dit oral" },
   "rail.director": { en: "Director", af: "Regisseur" },
   "rail.director.hint": { en: "Build and publish", af: "Bou en sit uit" },
@@ -3633,7 +3644,7 @@ export const STRINGS: Dict = {
   "mc.ours": { en: "Ours", af: "Ons s’n" },
   "mc.aiMade": { en: "AI-made", af: "AI-gemaak" },
   "mc.comingSoon": { en: "coming soon", af: "kom binnekort" },
-  "rail.video": { en: "Music video", af: "Musiekvideo" },
+  "rail.video": { en: "Music video", af: "Musiek\u00ADvideo" },
   "tab.nav": { en: "The five parts of the app", af: "Die vyf dele van die toep" },
   "board.look": { en: "How the whole film looks", af: "Hoe die hele film lyk" },
   "board.lookHint": { en: "Warm evening light, shot on film, slow camera", af: "Warm aandlig, op film geskiet, stadige kamera" },
@@ -3669,14 +3680,14 @@ export const STRINGS: Dict = {
   "tab.make": { en: "Make", af: "Maak" },
   "tab.library": { en: "Channel", af: "Kanaal" },
   "tab.you": { en: "You", af: "Jy" },
-  "rail.canvas": { en: "Video desk", af: "Videolessenaar" },
+  "rail.canvas": { en: "Video desk", af: "Video\u00ADlessenaar" },
   "rail.canvas.hint": { en: "Adverts, podcasts, social", af: "Advertensies, potgooie, sosiaal" },
   /* The cutting room. "Video editor" was the obvious name and the wrong one:
      the room next door is already called the Video desk, and two rooms whose
      names both start with "Video" is how somebody ends up in the one they did
      not mean. A cutting room is what it is, and what every editor has been
      called since film was film. */
-  "rail.videoedit": { en: "Video Editor", af: "Video-redigeerder" },
+  "rail.videoedit": { en: "Video Editor", af: "Video-redi\u00ADgeerder" },
   "rail.photo": { en: "Photo Editor", af: "Foto Editor" },
   "rail.photo.hint": { en: "Stills for social, with words on them", af: "Stille vir sosiaal, met woorde daarop" },
   "rail.videoedit.hint": { en: "Your own footage, on a clock", af: "Jou eie opnames, op \u2019n klok" },

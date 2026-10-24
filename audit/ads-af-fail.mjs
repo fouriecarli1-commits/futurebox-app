@@ -18,7 +18,7 @@ await p.waitForTimeout(2500);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: /^Advertensies/ }).first().click();
+await room.locator('button').filter({ hasText: /^Adver\u00AD?tensies/ }).first().click();
 await p.waitForTimeout(1500);
 
 await room.locator('#ads-what').fill('n Bakkery in Bellville. Suurdeeg, ses dae oop.');

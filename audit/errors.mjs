@@ -94,7 +94,7 @@ try {
      one. */
   const CASES = [
     { name: 'Make a song', room: /^Maak .n liedjie/, button: /Skryf die volgende stuk/ },
-    { name: 'Adverts', room: /^Advertensies/, button: /Skryf die advertensies/ },
+    { name: 'Adverts', room: /^Adver\u00AD?tensies/, button: /Skryf die advertensies/ },
   ];
 
   for (const { name, room: where, button } of CASES) {

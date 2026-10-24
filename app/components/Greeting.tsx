@@ -262,12 +262,18 @@ export default function Greeting({
            Since 20 October 2026 the glass is the futuristic look's tile
            (`fb-fx-tile`): the same tinted glass, with a light-line edge, and
            the icon in a round glowing lens. */
-        className="fb-fx-tile group min-h-[44px] w-full rounded-2xl border px-4 py-3.5 text-left transition-all flex items-start gap-3 backdrop-blur-xs lg:min-h-[128px] lg:flex-col lg:gap-4 lg:p-5"
+        className="fb-fx-tile group min-h-[44px] w-full rounded-2xl border px-4 py-3.5 text-left transition-all flex flex-col items-start gap-2 backdrop-blur-xs sm:flex-row sm:gap-3 lg:min-h-[128px] lg:flex-col lg:gap-4 lg:p-5"
       >
+        {/* ── The lens above the name on a phone, beside it from `sm` up ──
+            The owner, 24 October 2026, with a photograph of this door on her
+            phone at its "Large" text size: *"Die woorde pas nie op een plek in
+            nie. Dit is nie reg nie."* Beside the lens, the name had sixty
+            pixels on a 360-pixel phone and "Studio" broke in two. Above it,
+            the name has the whole tile. */}
         <span className="fb-fx-lens mt-0.5 grid h-9 w-9 shrink-0 place-items-center border transition-all group-hover:scale-105 lg:h-12 lg:w-12">
           <Icon className="h-[18px] w-[18px] text-emerald-400 lg:h-6 lg:w-6" />
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="w-full min-w-0 sm:flex-1">
           {/* Wraps. It was `truncate`, and two rooms out of eleven had names
               longer than half a 390-pixel screen: the owner's photograph shows
               "Sound trai…" and "Make a so…" on a door whose whole job is to

@@ -111,7 +111,7 @@ const doorRooms = p.locator('div.fixed.inset-0.z-\\[55\\] button');
 const manyDoors = await doorRooms.count();
 for (let i = 0; i < manyDoors; i += 1) {
   const first = ((await doorRooms.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
-  if (/^Advertensies/i.test(first)) {
+  if (/^Adver\u00AD?tensies/i.test(first)) {
     await doorRooms.nth(i).click();
     break;
   }
@@ -121,7 +121,7 @@ await p.waitForTimeout(1600);
 const room = p.locator('div.fixed.inset-0.z-50').first();
 
 // The rail entry is Afrikaans now, so find it by its Afrikaans name.
-const entry = room.locator('button').filter({ hasText: /^Advertensies/ });
+const entry = room.locator('button').filter({ hasText: /^Adver\u00AD?tensies/ });
 if (await entry.count()) {
   await entry.first().click();
   await p.waitForTimeout(1600);
@@ -137,7 +137,7 @@ const text = await room.innerText();
 
 // ── Every string this room should be showing in Afrikaans ────────────────
 const WANT = [
-  ['heading',        /Advertensies/],
+  ['heading',        /Adver\u00AD?tensies/],
   ['what it does',   /Sê wat jy verkoop/],
   ['step 1',         /Sê wat jy verkoop|Sê wat jy verkoop/],
   ['step 2',         /Dit skryf die advertensies/],

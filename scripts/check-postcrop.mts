@@ -32,7 +32,7 @@
  */
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN,
-  canMove, moveBy, place, showsThrough, type Crop, type Size,
+  canMove, KEEP_INSIDE, moveBy, place, showsThrough, type Crop, type Size,
 } from '../app/lib/postcrop';
 
 let bad = 0;
@@ -150,25 +150,31 @@ ok('  and it CAN be dragged, because a small picture has room inside the frame',
   'nailed to the middle, a picture smaller than the frame can only ever be a'
   + ' small picture in the middle, which is not a layout anybody chose');
 
+/* ── Loose, since 24 October 2026 ───────────────────────────────────────
+   The owner: *"Edit whole picture moes die prent losmaak dat mens die hele
+   prent reg kon trek."* So the invariant moved once more: the whole picture
+   may be pushed past the frame's edge, but never out of it — a quarter of
+   it, measured against the smaller of picture and frame, is always still
+   inside, whatever number the pan holds. */
 const shifted = MAD.map((one) => place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: one, y: one }));
-const held = shifted.filter((one) => one.left < -0.5 || one.top < -0.5
-  || one.left + one.width > STORY.width + 0.5
-  || one.top + one.height > STORY.height + 0.5);
-ok('    and no pan value can push it outside the frame',
-  held.length === 0,
-  held.map((one) => `${Math.round(one.left)},${Math.round(one.top)} `
+const gone = shifted.filter((one) => one.left + one.width < Math.min(STORY.width, one.width) * KEEP_INSIDE - 0.5
+  || one.left > STORY.width - Math.min(STORY.width, one.width) * KEEP_INSIDE + 0.5
+  || one.top + one.height < Math.min(STORY.height, one.height) * KEEP_INSIDE - 0.5
+  || one.top > STORY.height - Math.min(STORY.height, one.height) * KEEP_INSIDE + 0.5);
+ok('    and no pan value can push the loose picture out of the frame',
+  gone.length === 0,
+  gone.map((one) => `${Math.round(one.left)},${Math.round(one.top)} `
     + `${Math.round(one.width)}x${Math.round(one.height)}`).join(' | ')
-  + ` in ${STORY.width}x${STORY.height} — a pan that means more than the room`
-  + ' there is, is a picture half off the edge of a post');
-
-/* And it reaches the edge, rather than stopping somewhere short of it: a
-   pan of 1 is "as far as it goes", and a small picture's as-far-as-it-goes
-   is its own edge against the frame's. */
+  + ` in ${STORY.width}x${STORY.height} — a quarter of it must still be inside`);
 const corner = place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: -1, y: -1 });
-ok('    and a pan of one really reaches the edge',
-  near(corner.left, 0) && near(corner.top, 0),
-  `${Math.round(corner.left)},${Math.round(corner.top)} — stopping short means`
-  + ' a corner of the frame she can never put the picture into');
+ok('    and a pan of one goes past the edge, leaving a quarter inside',
+  corner.left < -0.5 && near(corner.left + corner.width, Math.min(STORY.width, corner.width) * KEEP_INSIDE)
+  && near(corner.top + corner.height, Math.min(STORY.height, corner.height) * KEEP_INSIDE),
+  `${Math.round(corner.left)},${Math.round(corner.top)} — the picture is loose, so the`
+  + ' edge of the frame is not where it stops');
+const centred = place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: 0, y: 0 });
+ok('    and with no pan it sits in the middle, as it always did',
+  near(centred.left, (STORY.width - centred.width) / 2) && near(centred.top, (STORY.height - centred.height) / 2));
 
 /* ── Zoom is a multiple of the basis, in both bases ─────────────────────── */
 

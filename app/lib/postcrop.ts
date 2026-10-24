@@ -66,6 +66,8 @@
 export const ZOOM_MIN = 0.2;
 export const ZOOM_MAX = 4;
 export const ZOOM_STEP = 0.05;
+/** How much of a loose picture must stay inside the frame, as a share of the smaller of the two. */
+export const KEEP_INSIDE = 0.25;
 
 export type Basis = 'fill' | 'whole';
 
@@ -158,8 +160,20 @@ export function place(picture: Size, frame: Size, crop: Crop): Placed {
      it is the smaller — and neither can be pushed past that. The pan is
      still a share of whatever room there happens to be, so there is still no
      stored number that can be out of range. */
-  const slackX = Math.abs(width - frame.width) / 2;
-  const slackY = Math.abs(height - frame.height) / 2;
+  /* ── And "the whole picture" is loose ─────────────────────────────────
+     The owner, 24 October 2026: *"Ek dink Edit whole picture moes die prent
+     losmaak dat mens die hele prent reg kon trek."* With the frame no
+     longer having to stay covered, the picture is a thing laid on a sheet:
+     it may be pushed until only a quarter of it is still inside, in either
+     direction, and the pan is still a share of that room. `fill` keeps the
+     old slack, because there the frame IS what must stay covered. */
+  const loose = crop.basis === 'whole';
+  const slackX = loose
+    ? (frame.width + width) / 2 - Math.min(frame.width, width) * KEEP_INSIDE
+    : Math.abs(width - frame.width) / 2;
+  const slackY = loose
+    ? (frame.height + height) / 2 - Math.min(frame.height, height) * KEEP_INSIDE
+    : Math.abs(height - frame.height) / 2;
 
   return {
     left: (frame.width - width) / 2 + held(crop.x, -1, 1) * slackX,

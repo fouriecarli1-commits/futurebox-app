@@ -581,7 +581,8 @@ export async function toRoom(page, name, { folded = false } = {}) {
   const firstLineIs = async (buttons) => {
     const many = await buttons.count();
     for (let i = 0; i < many; i += 1) {
-      const first = ((await buttons.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
+      /* Soft hyphens are where a long Afrikaans name may break on a tile; they are not part of the name. */
+      const first = ((await buttons.nth(i).innerText().catch(() => '')) ?? '').replace(/\u00AD/g, '').split('\n')[0].trim();
       if (first.toLowerCase().startsWith(name.toLowerCase())) return buttons.nth(i);
     }
     return null;

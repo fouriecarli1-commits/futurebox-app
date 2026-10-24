@@ -7270,7 +7270,10 @@ export default function PostStudio({
           <button
             type="button"
             data-postcentre
-            onClick={() => setCrop((was) => ({ ...was, zoom: ZOOM_MIN, x: 0, y: 0 }))}
+            /* At one, not at the floor: this said `ZOOM_MIN`, which was one
+               until shrinking was allowed and then quietly became a fifth —
+               so "Centre it" shrank the picture to a stamp. */
+            onClick={() => setCrop((was) => ({ ...was, zoom: 1, x: 0, y: 0 }))}
             className={LEEG}
           >
             {t('post.centre', 'Centre it')}
@@ -7297,9 +7300,11 @@ export default function PostStudio({
         </label>
 
         <p className="text-[12px] leading-relaxed text-zinc-500">
-          {movable
-            ? t('post.dragIt', 'Drag the picture above to choose what shows.')
-            : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}
+          {crop.basis === 'whole'
+            ? t('post.dragLoose', 'The whole picture is loose: drag it anywhere in the frame, and slide How close to make it bigger or smaller.')
+            : movable
+              ? t('post.dragIt', 'Drag the picture above to choose what shows.')
+              : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}
         </p>
 
         {gaps && (
