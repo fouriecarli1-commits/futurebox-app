@@ -1844,7 +1844,10 @@ export default function MakeMusic({
                 button until the words read as Afrikaans. It used to appear
                 only once the box held enough Afrikaans to be recognised, so
                 the owner, in a collab room, could not find it at all. */}
-            {singWanted !== 'en' && !singItYourself && (
+            {/* On every song, whatever language it is set to: the owner, 24
+                October 2026, still could not find it with the box set to
+                English. The button names what it is for. */}
+            {!singItYourself && (
               <SayItFirst
                 folded={!(looksAfrikaans(lyrics) || singWanted === 'af')}
                 lyrics={lyrics}

@@ -26,7 +26,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Info, Loader2, Mic, RotateCcw, Send, Sparkles, Square, Trash2, Volume2, X } from 'lucide-react';
+import { Check, Info, Loader2, Mic, Pause, RotateCcw, Send, Sparkles, Square, Trash2, Volume2, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import { splitSections } from '../lib/engines';
@@ -70,6 +70,11 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
   const [take, setTake] = useState<{ blob: Blob; url: string } | null>(null);
   const [startedAt, setStartedAt] = useState(0);
   const [now, setNow] = useState(0);
+  /* A pause in the reading: the recorder holds, the clock holds, and the
+     take is one file when it ends. Asked for by name on 24 October 2026. */
+  const [paused, setPaused] = useState(false);
+  const pausedFor = useRef(0);
+  const pausedAt = useRef(0);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
 
@@ -77,7 +82,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
   useEffect(() => () => { if (take) URL.revokeObjectURL(take.url); }, [take]);
   /* The clock on the recording, once a quarter second. */
   useEffect(() => {
-    if (stage !== 'recording') return undefined;
+    if (stage !== 'recording' || paused) return undefined;
     const every = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(every);
   }, [stage]);
@@ -105,15 +110,13 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
   const lines = sungLinesOf(lyrics);
   const covered = lines.filter((line) => sayAs?.[line]);
 
-  if (folded && !opened && !covered.length) {
-    return (
-      <button type="button" data-sayasopen onClick={() => setOpened(true)} className="mt-3 flex min-h-[44px] w-full items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 text-left text-sm font-semibold text-emerald-200">
-        <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
-        {t('sayas.folded', 'Singing in Afrikaans? Read your words aloud first, so they are sung the way you say them')}
-      </button>
-    );
-  }
-  if (!lines.length) {
+  const openSheet = (): void => {
+    setProblem('');
+    setStage(covered.length === lines.length && covered.length ? 'done' : 'ready');
+    setSheet(true);
+  };
+
+  if (!lines.length && !(folded && !opened)) {
     return (
       <p data-sayas data-sayasempty className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 text-sm text-zinc-300">
         <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
@@ -121,12 +124,6 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
       </p>
     );
   }
-
-  const openSheet = (): void => {
-    setProblem('');
-    setStage(covered.length === lines.length && covered.length ? 'done' : 'ready');
-    setSheet(true);
-  };
 
   const start = async (): Promise<void> => {
     setProblem('');
@@ -149,6 +146,8 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
       };
       recorder.current = made;
       made.start();
+      pausedFor.current = 0;
+      setPaused(false);
       setStartedAt(Date.now());
       setNow(Date.now());
       setStage('recording');
@@ -157,8 +156,22 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
     }
   };
   const stop = (): void => {
+    if (paused) { pausedFor.current += Date.now() - pausedAt.current; setPaused(false); }
     recorder.current?.stop();
     recorder.current = null;
+  };
+  const holdOrGo = (): void => {
+    const made = recorder.current;
+    if (!made) return;
+    if (made.state === 'recording') {
+      made.pause();
+      pausedAt.current = Date.now();
+      setPaused(true);
+    } else if (made.state === 'paused') {
+      made.resume();
+      pausedFor.current += Date.now() - pausedAt.current;
+      setPaused(false);
+    }
   };
 
   const submit = async (): Promise<void> => {
@@ -244,7 +257,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
 
         {stage === 'ready' && (
           <>
-            <p className="text-center text-sm text-zinc-400">{t('sayas.sheetReady', 'Read every line once, from the top, speaking normally. Press stop after the last line.')}</p>
+            <p className="text-center text-sm text-zinc-300">{t('sayas.readSpeed', 'Read the words at your normal talking speed, the way you say them. Each line is written down as you said it and that is what the singer sings. Press Stop after the last line.')}</p>
             <button type="button" data-sayasrecord disabled={!canWrite} onClick={() => { void start(); }} className={`${BIG} w-full bg-rose-500 text-white disabled:opacity-50`}>
               <Mic className="h-5 w-5" /> {t('sayas.record', 'Start recording')}
             </button>
@@ -255,11 +268,17 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
           <>
             <p className="flex items-center justify-center gap-2 text-sm font-bold text-rose-300" data-sayasclock>
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" aria-hidden />
-              {t('sayas.recordingNow', 'Recording')} · {clock(Math.max(0, now - startedAt))}
+              {paused ? t('sayas.pausedNow', 'Paused') : t('sayas.recordingNow', 'Recording')} · {clock(Math.max(0, (paused ? pausedAt.current : now) - startedAt - pausedFor.current))}
             </p>
-            <button type="button" data-sayasstop onClick={stop} className={`${BIG} w-full border border-rose-400 bg-zinc-900 text-rose-100`}>
-              <Square className="h-5 w-5" fill="currentColor" /> {t('sayas.stop', 'Stop — I have read it all')}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" data-sayaspause aria-pressed={paused} onClick={holdOrGo} className={`${BIG} border border-zinc-600 bg-zinc-900 text-zinc-100`}>
+                {paused ? <Mic className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+                {paused ? t('sayas.resume', 'Carry on') : t('sayas.pause', 'Pause')}
+              </button>
+              <button type="button" data-sayasstop onClick={stop} className={`${BIG} border border-rose-400 bg-zinc-900 text-rose-100`}>
+                <Square className="h-5 w-5" fill="currentColor" /> {t('sayas.stop', 'Stop — I have read it all')}
+              </button>
+            </div>
           </>
         )}
 
@@ -305,6 +324,28 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
     document.body,
   ) : null;
 
+  /* One button that says what it does. The owner, 24 October 2026: *"I still
+     cannot see a place where to record lyrics in afrikaans ... Its must say
+     something like: Record Afrikaans lyrics."* The folded line used to be a
+     sentence that unfolded into a card with the button on it — two presses
+     and a riddle. Now the first press is the recording screen. */
+  if (folded && !opened && !covered.length) {
+    return (
+      <>
+        <button
+          type="button"
+          data-sayasopen
+          data-sayasbegin={lines.length ? '' : undefined}
+          onClick={() => { setOpened(true); if (lines.length) openSheet(); }}
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-rose-500 px-4 text-sm font-extrabold text-white"
+        >
+          <Mic className="h-5 w-5 shrink-0" />
+          {t('sayas.recordAf', 'Record Afrikaans lyrics')}
+        </button>
+        {sheet ? screen : null}
+      </>
+    );
+  }
   return (
     <div data-sayas className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5">
       <p className="flex items-center gap-2 text-sm font-bold text-zinc-100">
@@ -318,7 +359,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" data-sayasbegin onClick={openSheet} className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-rose-500 px-4 text-sm font-bold text-white">
             <Mic className="h-4 w-4" />
-            {covered.length ? t('sayas.againOpen', 'Read it again') : t('sayas.openSheet', 'Open the recording screen')}
+            {covered.length ? t('sayas.againOpen', 'Read it again') : t('sayas.recordAf', 'Record Afrikaans lyrics')}
           </button>
           {covered.length > 0 && (
             <button type="button" data-sayasclear onClick={() => onSayAs(undefined)} className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300">

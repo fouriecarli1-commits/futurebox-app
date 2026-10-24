@@ -59,6 +59,11 @@ try {
   await page.locator('[data-sayasclock]').waitFor({ state: 'visible', timeout: 5000 });
   await page.waitForTimeout(1600);
   check('  and recording shows a running clock', /0:0[1-9]/.test((await page.locator('[data-sayasclock]').textContent()) ?? ''));
+  await page.locator('[data-sayaspause]').click();
+  await page.waitForTimeout(700);
+  check('  and Pause holds the clock', (await page.locator('[data-sayaspause]').getAttribute('aria-pressed')) === 'true');
+  await page.locator('[data-sayaspause]').click();
+  await page.waitForTimeout(400);
   await page.locator('[data-sayasstop]').click();
   await page.locator('[data-sayastake]').waitFor({ state: 'visible', timeout: 5000 });
   check('  and stopping offers the take to listen back to', (await page.locator('[data-sayastake]').count()) === 1);
