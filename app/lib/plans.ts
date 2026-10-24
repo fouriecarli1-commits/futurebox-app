@@ -114,7 +114,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        device, costing nobody anything — and that has no allowance and never
        needed one. */
     videos: 0,
-    who: 'Everything your own phone can make, without limit and without paying.',
+    who: 'Everything your own phone can make, without limit and without paying — and 10 welcome credits to take one real thing out.',
     /* No generated music on the free tier either, since 8 September 2026.
 
        It was two half songs. ElevenLabs' real prices — $0.15 a minute, half
@@ -129,7 +129,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        part people stay for. */
     includes: [
       'Unlimited browser sketches — real audio and real video, made on your own device',
-      'The recording booth: sing and record as many takes as you like. Keeping a mixed take is 3 credits a minute, from a plan\u2019s credits — this plan holds none',
+      'The recording booth: sing and record as many takes as you like. Keeping a mixed take is 3 credits a minute. This plan holds no monthly credits; your 10 welcome credits, or a pack, pay for it',
       'Hooks, the timeline and the radar',
       'Style previews, so you can hear a sound before you buy anything',
       'A generated song is on a plan — every one of them costs real money to make',
@@ -169,12 +169,12 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Booth is open on every plan — record, sing over a track, as many takes as you like; keeping a mixed take is 3 credits a minute. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 3 credits a minute too.',
-      'The Video Editor is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and included, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6. This plan holds no credits, so you can build and try everything here, and the film waits for you.',
+      'The Video Editor is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and included, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6. This plan holds no monthly credits, so you can build and try everything here; your 10 welcome credits put a short film together, and after that a pack does.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 15 credits, eight advert lines 40.',
       'Dubbing an episode into another language is the dearest thing here: 110 credits a minute, so it needs Studio or Label.',
       /* The owner, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
-      'The Photo Editor is open on this plan too — crop, tone, words, shapes, templates and the background remover, all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits, and this plan holds none, so the picture waits for you.',
+      'The Photo Editor is open on this plan too — crop, tone, words, shapes, templates and the background remover, all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits — two of them from your 10 welcome credits, and a pack after that.',
       '1 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },

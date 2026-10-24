@@ -20,7 +20,7 @@
 
 import { admin, callerById, callerFrom, callerIsOwner, metered, type Caller } from './account';
 import { wrote } from './wrote';
-import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
+import { budgetFor, capFor, monthKey, TIER_CREDITS, WELCOME_CREDITS } from '@/app/lib/credits';
 import { kidsRelease, kidsSpend, kidsWalletReturn, kidsWalletTake } from './kidsmode';
 import { splitOf, type Share } from '@/app/lib/paysplit';
 
@@ -131,6 +131,21 @@ export async function settle(caller: Caller): Promise<number | null> {
   // What may be handed over this month across every grant, so that calling
   // this on every visit cannot become a second month's worth.
   const budget = budgetFor(caller.tier);
+
+  /* The once-off welcome, before the month: see `WELCOME_CREDITS`. The period
+     key is what makes it once; the cap is set out of the way, because a
+     welcome is owed whatever the balance is — a member who bought a pack on
+     day one is not thereby owed less. It is not 'monthly', so the budget
+     below does not count it. */
+  const welcome = await client.rpc('grant_credits', {
+    p_owner: caller.id,
+    p_amount: WELCOME_CREDITS,
+    p_reason: 'welcome',
+    p_period: 'welcome',
+    p_cap: 1_000_000_000,
+    p_budget: null,
+  });
+  if (welcome.error) return null;
 
   const monthly = await client.rpc('grant_credits', {
     p_owner: caller.id,

@@ -1374,6 +1374,26 @@ export const TIER_CREDITS: Record<Tier, number> = {
  * through it in a day. On a paid tier the cap is three months of the
  * allowance, which nobody reaches by using the product normally.
  */
+/**
+ * Credits handed to every account once, the first time it is seen.
+ *
+ * The owner, 24 October 2026, while filling in the Play Store listing:
+ * *"kom ons gee die free tier 'n bietjie free credits."* The free tier still
+ * carries no MONTHLY credits — `TIER_CREDITS.free` stays nought and
+ * `check:editorgate` holds it there — because a monthly gift is a monthly
+ * bill. This is a once-off: enough for one song (8), or a finished picture
+ * (5) and a short film, so somebody can take one real thing out of the app
+ * before deciding on a plan. Ten credits is about R5 of supplier time at the
+ * most, once, per account.
+ *
+ * The ledger makes it once: the grant carries the period key `welcome`, and
+ * the unique index on (owner, period) makes a second one a no-op. An account
+ * deleted and made again is a new owner and gets it again; that is the price
+ * of a deletion that really deletes, and ten credits is a price worth paying
+ * for that.
+ */
+export const WELCOME_CREDITS = 10;
+
 export function capFor(tier: Tier): number {
   return tier === 'free' ? TIER_CREDITS.free : TIER_CREDITS[tier] * 3;
 }

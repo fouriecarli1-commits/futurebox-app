@@ -36,14 +36,14 @@ export const metadata = {
    Music API terms 2(D) require a privacy policy that says how information is
    shared "including with ElevenLabs and third parties". Naming them in a
    list of suppliers was most of the way there; it was not all of it. */
-const UPDATED = '18 October 2026';
+const UPDATED = '24 October 2026';
 
 /* Same as the terms: contact is a page, not an address. See the note there. */
 const CONTACT_PAGE = '/help';
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" id={id}>
       <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
       <div className="space-y-3 text-base text-zinc-300 leading-relaxed">{children}</div>
     </section>
@@ -61,6 +61,15 @@ export default function Privacy(): React.ReactElement {
           <h1 className="text-4xl font-black text-white tracking-tight">Privacy</h1>
           <p className="text-base text-zinc-400 leading-relaxed">
             What this app keeps, who else sees it, and how to have it deleted. Last updated {UPDATED}.
+          </p>
+          {/* Google Play's policy asks a privacy notice to name the entity
+              behind the listing; POPIA asks it to name the responsible
+              party. One sentence does both. The company name may be shown;
+              nothing further about the company is — see `lib/brand.ts`. */}
+          <p className="text-base text-zinc-400 leading-relaxed" data-privacyparty>
+            This notice is given by FUTUREBOXSTUDIO (Pty) Ltd, a South African company, which runs
+            FutureBox (the website at futurebox.studio and the FutureBox app on Google Play) and is
+            the responsible party for your personal information under POPIA.
           </p>
         </header>
 
@@ -183,7 +192,7 @@ export default function Privacy(): React.ReactElement {
           <p>The live visitor count keeps a random id your browser made up and a timestamp, for two minutes. It is not tied to your account and it disappears on its own.</p>
         </Section>
 
-        <Section title="Deleting it">
+        <Section title="Deleting it" id="delete">
           <p>You can clear the tally of what you make on your account screen, on its own, without deleting anything else — wanting the suggestions to stop is not the same as wanting the account gone, and only offering the second is not offering a choice.</p>
           <p>You can delete any song, any cloned voice and any trained sound from inside the app at any time. Deleting a voice or a sound removes it from ElevenLabs as well as from here — removing only our row would be hiding it, not deleting it.</p>
           <p>
