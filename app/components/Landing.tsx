@@ -168,11 +168,11 @@ export default function Landing({
       {/* ── Header ───────────────────────────────────────────────────── */}
       <header className={`sticky top-0 z-40 w-full ${GLASS} border-x-0 border-t-0`}>
         <div className={`${GUTTER} flex h-20 items-center justify-between gap-3`}>
-          <button type="button" onClick={to('top')} className="flex items-center gap-3 text-left">
+          <button type="button" onClick={to('top')} className="flex min-h-[44px] min-w-[44px] shrink-0 items-center gap-3 text-left">
             {/* The app icon's own tile (`scripts/icon.mjs`): green, lit, the
                 chip black. The owner, 13 October 2026: "die groen om die icon
                 moet brighter en neon wees, en die swart lyne bly swart". */}
-            <img src="/icon-chip-192.png" alt="" width={192} height={192} className="h-10 w-10 rounded-xl shadow-[0_0_18px_rgba(5,255,147,0.45)]" data-landingmark />
+            <img src="/icon-chip-192.png" alt="" width={192} height={192} className="h-10 w-10 shrink-0 rounded-xl shadow-[0_0_18px_rgba(5,255,147,0.45)]" data-landingmark />
             <span>
               {/* The word is hidden on a phone: beside the language switch
                   and the one button, 390 pixels holds the mark or the name,
