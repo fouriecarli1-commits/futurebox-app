@@ -180,14 +180,38 @@ const DEPTHS: readonly { readonly id: Depth; readonly label: readonly [string, s
   { id: 32, label: ['pro.depth32', '32-bit float'], note: ['pro.depth32Note', 'Nothing rounded and nothing clipped: a peak over full is kept to be turned down later. Twice the size of 16-bit.'] },
 ];
 
+/**
+ * The song's key as the rack's root: "A Minor" is A, "C# Major" is C#, and
+ * the spellings the rack does not use (D#, G#, A#, Db, Gb) are turned into
+ * the ones it does. Nothing for a key it cannot read.
+ */
+function rootOf(keyName: string | undefined): string | null {
+  const root = (keyName ?? '').trim().match(/^([A-Ga-g])\s*([#b♯♭]?)/);
+  if (!root) return null;
+  const spelled = `${root[1].toUpperCase()}${root[2] === '♯' ? '#' : root[2] === '♭' ? 'b' : root[2]}`;
+  const same: Record<string, string> = { 'D#': 'Eb', 'G#': 'Ab', 'A#': 'Bb', Db: 'C#', Gb: 'F#', Cb: 'B', Fb: 'E', 'E#': 'F', 'B#': 'C' };
+  const named = same[spelled] ?? spelled;
+  return (KEYS as readonly string[]).includes(named) ? named : null;
+}
+
 export default function ProBooth({
   title,
   songId,
   backing,
+  bpm,
+  keyName,
   onKeep,
   onClose,
 }: {
   title: string;
+  /**
+   * The song's own tempo and key, so the rack opens on them rather than on
+   * 120 and C. Seen on 24 October 2026: a 96 BPM song in A minor opened a
+   * studio reading "120 bpm · C", and every generated part and the click
+   * would have followed the wrong number until somebody noticed.
+   */
+  bpm?: number;
+  keyName?: string;
   /**
    * The song's own id, which is what the saved session is filed under.
    *
@@ -315,7 +339,11 @@ export default function ProBooth({
      It is here because a musician setting up a session writes it down, and
      because a lane brought in from elsewhere is easier to place when the
      session says what it is in. */
-  const [meter, setMeter] = useState<Meter>(DEFAULT_METER);
+  const [meter, setMeter] = useState<Meter>(() => sane({
+    ...DEFAULT_METER,
+    bpm: bpm && Number.isFinite(bpm) ? bpm : DEFAULT_METER.bpm,
+    key: rootOf(keyName) ?? DEFAULT_METER.key,
+  }));
   /* The markers on the ruler, in seconds, kept in order. Saved with the
      session — a marker that is gone after a reload is not a marker. */
   const [markers, setMarkers] = useState<number[]>([]);

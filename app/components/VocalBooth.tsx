@@ -1198,6 +1198,8 @@ export default function VocalBooth({
       <ProBooth
         title={track.title}
         songId={track.id}
+        bpm={track.bpm}
+        keyName={track.key}
         backing={backing}
         /* The lanes room says its own credits and its own take — see
            `onKeep` on ProBooth. This used to fill them from THIS room's
