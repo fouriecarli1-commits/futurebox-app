@@ -36,7 +36,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Baby, Check, Cpu, LogIn, Lock, Megaphone, Tags,
+  Baby, Check, LogIn, Lock, Megaphone, Tags,
 } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
 import { hasWelcomeVideo } from '../lib/welcomevideo';
@@ -172,9 +172,7 @@ export default function Landing({
             {/* The app icon's own tile (`scripts/icon.mjs`): green, lit, the
                 chip black. The owner, 13 October 2026: "die groen om die icon
                 moet brighter en neon wees, en die swart lyne bly swart". */}
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-cyan-400 to-emerald-500 shadow-[0_0_18px_rgba(5,255,147,0.55)]">
-              <Cpu className="h-5 w-5 text-onAccent" />
-            </span>
+            <img src="/icon-chip-192.png" alt="" width={192} height={192} className="h-10 w-10 rounded-xl shadow-[0_0_18px_rgba(5,255,147,0.45)]" data-landingmark />
             <span>
               {/* The word is hidden on a phone: beside the language switch
                   and the one button, 390 pixels holds the mark or the name,
@@ -240,9 +238,7 @@ export default function Landing({
               </div>
 
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.25)] sm:h-14 sm:w-14">
-                  <Cpu className="h-7 w-7 text-onAccent sm:h-8 sm:w-8" />
-                </div>
+                <img src="/icon-chip-192.png" alt="" width={192} height={192} className="h-12 w-12 shrink-0 rounded-2xl shadow-[0_0_60px_rgba(16,185,129,0.35)] sm:h-14 sm:w-14" data-landingheromark />
                 <p className="text-3xl font-black leading-none tracking-tighter text-white sm:text-5xl">
                   FUTURE<span className="text-emerald-400">BOX</span>
                 </p>

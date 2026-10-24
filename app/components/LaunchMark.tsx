@@ -1,4 +1,3 @@
-import { Cpu } from 'lucide-react';
 
 /**
  * What an installed app paints the instant it is opened.
@@ -61,7 +60,10 @@ export default function LaunchMark() {
        it with a swipe. */
     <div data-launchmark aria-hidden="true">
       <span data-launchmarktile>
-        <Cpu />
+        {/* The app icon itself — the file the home screen shows — rather than
+            a drawing of it. The owner, 24 October 2026: the icon and the
+            logo must be the same thing everywhere in the app. */}
+        <img src="/icon-chip-192.png" alt="" width={192} height={192} />
       </span>
       <p data-launchmarkword>
         FUTURE<span>BOX</span>

@@ -62,7 +62,7 @@ ok('  and carries the words, not only the mark',
   'her whole request: "die futurebox woorde logo moet saam launch"');
 
 ok('  with the same tile the icon and the landing page are drawn with',
-  /data-launchmarktile/.test(mark) && /Cpu/.test(mark),
+  /data-launchmarktile/.test(mark) && /icon-chip-192\.png/.test(mark),
   'a different drawing on the splash is a second brand — the thing on the'
   + ' home screen would not be the thing that opens');
 

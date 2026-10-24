@@ -1820,14 +1820,17 @@ html[data-fb-mode='light'] body:is(:has([data-cubed]), :has([data-accountroom]))
      neon wees, en die swart lyne bly swart … net nie geel nie." Literal
      colours on purpose: a theme preset must not reach into the brand
      mark. */
-  background-image: linear-gradient(135deg, #47d2eb 0%, #05ff93 55%, #2bff9e 100%);
-  box-shadow: 0 0 10px rgba(5, 255, 147, 0.9), 0 0 28px rgba(5, 255, 147, 0.45);
+  /* Since 24 October 2026 the tile IS the icon file, so no gradient of our
+     own behind it: the icon carries its board, its chip and its glow. */
+  overflow: hidden;
+  box-shadow: 0 0 28px rgba(5, 255, 147, 0.35);
 }
 
-[data-launchmarktile] > svg {
-  width: 3.2rem;
-  height: 3.2rem;
-  color: #06110c;
+[data-launchmarktile] > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 [data-launchmarkword] {
