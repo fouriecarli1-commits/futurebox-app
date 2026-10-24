@@ -258,7 +258,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
         {stage === 'ready' && (
           <>
             <p className="text-center text-sm text-zinc-300">{t('sayas.readSpeed', 'Read the words at your normal talking speed, the way you say them. Each line is written down as you said it and that is what the singer sings. Press Stop after the last line.')}</p>
-            <button type="button" data-sayasrecord disabled={!canWrite} onClick={() => { void start(); }} className={`${BIG} w-full bg-rose-500 text-white disabled:opacity-50`}>
+            <button type="button" data-sayasrecord disabled={!canWrite} onClick={() => { void start(); }} className={`${BIG} w-full disabled:opacity-50`} style={{ background: '#be123c', color: '#ffffff' }}>
               <Mic className="h-5 w-5" /> {t('sayas.record', 'Start recording')}
             </button>
           </>
@@ -267,7 +267,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
         {stage === 'recording' && (
           <>
             <p className="flex items-center justify-center gap-2 text-sm font-bold text-rose-300" data-sayasclock>
-              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" aria-hidden />
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-600" aria-hidden />
               {paused ? t('sayas.pausedNow', 'Paused') : t('sayas.recordingNow', 'Recording')} · {clock(Math.max(0, (paused ? pausedAt.current : now) - startedAt - pausedFor.current))}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -337,7 +337,8 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
           data-sayasopen
           data-sayasbegin={lines.length ? '' : undefined}
           onClick={() => { setOpened(true); if (lines.length) openSheet(); }}
-          className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-rose-500 px-4 text-sm font-extrabold text-white"
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold"
+          style={{ background: '#be123c', color: '#ffffff' }}
         >
           <Mic className="h-5 w-5 shrink-0" />
           {t('sayas.recordAf', 'Record Afrikaans lyrics')}
@@ -357,7 +358,7 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
       </p>
       {canWrite ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button type="button" data-sayasbegin onClick={openSheet} className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-rose-500 px-4 text-sm font-bold text-white">
+          <button type="button" data-sayasbegin onClick={openSheet} className="inline-flex min-h-[48px] items-center gap-2 rounded-xl px-4 text-sm font-bold" style={{ background: '#be123c', color: '#ffffff' }}>
             <Mic className="h-4 w-4" />
             {covered.length ? t('sayas.againOpen', 'Read it again') : t('sayas.recordAf', 'Record Afrikaans lyrics')}
           </button>

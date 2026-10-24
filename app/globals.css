@@ -3785,7 +3785,12 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 [data-cutfloat] [data-desk] { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 [data-cutfloat] [data-desk] > header { background: rgba(10, 12, 16, 0.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 [data-cutfloat] [data-desk] :is(div, section, fieldset) { background: transparent !important; box-shadow: none !important; }
-[data-cutfloat] [data-desk] :is(p, span, label, h3, h4, legend) { text-shadow: 0 0 2px #000, 0 1px 3px #000; }
+/* Light ink on every tile, in both themes: the tiles are dark glass whatever
+   the room's theme, and the light theme's dark ink on them measured 1.02:1
+   (check:contrastlightphone, 24 October 2026). */
+[data-cutfloat] [data-desk] :is(p, span, label, h3, h4, legend, button, select, option, textarea, input):not([data-coin]) { color: #eafff4 !important; }
+[data-cutfloat] [data-desk] :is(p, span, label, h3, h4, legend):not([data-coin]) { text-shadow: 0 0 2px #000, 0 1px 3px #000; }
+[data-cutfloat] [data-desk] :is(select, option) { background: #131a22 !important; }
 [data-cutfloat] [data-desk] :is(button, select, textarea, input[type="text"], input[type="number"], input[type="search"], a[href]) {
   background: rgba(19, 26, 34, 0.74) !important;
   backdrop-filter: blur(6px);

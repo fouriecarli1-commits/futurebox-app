@@ -52,7 +52,7 @@ export function Coin({ label }: { readonly label: string }): React.ReactElement 
       title={label}
       aria-label={label}
       className="rounded-full px-1 text-[9px] font-black leading-[14px]"
-      style={{ background: COIN, color: '#1c1917' }}
+      data-coin="" style={{ background: COIN, color: '#1c1917' }}
     >
       c
     </span>
