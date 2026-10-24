@@ -205,6 +205,9 @@ function BenchButton({
 const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'motion', 'words', 'restyle']);
 
 /** Either side of the transport: the shot you picked, and the whole film. */
+/** The benches whose controls point at the clock, so the clock must stay in reach. */
+const ON_CLOCK: ReadonlySet<Bench> = new Set<Bench>(['clip', 'words', 'motion']);
+
 const UPPER: readonly BenchSpec[] = [
   {
     id: 'clip',
@@ -576,7 +579,12 @@ export default function CutDock({
           each control is a slightly see-through tile (`[data-cutfloat]` in
           globals.css). A zero-height anchor above the bar is what it hangs
           from, so the film and the clock keep the whole column. */}
-      {sheet ? (
+      {/* Not the benches that work ON the clock. Words are dragged to their
+          place on the lane, a clip is split where the playhead stands, and
+          motion's keyframes sit on the ruler — a bench floating over the
+          lane would cover the very thing the finger has to reach. Those
+          three keep the capped sheet under the clock; the rest float. */}
+      {sheet && open && ON_CLOCK.has(open) ? sheet : sheet ? (
         <div className="relative shrink-0">
           <div data-cutfloat="" className="absolute inset-x-0 bottom-0 z-20 flex h-[58dvh] flex-col">
             {sheet}
