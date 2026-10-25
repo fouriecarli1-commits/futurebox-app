@@ -353,10 +353,17 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
         <Volume2 className="h-4 w-4 shrink-0 text-emerald-300" />
         {t('sayas.title', 'Read your words to me, so they are sung the way you say them')}
       </p>
+      {/* "Press record" only while there is a record button. The owner, 25
+          October 2026, on the other side of a pair song: *"Waar is dit record
+          button"* — the card told her to press it, hid it, and then said
+          "their turn" twice. One sentence now, saying when it comes back and
+          which button at the top brings the turn over. */}
       <p className="mt-1 text-sm text-zinc-400">
-        {t('sayas.how', 'Press record and read every line once, in order, the way it must sound. Each line is then written out the way you said it, and that is what the singer reads. Your words stay exactly as you wrote them.')}
+        {canWrite
+          ? t('sayas.how', 'Press record and read every line once, in order, the way it must sound. Each line is then written out the way you said it, and that is what the singer reads. Your words stay exactly as you wrote them.')
+          : t('sayas.theirTurn', 'Their turn. The record button comes back the moment the turn is yours — press “Ask for the turn” at the top of the song box.')}
       </p>
-      {canWrite ? (
+      {canWrite && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" data-sayasbegin onClick={openSheet} className="inline-flex min-h-[48px] items-center gap-2 rounded-xl px-4 text-sm font-bold" style={{ background: '#be123c', color: '#ffffff' }}>
             <Mic className="h-4 w-4" />
@@ -368,8 +375,6 @@ export default function SayItFirst({ lyrics, sayAs, onSayAs, canWrite, folded = 
             </button>
           )}
         </div>
-      ) : (
-        <p className="mt-2 text-sm text-zinc-400">{t('make.pairWatching', 'Their turn — ask for the pen at the top to write.')}</p>
       )}
       {covered.length > 0 && (
         <div className="mt-3 space-y-2" data-sayaslines>

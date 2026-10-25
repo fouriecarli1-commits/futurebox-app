@@ -254,7 +254,7 @@ export default function MakeMusic({
       ? Object.fromEntries(Object.entries(ops).map(([name, run]) => [
         name,
         DRAFT_OPS.includes(name)
-          ? () => setStatus(t('make.pairWatchingCopilot', 'It is their turn to write, so the copilot cannot put anything into the song yet. Ask for the pen at the top, then ask the copilot again.'))
+          ? () => setStatus(t('make.pairWatchingCopilot', 'It is their turn to write, so the copilot cannot put anything into the song yet. Press “Ask for the turn” at the top of the song box, then ask the copilot again.'))
           : run,
       ]))
       : ops
@@ -1959,7 +1959,7 @@ export default function MakeMusic({
             )}
             <p className="pt-1 text-sm text-zinc-500">
               {watching
-                ? <span data-pairwatching>{t('make.pairWatching', 'Their turn — ask for the pen at the top to write.')}</span>
+                ? <span data-pairwatching>{t('make.pairWatching', 'Their turn — press “Ask for the turn” at the top of the song box to write.')}</span>
                 : engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
             </p>
             <div className="pt-2">
