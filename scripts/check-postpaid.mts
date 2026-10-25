@@ -250,9 +250,18 @@ ok(`  and those are all the ways out there are (${handOvers})`,
 
 /* ── The preview is not a deliverable ───────────────────────────────────── */
 
-ok('the preview is drawn smaller than the frame it stands for',
+ok('the preview is drawn at what the screen shows, never past the post\u2019s own size',
   /const PREVIEW_LONGEST = \d{3};/.test(studio)
-  && /to\.width = Math\.ceil\(size\.width \* want\)/.test(studio),
+  && /const GLASS_LONGEST = \d{4};/.test(studio)
+  && /to\.width = Math\.ceil\(size\.width \* want\)/.test(studio)
+  && /Math\.min\(1, Math\.max\(PREVIEW_LONGEST \/ longest, Math\.min\(GLASS_LONGEST \/ longest, shown\)\)\)/.test(studio),
+  'the glass is sized from the screen (the owner, 25 October 2026: a 540-wide'
+  + ' preview stretched three times over looked broken), and capped at one'
+  + ' times the post so the preview is never a sharper file than the paid one');
+/* And the browser's own menu on it, which is where "Save image as…" lives. */
+const glass = upTo(from(studio, 'data-postcanvas'), 'className=');
+ok('  and the glass offers no browser menu to save it from',
+  glass.includes('onContextMenu') && glass.includes('event.preventDefault()'),
   'right-click on a canvas offers "Save image as…" and hands over the exact'
   + ' file — the preview being the finished picture is a free road out');
 

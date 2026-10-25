@@ -239,6 +239,12 @@ const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-
  * device pixels per point on everything made here.
  */
 const PREVIEW_LONGEST = 540;
+/**
+ * The most the glass is ever drawn at, whatever the screen. A 4K desk at
+ * two device pixels per point would otherwise ask for a canvas redrawn on
+ * every keystroke at the size of the file itself.
+ */
+const GLASS_LONGEST = 2560;
 
 /**
  * The longest edge a picture is sent at to have the things in it found.
@@ -994,6 +1000,11 @@ export default function PostStudio({
   /* How close the glass is looked at — a magnifier, not the post's own crop,
      so it works in every tool and changes nothing that is saved. */
   const [view, setView] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 });
+  /* How big the glass is on the screen, in CSS pixels — measured by the
+     ResizeObserver beside the stage, and read by `draw` so the glass is
+     drawn at the size it is shown. Declared here, above `draw`, because
+     the draw effect lists it. */
+  const [fitted, setFitted] = useState<{ w: number; h: number; room: number } | null>(null);
   /* Whether the zoom bar is unfolded — see `data-postview`. */
   const [viewOpen, setViewOpen] = useState(false);
   /* The brush is a switch of its own: on, a finger paints; off, the photo can
@@ -1739,8 +1750,25 @@ export default function PostStudio({
        `times` is only ever read on the export path: the preview is drawn at
        whatever fits and a 2x preview would be two megapixels redrawn on every
        keystroke for a picture nobody is looking at closely. */
+    /* On the screen: as many pixels as the screen shows, and no more.
+
+       The owner, 25 October 2026, with the 1024 x 500 feature graphic on
+       a desk screen: *"Kyk hoe verswak die prent wanneer mens dit in ons
+       photo booth in bring."* The glass was drawn 540 across and stretched
+       by CSS to 1700, three times over, and on a phone at three device
+       pixels per point it was stretched too. It is now drawn at the width
+       it is shown, times the device pixel ratio, times the pinch zoom —
+       never more than the post's own size, never more than
+       `GLASS_LONGEST`, and never less than `PREVIEW_LONGEST`. The picture
+       is still not a free road out: the canvas suppresses the browser's
+       own menu, so there is no "Save image as…" on it, and it is never
+       drawn past the size the file comes out at. */
+    const longest = Math.max(size.width, size.height);
+    const shown = fitted && typeof window !== 'undefined'
+      ? (fitted.w * Math.min(3, window.devicePixelRatio || 1) * Math.max(1, view.scale)) / size.width
+      : PREVIEW_LONGEST / longest;
     const want = guides
-      ? Math.min(1, PREVIEW_LONGEST / Math.max(size.width, size.height))
+      ? Math.min(1, Math.max(PREVIEW_LONGEST / longest, Math.min(GLASS_LONGEST / longest, shown)))
       : times;
     /* The canvas is sized first and the scale read back OUT of it.
  
@@ -1754,6 +1782,7 @@ export default function PostStudio({
     to.width = Math.ceil(size.width * want);
     to.height = Math.ceil(size.height * want);
     ctx.setTransform(to.width / size.width, 0, 0, to.height / size.height, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
     /* Setting width or height clears the canvas to transparent, so "nothing
        behind it" is the absence of this fill rather than a colour. */
     /* The background layer can be switched off in the layer list, which is
@@ -2644,6 +2673,9 @@ export default function PostStudio({
     cells, cellOn, editingCell, framing,
     /* Vector art arriving after its picture loads. */
     artTick,
+    /* The size the glass is shown at and the pinch zoom: `draw` picks its
+       pixel size from them, so a bigger screen is a sharper picture. */
+    fitted, view.scale,
     marks, markOn, magicStrokes, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -9854,7 +9886,6 @@ export default function PostStudio({
 
   /* The space the photograph has, measured, so the canvas fills it. */
   const stage = useRef<HTMLDivElement | null>(null);
-  const [fitted, setFitted] = useState<{ w: number; h: number; room: number } | null>(null);
   useEffect(() => {
     const el = stage.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
