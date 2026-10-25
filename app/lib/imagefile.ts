@@ -502,7 +502,17 @@ export async function fit(file: File, longest: number, keep = false): Promise<Ma
   const { width, height } = fitTo(bitmap.width, bitmap.height, longest);
   if (keep && width === bitmap.width && height === bitmap.height && /^image\/(jpeg|png|webp)$/.test(file.type)) {
     bitmap.close();
-    return { ok: true, blob: file, preview: URL.createObjectURL(file), width, height };
+    /* The same bytes as a data URL, not a blob URL: the page's
+       Content-Security-Policy lets nothing fetch `blob:`, and Grab text
+       fetches the preview to read it. `check:grabtext` read "" off the
+       blob URL and said so. */
+    const preview = await new Promise<string>((done, fail) => {
+      const reader = new FileReader();
+      reader.onload = () => done(String(reader.result ?? ''));
+      reader.onerror = () => fail(reader.error ?? new Error('unreadable'));
+      reader.readAsDataURL(file);
+    }).catch(() => '');
+    if (preview) return { ok: true, blob: file, preview, width, height };
   }
   return draw(bitmap, width, height, (context) => {
     context.imageSmoothingQuality = 'high';
