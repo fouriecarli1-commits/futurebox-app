@@ -63,9 +63,17 @@ export function interestOf(rgba: Uint8ClampedArray | Uint8Array, w: number, h: n
       const least = Math.min(r, g, b);
       const saturation = most > 0 ? (most - least) / most : 0;
       /* Skin, by the usual rule of thumb: red leads, green follows, blue
-         trails, and not too dark. Every skin colour meets it. */
-      const skin = r > 60 && r > g && g > b && r - b > 15 && r - g < 110 ? 1 : 0;
-      score[i] = a * (detail / 4 + saturation * 40 + skin * 30);
+         trails, and not too dark. Every skin colour meets it — and so did
+         a sunset, which is why the two bounds after it are there: skin is
+         never that saturated, and its green never leads its blue by that
+         much. An orange sky scored as a face and the crop went to it. */
+      const skin = r > 60 && r > g && g > b && r - b > 15 && r - g < 110 && g - b < 70 && saturation < 0.7 ? 1 : 0;
+      /* Colour counts for little on its own: a sunset, a sea or a painted
+         wall is saturated across half the photo and is the background, not
+         the subject. Detail and skin are what a person is. Saturation at
+         forty and skin at thirty put a sunset ahead of the somebody standing
+         in front of it. */
+      score[i] = a * (detail / 4 + saturation * 10 + skin * 45);
     }
   }
   return { w, h, score };
@@ -78,11 +86,26 @@ export function interestOf(rgba: Uint8ClampedArray | Uint8Array, w: number, h: n
 export function bestCrop(interest: Interest, pictureAspect: number, frameAspect: number): Crop {
   const { w, h, score } = interest;
   if (!(pictureAspect > 0) || !(frameAspect > 0) || w < 1 || h < 1) return { basis: 'fill', zoom: 1, x: 0, y: 0 };
+  /* Above the photo's own baseline, not the raw score.
+
+     A flat blue sky is saturated, so every cell of it scored about twenty
+     — and a person's face scored thirty more than that over a few hundred
+     cells. Every window holds the same number of cells, so the sky added
+     the same to all of them and decided nothing; but the pull to the
+     middle below is a share of the WHOLE, and the whole was mostly sky.
+     On a plain phone photograph of somebody standing to one side, the
+     pull won and the crop cut them in half. The owner, 25 October 2026:
+     *"Smart crop werk nie."* What is summed now is each cell's excess over
+     the photo's mean, so a uniform background counts for nothing and the
+     pull is a twentieth of what actually stands out. */
+  let mean = 0;
+  for (let i = 0; i < w * h; i += 1) mean += score[i];
+  mean /= w * h;
   /* Running sums, so any rectangle's total is four lookups. */
   const sums = new Float64Array((w + 1) * (h + 1));
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
-      sums[(y + 1) * (w + 1) + x + 1] = score[y * w + x]
+      sums[(y + 1) * (w + 1) + x + 1] = Math.max(0, score[y * w + x] - mean)
         + sums[y * (w + 1) + x + 1] + sums[(y + 1) * (w + 1) + x] - sums[y * (w + 1) + x];
     }
   }

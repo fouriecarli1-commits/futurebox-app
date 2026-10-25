@@ -36,6 +36,32 @@ const photo = (w: number, h: number, patch: { x0: number; x1: number; y0: number
   return px;
 };
 
+/* ── A person to one side of a plain sky, and of a sunset ────────────
+   The owner, 25 October 2026: *"Smart crop werk nie."* On a phone
+   photograph of somebody standing to the right of a flat blue sky the crop
+   cut them in half: the sky's colour scored as interest in every cell, and
+   the pull to the middle, a share of the whole, outweighed one face. And
+   an orange sky met the skin rule outright. Both are held here. */
+const person = (w: number, h: number, sky: 'plain' | 'sunset'): Uint8ClampedArray => {
+  const px = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const i = (y * w + x) * 4;
+      let r = 40; let g = 60; let b = 90;
+      if (sky === 'sunset' && x < w * 0.69) { r = 230; g = 90 + Math.round(60 * y / h); b = 30 + Math.round(20 * x / w); }
+      const cx = w * 0.84; const cy = h * 0.36;
+      if ((x - cx) ** 2 / (w * w * 0.004) + (y - cy) ** 2 / (h * h * 0.02) < 1) { r = 200; g = 150; b = 120; }
+      else if (x > w * 0.76 && x < w * 0.94 && y > h * 0.49) { r = 50; g = 50; b = 60; }
+      px[i] = r; px[i + 1] = g; px[i + 2] = b; px[i + 3] = 255;
+    }
+  }
+  return px;
+};
+for (const sky of ['plain', 'sunset'] as const) {
+  const got = bestCrop(interestOf(person(160, 90, sky), 160, 90), 16 / 9, 1);
+  ok(`a person to the right of a ${sky} sky is kept in a square`, got.x < -0.5, JSON.stringify(got));
+}
+
 /* A wide photo (16:9 at 48 × 27) with a person standing far right. */
 const wideRight = interestOf(photo(48, 27, { x0: 38, x1: 46, y0: 5, y1: 25 }), 48, 27);
 const square = bestCrop(wideRight, 16 / 9, 1);
