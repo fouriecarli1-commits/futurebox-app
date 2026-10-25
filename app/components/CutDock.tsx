@@ -250,7 +250,11 @@ const LOWER: readonly BenchSpec[] = [
   {
     id: 'characters',
     icon: <PersonStanding className="h-5 w-5" />,
-    label: ['cut.characters', '3D characters'],
+    /* "Characters", not "3D characters": the phone strip's buttons are 64
+       pixels wide and the longer name was cut to "3D chara…" on a 7-inch
+       tablet (the owner's store screenshots, 25 October 2026). The bench
+       itself still opens under its full name. */
+    label: ['cut.characters', 'Characters'],
     what: [
       'cut.charactersWhat',
       'Characters in a 3D look, drawn by AI from your words — animated film, game hero, claymation, android, hologram — kept in your cast and made to move in a shot.',

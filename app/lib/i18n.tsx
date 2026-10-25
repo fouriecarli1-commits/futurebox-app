@@ -3322,7 +3322,7 @@ export const STRINGS: Dict = {
   "veo.preset.vintage": { en: "35mm film grain", af: "35mm-filmkorrel" },
   "veo.preset.noir": { en: "Dramatic noir", af: "Dramatiese noir" },
   "veo.preset.dream": { en: "Dreamy mist", af: "Dromerige mistiek" },
-  "cut.characters": { en: "3D characters", af: "3D-karakters" },
+  "cut.characters": { en: "Characters", af: "Karakters" },
   "cut.charactersWhat": { en: "Characters in a 3D look, drawn by AI from your words — animated film, game hero, claymation, android, hologram — kept in your cast and made to move in a shot.", af: "Karakters met ’n 3D-voorkoms, deur KI geteken uit jou woorde — animasiefilm, speletjieheld, kleianimasie, androïde, hologram — in jou rolverdeling gehou en in ’n skoot laat beweeg." },
   "cut.restyle": { en: "AI restyle", af: "KI-herstyl" },
   "cut.restyleWhat": { en: "The frame you are on, redrawn in a world of the future, and a new shot made from it that lands next to the original.", af: "Die raam waarop jy is, oorgeteken in ’n wêreld van die toekoms, en ’n nuwe skoot daaruit gemaak wat langs die oorspronklike land." },
