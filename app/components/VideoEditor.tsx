@@ -69,7 +69,7 @@ import FileSize from './FileSize';
 import { limitOf } from '../lib/squeeze';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Pause, SkipBack, SkipForward, Square, StepBack, StepForward, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
+  Play, Pause, SkipBack, SkipForward, Square, StepBack, StepForward, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown, Mic,
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -177,7 +177,7 @@ import { soundOf,
   captionAt, cutOut, cutSong, heard, move, runs, songSecond, split, splitHere, startsAt,
   trim,
   wordsReach,
-  type Edit, type Piece,
+  type Edit, type Piece, type VoiceOver,
 } from '../lib/videoedit';
 import {
   JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
@@ -594,6 +594,36 @@ const SHOT_STARTS: readonly (readonly [string, string])[] = [
   ['light', 'golden-hour light'],
   ['moves', 'the camera moves slowly closer'],
 ];
+
+/**
+ * One voice-over's sound in the preview: an element kept on the film's
+ * clock the way the music bed is — left to run, pulled back only when it
+ * has drifted — so what she hears while she scrubs is what the film will
+ * carry. Silent outside its own stretch of the clock.
+ */
+function VoiceBed({ voice, at, running }: {
+  readonly voice: VoiceOver;
+  readonly at: number;
+  readonly running: boolean;
+}): React.ReactElement {
+  const line = useRef<HTMLAudioElement | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const made = URL.createObjectURL(voice.clip);
+    setUrl(made);
+    return () => URL.revokeObjectURL(made);
+  }, [voice.clip]);
+  useEffect(() => {
+    const a = line.current;
+    if (!a || !url) return;
+    const want = at - voice.at;
+    if (want < 0 || want >= voice.long) { a.pause(); return; }
+    if (Math.abs(a.currentTime - want) > 0.25) a.currentTime = want;
+    if (running) { if (a.paused) void a.play().catch(() => undefined); }
+    else a.pause();
+  }, [at, running, url, voice.at, voice.long]);
+  return <audio ref={line} src={url ?? undefined} preload="auto" className="hidden" data-editorvoicebed={voice.id} />;
+}
 
 export default function VideoEditor({
   plan,
@@ -1976,7 +2006,8 @@ export default function VideoEditor({
        The same multiplication the renderer does, against the same flag — a
        preview that ducked on something else would be a mix balanced against
        a film that does not exist. */
-    const speaking = Boolean(piece) && soundOf(piece!) && on.shots;
+    const speaking = (Boolean(piece) && soundOf(piece!) && on.shots)
+      || (edit.voices ?? []).some((one) => at >= one.at && at < one.at + one.long);
     const duck = speaking && edit.duck !== undefined
       ? Math.max(0, Math.min(1, edit.duck))
       : 1;
@@ -1986,7 +2017,7 @@ export default function VideoEditor({
        range from the film is a preview that lies at the edges. */
     a.playbackRate = Math.max(0.5, Math.min(2, edit.underSpeed ?? 1));
     a.loop = Boolean(edit.underLoop);
-  }, [edit, piece, bedUrl]);
+  }, [edit, piece, bedUrl, at]);
 
   /* ── Kept on the film's clock ──────────────────────────────────────────
 
@@ -2010,6 +2041,65 @@ export default function VideoEditor({
     if (running) { if (a.paused) void a.play().catch(() => undefined); }
     else a.pause();
   }, [at, running, edit, bedUrl]);
+
+  /* ── A voice-over, spoken over the film while it plays ────────────────
+
+     Press once: the film starts from the playhead and the microphone opens.
+     Press again: the film stops, and what was said lands on the voice lane
+     at the second she pressed first, for as long as she spoke. Recorded to
+     picture, because narration timed against a stopped frame is narration
+     that has to be moved afterwards. Nothing leaves the phone. */
+  const [voicing, setVoicing] = useState<'no' | 'asking' | 'on' | 'refused'>('no');
+  const voiceTake = useRef<{ recorder: MediaRecorder; stream: MediaStream; from: number; began: number; parts: Blob[] } | null>(null);
+  const stopVoice = useCallback(() => {
+    const take = voiceTake.current;
+    if (!take) return;
+    voiceTake.current = null;
+    setRunning(false);
+    /* The button goes back to "Record" at once; the take lands when the
+       recorder has handed over its last piece, a moment later. */
+    setVoicing('no');
+    const long = Math.max(0, (performance.now() - take.began) / 1000);
+    take.recorder.onstop = () => {
+      take.stream.getTracks().forEach((one) => one.stop());
+      const clip = new Blob(take.parts, { type: take.recorder.mimeType || 'audio/webm' });
+      if (long >= 0.3 && clip.size > 0) {
+        const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        commit((was) => ({ ...was, voices: [...(was.voices ?? []), { id, clip, at: take.from, long }] }));
+      }
+    };
+    try { take.recorder.stop(); } catch { take.stream.getTracks().forEach((one) => one.stop()); }
+  }, [commit]);
+  const startVoice = useCallback(async () => {
+    if (voiceTake.current || typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setVoicing('refused');
+      return;
+    }
+    setVoicing('asking');
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    } catch {
+      setVoicing('refused');
+      return;
+    }
+    const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((one) => MediaRecorder.isTypeSupported(one));
+    const recorder = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream);
+    const parts: Blob[] = [];
+    recorder.ondataavailable = (event) => { if (event.data.size > 0) parts.push(event.data); };
+    /* From the playhead — unless the playhead stands at the end, where there
+       is nothing left to speak over; then from the top, the way pressing
+       play at the end of a film does. */
+    const from = at >= runs(edit) - 0.05 ? 0 : at;
+    if (from !== at) scrubTo(from);
+    voiceTake.current = { recorder, stream, from, began: performance.now(), parts };
+    recorder.start(250);
+    setVoicing('on');
+    setRunning(true);
+  }, [at, edit, scrubTo]);
+  /* The film reaching its end stops the take, as a hand on the button would. */
+  useEffect(() => { if (voicing === 'on' && !running) stopVoice(); }, [running, voicing, stopVoice]);
+  useEffect(() => () => { voiceTake.current?.stream.getTracks().forEach((one) => one.stop()); }, []);
 
   /* A waiting seek, landed the moment the element can take one. */
   useEffect(() => {
@@ -3490,6 +3580,9 @@ async function smallerFrame(url: string): Promise<string> {
         markTurn, markSolid, markUnder,
       });
       if (!result.ok) {
+        /* The reason, to the console: the sentence below is the same for
+           every reason, and a film that would not come out needs one. */
+        console.warn('film: not put together —', result.why);
         setProblem(
           result.why === 'unsupported'
             ? t('edit.noRecord', 'This browser cannot record a film. Chrome or Edge can.')
@@ -4370,6 +4463,7 @@ async function smallerFrame(url: string): Promise<string> {
               {bedUrl && (
                 <audio ref={bed} data-editorbedsound src={bedUrl} preload="auto" className="hidden" />
               )}
+              {(edit.voices ?? []).map((one) => <VoiceBed key={one.id} voice={one} at={at} running={running} />)}
               {/* ── Her shapes and the frame, drawn by the film's own functions ── */}
               {((edit.shapes?.length ?? 0) > 0 || (edit.frame && edit.frame !== 'none')) && (
                 <FilmFurniture
@@ -4836,6 +4930,7 @@ async function smallerFrame(url: string): Promise<string> {
                 ['T1', t('edit.laneWords', 'Words'), Type],
                 ['A1', t('edit.laneSound', 'Sound'), Volume2],
                 ['A2', t('edit.laneMusic', 'Music'), ListMusic],
+                ['A3', t('edit.laneVoice', 'Voice-over'), Mic],
               ] as const).map(([code, name, Icon]) => (
                 <div key={code} className="flex h-12 items-stretch border-b last:border-b-0" style={{ borderColor: 'rgba(16,185,129,0.12)' }}>
                   <span className="flex w-36 shrink-0 items-center gap-2 border-r px-3 text-xs font-bold" style={{ borderColor: 'rgba(16,185,129,0.18)', color: INK }}>
@@ -5633,6 +5728,26 @@ async function smallerFrame(url: string): Promise<string> {
                     </span>
                   )}
                 </div>
+
+                {/* ── And her voice, under that — only once there is one ──── */}
+                {(edit.voices ?? []).length > 0 && (
+                  <div className="relative border-t border-zinc-800" style={{ height: Math.max(28, Math.round(soundTall * 0.6)) }} data-editorvoicelane>
+                    <span className="pointer-events-none absolute left-2 top-0.5 z-20 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                      <Mic className="h-3 w-3" /> {t('edit.voiceLane', 'Voice-over')}
+                    </span>
+                    {(edit.voices ?? []).map((one) => (
+                      <div
+                        key={one.id}
+                        data-editorvoiceblock={one.id}
+                        className="absolute inset-y-1 overflow-hidden rounded-lg border border-rose-400/50 bg-rose-500/15"
+                        style={{ left: one.at * perSecond, width: Math.max(6, one.long * perSecond) }}
+                        title={`${one.at.toFixed(1)}s – ${(one.at + one.long).toFixed(1)}s`}
+                      >
+                        <WaveBlock sound={one.clip} wide={Math.max(6, one.long * perSecond)} tall={Math.max(8, Math.round(soundTall * 0.6) - 8)} colour="rgba(253,164,175,0.9)" />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* ── The cursor, over every lane ─────────────────────────
 
@@ -7618,6 +7733,63 @@ async function smallerFrame(url: string): Promise<string> {
 
         {bench === 'sound' && (
           <div className="space-y-3">
+          {/* ── Her own voice over the film ──────────────────────────── */}
+          <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3" data-editorvoiceover>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                data-editorvoicerec
+                aria-pressed={voicing === 'on'}
+                disabled={voicing === 'asking' || (voicing !== 'on' && edit.pieces.length === 0)}
+                onClick={() => { if (voicing === 'on') stopVoice(); else void startVoice(); }}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold"
+                style={voicing === 'on'
+                  ? { background: '#be123c', color: '#ffffff' }
+                  : { background: 'rgba(52,211,153,0.16)', color: '#a7f3d0', boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.45)' }}
+              >
+                {voicing === 'on' ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {voicing === 'on'
+                  ? t('edit.voiceStop', 'Stop — put it on the film')
+                  : voicing === 'asking'
+                    ? t('edit.voiceAsking', 'Opening the microphone…')
+                    : t('edit.voiceRecord', 'Record a voice-over')}
+                <span className="rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  {t('edit.voiceFree', 'No credits')}
+                </span>
+              </button>
+              <span className="text-xs" style={{ color: INK_DIM }}>
+                {voicing === 'on'
+                  ? t('edit.voiceLive', 'The film is playing. Say your piece, then press Stop.')
+                  : t('edit.voiceHow', 'The film plays from the playhead while you speak; your voice lands there, and the music steps back under it.')}
+              </span>
+            </div>
+            {voicing === 'refused' && (
+              <p className="text-xs text-rose-300" data-editorvoicerefused>
+                {t('edit.voiceRefused', 'The microphone did not open. Allow it for this site and try again.')}
+              </p>
+            )}
+            {(edit.voices ?? []).length > 0 && (
+              <ul className="space-y-1" data-editorvoicelist>
+                {(edit.voices ?? []).map((one, index) => (
+                  <li key={one.id} className="flex items-center gap-2 text-xs" style={{ color: INK }}>
+                    <Mic className="h-3.5 w-3.5 shrink-0" style={{ color: INK_DIM }} />
+                    <span className="min-w-0 flex-1 truncate tabular-nums">
+                      {t('edit.voiceLine', 'Voice-over')} {index + 1} · {one.at.toFixed(1)}s – {(one.at + one.long).toFixed(1)}s
+                    </span>
+                    <button
+                      type="button"
+                      data-editorvoicedrop={one.id}
+                      onClick={() => commit((was) => ({ ...was, voices: (was.voices ?? []).filter((kept) => kept.id !== one.id) }))}
+                      aria-label={t('edit.voiceDrop', 'Take this voice-over off')}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <label
             data-editorunder
             className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"

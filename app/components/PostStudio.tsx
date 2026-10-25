@@ -98,7 +98,7 @@ import { GRID, bestCrop, interestOf, windowOf } from '../lib/smartcrop';
 import FileSize, { type Estimate } from './FileSize';
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
-  canMove, moveBy, place, showsThrough, zoomTo, type Crop,
+  canMove, moveBy, place, showsThrough, zoomAbout, zoomTo, type Crop,
 } from '../lib/postcrop';
 import {
   AUTO, PLAIN, RANGES, filterFor, lightnessOf, paintWashes, smartLight, touched, towards, washesOf, type Look,
@@ -1659,6 +1659,10 @@ export default function PostStudio({
     readonly x: number; readonly y: number; readonly w: number; readonly h: number;
   }>());
   /** The line a thumb is currently carrying, and where it took hold. */
+  /* A corner of the ring round the whole picture, taken: the distance from
+     the picture's middle when it was taken, and the zoom it had, so the
+     pull is a ratio and not a sum of jittery moves. */
+  const photoPull = useRef<{ readonly cx: number; readonly cy: number; readonly from: number; readonly zoom: number } | null>(null);
   const carrying = useRef<{
     readonly id: string;
     readonly dx: number;
@@ -2401,6 +2405,44 @@ export default function PostStudio({
       }
     }
 
+    /* ── The ring round the whole picture ─────────────────────────────────
+       The owner, 25 October 2026: *"die crop wat jy nog nie het nie, is om 'n
+       raam om die hele prent te kan trek, en die hele prent manually te
+       shrink na 'n size wat mens verkies."* While the picture is loose (The
+       whole picture) and is the layer being edited, the same ring the words
+       get stands round it: pull a corner and it grows or shrinks about its
+       middle; drag the body and it moves. Never in the exported file. */
+    if (guides && picture && !cropBox && !photoHidden && crop.basis === 'whole' && (layerOn === 'all' || layerOn === 'photo')) {
+      const ring = place(picture, size, crop);
+      const line = Math.max(2, size.width * 0.004);
+      const arm = Math.min(ring.width, ring.height, size.width * 0.06);
+      const knob = Math.max(9, size.width * 0.018);
+      ctx.save();
+      ctx.strokeStyle = '#39ff14';
+      ctx.shadowColor = '#39ff14';
+      ctx.shadowBlur = line * 4;
+      ctx.lineWidth = line;
+      ctx.setLineDash([line * 4, line * 3]);
+      ctx.strokeRect(ring.left, ring.top, ring.width, ring.height);
+      ctx.setLineDash([]);
+      ctx.lineWidth = line * 2.5;
+      for (const [cx, cy, dx, dy] of [
+        [ring.left, ring.top, 1, 1], [ring.left + ring.width, ring.top, -1, 1],
+        [ring.left, ring.top + ring.height, 1, -1], [ring.left + ring.width, ring.top + ring.height, -1, -1],
+      ] as const) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + dy * arm);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx + dx * arm, cy);
+        ctx.stroke();
+        ctx.fillStyle = '#39ff14';
+        ctx.beginPath();
+        ctx.arc(cx, cy, knob, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     /* ── The crop box, over everything, and never on the exported file ───
  
         Drawn here rather than as HTML over the canvas, for the same reason
@@ -2956,6 +2998,27 @@ export default function PostStudio({
     /* The photograph is dragged only while it is a layer being edited: with
        one shape or one line chosen, a thumb that misses it does nothing
        rather than moving the picture underneath. */
+    /* A corner of the ring round the loose picture: pulled, the picture
+       grows or shrinks about its middle (`zoomAbout`). Checked before the
+       move, because a corner sits on the picture's edge and the move below
+       would take it as a drag. */
+    if (picture && at && !cropBox && !photoHidden && crop.basis === 'whole' && (layerOn === 'all' || layerOn === 'photo')) {
+      const put = frameAt(event);
+      if (put) {
+        const px = put.x * size.width;
+        const py = put.y * size.height;
+        const reach = Math.max(22, size.width * 0.05);
+        const corner = [[0, 0], [1, 0], [0, 1], [1, 1]].some(([sx, sy]) =>
+          Math.hypot(px - (at.left + sx * at.width), py - (at.top + sy * at.height)) <= reach);
+        if (corner) {
+          const cx = at.left + at.width / 2;
+          const cy = at.top + at.height / 2;
+          photoPull.current = { cx, cy, from: Math.max(1, Math.hypot(px - cx, py - cy)), zoom: crop.zoom };
+          event.currentTarget.setPointerCapture(event.pointerId);
+          return;
+        }
+      }
+    }
     if (!movable || photoHidden || (layerOn !== 'all' && layerOn !== 'photo')) return;
     lastAt.current = { x: event.clientX, y: event.clientY };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -3096,6 +3159,14 @@ export default function PostStudio({
       });
       return;
     }
+    const pull = photoPull.current;
+    if (pull && picture) {
+      const put = frameAt(event);
+      if (!put) return;
+      const dist = Math.hypot(put.x * size.width - pull.cx, put.y * size.height - pull.cy);
+      setCrop((now) => zoomAbout(now, picture, size, pull.zoom * (dist / pull.from)));
+      return;
+    }
     const was = lastAt.current;
     if (!was || !at) return;
     const box = event.currentTarget.getBoundingClientRect();
@@ -3129,6 +3200,7 @@ export default function PostStudio({
     cutFrom.current = null;
     carrying.current = null;
     markHeld.current = null;
+    photoPull.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -3222,7 +3294,7 @@ export default function PostStudio({
        rather than the photo being cut to a square nobody chose. With work
        already there, the canvas stays and "Its own size" is one press. */
     const fresh = picture === null && words.length === 0 && marks.length === 0 && !shapeChosen.current;
-    const made = await fit(file, OWN_MOST);
+    const made = await fit(file, OWN_MOST, true);
     if (!made.ok) {
       setSaid(made.why === 'too_many_pixels'
         ? t('post.tooMany', 'That picture is too large to open on a phone. A photo straight off a camera often is.')
@@ -3289,7 +3361,7 @@ export default function PostStudio({
     const id = fillingCell.current;
     fillingCell.current = null;
     if (!file || !id) return;
-    const made = await fit(file, Math.max(size.width, size.height));
+    const made = await fit(file, Math.max(size.width, size.height), true);
     if (!made.ok) {
       setSaid(made.why === 'too_many_pixels'
         ? t('post.tooMany', 'That picture is too large to open on a phone. A photo straight off a camera often is.')
@@ -4327,6 +4399,18 @@ export default function PostStudio({
           af: `Pasgemaakte grootte ${w}×${h}`,
         },
       });
+    }
+    /* ── And the photo lands in the new shape by the smart crop ──────────
+       The owner, 25 October 2026: *"wanneer mens ook aan die begin die hele
+       working space resize, dan moet die hele foto, outomaties en slim crop
+       tot in die nuwe size en shape."* The same placement the Smart crop
+       blocks make, done for her: the part of the photo worth keeping stands
+       in the new frame, rather than whatever the middle happens to be. She
+       can still drag it after. */
+    if (picture) {
+      const pictureAspect = picture.naturalWidth / Math.max(1, picture.naturalHeight);
+      setCrop(interest ? bestCrop(interest, pictureAspect, w / Math.max(1, h)) : MIDDLE);
+      setView({ scale: 1, x: 0, y: 0 });
     }
     setShowSizeModal(false);
     setSaid(t('size.applied', 'Canvas dimensions updated.'));
@@ -7301,7 +7385,7 @@ export default function PostStudio({
 
         <p className="text-[12px] leading-relaxed text-zinc-500">
           {crop.basis === 'whole'
-            ? t('post.dragLoose', 'The whole picture is loose: drag it anywhere in the frame, and slide How close to make it bigger or smaller.')
+            ? t('post.dragLoose', 'The whole picture is loose: drag it anywhere in the frame, pull a corner of its ring to make it bigger or smaller, or slide How close.')
             : movable
               ? t('post.dragIt', 'Drag the picture above to choose what shows.')
               : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}

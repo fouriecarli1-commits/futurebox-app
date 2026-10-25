@@ -376,6 +376,12 @@ export interface Cut {
   /** Sound effects on the song — the same chain a shot's sound goes through. */
   readonly audioFx?: readonly AudioFxOn[];
   /**
+   * Voice-overs: her own voice, each started at a second of the film's
+   * clock and mixed over the song and the shots. Never ducked themselves —
+   * the song ducks for THEM, the way it ducks for a speaking shot.
+   */
+  readonly voices?: readonly { readonly clip: Blob; readonly at: number; readonly long: number }[];
+  /**
    * Roll the rumble and the hiss off the scenes that speak.
    *
    * Two filters: nothing below `NOISE_LOW`, nothing above `NOISE_HIGH`. Not a
@@ -1112,7 +1118,11 @@ export async function stitch(cut: Cut): Promise<Made> {
   /* Either reason is enough to need a graph: a song laid under the film, or
      a single shot that was paid to speak. */
   const talks = cut.scenes.some((one) => one.sound);
-  if (cut.audio || talks) {
+  /* The voice-overs, decoded up front so they can be scheduled on the same
+     clock as the song. One that will not decode is left out, not a failure:
+     the rest of the film is still the film. */
+  const voices: { readonly buffer: AudioBuffer; readonly at: number; readonly long: number }[] = [];
+  if (cut.audio || talks || cut.voices?.length) {
     const Ctx =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -1162,11 +1172,20 @@ export async function stitch(cut: Cut): Promise<Made> {
         // A song that will not decode is a film without one, not a failure.
         song = null;
       }
+      for (const one of cut.voices ?? []) {
+        try {
+          const buffer = await audioContext.decodeAudioData(await one.clip.arrayBuffer());
+          voices.push({ buffer, at: Math.max(0, one.at), long: Math.min(one.long, buffer.duration) });
+        } catch (error) {
+          // A voice that will not decode is a film without that line.
+          console.warn('stitch: a voice-over would not decode and was left out —', error);
+        }
+      }
       /* The track joins the stream only when something will come out of it.
          A song that failed to decode with no talking shots used to mean no
          audio track at all, and adding a silent one would change the file
          this browser writes for a case that has already gone wrong. */
-      if (song || talks) {
+      if (song || talks || voices.length) {
         for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
       } else {
         destination = null;
@@ -1243,6 +1262,10 @@ export async function stitch(cut: Cut): Promise<Made> {
   const finished = new Promise<void>((done) => {
     recorder.onstop = () => done();
   });
+  recorder.onerror = (event) => {
+    console.error('stitch: the recorder reported an error —', (event as unknown as { error?: unknown }).error ?? event);
+  };
+  const began = performance.now();
 
   const urls: string[] = [];
   try {
@@ -1292,6 +1315,28 @@ export async function stitch(cut: Cut): Promise<Made> {
     } else {
       song?.start(0, Math.max(0, cut.audioFrom ?? 0));
     }
+    /* ── The voice-overs, on the same clock ───────────────────────────
+
+       Each one is a node started at its film second, and the song steps
+       back under it for as long as it runs — scheduled here, once, because
+       a narration crosses cuts and the per-scene duck below only knows
+       about the shot it is on. */
+    const spoke = audioContext && mixer ? audioContext.currentTime : 0;
+    const voiced = (second: number): boolean => voices.some((one) => second >= one.at && second < one.at + one.long);
+    if (audioContext && mixer) {
+      for (const one of voices) {
+        const line = audioContext.createBufferSource();
+        line.buffer = one.buffer;
+        line.connect(mixer);
+        line.start(spoke + one.at, 0, one.long);
+        songRuns.push(line);
+        if (songGain && cut.duck !== undefined) {
+          const base = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
+          songGain.gain.setTargetAtTime(base * Math.max(0, Math.min(1, cut.duck)), spoke + one.at, DUCK_IN);
+          songGain.gain.setTargetAtTime(base, spoke + one.at + one.long, DUCK_IN);
+        }
+      }
+    }
 
     for (let index = 0; index < cut.scenes.length; index += 1) {
       cut.onScene?.(index, cut.scenes.length);
@@ -1325,7 +1370,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          of them. */
       if (songGain && audioContext && cut.duck !== undefined) {
         const base = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
-        const want = talking ? base * Math.max(0, Math.min(1, cut.duck)) : base;
+        const want = talking || voiced(audioContext.currentTime - spoke) ? base * Math.max(0, Math.min(1, cut.duck)) : base;
         songGain.gain.setTargetAtTime(want, audioContext.currentTime, DUCK_IN);
       }
       video.muted = !talking;
@@ -1401,9 +1446,28 @@ export async function stitch(cut: Cut): Promise<Made> {
       /* Named `view` as well as `window`: the caption gate below reads it, and
          `window.from` inside a browser file is a line that stops the next
          reader to work out whether it means the global. */
+      /* A clip recorded in a browser — a take off this app's own camera, a
+         screen recording — carries no length in its header, and a fresh
+         element reports its `duration` as Infinity until it has been seeked
+         past the end. `windowOf` read that Infinity as "no length" and gave
+         back a window from nought to nought, so the scene ended on its first
+         frame: the export ran fourteen milliseconds and the recorder handed
+         back nothing. `check:voiceover` found it with a clip made the way a
+         phone makes one. The same seek `measure` uses settles it here, and
+         the seek back to the top below is then taken even for a scene that
+         starts at nought. */
+      let soughtEnd = false;
+      if (!Number.isFinite(video.duration)) {
+        soughtEnd = true;
+        video.currentTime = 1e101;
+        await new Promise<void>((done) => {
+          video.onseeked = () => done();
+          setTimeout(done, 1200);
+        });
+      }
       const window = windowOf(cut.scenes[index], video.duration);
       const view = window;
-      if (window.from > 0) {
+      if (window.from > 0 || soughtEnd) {
         video.currentTime = window.from;
         await new Promise<void>((done) => {
           let settled = false;
@@ -1684,7 +1748,11 @@ export async function stitch(cut: Cut): Promise<Made> {
        node holds the context open. */
     for (const one of songRuns) { try { one.stop(); } catch { /* already done */ } }
     await finished;
-  } catch {
+  } catch (error) {
+    /* Said to the console as well as answered with `failed`: the room shows
+       one sentence for every reason, and the reason is what anybody
+       debugging a film that would not come out needs to see. */
+    console.error('stitch: the film could not be put together —', error);
     try {
       if (recorder.state !== 'inactive') recorder.stop();
     } catch {
@@ -1696,7 +1764,17 @@ export async function stitch(cut: Cut): Promise<Made> {
     void audioContext?.close();
   }
 
-  if (!parts.length) return { ok: false, why: 'failed' };
+  if (!parts.length) {
+    console.error('stitch: the recorder gave nothing back', JSON.stringify({
+      voices: voices.length,
+      tracks: stream.getTracks().map((one) => `${one.kind}:${one.readyState}:muted=${one.muted}:enabled=${one.enabled}`),
+      state: recorder.state,
+      audio: audioContext ? `${audioContext.state} at ${audioContext.currentTime.toFixed(2)}s` : 'none',
+      ran: `${Math.round(performance.now() - began)}ms`,
+      scenes: cut.scenes.length,
+    }));
+    return { ok: false, why: 'failed' };
+  }
   const blob = new Blob(parts, { type: mimeType });
   return {
     ok: true,

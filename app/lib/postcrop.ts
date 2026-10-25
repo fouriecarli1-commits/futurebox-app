@@ -220,6 +220,31 @@ export const zoomTo = (crop: Crop, to: number): Crop =>
   ({ ...crop, zoom: saneZoom(to) });
 
 /**
+ * A new zoom with the picture's middle held still.
+ *
+ * The owner, 25 October 2026: *"'n raam om die hele prent te kan trek, en
+ * die hele prent manually te shrink na 'n size wat mens verkies."* A corner
+ * of that frame is pulled, and the picture grows or shrinks about its own
+ * middle, the way the words do. `zoomTo` alone would keep the PAN, which
+ * is a share of a slack that changes with the size — so the middle would
+ * drift. This works the pan back out of where the middle has to stay.
+ */
+export function zoomAbout(crop: Crop, picture: Size, frame: Size, to: number): Crop {
+  const was = place(picture, frame, crop);
+  const midX = was.left + was.width / 2;
+  const midY = was.top + was.height / 2;
+  const next = { ...crop, zoom: saneZoom(to) };
+  const now = place(picture, frame, next);
+  const wantLeft = midX - now.width / 2;
+  const wantTop = midY - now.height / 2;
+  return {
+    ...next,
+    x: now.slackX > 0 ? held((wantLeft - (frame.width - now.width) / 2) / now.slackX, -1, 1) : 0,
+    y: now.slackY > 0 ? held((wantTop - (frame.height - now.height) / 2) / now.slackY, -1, 1) : 0,
+  };
+}
+
+/**
  * Whether the picture leaves any of the frame uncovered.
  *
  * Used to say so on screen rather than to prevent it: `whole` is a choice,

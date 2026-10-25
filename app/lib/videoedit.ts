@@ -395,6 +395,28 @@ export function aspectOf(
     Math.abs(ratio - one[1]) < Math.abs(ratio - best[1]) ? one : best)[0];
 }
 
+/**
+ * A voice-over: her own voice, recorded in this room over the film while it
+ * played, laid at a second of the FILM's clock.
+ *
+ * On the film's clock and not on a shot, because a narration runs across
+ * cuts — "and then we went up the mountain" does not stop where the shot
+ * does. The cost of that choice is honest too: a shot cut out from before
+ * it leaves the words where they were, on the clock, and the film moves
+ * under them. That is what every cutting program does with a voice lane.
+ *
+ * No credits. Nothing leaves the phone: the microphone goes into
+ * `MediaRecorder` and the file goes into the film.
+ */
+export interface VoiceOver {
+  readonly id: string;
+  readonly clip: Blob;
+  /** The film second it starts at — where the playhead stood when she pressed. */
+  readonly at: number;
+  /** How long it runs, in seconds, measured by the clock while she spoke. */
+  readonly long: number;
+}
+
 /** An edit, whole. */
 export interface Edit {
   readonly pieces: readonly Piece[];
@@ -621,6 +643,8 @@ export interface Edit {
   readonly markTurn?: number;
   readonly markSolid?: number;
   readonly markUnder?: boolean;
+  /** Voice-overs laid over the film, on its own clock. Absent is none. */
+  readonly voices?: readonly VoiceOver[];
 }
 
 /**
@@ -1009,6 +1033,13 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.duck !== undefined && edit.under && on.music && on.shots
       && kept.some((one) => soundOf(one))
       ? { duck: Math.max(0, Math.min(1, edit.duck)) } : {}),
+    /* The voice-overs that still land on the film: one laid past the end of
+       a film that was since cut shorter has nothing to speak over, and a
+       renderer told to start a sound after the recording stops would. */
+    ...(edit.voices?.length
+      ? { voices: edit.voices.filter((one) => one.long > 0 && one.at < runs(edit))
+        .map(({ clip, at, long }) => ({ clip, at: Math.max(0, at), long })) }
+      : {}),
     width: frame.width,
     height: frame.height,
     fps,

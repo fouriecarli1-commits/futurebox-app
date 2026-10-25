@@ -44,6 +44,27 @@ export async function balanceOf(owner: string): Promise<number | null> {
 }
 
 /**
+ * How many ledger rows carry this `ref` for this owner, or null when the
+ * ledger could not be asked.
+ *
+ * For a run of several versions of one song (`versionsCost`): every take is
+ * spent under the same ref, so the route can hold the n-th take to there
+ * being exactly n before it — a browser cannot ask for the cheap fourth
+ * version of a song it never paid the first three of.
+ */
+export async function entriesWith(owner: string, ref: string): Promise<number | null> {
+  const client = admin();
+  if (!client) return null;
+  const { count, error } = await client
+    .from('credit_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner', owner)
+    .eq('ref', ref);
+  if (error) return null;
+  return count ?? 0;
+}
+
+/**
  * Take the credits, or refuse.
  *
  * True means they are gone and the caller may go ahead. False means the

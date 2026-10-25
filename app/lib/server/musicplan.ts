@@ -60,6 +60,15 @@ export interface Body {
   pair?: string;
   /** Written line to spoken spelling, from the member's own reading (`sayas.ts`). */
   sayAs?: Record<string, string>;
+  /**
+   * Two to four versions of the one song in one press, so she can pick
+   * (`versionsCost` in `lib/credits.ts`). `versions` is how many were asked
+   * for, `take` which one this request is (from nought), and `bundle` the
+   * id the browser gave the run, which the ledger holds every take to.
+   */
+  versions?: number;
+  take?: number;
+  bundle?: string;
 }
 
 /**

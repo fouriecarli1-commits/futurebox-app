@@ -370,6 +370,7 @@ async function draw(
   width: number,
   height: number,
   paint: (context: CanvasRenderingContext2D) => void,
+  quality = QUALITY,
 ): Promise<Made> {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -383,7 +384,7 @@ async function draw(
   bitmap.close();
   const blob = await encode(canvas);
   if (!blob) return { ok: false, why: 'unreadable' };
-  return { ok: true, blob, preview: canvas.toDataURL('image/webp', QUALITY), width, height };
+  return { ok: true, blob, preview: canvas.toDataURL('image/webp', quality), width, height };
 }
 
 /**
@@ -483,10 +484,28 @@ export function fitTo(
   };
 }
 
-export async function fit(file: File, longest: number): Promise<Made> {
+/**
+ * @param keep  Keep the picture's own quality: the file itself, untouched,
+ *   when it already fits, and a near-lossless copy when it has to come
+ *   down. For the photo editor, where the picture IS the work.
+ *
+ *   The owner, 25 October 2026: *"wanneer ek 'n foto in ons photo editor in
+ *   bring dat die kwaliteit sak."* It did: every photo was re-encoded on the
+ *   way in as WebP at 85%, which is right for a reference sent to an engine
+ *   and wrong for the thing she is about to edit at full size. Without
+ *   `keep` nothing changes for the other callers.
+ */
+export async function fit(file: File, longest: number, keep = false): Promise<Made> {
   const bitmap = await decode(file);
   if (typeof bitmap === 'string') return { ok: false, why: bitmap };
 
   const { width, height } = fitTo(bitmap.width, bitmap.height, longest);
-  return draw(bitmap, width, height, (context) => context.drawImage(bitmap, 0, 0, width, height));
+  if (keep && width === bitmap.width && height === bitmap.height && /^image\/(jpeg|png|webp)$/.test(file.type)) {
+    bitmap.close();
+    return { ok: true, blob: file, preview: URL.createObjectURL(file), width, height };
+  }
+  return draw(bitmap, width, height, (context) => {
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(bitmap, 0, 0, width, height);
+  }, keep ? 0.97 : QUALITY);
 }

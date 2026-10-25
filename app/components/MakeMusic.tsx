@@ -19,7 +19,7 @@ import {
   Video as VideoIcon, X, Mic,
   Sliders, Image as ImageIcon, Plus, Clock, AudioLines, SlidersHorizontal, Palette,
 } from 'lucide-react';
-import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
+import { renderSketch, encodeWav, familyFor, sketchDurationSeconds, type SketchSpec } from '../lib/audio';
 import {
   loadTracks, saveTracks, putAudio, getAudio, deleteAudio, downloadBlob, safeFilename,
   type Track,
@@ -43,7 +43,7 @@ import Hint from './Hint';
 import SayItWrong from './SayItWrong';
 import { weightWords, weirdWords } from '../lib/songweight';
 import { STARTERS, LENGTH_CHOICES } from '../data/sound';
-import { CREDITS, songCost, type SongEngine } from '../lib/credits';
+import { CREDITS, songCost, VERSIONS_MOST, versionsCost, type SongEngine } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import { withSaid } from '../lib/speak';
@@ -709,6 +709,20 @@ export default function MakeMusic({
      how somebody works, not a thing worth a row in a table, and a browser
      that will not keep it simply starts ticked again. */
   const [wantCover, setWantCover] = useState(true);
+  /* ── How many versions in one press ────────────────────────────────────
+     The owner, 24 October 2026: *"op een slag 2-4 weergawes te generate, dan
+     kan die mense tussen die opsie van die een liedjie kies."* One is the
+     song as it always was. More than one makes the run below, at the bundle
+     price (`versionsCost`), and the versions wait in `picking` until she
+     keeps one; the rest are dropped. */
+  const [versions, setVersions] = useState(1);
+  const [picking, setPicking] = useState<{
+    readonly name: string;
+    readonly spec: SketchSpec;
+    readonly began: number;
+    readonly takes: readonly { readonly blob: Blob; readonly model: string; readonly sung?: string; readonly sungAt?: Track['sungAt']; readonly url: string }[];
+  } | null>(null);
+  useEffect(() => () => { picking?.takes.forEach((one) => URL.revokeObjectURL(one.url)); }, [picking]);
   useEffect(() => {
     try {
       const said = window.localStorage.getItem('futurebox.cover.with.song');
@@ -890,6 +904,141 @@ export default function MakeMusic({
   const [justMade, setJustMade] = useState<string | null>(null);
 
 
+  /**
+   * A made song, kept: on the shelf, in the account, and handed to the
+   * room. Everything after the engine, in one place, so a song from a run
+   * of versions (`keepVersion`) lands exactly as one from a single press.
+   */
+  const settle = useCallback(
+    async ({ blob, source, models, sungBack, sungAt, name, spec, remixOf, began }: {
+      readonly blob: Blob;
+      readonly source: Track['source'];
+      readonly models: string[];
+      readonly sungBack: string;
+      readonly sungAt: Track['sungAt'];
+      readonly name: string;
+      readonly spec: SketchSpec;
+      readonly remixOf?: Track;
+      readonly began: number;
+    }): Promise<void> => {
+      setStage({ at: 'saving' });
+      // How long that really took, kept so the next one can be told what to
+      // expect. Only real runs are recorded, and only ones that finished.
+      if (source === 'engine') remember(seconds, Math.round((Date.now() - began) / 1000));
+
+      // What the library will print. The sketch's arithmetic describes the
+      // sketch; when a real engine made this, the file itself is asked, and
+      // the chosen length stands in only if it cannot be read.
+      const length =
+        source === 'engine' ? ((await durationOf(blob)) ?? seconds) : sketchDurationSeconds(spec);
+
+      // The plan this song was made from, kept so the words can follow the
+      // music later. Only for a real generation: a sketch has no singing in
+      // it, so following a lyric sheet over one would be following nothing.
+      const plan = source === 'engine' ? splitSections(lyrics, seconds) : [];
+
+      const id = `t-${Date.now()}`;
+      await putAudio(id, blob);
+
+      const track: Track = {
+        id,
+        title: name,
+        genre: remixOf?.genre ?? (canvas.style.split(',')[0] || 'Untitled style').trim(),
+        bpm: spec.bpm,
+        key: spec.key,
+        /* The words the engine sang, when the room had none of its own.
+           Every song made by prompt since 8 October came back with these
+           and dropped them — see `lib/sungwords.ts`. They go on the track
+           itself so the release carries them, the sleeve can read them,
+           and a lyric video has something to put on the screen. */
+        lyrics: lyrics.trim() || sungBack,
+        ...(sungAt ? { sungAt } : {}),
+        style: styleText,
+        models,
+        source,
+        seconds: Math.round(length),
+        createdAt: new Date().toISOString(),
+        seed: spec.seed,
+        ...(plan.length
+          ? { parts: plan, plannedSeconds: plan.reduce((total, part) => total + part.seconds, 0) }
+          : {}),
+        ...(remixOf ? { remixOf: remixOf.id } : {}),
+        /* Made by two people: both named as the artist, not only whoever
+           pressed the button. */
+        ...(pairGate?.credit ? { by: pairGate.credit, pair: pairGate.id } : {}),
+      };
+
+      const next = [track, ...tracks];
+      setTracks(next);
+      saveTracks(next);
+      setJustMade(track.id);
+      /* Remembered against the account, not just this browser.
+
+         The genre is the one thing about a song that says something about
+         the person who made it rather than about the song, which is why it
+         is this and not the title or the words. A count, and nothing about
+         when — see `supabase/taste.sql`. */
+      noteTaste('genre', track.genre);
+      record('publish.release');
+      setStatus(remixOf ? t('make.doneTake') : t('make.done'));
+
+      // The song is already playable. Copying it to the account happens after,
+      // so a slow upload never holds up the thing you just made.
+      cloud.pushTrack(track, blob).then((result) => {
+        if (result.saved) {
+          setStatus(t('auth.savedToAccount'));
+        } else if (result.reason !== 'off') {
+          // The song is safe on the device either way, but if it did not reach
+          // the account you have to be told — otherwise you find out by
+          // opening your phone and seeing an empty channel.
+          setStatus(result.message);
+        }
+      });
+      onMade(track);
+      /* The panel, open, with the new song in it. `coverFor` is what tells
+         it to draw without being asked — see `Sleeve.startNow`, which only
+         acts once and only when the song has no cover already. */
+      if (wantCover) {
+        setCoverFor(track.id);
+        setSleeveFor(track.id);
+      }
+    },
+    [canvas.style, lyrics, onMade, pairGate, seconds, styleText, t, tracks, wantCover],
+  );
+
+  /** The one she chose out of a run of versions, kept; the rest dropped. */
+  const keepVersion = useCallback(
+    async (index: number) => {
+      if (!picking) return;
+      const take = picking.takes[index];
+      if (!take) return;
+      setBusy(true);
+      try {
+        const trained = sounds.mine.find((one) => one.id === ownSound);
+        const models = [take.model]
+          .concat(singItYourself ? ['Backing — no vocal'] : [])
+          .concat(trained ? [`Trained on your own songs — ${trained.name}`] : []);
+        await settle({
+          blob: take.blob,
+          source: 'engine',
+          models,
+          sungBack: take.sung && !lyrics.trim() ? take.sung : '',
+          sungAt: take.sungAt,
+          name: picking.name,
+          spec: picking.spec,
+          began: picking.began,
+        });
+        setPicking(null);
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message.trim() || t('make.failed') : t('make.failed'));
+      } finally {
+        setBusy(false);
+        setStage(null);
+      }
+    },
+    [lyrics, ownSound, picking, settle, singItYourself, sounds.mine, t],
+  );
+
   const make = useCallback(
     async (remixOf?: Track) => {
       const gate = check('publish.release', userPlan);
@@ -938,6 +1087,36 @@ export default function MakeMusic({
           bars: Math.max(8, Math.round((seconds * bpm) / 240)),
           seed: Math.floor(Math.random() * 1_000_000),
         };
+
+        /* ── Several versions: one run, then the picker ──────────────────
+           Each take is charged its step of the bundle on the server, under
+           the run's id; the song is not saved until she keeps one. */
+        if (versions > 1 && engines.available('audio') && !pairGate && !remixOf) {
+          const bundle = `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+          const takes: { blob: Blob; model: string; sung?: string; sungAt?: Track['sungAt']; url: string }[] = [];
+          for (let take = 0; take < versions; take += 1) {
+            setStatus(t('make.versionGoing', 'Version {n} of {of}…').replace('{n}', String(take + 1)).replace('{of}', String(versions)));
+            const result = await engines.generateAudio({
+              title: name,
+              style: styleText,
+              lyrics,
+              bpm: spec.bpm,
+              key: spec.key,
+              seconds,
+              instrumental: singItYourself,
+              finetuneId: ownSound || undefined,
+              sayAs: canvas.sayAs,
+              versions,
+              take,
+              bundle,
+              onStage: setStage,
+            });
+            takes.push({ blob: result.blob, model: result.model, sung: result.sung, sungAt: result.sungAt, url: URL.createObjectURL(result.blob) });
+          }
+          setPicking({ name, spec, began, takes });
+          setStatus(t('make.versionsPick', 'Listen to each one and keep the one you want. The others are dropped.'));
+          return;
+        }
 
         // A connected engine takes over here; until then we render the sketch.
         let blob: Blob;
@@ -994,87 +1173,7 @@ export default function MakeMusic({
         }
 
 
-        setStage({ at: 'saving' });
-        // How long that really took, kept so the next one can be told what to
-        // expect. Only real runs are recorded, and only ones that finished.
-        if (source === 'engine') remember(seconds, Math.round((Date.now() - began) / 1000));
-
-        // What the library will print. The sketch's arithmetic describes the
-        // sketch; when a real engine made this, the file itself is asked, and
-        // the chosen length stands in only if it cannot be read.
-        const length =
-          source === 'engine' ? ((await durationOf(blob)) ?? seconds) : sketchDurationSeconds(spec);
-
-        // The plan this song was made from, kept so the words can follow the
-        // music later. Only for a real generation: a sketch has no singing in
-        // it, so following a lyric sheet over one would be following nothing.
-        const plan = source === 'engine' ? splitSections(lyrics, seconds) : [];
-
-        const id = `t-${Date.now()}`;
-        await putAudio(id, blob);
-
-        const track: Track = {
-          id,
-          title: name,
-          genre: remixOf?.genre ?? (canvas.style.split(',')[0] || 'Untitled style').trim(),
-          bpm: spec.bpm,
-          key: spec.key,
-          /* The words the engine sang, when the room had none of its own.
-             Every song made by prompt since 8 October came back with these
-             and dropped them — see `lib/sungwords.ts`. They go on the track
-             itself so the release carries them, the sleeve can read them,
-             and a lyric video has something to put on the screen. */
-          lyrics: lyrics.trim() || sungBack,
-          ...(sungAt ? { sungAt } : {}),
-          style: styleText,
-          models,
-          source,
-          seconds: Math.round(length),
-          createdAt: new Date().toISOString(),
-          seed: spec.seed,
-          ...(plan.length
-            ? { parts: plan, plannedSeconds: plan.reduce((total, part) => total + part.seconds, 0) }
-            : {}),
-          ...(remixOf ? { remixOf: remixOf.id } : {}),
-          /* Made by two people: both named as the artist, not only whoever
-             pressed the button. */
-          ...(pairGate?.credit ? { by: pairGate.credit, pair: pairGate.id } : {}),
-        };
-
-        const next = [track, ...tracks];
-        setTracks(next);
-        saveTracks(next);
-        setJustMade(track.id);
-        /* Remembered against the account, not just this browser.
-
-           The genre is the one thing about a song that says something about
-           the person who made it rather than about the song, which is why it
-           is this and not the title or the words. A count, and nothing about
-           when — see `supabase/taste.sql`. */
-        noteTaste('genre', track.genre);
-        record('publish.release');
-        setStatus(remixOf ? t('make.doneTake') : t('make.done'));
-
-        // The song is already playable. Copying it to the account happens after,
-        // so a slow upload never holds up the thing you just made.
-        cloud.pushTrack(track, blob).then((result) => {
-          if (result.saved) {
-            setStatus(t('auth.savedToAccount'));
-          } else if (result.reason !== 'off') {
-            // The song is safe on the device either way, but if it did not reach
-            // the account you have to be told — otherwise you find out by
-            // opening your phone and seeing an empty channel.
-            setStatus(result.message);
-          }
-        });
-        onMade(track);
-        /* The panel, open, with the new song in it. `coverFor` is what tells
-           it to draw without being asked — see `Sleeve.startNow`, which only
-           acts once and only when the song has no cover already. */
-        if (wantCover) {
-          setCoverFor(track.id);
-          setSleeveFor(track.id);
-        }
+        await settle({ blob, source, models, sungBack, sungAt, name, spec, remixOf, began });
       } catch (error) {
         // The reason travels all the way here and used to be dropped on the
         // floor: `catch {}` without binding it, then a generic line. The music
@@ -1089,7 +1188,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, onPairMade, ownSound, pairGate, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, wantCover],
+    [bpm, canvas.sayAs, canvas.style, lyrics, onPairMade, ownSound, pairGate, seconds, settle, singItYourself, songKey, sounds.mine, styleText, t, title, userPlan, versions, wordless],
   );
 
   const toggle = async (track: Track) => {
@@ -1961,7 +2060,12 @@ export default function MakeMusic({
             }}
             className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
           />
-          <span>{t('make.coverToo', 'Make album cover')}</span>
+          {/* With its price on it: the tick adds to the press, and a tick
+              that quietly adds credits is the surprise this app does not do. */}
+          <span>
+            {t('make.coverToo', 'Make album cover')}
+            <span className="ml-1.5 text-xs font-semibold text-zinc-500">· {CREDITS.cover} {t('video.credits', 'credits')}</span>
+          </span>
         </label>
         {/* Or buy one: a cover drawn by a real artist, from the album art
             market. The owner, 18 October 2026. */}
@@ -1982,6 +2086,37 @@ export default function MakeMusic({
           </button>
         )}
 
+        {/* ── How many versions ──────────────────────────────────────────
+            The owner, 24 October 2026: *"2-4 weergawes … dan kan die mense
+            tussen die opsie van die een liedjie kies."* Each chip says the
+            whole price of its run, so the press below never surprises. A
+            pair song is made once, as agreed, and offers no run. */}
+        {!pairGate && (
+          <div className="space-y-1" data-makeversions>
+            <p className="text-xs font-semibold text-zinc-400">
+              {t('make.versionsHow', 'How many versions? Listen to them, keep one.')}
+            </p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {Array.from({ length: VERSIONS_MOST }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  data-makeversion={n}
+                  aria-pressed={versions === n}
+                  disabled={busy}
+                  onClick={() => setVersions(n)}
+                  className={`min-h-[44px] rounded-xl border px-2 text-sm font-bold ${versions === n ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200' : 'border-zinc-700 bg-zinc-900/60 text-zinc-300'}`}
+                >
+                  {n}
+                  <span className="block text-[10px] font-semibold text-zinc-500">
+                    {versionsCost(songCost(pricedFor(seconds), singer), n)} {t('video.credits', 'credits')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => make()}
@@ -1994,12 +2129,49 @@ export default function MakeMusic({
           {/* What the press costs, both halves of it. The song's number was
               already on the length chips; the cover's was nowhere until
               now, and a tick that quietly adds two credits is the surprise
-              this app does not do. */}
+              this app does not do. A run of versions is the bundle price. */}
           <span className="text-sm font-bold opacity-80">
-            · {songCost(pricedFor(seconds), singer) + (wantCover ? CREDITS.cover : 0)}{' '}
+            · {versionsCost(songCost(pricedFor(seconds), singer), pairGate ? 1 : versions) + (wantCover ? CREDITS.cover : 0)}{' '}
             {t('video.credits', 'credits')}
           </span>
         </button>
+
+        {/* ── The versions, waiting to be chosen ─────────────────────────── */}
+        {picking && (
+          <div className="space-y-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-3" data-makepicking>
+            <p className="text-sm font-bold text-emerald-200">
+              {t('make.versionsReady', '{n} versions of “{name}”. Listen, then keep one — the others are dropped.')
+                .replace('{n}', String(picking.takes.length)).replace('{name}', picking.name)}
+            </p>
+            <ul className="space-y-2">
+              {picking.takes.map((take, index) => (
+                <li key={take.url} className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/70 p-2" data-makeversionrow={index + 1}>
+                  <span className="w-6 text-center text-sm font-black text-zinc-300">{index + 1}</span>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio src={take.url} controls preload="metadata" className="h-9 min-w-0 flex-1" />
+                  <button
+                    type="button"
+                    data-makekeep={index + 1}
+                    disabled={busy}
+                    onClick={() => void keepVersion(index)}
+                    className="min-h-[44px] rounded-xl bg-emerald-500 px-3 text-sm font-extrabold text-onAccent disabled:opacity-60"
+                  >
+                    {t('make.keepVersion', 'Keep this one')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              data-makedropall
+              disabled={busy}
+              onClick={() => { setPicking(null); setStatus(t('make.versionsDropped', 'Dropped. Nothing was saved.')); }}
+              className="min-h-[44px] rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300"
+            >
+              {t('make.dropVersions', 'Drop them all')}
+            </button>
+          </div>
+        )}
 
         {pairGate && !pairGate.ready && !busy && (
           <p data-makewaits className="text-center text-sm text-amber-300">{pairGate.why}</p>

@@ -102,6 +102,14 @@ export interface AudioRequest {
    * shown and released stay the written ones.
    */
   readonly sayAs?: Readonly<Record<string, string>>;
+  /**
+   * One of several versions of the same song, made in one press so she can
+   * pick: how many, which one this is (from nought), and the id of the run,
+   * which the server's ledger holds every take to. See `versionsCost`.
+   */
+  readonly versions?: number;
+  readonly take?: number;
+  readonly bundle?: string;
   /** Told what is happening, as it happens. Optional; nothing depends on it. */
   readonly onStage?: (stage: Stage) => void;
 }
@@ -354,6 +362,9 @@ export const engines: Engines = {
         finetuneId: request.finetuneId || undefined,
         pair: request.pair || undefined,
         sayAs: request.sayAs && Object.keys(request.sayAs).length ? request.sayAs : undefined,
+        ...(request.versions && request.versions > 1
+          ? { versions: request.versions, take: request.take ?? 0, bundle: request.bundle }
+          : {}),
         }),
       });
     } catch (error) {

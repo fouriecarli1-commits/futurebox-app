@@ -34,8 +34,9 @@ import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
 import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
 import { makeSong, saidHeader } from '@/app/lib/server/lyria';
 import { cannot, promptFor } from '@/app/lib/server/lyriaprompt';
-import { songCost , CREDITS } from '@/app/lib/credits';
-import { charge, chargeTogether } from '@/app/lib/server/credits';
+import { songCost , CREDITS, VERSIONS_MOST, versionStep } from '@/app/lib/credits';
+import { charge, chargeTogether, entriesWith } from '@/app/lib/server/credits';
+import { callerIsOwner } from '@/app/lib/server/account';
 import { guard } from '@/app/lib/server/safety';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 import { kidsCovers } from '@/app/lib/server/kidsmode';
@@ -321,9 +322,39 @@ export async function POST(request: Request): Promise<Response> {
   /* A song made by two people in a pair room is paid as they agreed — half
      each, or all by one of them (`chargeTogether`); every other song by the
      person who asked. */
-  const pay = (amount: number) => (together?.ok && together.other
-    ? chargeTogether(request, amount, 'song', together.other, together.share)
-    : charge(request, amount, 'song'));
+  /* ── Several versions of the one song, in one press ───────────────────
+     The owner, 24 October 2026: *"op een slag 2-4 weergawes te generate, dan
+     kan die mense tussen die opsie van die een liedjie kies"*, with a bundle
+     price (`versionsCost`). The browser sends one request per version with
+     the run's id; each is charged its step of the bundle under that id, and
+     the n-th take is only served when the ledger shows exactly n before it
+     — so the cheap fourth version cannot be asked for on its own. Not for
+     a pair song or the kids room, which have prices of their own. */
+  const versions = Math.max(1, Math.min(VERSIONS_MOST, Math.round(Number(body.versions ?? 1)) || 1));
+  const take = Math.max(0, Math.min(versions - 1, Math.round(Number(body.take ?? 0)) || 0));
+  const bundle = typeof body.bundle === 'string' && /^[a-z0-9-]{6,48}$/i.test(body.bundle) ? body.bundle : null;
+  const bundled = versions > 1 && bundle !== null;
+  if (versions > 1 && (!bundled || kidsSong || together)) {
+    return Response.json(
+      { error: 'bad_request', message: 'Several versions need a run id, and are not for a pair song or the kids room.' },
+      { status: 400 },
+    );
+  }
+  if (bundled && take > 0 && caller && !callerIsOwner(caller)) {
+    const before = await entriesWith(caller.id, `versions:${bundle}`);
+    if (before !== take) {
+      return Response.json(
+        { error: 'out_of_order', message: 'That version is not the next one in its run. Start the run again.' },
+        { status: 409 },
+      );
+    }
+  }
+  const priced = (single: number): number => (bundled ? versionStep(single, versions, take) : single);
+  const pay = (amount: number) => (bundled
+    ? charge(request, amount, 'song', `versions:${bundle}`)
+    : together?.ok && together.other
+      ? chargeTogether(request, amount, 'song', together.other, together.share)
+      : charge(request, amount, 'song'));
   const sung = (body.sections ?? [])
     .flatMap((one) => one.lines ?? [])
     .join('\n');
@@ -351,7 +382,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     /* Lyria is one price per song, whatever its length — `songCost` says so. */
-    const bill = await pay(kidsSong ? CREDITS.kidSong : songCost(length, 'google'));
+    const bill = await pay(kidsSong ? CREDITS.kidSong : priced(songCost(length, 'google')));
     if (!bill.ok) return bill.response;
 
     const asked = promptFor(body);
@@ -381,7 +412,7 @@ export async function POST(request: Request): Promise<Response> {
   // Paid for before a byte is asked for, and given back below if the engine
   // then refuses. Charging afterwards would hand free work to whoever is
   // quickest, because two requests can both pass a check that is not a write.
-  const paid = await pay(kidsSong ? CREDITS.kidSong : songCost(length));
+  const paid = await pay(kidsSong ? CREDITS.kidSong : priced(songCost(length)));
   if (!paid.ok) return paid.response;
 
   /* ── Out of the one door, which this call never went through ──────

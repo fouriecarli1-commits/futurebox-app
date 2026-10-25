@@ -1150,6 +1150,37 @@ export function songCost(seconds: number, engine: SongEngine = 'eleven'): number
 }
 
 /**
+ * Two, three or four versions of one song in one press, so she can pick.
+ *
+ * The owner, 24 October 2026: *"ek dink daar moet ook 'n opsie wees om op een
+ * slag 2-4 weergawes te generate, dan kan die mense tussen die opsie van die
+ * een liedjie kies"* — and the next day, *"Die meer versions kan dalk 'n
+ * bundle price hê."* So: a bundle, as a multiple of the one-song price,
+ * rounded to whole credits. On an eight-credit song that is 8, 14, 19 and
+ * 24. Every version still costs the engine the same, so the multiples stay
+ * above the supplier's share; when a cheaper engine is contracted the
+ * numbers here drop, not the code.
+ *
+ * Charged version by version, each at the step between two bundle prices
+ * (`versionStep`), so a run that fails halfway has paid for what it got
+ * and no more — and so the route can hold every take to the one before it.
+ */
+export const VERSION_BUNDLE: Readonly<Record<number, number>> = { 1: 1, 2: 1.75, 3: 2.4, 4: 3 };
+export const VERSIONS_MOST = 4;
+
+export function versionsCost(single: number, versions: number): number {
+  const n = Math.max(1, Math.min(VERSIONS_MOST, Math.round(versions)));
+  return Math.round(single * (VERSION_BUNDLE[n] ?? n));
+}
+
+/** What the `take`-th version (from nought) of `versions` costs on its own. */
+export function versionStep(single: number, versions: number, take: number): number {
+  const n = Math.max(1, Math.min(VERSIONS_MOST, Math.round(versions)));
+  const k = Math.max(0, Math.min(n - 1, Math.round(take)));
+  return versionsCost(single, k + 1) - (k === 0 ? 0 : versionsCost(single, k));
+}
+
+/**
  * An episode dubbed into another language, by its length.
  *
  * ElevenLabs bill dubbing by the minute of source audio, and it is the dearest

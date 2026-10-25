@@ -87,6 +87,60 @@ try {
     after !== null && after.busy > 500, JSON.stringify(after));
   check('  and the block says it is the one in use',
     (await page.locator('[data-postsmartcrop="square"]').first().getAttribute('aria-pressed')) === 'true');
+
+  /* ── The whole picture, loose, with a ring to pull ───────────────────
+     The owner, 25 October 2026: *"'n raam om die hele prent te kan trek, en
+     die hele prent manually te shrink na 'n size wat mens verkies."* A wide
+     photo in a square frame sits in the middle with background above and
+     below; its top-left corner is a known place. Pulled toward the middle,
+     the picture gets smaller — the zoom reads below one — and it stays in
+     the middle. */
+  await page.locator('[data-postbasis="whole"]').first().click();
+  await page.waitForTimeout(500);
+  const zoomWas = (await page.locator('[data-postzoomnow]').first().innerText().catch(() => '')) || '';
+  const canvasBox = await page.locator('[data-postcanvas]').first().boundingBox();
+  check('the whole picture starts at one', /1\.00/.test(zoomWas) && canvasBox !== null, zoomWas);
+  if (canvasBox) {
+    /* A 16:9 photo contained in a 1:1 frame: full width, 9/16 of the height,
+       so its top edge is (1 − 9/16) / 2 of the frame down. */
+    const cornerX = canvasBox.x + 2;
+    const cornerY = canvasBox.y + canvasBox.height * ((1 - 9 / 16) / 2) + 2;
+    const midX = canvasBox.x + canvasBox.width / 2;
+    const midY = canvasBox.y + canvasBox.height / 2;
+    await page.mouse.move(cornerX, cornerY);
+    await page.mouse.down();
+    for (let step = 1; step <= 8; step += 1) {
+      await page.mouse.move(cornerX + (midX - cornerX) * 0.3 * (step / 8), cornerY + (midY - cornerY) * 0.3 * (step / 8));
+      await page.waitForTimeout(30);
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    const zoomNow = (await page.locator('[data-postzoomnow]').first().innerText().catch(() => '')) || '';
+    const read = Number((zoomNow.match(/([\d.]+)x/) ?? [])[1]);
+    check('  and pulling its corner toward the middle makes it smaller',
+      Number.isFinite(read) && read < 0.95 && read > 0.4, `the zoom reads "${zoomNow}" after the pull`);
+    const seen = await page.evaluate(() => {
+      const one = document.querySelector('[data-postcanvas]');
+      if (!one) return null;
+      const ctx = one.getContext('2d');
+      const d = ctx.getImageData(0, 0, one.width, one.height).data;
+      /* The photo is grey with a coloured figure; the frame's background is
+         not grey. Where the grey starts and stops across the middle row says
+         where the picture sits. */
+      const y = Math.floor(one.height / 2);
+      let first = -1; let last = -1;
+      for (let x = 0; x < one.width; x += 1) {
+        const i = (y * one.width + x) * 4;
+        const grey = Math.abs(d[i] - 0x7a) < 12 && Math.abs(d[i + 1] - 0x7a) < 12 && Math.abs(d[i + 2] - 0x7a) < 12;
+        const figure = Math.abs(d[i] - d[i + 1]) > 80;
+        if (grey || figure) { if (first < 0) first = x; last = x; }
+      }
+      return { first, last, width: one.width };
+    });
+    check('  about its middle, not toward the corner that was pulled',
+      seen !== null && seen.first > 0 && Math.abs(seen.first - (seen.width - 1 - seen.last)) <= Math.max(6, seen.width * 0.03),
+      JSON.stringify(seen));
+  }
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 300)}`);
 } finally {
