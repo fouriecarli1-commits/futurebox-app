@@ -109,3 +109,13 @@ export const APP_LINE = 'Make a song, make the video, and publish it. In English
 export function profileAddress(handle: string): string {
   return `${SITE_HOST}/@${handle.replace(/^@/, '')}`;
 }
+
+/**
+ * Where the kids' app lives as an address of its own: `kids.` in front of
+ * the real domain, once there is one, and `/kids` on a preview address,
+ * where no subdomain exists. Here rather than in `KidsInstall.tsx` because
+ * it names the domain, and the domain is named in this file only.
+ */
+export const KIDS_ADDRESS = SITE_HOST.endsWith('futurebox.studio')
+  ? `kids.${SITE_HOST.replace(/^www\./, '')}`
+  : `${SITE_HOST}/kids`;

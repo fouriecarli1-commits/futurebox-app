@@ -61,8 +61,17 @@ const check = (label: string, ok: boolean, detail = '') => {
 
 const scripts = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts;
 const files = readdirSync('.github/workflows').filter((one) => /\.ya?ml$/.test(one));
+/* Without its comments. On 26 October 2026 eight checks were found sitting
+   at the end of a YAML comment — two lines of a step had been joined, the
+   `run:` went with the join, and the check names stayed in the text. This
+   guard read the text, found the names, and said they ran. They had not run
+   since. A name only counts where a step would execute it. */
 const workflow = files
   .map((one) => readFileSync(`.github/workflows/${one}`, 'utf8'))
+  .join('\n')
+  .split('\n')
+  .filter((line) => !/^\s*#/.test(line))
+  .map((line) => line.replace(/\s#\s.*$/, ''))
   .join('\n');
 
 /* ── And does it run the Node the sweep runs on ────────────────────────

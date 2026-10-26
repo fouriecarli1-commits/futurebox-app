@@ -53,7 +53,9 @@ const OURS = /(futurebox[a-z0-9-]*\.(app|com|co\.za|io|net|studio)|futurebox-app
 const typed: string[] = [];
 for (const path of files) {
   if (ALLOWED.includes(path)) continue;
-  readFileSync(path, 'utf8')
+  /* Comments may name an address — a note about what went wrong on
+     `futurebox-app.vercel.app` is history, not a link. Code may not. */
+  withoutComments(readFileSync(path, 'utf8'))
     .split('\n')
     .forEach((line, i) => {
       if (OURS.test(line)) typed.push(`${path}:${i + 1}: ${line.trim().slice(0, 80)}`);

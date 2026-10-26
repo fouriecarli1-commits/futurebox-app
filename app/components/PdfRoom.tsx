@@ -17,6 +17,7 @@
  * writing is `lib/pdfwork.ts`, the drawing `lib/pdfview.ts`; both are loaded
  * only when this room opens.
  */
+import { SITE_HOST } from '../lib/brand';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, ArrowRight, Calendar, Check, ChevronLeft, ChevronRight, CircleDot, Combine, Download, Eraser, FileOutput,
@@ -1315,7 +1316,7 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
           </div>
         )}
         {m.kind === 'link' && (
-          <input type="url" inputMode="url" value={m.url} data-pdflinkurl placeholder="futurebox.co.za" onChange={(event) => { const url = event.target.value; editPicked((x) => (x.kind === 'link' ? { ...x, url } : x)); }} className={FIELD} aria-label={w('url')} />
+          <input type="url" inputMode="url" value={m.url} data-pdflinkurl placeholder={SITE_HOST} onChange={(event) => { const url = event.target.value; editPicked((x) => (x.kind === 'link' ? { ...x, url } : x)); }} className={FIELD} aria-label={w('url')} />
         )}
         {m.kind === 'field' && (
           <input value={m.name} onChange={(event) => { const n = event.target.value; editPicked((x) => (x.kind === 'field' ? { ...x, name: n } : x)); }} className={FIELD} aria-label={w('fieldName')} />

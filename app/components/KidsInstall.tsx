@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, ExternalLink, Smartphone } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { SITE_HOST } from '../lib/brand';
+import { SITE_HOST, KIDS_ADDRESS as KIDS_FROM_BRAND } from '../lib/brand';
 
 /** The install offer Chrome hands a page that can be installed. */
 interface InstallOffer extends Event {
@@ -33,9 +33,7 @@ type Where = 'apple' | 'samsung' | 'other';
  * grown-up app, a link to it leaves that app for the browser — the one place
  * a phone will install another app from.
  */
-const KIDS_ADDRESS = SITE_HOST.endsWith('futurebox.studio')
-  ? `kids.${SITE_HOST.replace(/^www\./, '')}`
-  : `${SITE_HOST}/kids`;
+const KIDS_ADDRESS = KIDS_FROM_BRAND;
 
 /** Remembered for this window: it was opened from the kids' own icon. */
 const FROM_ICON = 'fb-kids-app';

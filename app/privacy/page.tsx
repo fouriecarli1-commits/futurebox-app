@@ -15,6 +15,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { SITE_HOST } from '../lib/brand';
 
 export const metadata = {
   title: 'Privacy — FutureBox',
@@ -68,7 +69,7 @@ export default function Privacy(): React.ReactElement {
               nothing further about the company is — see `lib/brand.ts`. */}
           <p className="text-base text-zinc-400 leading-relaxed" data-privacyparty>
             This notice is given by FUTUREBOXSTUDIO (Pty) Ltd, a South African company, which runs
-            FutureBox (the website at futurebox.studio and the FutureBox app on Google Play) and is
+            FutureBox (the website at {SITE_HOST} and the FutureBox app on Google Play) and is
             the responsible party for your personal information under POPIA.
           </p>
         </header>

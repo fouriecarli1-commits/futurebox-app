@@ -1,3 +1,4 @@
+import { SITE_URL } from './brand';
 /**
  * Barcode & QR code generator for FutureBox Studio.
  *
@@ -274,7 +275,7 @@ export function generateBarcodeDataUrl(options: BarcodeOptions): string {
 
   if (typeof document === 'undefined') return '';
 
-  const safeData = data.trim() || (type === 'qr' ? 'https://futurebox.app' : '123456789');
+  const safeData = data.trim() || (type === 'qr' ? SITE_URL : '123456789');
 
   if (type === 'code128' || type === 'ean13' || type === 'upca') {
     const width = options.width || 360;

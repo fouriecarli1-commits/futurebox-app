@@ -1127,7 +1127,10 @@ jobs:
         run: npm run check:radarshuffle
 
       # The rooms that answer "not set up" rather than failing, the names
-      # nobody may take, and the marketing arithmetic that reaches a client. && npm run check:queue && npm run check:analyse && npm run check:brand && npm run check:reserved && npm run check:nam && npm run check:marketplan && npm run check:adweek && npm run check:habits
+      # nobody may take, the address typed in one place only, and the
+      # marketing arithmetic that reaches a client.
+      - name: Not-set-up rooms, reserved names, one address and the marketing arithmetic
+        run: npm run check:queue && npm run check:analyse && npm run check:brand && npm run check:reserved && npm run check:nam && npm run check:marketplan && npm run check:adweek && npm run check:habits
 
       # And the rule that keeps this list honest.
       - name: Every check runs somewhere

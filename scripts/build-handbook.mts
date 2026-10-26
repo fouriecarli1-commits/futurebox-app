@@ -33,6 +33,7 @@
  * fails loudly if a page ever grows something this cannot read.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { SITE_HOST } from '../app/lib/brand.ts';
 
 const PAGES = [
   { name: 'TERMS', title: 'Terms', path: 'app/terms/page.tsx' },
@@ -93,6 +94,9 @@ function expressions(source: string, updated: string): string {
     // all, so there is nothing left to substitute at read time.
     if (code === 'CONTACT_PAGE') return 'the help page';
     if (code === 'UPDATED') return updated;
+    /* The site's own address, read from the same place the page reads it,
+       so the assistant names the address the page shows. */
+    if (code === 'SITE_HOST') return SITE_HOST;
     if (code === 'children' || code === 'title') return whole;
     throw new Error(
       `handbook: cannot read the expression {${code}} — add it to expressions() in scripts/build-handbook.mts`,
