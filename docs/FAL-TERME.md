@@ -74,6 +74,38 @@ must not send a clip.
   person.
 - **Sub-processors.** Attachment 4 points to https://trust.fal.ai/subprocessors.
 
+## The API Services terms, read the same day
+
+The owner pasted these too. Five points bind how the app is built:
+
+1. **Never an "Excluded Model".** Section 2 (*Use of Client Content*): a
+   model marked "Pending Enterprise Ready" may be trained on what we send,
+   **and the DPA and their security duties do not apply to it at all.** So
+   that label is not a privacy footnote, it switches off everything in the
+   section above. The app may only call models without it.
+2. **A third-party model is another company.** Section 2 (*Third Party
+   Models*): when a model on fal.ai runs through a partner's own API, the
+   member's content goes to that partner, and fal.ai marks which models
+   those are. The background-removal model priced in `credits.ts` is
+   VEED's. If its page marks it as a partner API, VEED is a new processor:
+   a name on the privacy page and a row in `check:verwerkers`, or a
+   fal-hosted model instead. Prefer models fal.ai runs itself.
+3. **The key never reaches a phone.** Section 2: "Client will not expose any
+   of the Services APIs directly to any End Users." Every call goes through
+   our server with `FAL_KEY` held there, which is how every other engine in
+   this app already works.
+4. **Our terms must protect them as well as theirs do.** Section 2 (*End
+   User Agreements*). The terms page already has lawful use, no
+   infringement, no impersonation and "not guaranteed to be unique". On 26
+   October 2026 two lines were widened to fit video: "unique" now covers a
+   picture or film, not only music, and "upload recordings you have no
+   right to" now names footage and pictures, and film of somebody who has
+   not agreed to be in it.
+5. **We carry the risk of what members do with it.** Section 3: FutureBox
+   indemnifies fal.ai against claims arising from members' use. That is
+   why the prompt check and the strike rule on the terms page apply to
+   these buttons too, the same as to video generation.
+
 ## Commitment minimums
 
 Only matter when volume grows. They offered a 15-minute call; nothing has to
@@ -93,6 +125,7 @@ price is set, the same rule as every other engine.
    `FAL_KEY` (never in chat, never in code).
 2. The DPA and API terms saved as PDFs in `private/`, dated.
 3. Their answer on deleting the clip and the result after each job (above).
-4. Each model's page checked for "Pending Enterprise Ready".
+4. Each model's page checked: not "Pending Enterprise Ready", and not a
+   partner API (or that partner added as a processor first).
 5. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
    red until it is there.

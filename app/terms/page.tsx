@@ -76,7 +76,7 @@ export const metadata = {
    does not need to enjoy reading it, but it has to be here and it has to be
    plain, because the alternative is a clause somebody agreed to without being
    told. */
-const UPDATED = '14 October 2026';
+const UPDATED = '26 October 2026';
 
 /* Contact is a page, not an address.
 
@@ -154,7 +154,7 @@ export default function Terms(): React.ReactElement {
                 our own reading of somebody else's statute would be worse.
                 It is on the attorney's list in `docs/LEGAL-REVIEW.md`. */}
             <li><strong className="text-white">A song the machine made on its own may not be yours to defend.</strong> Nobody takes it from you and you may sell it — that part is above and it stands. What is not settled, here or in most countries, is whether a piece of music generated purely from a prompt attracts the kind of copyright that lets you stop somebody else using something very like it. The usual answer is that protection follows human authorship. So the surest way to hold something defensible is to put yourself into it: <strong className="text-white">sing on it in the Pro Booth, play on it, rewrite the arrangement, cut it into your own film.</strong> That is your performance and your work, and it is a different thing in law from a track a prompt produced. We are asking an attorney where this lands in South Africa specifically, and this page will say so plainly when we know.</li>
-            <li><strong className="text-white">Generated music is not guaranteed to be unique.</strong> An AI model can produce something close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
+            <li><strong className="text-white">What is generated is not guaranteed to be unique.</strong> An AI model can produce a song, a picture or a piece of film close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
             {/* Confirmed by ElevenLabs support on 9 September 2026, in writing,
                 in answer to a direct question. It is stated here rather than
                 left to "satisfy yourself that you are entitled to", because a
@@ -176,7 +176,7 @@ export default function Terms(): React.ReactElement {
           <ul className="space-y-1.5 pl-5 list-disc marker:text-red-500">
             <li><strong className="text-white">Clone a voice that is not yours.</strong> A voice identifies a person. Cloning one without them is impersonation whatever it was meant for. You confirm the voice is your own before a clone is made, and that confirmation is kept.</li>
             <li><strong className="text-white">Train a sound on music you do not own.</strong> Same reason, same confirmation.</li>
-            <li><strong className="text-white">Upload recordings you have no right to.</strong></li>
+            <li><strong className="text-white">Upload recordings, footage or pictures you have no right to</strong>, including film of somebody who has not agreed to be in it.</li>
             <li><strong className="text-white">Ask for a named person&apos;s voice or style.</strong> Prompts that name a real artist &mdash; &ldquo;in the voice of&rdquo;, &ldquo;in the style of&rdquo;, &ldquo;sounds like&rdquo; followed by somebody&apos;s name &mdash; are refused. Describe the sound instead: the tempo, the instruments, the era, the delivery. That is also how you get a result you are entitled to release.</li>
             <li>Impersonate anybody, or present a generated recording as a real person having said or sung something, or make anything built to be taken as a real recording of a real event.</li>
             <li>Use the app to make material that is illegal, that sexualises children, that incites violence against anybody, that harasses somebody, or that is a script for defrauding somebody &mdash; including anything read in the name of a bank, an insurer or an authority.</li>
