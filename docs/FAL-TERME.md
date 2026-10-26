@@ -20,18 +20,64 @@ find the e-mail again.*
 | Sub-processors | Listed in their trust centre. — https://trust.fal.ai/subprocessors | Read once before launch, the way the ElevenLabs list was read. |
 | Concurrency | Pay-as-you-go allows **40 jobs at once**. | Far above what launch needs. The queue and webhook docs are the ones the wiring should follow. |
 
-## Still open
+## Section 72, read against the DPA itself
 
-- **POPIA section 72, the transfer out of South Africa.** The reply says the
-  region is "not specified", which means the footage leaves the country. The
-  DPA may already carry a transfer clause (standard contractual clauses, or
-  a clause naming "any applicable data protection law"). That is the basis
-  we need, and only reading the DPA itself will tell. `fal.ai` cannot be
-  opened from the build machine, so this is the owner's to read.
-  If it is not there, the fallback is section 72(1)(b): the member says yes,
-  on the button, to their clip going to fal.ai outside South Africa.
-- **Commitment minimums.** Only matter when volume grows. They offered a
-  15-minute call; nothing has to wait on it.
+The owner pasted the full DPA (last updated 31 July 2026) the same day.
+
+**The SCCs do not cover us.** Section 5 applies the EU standard contractual
+clauses only to data of residents of the EEA, the UK and Switzerland. Our
+members are in South Africa, so section 5 is not our basis.
+
+**The DPA itself is.** POPIA section 72(1)(a) allows a transfer to a party
+bound by "a binding agreement" that gives protection substantially similar
+to POPIA's conditions, including on passing the data further on. The DPA is
+that agreement:
+
+| POPIA asks | The DPA |
+|---|---|
+| Processed only for the purpose, on our instructions (s20) | 1.1, 1.2 |
+| Confidentiality of staff (s20) | 1.4 |
+| Security safeguards (s19) | 1.5 and Attachment 3: least privilege, encryption in transit and at rest, vulnerability scanning |
+| Told about a breach (s21, s22) | 2.3, "without undue delay" |
+| Help with a member's request to see or delete their data (s23–s25) | 2.1 |
+| Passing it on only under the same protection (s72(1)(a), onward transfer) | 4.3: sub-processors bound "no less protective", fal.ai liable for them; 15 days' notice of a new one, with a right to object (4.2) |
+| Deleted when no longer needed (s14) | 1.6, on termination — **see the gap below** |
+
+"Data Protection Law" (Attachment 1) includes "any other … international
+data protection or privacy laws that apply", and 1.3 binds each side to it.
+
+**So the basis is section 72(1)(a), the DPA, and to be safe also
+72(1)(b): the button tells the member their clip goes to fal.ai outside
+South Africa and they say yes.** Both together cost one sentence on the
+button.
+
+### One real gap: how long they keep it
+
+Attachment 2 says fal.ai keeps Client Personal Data **"until the
+termination of the Agreement"**. For a member's footage that is far longer
+than the seconds a job needs, and POPIA section 14 says no longer than
+necessary. 1.2 allows instructions "through configuration tools", so there
+may be a setting or a request header that deletes the input and the result
+after a job. **Ask them which**, before the first call. Until then the app
+must not send a clip.
+
+### Smaller points
+
+- **Faces.** Attachment 2: "not designed for special categories" of data.
+  Taking a background or an item out of a clip is not recognising who is in
+  it, so it is not biometric processing. The app must never ask fal.ai to
+  identify a person.
+- **Children.** The video editor is not reachable from the Kids Studio, and
+  that has to stay true for these three buttons.
+- **De-identified data** (1.7.2) may be used to improve their service. It is
+  written for California law and covers only data that cannot be tied to a
+  person.
+- **Sub-processors.** Attachment 4 points to https://trust.fal.ai/subprocessors.
+
+## Commitment minimums
+
+Only matter when volume grows. They offered a 15-minute call; nothing has to
+wait on it.
 
 ## What it unlocks besides the three buttons
 
@@ -46,7 +92,7 @@ price is set, the same rule as every other engine.
 1. The business account on fal.ai, pay-as-you-go, and its key in Vercel as
    `FAL_KEY` (never in chat, never in code).
 2. The DPA and API terms saved as PDFs in `private/`, dated.
-3. Section 72 settled one way or the other (above).
+3. Their answer on deleting the clip and the result after each job (above).
 4. Each model's page checked for "Pending Enterprise Ready".
 5. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
    red until it is there.

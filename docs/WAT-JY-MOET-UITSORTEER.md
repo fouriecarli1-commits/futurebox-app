@@ -15,7 +15,7 @@ Niks hier is kode nie. Alles hier is iets wat net jy kan doen.
 
 | # | Wat | Hoe lank | Wie |
 |---|---|---|---|
-| 1 | ~~Stuur die fal.ai-brief~~ — **beantwoord 26 Oktober 2026**, sien `docs/FAL-TERME.md`. Oor: lees die DPA vir 'n artikel 72-klousule | 15 min | jy |
+| 1 | ~~Stuur die fal.ai-brief~~ — **beantwoord 26 Oktober 2026**, sien `docs/FAL-TERME.md`. Artikel 72 is gedek deur die DPA self. Oor: vra hulle hoe 'n greep ná elke werk uitgevee word | 5 min | jy |
 | 2 | Stuur die Kits.AI-brief (`private/EPOS-KITS.md`) | 10 min | jy |
 | 3 | Registreer die Inligtingsbeampte | 30 min | jy |
 | 4 | Vra Music.ai, Resend en Kling (`private/EPOS-DPA-KORT.md`) | 15 min | jy |
@@ -33,7 +33,9 @@ oopmaak; die res is netheid wat 'n ouditeur gaan vra.
 > **26 Oktober 2026: fal.ai het geantwoord.** Die DPA is deel van hulle
 > standaardterme (ook vir betaal-soos-jy-gaan), en hulle lei nie op wat ons
 > stuur nie (artikel 2.4), behalwe op modelle gemerk "Pending Enterprise
-> Ready". Net die artikel 72-vraag is nog oop. Alles staan in
+> Ready". Die DPA self is die artikel 72(1)(a)-grond. Net bewaring is oop:
+> hulle hou data tot die ooreenkoms eindig, en ons moet weet hoe om 'n
+> greep ná elke werk te laat uitvee. Alles staan in
 > `docs/FAL-TERME.md`, saam met die vyf stappe voor die eerste oproep.
 
 **Wat is af:** drie knoppies in die snykamer. Agtergrond uithaal, 'n item uit 'n
