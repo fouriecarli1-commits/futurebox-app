@@ -2243,15 +2243,28 @@ jobs:
       # refuses to start, which reads as a broken app rather than a missing
       # libnss3.
       #
-      # apt is told to give up on a stalled download after 20 seconds and
-      # try again, up to five times. On 26 October 2026 one font package
-      # from the Azure mirror hung for eight minutes before apt's default
-      # timeout let go, the step took sixteen minutes instead of one, and
-      # "rooms" was stopped at its 30-minute limit with no probe failing.
+      # The system packages come from the Azure apt mirror, which on 26
+      # October 2026 delivered them at 40 kB/s: 25 MB took ten minutes in
+      # every job, and one job was stopped at its 30-minute limit with no
+      # probe failing. So the downloaded .deb files are kept between runs
+      # and handed back to apt, which then installs without fetching. A
+      # package that has changed since is still fetched; nothing installs
+      # from the cache that apt would not have chosen itself. A stalled
+      # download gives up after 20 seconds and retries.
+      - name: Keep the browser's system packages between runs
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-debs
+          key: apt-debs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: apt-debs-${{ runner.os }}-
+
       - name: Install Chromium
         run: |
-          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "20";\nAcquire::https::Timeout "20";\n' | sudo tee /etc/apt/apt.conf.d/80-quick-retry > /dev/null
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAPT::Keep-Downloaded-Packages "true";\nBinary::apt::APT::Keep-Downloaded-Packages "true";\n' | sudo tee /etc/apt/apt.conf.d/80-quick-retry > /dev/null
+          mkdir -p ~/apt-debs
+          if ls ~/apt-debs/*.deb > /dev/null 2>&1; then sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/; fi
           npx playwright install --with-deps chromium
+          cp /var/cache/apt/archives/*.deb ~/apt-debs/ 2> /dev/null || true
 
       # Built once here. The eight probes that need their own probe page
       # rebuild on top of this; the rest start the server against it.
