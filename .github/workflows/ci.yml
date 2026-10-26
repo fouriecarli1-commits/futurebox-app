@@ -2190,7 +2190,9 @@ jobs:
     # On 26 October 2026 "doors two" reached 30 with four new probes still
     # waiting (afwrap, voiceover, versions, spectrogramwalk): its build took
     # fourteen minutes that morning and its probes sixteen. They moved to
-    # "doors", which had finished in ten.
+    # "doors", which had finished in ten — and which then took 27 on the next
+    # run, so voiceover went on to "make two" and spectrogramwalk to "rooms
+    # two", the two quickest jobs that run.
     timeout-minutes: 30
     strategy:
       # Which rooms broke is the answer worth having. Stopping at the first
@@ -2199,17 +2201,17 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:afwrap check:voiceover check:versions check:spectrogramwalk
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:afwrap check:versions
           - group: doors two
             probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
-            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters
+            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover
           - group: rooms
             probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:kidsplaylistwalk check:kidstorywalk check:reportwalk check:kidsdrumwalk check:kidseditwalk check:kidsgallerywalk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang
           - group: rooms two
-            probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk
+            probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk check:spectrogramwalk
           - group: whole
             probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:copilotsheet check:widecover check:googlecover check:sayassheet check:afrikaansscreen check:spotlight check:photosong check:singview
           - group: whole two
