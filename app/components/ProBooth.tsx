@@ -362,6 +362,16 @@ export default function ProBooth({
    * timeline keeps the screen.
    */
   const [picked, setPicked] = useState<string | null>(null);
+  /* Waves or spectrograms on every lane. The owner, 26 October 2026: *"Kan
+     ons ook 'n spectogram in ons probooth en video editor in bou?"* Kept
+     on the device, because somebody who mixes by eye wants it every time. */
+  const [laneView, setLaneView] = useState<'wave' | 'spectrum'>(() => {
+    try { return window.localStorage.getItem('futurebox.booth.view') === 'spectrum' ? 'spectrum' : 'wave'; } catch { return 'wave'; }
+  });
+  const pickLaneView = (next: 'wave' | 'spectrum'): void => {
+    setLaneView(next);
+    try { window.localStorage.setItem('futurebox.booth.view', next); } catch { /* a private window keeps nothing */ }
+  };
   /**
    * Which desk is out from behind the bars, if any.
    *
@@ -6239,7 +6249,24 @@ export default function ProBooth({
             />
           )}
           {!sideways && <BoothScope ear={scopeRef} playing={playing} />}
+          <div className="flex items-center gap-1.5" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
+            {(['wave', 'spectrum'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-boothview={one}
+                aria-pressed={laneView === one}
+                title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
+                onClick={() => pickLaneView(one)}
+                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+              >
+                {one === 'wave' ? <Waves className="h-3.5 w-3.5" /> : <Grid3x3 className="h-3.5 w-3.5" />}
+                {one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
+              </button>
+            ))}
+          </div>
           <BoothTimeline
+            view={laneView}
             markers={markers}
             onMarks={findMarks}
             lanes={lanes}

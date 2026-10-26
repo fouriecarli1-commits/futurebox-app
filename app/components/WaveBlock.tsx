@@ -30,10 +30,27 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { peaksOf, type Peaks } from '../lib/peaks';
+import { paintSpectrogram, spectrogramOfBlob, type Spectrogram } from '../lib/spectrogram';
 
 const remembered = new WeakMap<Blob, Peaks>();
 /** The ones already being read, so two lanes asking at once decode once. */
 const reading = new WeakMap<Blob, Promise<Peaks | null>>();
+
+const pictured = new WeakMap<Blob, Spectrogram>();
+const picturing = new WeakMap<Blob, Promise<Spectrogram | null>>();
+/** The spectrogram of a file, read once however many blocks show it. */
+async function pictureOf(blob: Blob): Promise<Spectrogram | null> {
+  const had = pictured.get(blob);
+  if (had) return had;
+  const already = picturing.get(blob);
+  if (already) return already;
+  const job = spectrogramOfBlob(blob).then((got) => {
+    if (got) pictured.set(blob, got);
+    return got;
+  });
+  picturing.set(blob, job);
+  return job;
+}
 
 async function shapeOf(blob: Blob): Promise<Peaks | null> {
   const had = remembered.get(blob);
@@ -49,9 +66,14 @@ async function shapeOf(blob: Blob): Promise<Peaks | null> {
 }
 
 export default function WaveBlock({
-  sound, wide, tall, colour, from, long,
+  sound, wide, tall, colour, from, long, view = 'wave',
 }: {
   readonly sound: Blob;
+  /**
+   * The wave, or the spectrogram — time across, pitch up, loudness as
+   * colour (`lib/spectrogram.ts`). The owner, 26 October 2026.
+   */
+  readonly view?: 'wave' | 'spectrum';
   /** How wide the block is on the clock, in pixels. */
   readonly wide: number;
   readonly tall: number;
@@ -68,12 +90,22 @@ export default function WaveBlock({
 }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [shape, setShape] = useState<Peaks | null>(null);
+  const [picture, setPicture] = useState<Spectrogram | null>(null);
 
   useEffect(() => {
     let alive = true;
     void shapeOf(sound).then((got) => { if (alive) setShape(got); });
     return () => { alive = false; };
   }, [sound]);
+  /* The spectrogram only once it is asked for: it is a few hundred
+     transforms, which is nothing on a desk and a noticeable pause on a
+     phone for a lane nobody has switched over. */
+  useEffect(() => {
+    if (view !== 'spectrum') return undefined;
+    let alive = true;
+    void pictureOf(sound).then((got) => { if (alive) setPicture(got); });
+    return () => { alive = false; };
+  }, [sound, view]);
 
   useEffect(() => {
     const node = canvas.current;
@@ -87,6 +119,10 @@ export default function WaveBlock({
     if (!context) return;
     context.scale(dpr, dpr);
     context.clearRect(0, 0, wide, tall);
+    if (view === 'spectrum') {
+      if (picture) paintSpectrogram(context, picture, wide, tall, from, long);
+      return;
+    }
     context.fillStyle = colour;
 
     const total = shape.duration > 0 ? shape.duration : 1;
@@ -112,12 +148,12 @@ export default function WaveBlock({
       const size = Math.max(1, shape.values[column] * (tall - 4));
       context.fillRect(x, middle - size / 2, 1, size);
     }
-  }, [shape, wide, tall, colour, from, long]);
+  }, [shape, picture, view, wide, tall, colour, from, long]);
 
   return (
     <canvas
       ref={canvas}
-      data-wave
+      data-wave={view}
       aria-hidden
       style={{ width: wide, height: tall, display: 'block' }}
     />

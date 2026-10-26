@@ -70,7 +70,7 @@ import { limitOf } from '../lib/squeeze';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, SkipForward, Square, StepBack, StepForward, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown, Mic,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X, Waves, Grid3x3,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import CanvasSizeModal from './CanvasSizeModal';
@@ -2050,6 +2050,15 @@ export default function VideoEditor({
      picture, because narration timed against a stopped frame is narration
      that has to be moved afterwards. Nothing leaves the phone. */
   const [voicing, setVoicing] = useState<'no' | 'asking' | 'on' | 'refused'>('no');
+  /* The sound lanes as waves or as spectrograms — the same switch the
+     booth has (the owner, 26 October 2026), kept on the device. */
+  const [soundView, setSoundView] = useState<'wave' | 'spectrum'>(() => {
+    try { return window.localStorage.getItem('futurebox.editor.view') === 'spectrum' ? 'spectrum' : 'wave'; } catch { return 'wave'; }
+  });
+  const pickSoundView = (next: 'wave' | 'spectrum'): void => {
+    setSoundView(next);
+    try { window.localStorage.setItem('futurebox.editor.view', next); } catch { /* a private window keeps nothing */ }
+  };
   const voiceTake = useRef<{ recorder: MediaRecorder; stream: MediaStream; from: number; began: number; parts: Blob[] } | null>(null);
   const stopVoice = useCallback(() => {
     const take = voiceTake.current;
@@ -5659,6 +5668,7 @@ async function smallerFrame(url: string): Promise<string> {
                       className="absolute inset-y-1 overflow-hidden rounded-md"
                     >
                       <WaveBlock
+                        view={soundView}
                         sound={one.clip}
                         wide={Math.max(THINNEST, lengthOfPiece(one) * perSecond)}
                         tall={Math.max(8, soundTall - 8)}
@@ -5705,6 +5715,7 @@ async function smallerFrame(url: string): Promise<string> {
                       className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10"
                     >
                       <WaveBlock
+                        view={soundView}
                         sound={edit.under}
                         wide={Math.max(0, total * perSecond)}
                         tall={Math.max(8, soundTall - 8)}
@@ -5743,7 +5754,7 @@ async function smallerFrame(url: string): Promise<string> {
                         style={{ left: one.at * perSecond, width: Math.max(6, one.long * perSecond) }}
                         title={`${one.at.toFixed(1)}s – ${(one.at + one.long).toFixed(1)}s`}
                       >
-                        <WaveBlock sound={one.clip} wide={Math.max(6, one.long * perSecond)} tall={Math.max(8, Math.round(soundTall * 0.6) - 8)} colour="rgba(253,164,175,0.9)" />
+                        <WaveBlock view={soundView} sound={one.clip} wide={Math.max(6, one.long * perSecond)} tall={Math.max(8, Math.round(soundTall * 0.6) - 8)} colour="rgba(253,164,175,0.9)" />
                       </div>
                     ))}
                   </div>
@@ -7733,6 +7744,26 @@ async function smallerFrame(url: string): Promise<string> {
 
         {bench === 'sound' && (
           <div className="space-y-3">
+          {/* ── Waves or spectrograms on the sound lanes ──────────────── */}
+          <div className="flex flex-wrap items-center gap-1.5" data-editorviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
+            {(['wave', 'spectrum'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-editorview={one}
+                aria-pressed={soundView === one}
+                title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
+                onClick={() => pickSoundView(one)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 text-xs font-bold"
+                style={soundView === one
+                  ? { borderColor: 'rgba(52,211,153,0.6)', background: 'rgba(52,211,153,0.15)', color: '#a7f3d0' }
+                  : { borderColor: 'rgba(255,255,255,0.1)', color: INK_DIM }}
+              >
+                {one === 'wave' ? <Waves className="h-3.5 w-3.5" /> : <Grid3x3 className="h-3.5 w-3.5" />}
+                {one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
+              </button>
+            ))}
+          </div>
           {/* ── Her own voice over the film ──────────────────────────── */}
           <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3" data-editorvoiceover>
             <div className="flex flex-wrap items-center gap-2">

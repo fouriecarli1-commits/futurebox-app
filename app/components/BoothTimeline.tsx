@@ -59,6 +59,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
+import { heat, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
@@ -227,8 +228,11 @@ export default function BoothTimeline({
   region,
   onRegion,
   onMarks,
+  view = 'wave',
 }: {
   readonly lanes: readonly Lane[];
+  /** Every lane as a wave, or as a spectrogram. The owner, 26 October 2026. */
+  readonly view?: 'wave' | 'spectrum';
   /** The length of the whole session, in seconds. The axis is this wide. */
   readonly total: number;
   /** Where the playhead is. */
@@ -1803,7 +1807,7 @@ export default function BoothTimeline({
                       roomy={wide > 0 && (plays / Math.max(0.001, scaleTotal)) * wide >= 84}
                       onRename={(name) => onChange(lane.id, { name })}
                     />
-                    <Wave lane={lane} />
+                    <Wave lane={lane} view={view} />
                     {/* ── Where it goes round ────────────────────────
 
                         A seam at every repeat, so a part that goes round
@@ -2199,7 +2203,19 @@ export default function BoothTimeline({
  * is the difference between a timeline of clips and a timeline of waveforms
  * with markers on them.
  */
-function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
+/** Spectrograms by decoded sound, so a redraw of the lane is a repaint and not a transform. */
+const pictured = new WeakMap<AudioBuffer, Map<number, Spectrogram>>();
+function pictureOf(sound: AudioBuffer, columns: number): Spectrogram {
+  let byColumns = pictured.get(sound);
+  if (!byColumns) { byColumns = new Map(); pictured.set(sound, byColumns); }
+  const had = byColumns.get(columns);
+  if (had) return had;
+  const made = spectrogramOf(sound, columns);
+  byColumns.set(columns, made);
+  return made;
+}
+
+function Wave({ lane, view = 'wave' }: { readonly lane: Lane; readonly view?: 'wave' | 'spectrum' }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const box = canvas.current;
@@ -2244,6 +2260,28 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
        the seams drawn over the top line up with them. */
     const times = repeatOf(lane);
     const pass = width / times;
+    if (view === 'spectrum') {
+      /* The same window and the same repeats as the wave, cell by cell:
+         pitch up the lane, time across it, the loud parts hot. Columns are
+         capped at six hundred because a lane is never read closer than
+         that, and the transform is paid once per sound (`pictureOf`). */
+      const picture = pictureOf(sound, Math.min(600, Math.max(8, Math.floor((whole / seen) * columns))));
+      const rowTall = height / picture.bins;
+      paint.fillStyle = heat(0);
+      paint.fillRect(0, 0, width, height);
+      for (let x = 0; x < width; x += 1) {
+        const inPass = pass > 0 ? (x % pass) / pass : 0;
+        const second = cut.from + inPass * (cut.to - cut.from);
+        const col = Math.min(picture.columns - 1, Math.max(0, Math.round((second / whole) * (picture.columns - 1))));
+        for (let r = 0; r < picture.bins; r += 1) {
+          const level = picture.cells[r * picture.columns + col];
+          if (level === 0) continue;
+          paint.fillStyle = heat(level);
+          paint.fillRect(x, height - (r + 1) * rowTall, 1, Math.ceil(rowTall));
+        }
+      }
+      return;
+    }
     const grad = paint.createLinearGradient(0, 0, 0, height);
     grad.addColorStop(0, '#22d3ee');
     grad.addColorStop(0.5, '#06b6d4');
@@ -2258,5 +2296,5 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
     paint.fillStyle = 'rgba(255,255,255,0.45)';
     paint.fillRect(0, Math.floor(height / 2), width, 1);
   });
-  return <canvas ref={canvas} className="pointer-events-none h-full w-full" />;
+  return <canvas ref={canvas} data-lanewave={view} className="pointer-events-none h-full w-full" />;
 }
