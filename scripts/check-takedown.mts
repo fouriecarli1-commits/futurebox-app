@@ -10,6 +10,7 @@
  * owner.
  */
 import { readFileSync } from 'node:fs';
+import { before, from } from './order.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -18,19 +19,18 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 };
 
 const route = readFileSync('app/api/report/route.ts', 'utf8');
-const patch = route.slice(route.indexOf('export async function PATCH'));
+const patch = from(route, 'export async function PATCH');
 const feed = readFileSync('app/rss/[show]/route.ts', 'utf8');
 const panel = readFileSync('app/components/OwnerReports.tsx', 'utf8');
 const account = readFileSync('app/components/Account.tsx', 'utf8');
 
 ok('the takedown is behind the owner\'s door, before anything is read',
-  patch.length > 0 && patch.indexOf('await opened(request)') > -1
-  && patch.indexOf('await opened(request)') < patch.indexOf(".from('reports')"),
+  before(patch, 'await opened(request)', ".from('reports')"),
   'a route that removes posts and suspends accounts, open to anybody, is the worst route this app could have');
 
 ok('the row is read before it is deleted, and the deletion is only from the Live room',
   /\.select\('\*'\)\.eq\('id', report\.ref\)/.test(patch)
-  && patch.indexOf(".select('*')") < patch.indexOf('.delete()')
+  && before(patch, ".select('*')", '.delete()')
   && /'live_says' : 'live_posts'/.test(patch),
   'what the post said goes into the record; once the row is gone it can only come from there');
 
