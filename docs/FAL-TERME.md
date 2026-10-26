@@ -106,6 +106,49 @@ The owner pasted these too. Five points bind how the app is built:
    why the prompt check and the strike rule on the terms page apply to
    these buttons too, the same as to video generation.
 
+## The Terms of Service (8 September 2026), read the same day
+
+The main agreement that the DPA and the API terms hang off. What it adds:
+
+1. **Everybody who presses these buttons must be 18.** Section 2: a
+   customer whose own users reach fal.ai "is responsible for ensuring that
+   your End Users are at least 18". Our terms let a parent or guardian hold
+   an account for somebody younger, and the app does not know a member's
+   age. So the same box that asks for the section 72 consent also asks
+   "I am 18 or older", and the buttons never appear in the Kids Studio.
+2. **"Usage Data" is theirs** (section 6): anonymised or aggregated data,
+   which "may include data based on or derived from" what we send, used for
+   anything lawful, including their own models. It cannot be tied to a
+   person, so POPIA does not reach it, but it means the privacy page must
+   not promise that nothing derived from a clip is ever used by fal.ai.
+   It promises what the API terms promise: the clip itself is not trained on.
+3. **Our input and their output are our confidential information**
+   (section 7). Useful, with the same exception as the DPA: they may keep
+   what their "standard backup, archival, or record-retention practices"
+   keep. Which is the retention question again.
+4. **Their acceptable-use policy binds our members too** (section 8,
+   https://fal.ai/legal/acceptable-use-policy). Not read yet. The prompt
+   check in front of these buttons has to refuse at least what it refuses.
+5. **The terms can change on notice; the DPA cannot.** The DPA (section 7)
+   needs both parties in writing to change. Re-read the Terms and the API
+   terms once a quarter; the DPA only if they write to say it changed.
+6. **Money.** Prepaid credits in US dollars, by card. They **expire after
+   365 days** (promotional ones after 90) and are not refundable. Prices
+   exclude tax. Top up small and often, sized to a month's use.
+7. **Who pays if something goes wrong.** Their liability is capped at the
+   greater of $50 or what we paid them in twelve months (section 17), and
+   we indemnify them for claims about what members send, including privacy
+   claims (section 15). The care has to be on our side: send only the clip
+   a job needs, and never a clip somebody has not confirmed they may use.
+8. **Disputes:** binding individual arbitration in the US (AAA), Californian
+   law. A claim under $10,000 is decided on paper, with no hearing, so
+   **keeping arbitration is better for a company in South Africa** than the
+   opt-out, which sends disputes to the courts in San Francisco. Opting out
+   is only possible within 30 days of accepting.
+9. **Section 14:** fal.ai output may not be used to train a model that
+   competes with the model that made it. This app trains nothing on fal.ai
+   output, and must not start.
+
 ## Commitment minimums
 
 Only matter when volume grows. They offered a 15-minute call; nothing has to
@@ -123,9 +166,11 @@ price is set, the same rule as every other engine.
 
 1. The business account on fal.ai, pay-as-you-go, and its key in Vercel as
    `FAL_KEY` (never in chat, never in code).
-2. The DPA and API terms saved as PDFs in `private/`, dated.
+2. The Terms, the DPA and the API terms saved as PDFs in `private/`, dated.
 3. Their answer on deleting the clip and the result after each job (above).
 4. Each model's page checked: not "Pending Enterprise Ready", and not a
    partner API (or that partner added as a processor first).
-5. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
+5. The consent box on each button: the clip goes to fal.ai outside South
+   Africa, and the member is 18 or older.
+6. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
    red until it is there.
