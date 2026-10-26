@@ -17,7 +17,7 @@ const check = (label, ok, detail = '') => {
   if (!ok) problems.push(label);
 };
 const server = await serve(PORT);
-const { browser, page: p } = await enter({ at: server.url, lang: 'en', width: 390, height: 844, touch: true, args: ['--autoplay-policy=no-user-gesture-required'] });
+const { browser, page: p } = await enter({ at: server.url, lang: 'en', width: 390, height: 844, touch: true, scale: 3, args: ['--autoplay-policy=no-user-gesture-required'] });
 const thrown = [];
 p.on('pageerror', (e) => thrown.push(String(e).slice(0, 160)));
 

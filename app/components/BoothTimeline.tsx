@@ -59,7 +59,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
-import { heat, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
+import { paintSpectrogram, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
@@ -2261,24 +2261,14 @@ function Wave({ lane, view = 'wave' }: { readonly lane: Lane; readonly view?: 'w
     const times = repeatOf(lane);
     const pass = width / times;
     if (view === 'spectrum') {
-      /* The same window and the same repeats as the wave, cell by cell:
-         pitch up the lane, time across it, the loud parts hot. Columns are
-         capped at six hundred because a lane is never read closer than
-         that, and the transform is paid once per sound (`pictureOf`). */
+      /* The same window and the same repeats as the wave: pitch up the
+         lane, time across it, the loud parts hot — one stretched picture
+         per pass. Columns are capped at six hundred because a lane is
+         never read closer than that, and the transform is paid once per
+         sound (`pictureOf`). */
       const picture = pictureOf(sound, Math.min(600, Math.max(8, Math.floor((whole / seen) * columns))));
-      const rowTall = height / picture.bins;
-      paint.fillStyle = heat(0);
-      paint.fillRect(0, 0, width, height);
-      for (let x = 0; x < width; x += 1) {
-        const inPass = pass > 0 ? (x % pass) / pass : 0;
-        const second = cut.from + inPass * (cut.to - cut.from);
-        const col = Math.min(picture.columns - 1, Math.max(0, Math.round((second / whole) * (picture.columns - 1))));
-        for (let r = 0; r < picture.bins; r += 1) {
-          const level = picture.cells[r * picture.columns + col];
-          if (level === 0) continue;
-          paint.fillStyle = heat(level);
-          paint.fillRect(x, height - (r + 1) * rowTall, 1, Math.ceil(rowTall));
-        }
+      for (let k = 0; k < times; k += 1) {
+        paintSpectrogram(paint, picture, pass, height, cut.from, cut.to - cut.from, k * pass);
       }
       return;
     }

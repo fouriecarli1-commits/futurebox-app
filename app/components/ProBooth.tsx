@@ -6249,7 +6249,7 @@ export default function ProBooth({
             />
           )}
           {!sideways && <BoothScope ear={scopeRef} playing={playing} />}
-          <div className="flex items-center gap-1.5" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
+          <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
             {(['wave', 'spectrum'] as const).map((one) => (
               <button
                 key={one}
@@ -6258,7 +6258,7 @@ export default function ProBooth({
                 aria-pressed={laneView === one}
                 title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
                 onClick={() => pickLaneView(one)}
-                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
               >
                 {one === 'wave' ? <Waves className="h-3.5 w-3.5" /> : <Grid3x3 className="h-3.5 w-3.5" />}
                 {one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}

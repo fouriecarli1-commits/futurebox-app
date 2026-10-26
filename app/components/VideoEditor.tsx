@@ -7745,7 +7745,7 @@ async function smallerFrame(url: string): Promise<string> {
         {bench === 'sound' && (
           <div className="space-y-3">
           {/* ── Waves or spectrograms on the sound lanes ──────────────── */}
-          <div className="flex flex-wrap items-center gap-1.5" data-editorviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
+          <div className="grid grid-cols-2 gap-1.5" data-editorviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
             {(['wave', 'spectrum'] as const).map((one) => (
               <button
                 key={one}
@@ -7754,7 +7754,7 @@ async function smallerFrame(url: string): Promise<string> {
                 aria-pressed={soundView === one}
                 title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
                 onClick={() => pickSoundView(one)}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 text-xs font-bold"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-bold"
                 style={soundView === one
                   ? { borderColor: 'rgba(52,211,153,0.6)', background: 'rgba(52,211,153,0.15)', color: '#a7f3d0' }
                   : { borderColor: 'rgba(255,255,255,0.1)', color: INK_DIM }}

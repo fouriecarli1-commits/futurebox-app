@@ -6,7 +6,7 @@
  * come out of the transform flat — the three things that go wrong in a
  * hand-written FFT.
  */
-import { fft, heat, rowEdges, spectrogramOf, FRAME, LOW, HIGH } from '../app/lib/spectrogram.ts';
+import { fft, heat, pixelsOf, rowEdges, spectrogramOf, FRAME, LOW, HIGH } from '../app/lib/spectrogram.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -67,6 +67,18 @@ const bufferOf = (samples: Float32Array): AudioBuffer => ({
 {
   const l = (c: string) => c.match(/\d+/g)!.map(Number).reduce((a, b) => a + b, 0);
   ok('the ramp runs from dark to hot', l(heat(0)) < l(heat(120)) && l(heat(120)) < l(heat(255)) && l(heat(255)) > 600);
+}
+
+/* The pixels put the highest pitch at the top. */
+{
+  const n = rate; const s = new Float32Array(n);
+  for (let i = 0; i < n; i += 1) s[i] = Math.sin((2 * Math.PI * 8000 * i) / rate) * 0.5;
+  const picture = spectrogramOf(bufferOf(s), 8, 32);
+  const px = pixelsOf(picture);
+  const rowLight = (y: number) => { let t = 0; for (let c = 0; c < picture.columns; c += 1) { const i = (y * picture.columns + c) * 4; t += px[i] + px[i + 1] + px[i + 2]; } return t; };
+  let brightest = 0; let best = -1; for (let y = 0; y < picture.bins; y += 1) if (rowLight(y) > best) { best = rowLight(y); brightest = y; }
+  ok('a high tone is painted near the top of the picture', brightest < picture.bins / 3, `row ${brightest} of ${picture.bins}`);
+  ok('  and every pixel is opaque', px.every((v, i) => i % 4 !== 3 || v === 255));
 }
 
 if (bad) { console.log(`\ncheck:spectrogram — ${bad} problem(s)`); process.exit(1); }

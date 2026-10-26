@@ -179,6 +179,15 @@ export async function spectrogramOfBlob(blob: Blob, columns = 480, bins = 48): P
   }
 }
 
+/** The colour of a cell, 0…255, as red, green and blue. */
+export function heatRgb(level: number): readonly [number, number, number] {
+  const v = Math.max(0, Math.min(255, level)) / 255;
+  if (v < 0.35) { const t = v / 0.35; return [Math.round(8 + 10 * t), Math.round(14 + 70 * t), Math.round(22 + 70 * t)]; }
+  if (v < 0.7) { const t = (v - 0.35) / 0.35; return [Math.round(18 + 40 * t), Math.round(84 + 127 * t), Math.round(92 + 61 * t)]; }
+  const t = (v - 0.7) / 0.3;
+  return [Math.round(58 + 197 * t), Math.round(211 + 44 * t), Math.round(153 + 102 * t)];
+}
+
 /**
  * The colour of a cell, 0…255 → a CSS colour. One ramp for the whole app:
  * near-black through the room's teal to a hot white, so the loud parts
@@ -186,16 +195,60 @@ export async function spectrogramOfBlob(blob: Blob, columns = 480, bins = 48): P
  * anybody has seen reads.
  */
 export function heat(level: number): string {
-  const v = Math.max(0, Math.min(255, level)) / 255;
-  if (v < 0.35) { const t = v / 0.35; return `rgb(${Math.round(8 + 10 * t)},${Math.round(14 + 70 * t)},${Math.round(22 + 70 * t)})`; }
-  if (v < 0.7) { const t = (v - 0.35) / 0.35; return `rgb(${Math.round(18 + 40 * t)},${Math.round(84 + 127 * t)},${Math.round(92 + 61 * t)})`; }
-  const t = (v - 0.7) / 0.3;
-  return `rgb(${Math.round(58 + 197 * t)},${Math.round(211 + 44 * t)},${Math.round(153 + 102 * t)})`;
+  const [r, g, b] = heatRgb(level);
+  return `rgb(${r},${g},${b})`;
 }
 
 /**
- * Paint a spectrogram into a box. `from`/`long` pick the part of the sound
- * the box shows, in seconds, the way `WaveBlock` reads them.
+ * The picture as pixels, one per cell, the highest pitch in the TOP row —
+ * so it can be put on a canvas once and then stretched into any lane.
+ */
+export function pixelsOf(picture: Spectrogram): Uint8ClampedArray {
+  const { columns, bins, cells } = picture;
+  const out = new Uint8ClampedArray(columns * bins * 4);
+  for (let r = 0; r < bins; r += 1) {
+    const y = bins - 1 - r;
+    for (let c = 0; c < columns; c += 1) {
+      const [red, green, blue] = heatRgb(cells[r * columns + c]);
+      const i = (y * columns + c) * 4;
+      out[i] = red; out[i + 1] = green; out[i + 2] = blue; out[i + 3] = 255;
+    }
+  }
+  return out;
+}
+
+const images = new WeakMap<Spectrogram, HTMLCanvasElement>();
+/**
+ * The picture on a small canvas of its own, made once per picture.
+ *
+ * Painting is then one `drawImage` per lane, stretched to fit: the booth
+ * redraws every lane on every render while it plays, and a few thousand
+ * rectangles a lane, four times a second, is the kind of work a phone
+ * notices. The stretch is also what makes it right at any pixel density —
+ * the first version copied columns of its own canvas and, with the canvas
+ * scaled for a dense screen, copied them from the wrong place.
+ */
+export function imageOf(picture: Spectrogram): HTMLCanvasElement | null {
+  const had = images.get(picture);
+  if (had) return had;
+  if (typeof document === 'undefined') return null;
+  const sheet = document.createElement('canvas');
+  sheet.width = picture.columns;
+  sheet.height = picture.bins;
+  const context = sheet.getContext('2d');
+  if (!context) return null;
+  const pixels = context.createImageData(picture.columns, picture.bins);
+  pixels.data.set(pixelsOf(picture));
+  context.putImageData(pixels, 0, 0);
+  images.set(picture, sheet);
+  return sheet;
+}
+
+/**
+ * Paint a spectrogram into a box, in the context's own units. `from`/`long`
+ * pick the part of the sound the box shows, in seconds, the way `WaveBlock`
+ * reads them; `x`/`wide` place it, so a lane that goes round four times can
+ * paint the same window four times side by side.
  */
 export function paintSpectrogram(
   context: CanvasRenderingContext2D,
@@ -204,24 +257,16 @@ export function paintSpectrogram(
   tall: number,
   from = 0,
   long?: number,
+  x = 0,
 ): void {
+  const sheet = imageOf(picture);
+  if (!sheet) return;
   const total = picture.duration > 0 ? picture.duration : 1;
   const start = Math.max(0, Math.min(from, total));
   const span = Math.max(0.01, Math.min(long ?? total - start, total - start));
-  const rowTall = tall / picture.bins;
-  context.fillStyle = heat(0);
-  context.fillRect(0, 0, wide, tall);
-  let last = -1;
-  for (let x = 0; x < wide; x += 1) {
-    const second = start + (x / wide) * span;
-    const col = Math.min(picture.columns - 1, Math.max(0, Math.round((second / total) * (picture.columns - 1))));
-    if (col === last && x > 0) { context.drawImage(context.canvas, x - 1, 0, 1, tall, x, 0, 1, tall); continue; }
-    last = col;
-    for (let r = 0; r < picture.bins; r += 1) {
-      const level = picture.cells[r * picture.columns + col];
-      if (level === 0) continue;
-      context.fillStyle = heat(level);
-      context.fillRect(x, tall - (r + 1) * rowTall, 1, Math.ceil(rowTall));
-    }
-  }
+  const sx = (start / total) * picture.columns;
+  const sw = Math.max(1, (span / total) * picture.columns);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(sheet, sx, 0, Math.min(sw, picture.columns - sx), picture.bins, x, 0, wide, tall);
 }
