@@ -6604,7 +6604,7 @@ export default function PostStudio({
             data-postaskref={at}
             onClick={() => dropRef(at)}
             title={t('post.refsDrop', 'Take this one out')}
-            className="relative h-10 w-10 overflow-hidden rounded-lg border border-zinc-700"
+            className="relative h-11 w-10 overflow-hidden rounded-xl border border-zinc-700"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- an
                 object URL for a picture chosen a second ago; the image
@@ -7294,7 +7294,7 @@ export default function PostStudio({
         <button
           type="button"
           onClick={() => setShowSizeModal(true)}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-500/10 px-3 text-xs font-bold text-teal-300 hover:brightness-110 active:scale-95 transition-all text-center"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-500/10 px-3 text-sm font-bold text-teal-300 hover:brightness-110 active:scale-95 transition-all text-center"
         >
           <Maximize2 className="h-4 w-4 text-teal-400" />
           {t('size.customOrStandard', 'Standard & Custom Sizes')}
@@ -7302,7 +7302,7 @@ export default function PostStudio({
         <button
           type="button"
           onClick={() => setShowTemplatesModal(true)}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-xs font-bold text-purple-300 hover:brightness-110 active:scale-95 transition-all text-center"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-sm font-bold text-purple-300 hover:brightness-110 active:scale-95 transition-all text-center"
         >
           <LayoutTemplate className="h-4 w-4 text-purple-400" />
           {t('stpl.openTemplates', 'Templates & Starter Packs')}
@@ -9937,7 +9937,7 @@ export default function PostStudio({
         aria-label={redoSays()
           ? `${t('post.redo', 'Do it again')} — ${redoSays()}`
           : t('post.redoNone', 'Nothing to do again')}
-        className="flex h-9 w-9 items-center justify-center rounded-lg disabled:opacity-35"
+        className="flex h-9 w-9 items-center justify-center rounded-xl disabled:opacity-35"
         style={chipStyle}
       >
         <Redo2 className="h-4 w-4" />
@@ -9958,13 +9958,13 @@ export default function PostStudio({
           onClick={onClose}
           data-roomback
           aria-label={t('room.backToAll', 'Alle Kamers')}
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className="flex h-9 w-9 items-center justify-center rounded-xl"
           style={{ ...chipStyle, color: PHOTO.accent }}
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
       ) : (
-        <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className="flex h-9 w-9 items-center justify-center rounded-lg" style={chipStyle}>
+        <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className="flex h-9 w-9 items-center justify-center rounded-xl" style={chipStyle}>
           <X className="h-4 w-4" />
         </button>
       )}
@@ -9981,7 +9981,7 @@ export default function PostStudio({
           data-postcustomsize
           onClick={() => setShowSizeModal(true)}
           title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-          className="block min-h-[44px] max-w-full truncate rounded-lg border px-2 text-left font-mono text-[10px] leading-tight"
+          className="block min-h-[44px] max-w-full truncate rounded-xl border px-2 text-left font-mono text-xs leading-tight"
           style={{ color: INK_DIM, borderColor: PHOTO.edge }}
         >
           {/* The name only where there is room for it: on a phone the
@@ -10004,7 +10004,7 @@ export default function PostStudio({
         title={plain
           ? t('post.showAllWhat', 'Show every setting there is')
           : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
-        className="flex h-9 shrink-0 items-center rounded-lg px-1.5 text-[10px] font-bold sm:px-2 sm:text-[11px]"
+        className="flex h-9 shrink-0 items-center rounded-xl px-1.5 text-xs font-bold sm:px-2"
         style={chipStyle}
       >
         {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
@@ -10015,7 +10015,7 @@ export default function PostStudio({
         onClick={showSocial}
         aria-label={t('post.social', 'How it looks on social')}
         title={t('post.social', 'How it looks on social')}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
         style={{ background: PHOTO.social }}
       >
         <Eye className="h-4 w-4" />
@@ -10027,7 +10027,7 @@ export default function PostStudio({
           aria-pressed={asking}
           onClick={() => { setAsking(!asking); setBench(null); }}
           aria-label={t('post.ask', 'Ask')}
-          className="flex h-9 items-center gap-1 rounded-lg px-2 text-[11px] font-bold"
+          className="flex h-9 items-center gap-1 rounded-xl px-2 text-xs font-bold"
           style={chipStyle}
         >
           <Sparkles className="h-4 w-4" />
@@ -10039,7 +10039,7 @@ export default function PostStudio({
         data-postexportopen
         aria-pressed={bench === 'save'}
         onClick={() => openBench('save')}
-        className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-[11px] font-extrabold uppercase tracking-wide"
+        className="flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-extrabold"
         style={{ background: PHOTO.accent, color: PHOTO.floor }}
       >
         <Download className="h-3.5 w-3.5" />
@@ -10419,7 +10419,7 @@ export default function PostStudio({
               <button
                 type="button"
                 onClick={() => openBench('starts')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-extrabold uppercase tracking-wider"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold"
                 style={{ background: PHOTO.accent, color: PHOTO.floor }}
               >
                 <LayoutTemplate className="h-3.5 w-3.5" />
@@ -10428,7 +10428,7 @@ export default function PostStudio({
               <button
                 type="button"
                 onClick={() => openBench('pic')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold"
                 style={chipStyle}
               >
                 <ImageIcon className="h-3.5 w-3.5" />
@@ -10764,7 +10764,7 @@ export default function PostStudio({
             type="button"
             data-postsocialuse
             onClick={() => handleApplyCanvasSize(feedNow.kind.width, feedNow.kind.height, `${feedNow.platform.name} ${lang === 'af' ? feedNow.kind.af : feedNow.kind.en}`)}
-            className="mb-2 min-h-[44px] w-full rounded-xl border text-xs font-bold"
+            className="mb-2 min-h-[44px] w-full rounded-xl border text-sm font-bold"
             style={{ borderColor: PHOTO.purple, color: PHOTO.purple, background: 'transparent' }}
           >
             {t('post.socialUse', 'Make my post this shape')} · {feedNow.kind.width}×{feedNow.kind.height}

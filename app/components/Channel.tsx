@@ -575,7 +575,7 @@ export default function Channel({
                  certainly thinking about what it is called. */
               setRenaming(made.id);
             }}
-            className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
+            className="min-h-[44px] px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
             {t('chan.new', 'New')}
@@ -658,7 +658,7 @@ export default function Channel({
                 type="button"
                 onClick={() => void play(list.trackIds[0], list.trackIds.slice(1))}
                 disabled={!listTracks.length}
-                className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 disabled:opacity-40"
+                className="min-h-[44px] px-2.5 py-1.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Play className="w-3.5 h-3.5" />
                 {t('chan.playAll', 'Play it through')}
@@ -754,7 +754,7 @@ export default function Channel({
                   setVault(id);
                   document.querySelector(`[data-chanshelf="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className={`min-h-[40px] whitespace-nowrap rounded-full px-4 py-1.5 transition ${
+                className={`min-h-[44px] whitespace-nowrap rounded-full px-4 py-1.5 transition ${
                   vault === id ? 'bg-emerald-500 text-onAccent font-extrabold' : 'bg-zinc-800/40 text-zinc-300 hover:text-white border border-white/10'
                 }`}
               >
@@ -1034,7 +1034,7 @@ export default function Channel({
                           );
                         });
                     }}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                   >
                     <MessageSquareQuote className="w-4 h-4 shrink-0" />
                     {timedFor(track).length > 0
@@ -1077,7 +1077,7 @@ export default function Channel({
                         );
                       });
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                 >
                   <Video className="w-4 h-4 shrink-0" />
                   {t('chan.filmIt', 'Film yourself to it')}

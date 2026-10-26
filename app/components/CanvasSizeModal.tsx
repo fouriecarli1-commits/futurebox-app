@@ -306,7 +306,7 @@ export default function CanvasSizeModal({
                   setLockRatio(!lockRatio);
                 }}
                 aria-pressed={lockRatio}
-                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
                   lockRatio
                     ? 'border border-amber-500/40 bg-amber-500/20 text-amber-300'
                     : 'border border-zinc-800 bg-zinc-900 text-zinc-400'
@@ -365,7 +365,7 @@ export default function CanvasSizeModal({
                   key={p.label}
                   type="button"
                   onClick={() => scaleBy(p.mult)}
-                  className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 hover:text-white hover:bg-zinc-800"
+                  className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 hover:text-white hover:bg-zinc-800"
                 >
                   {p.label}
                 </button>

@@ -4681,6 +4681,7 @@ export default function FutureBoxHome() {
 
               <div
                 ref={workPane}
+                data-roomstage=""
                 className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1"
               >
                 {!bareRoom && !atDoor && (

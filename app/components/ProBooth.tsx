@@ -3653,6 +3653,7 @@ export default function ProBooth({
             <div
               key={lane.id}
               data-strip={lane.id}
+              onClick={() => setPicked(lane.id)}
               className="min-w-0 rounded-2xl border p-2.5"
               style={{
                 borderColor: on ? LIT : EDGE,
@@ -3662,22 +3663,25 @@ export default function ProBooth({
                 boxShadow: on ? '0 0 0 1px rgba(56,189,248,0.25), 0 0 18px rgba(56,189,248,0.15)' : undefined,
               }}
             >
-              <div className="grid grid-cols-[minmax(0,1fr)_44px_44px_auto] items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setPicked(lane.id)}
-                  className="min-h-[44px] min-w-0 truncate rounded-lg px-2 text-left text-sm font-bold"
+              {/* The name is the strip's label, not a button beside three buttons:
+                  touching anywhere on the strip picks the lane, and the three
+                  controls are one equal-width set (check:tidybars). */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="min-w-0 flex-1 truncate px-1 text-sm font-bold"
                   style={{ color: on ? LIT : INK }}
                   title={lane.name}
+                  data-stripname={lane.id}
                 >
                   {lane.name}
-                </button>
+                </span>
+                <div className="grid w-[13.5rem] shrink-0 grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   aria-pressed={lane.muted}
                   aria-label={`${t('daw.mute', 'Mute')} · ${lane.name}`}
                   onClick={() => change(lane.id, { muted: !lane.muted })}
-                  className="h-11 w-11 rounded-xl border text-xs font-black transition-colors"
+                  className="h-11 w-full rounded-xl border text-xs font-black transition-colors"
                   style={lane.muted
                     ? { borderColor: '#f87171', background: 'rgba(248,113,113,0.18)', color: '#fecaca', boxShadow: '0 0 12px rgba(248,113,113,0.35)' }
                     : { borderColor: EDGE, color: INK_DIM }}
@@ -3689,7 +3693,7 @@ export default function ProBooth({
                   aria-pressed={lane.soloed}
                   aria-label={`${t('daw.solo', 'Solo')} · ${lane.name}`}
                   onClick={() => change(lane.id, { soloed: !lane.soloed })}
-                  className="h-11 w-11 rounded-xl border text-xs font-black transition-colors"
+                  className="h-11 w-full rounded-xl border text-xs font-black transition-colors"
                   style={lane.soloed
                     ? { borderColor: '#fbbf24', background: 'rgba(251,191,36,0.18)', color: '#fde68a', boxShadow: '0 0 12px rgba(251,191,36,0.35)' }
                     : { borderColor: EDGE, color: INK_DIM }}
@@ -3699,12 +3703,13 @@ export default function ProBooth({
                 <button
                   type="button"
                   onClick={() => { setPicked(lane.id); setDeskOpen('effects'); }}
-                  className="h-11 min-w-[88px] rounded-xl border px-3 text-xs font-bold transition-colors"
+                  className="h-11 w-full rounded-xl border px-1 text-xs font-bold transition-colors"
                   style={{ borderColor: fxCount ? LIT : EDGE, color: fxCount ? LIT : INK_DIM }}
                 >
                   {t('daw.fx', 'Effects')}
                   {fxCount ? ` · ${fxCount}` : ''}
                 </button>
+              </div>
               </div>
               <div className="mt-1 grid grid-cols-[3.5rem_minmax(0,1fr)_4rem] items-center gap-x-2">
                 <span className="text-[11px] font-semibold" style={{ color: INK_DIM }}>{t('pro.level', 'Level')}</span>
@@ -5285,7 +5290,7 @@ export default function ProBooth({
                       type="button"
                       aria-pressed={humGrid === one.id}
                       onClick={() => setHumGrid(one.id)}
-                      className={`min-h-[44px] rounded-lg border text-xs font-bold tabular-nums ${
+                      className={`min-h-[44px] rounded-xl border text-xs font-bold tabular-nums ${
                         humGrid === one.id ? 'border-sky-400 bg-sky-500/15 text-sky-100' : 'border-zinc-700 bg-zinc-900 text-zinc-400'
                       }`}
                     >
@@ -5523,7 +5528,7 @@ export default function ProBooth({
                 disabled={busy}
                 data-prosplitvoice
                 aria-label={t('pro.split', 'Split the voice off')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-xs font-semibold text-sky-200 disabled:opacity-40"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-sm font-semibold text-sky-200 disabled:opacity-40"
               >
                 <SquareSplitHorizontal className="h-4 w-4" />
                 {t('pro.splitShort', 'Voice off')} · {perMinute(pieceSeconds(lane), CREDITS.stems)} {t('video.credits', 'credits')}
@@ -5534,7 +5539,7 @@ export default function ProBooth({
                 disabled={busy || looking === lane.id}
                 data-prosplitparts
                 aria-label={t('pro.parts', 'Split into named parts')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-xs font-semibold text-sky-200 disabled:opacity-40"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-sm font-semibold text-sky-200 disabled:opacity-40"
               >
                 <Layers className="h-4 w-4" />
                 {t('pro.partsShort', 'Named parts')} · {perMinute(pieceSeconds(lane), CREDITS.parts)} {t('video.credits', 'credits')}
@@ -6204,7 +6209,7 @@ export default function ProBooth({
                 setCameBack(false);
                 setSavedAt(null);
               }}
-              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-sky-500 hover:text-white"
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-sky-500 hover:text-white"
             >
               {t('pro.startFresh', 'Start fresh')}
             </button>
@@ -6270,7 +6275,7 @@ export default function ProBooth({
                 aria-pressed={laneView === one}
                 title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
                 onClick={() => pickLaneView(one)}
-                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
               >
                 {one === 'wave' ? <Waves className="h-3.5 w-3.5" /> : <Grid3x3 className="h-3.5 w-3.5" />}
                 {one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
@@ -6861,7 +6866,7 @@ function LaneRow({
         aria-expanded={open}
         title={t('pro.tone', 'Tone')}
         aria-label={t('pro.tone', 'Tone')}
-        className={`shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-lg border text-xs font-bold ${
+        className={`shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-xl border text-xs font-bold ${
           isClean(lane.tone)
             ? 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
             : 'border-sky-500/50 text-sky-400'
@@ -7006,7 +7011,7 @@ function LaneRow({
             }}
             aria-expanded={saving}
             title={t('pro.save', 'Take this lane away')}
-            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-sky-500/50 hover:text-sky-400"
+            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-xl border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-sky-500/50 hover:text-sky-400"
           >
             <ArrowDownToLine className="h-4 w-4 shrink-0" />
             {t('pro.save', 'Take this lane away')}
@@ -7021,7 +7026,7 @@ function LaneRow({
                 type="button"
                 data-savewav
                 onClick={() => { setSaving(false); onSave('wav'); }}
-                className="w-full rounded-lg px-2.5 py-2 text-left hover:bg-zinc-900"
+                className="w-full rounded-xl px-2.5 py-2 text-left hover:bg-zinc-900"
               >
                 <span className="block text-sm font-bold text-zinc-200">
                   {t('pro.saveWav', 'Download WAV')}
@@ -7037,7 +7042,7 @@ function LaneRow({
                 type="button"
                 data-savemidi
                 onClick={() => { setSaving(false); onSave('midi'); }}
-                className="w-full rounded-lg px-2.5 py-2 text-left hover:bg-zinc-900"
+                className="w-full rounded-xl px-2.5 py-2 text-left hover:bg-zinc-900"
               >
                 <span className="block text-sm font-bold text-zinc-200">
                   {t('pro.saveMidi', 'Download MIDI')}
@@ -7110,7 +7115,7 @@ function LaneRow({
             <button
               type="button"
               onClick={() => onUseTempo(found.tempo as number, found.key)}
-              className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-sky-500/50 bg-sky-500/10 text-xs font-bold text-sky-300"
+              className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-xl border border-sky-500/50 bg-sky-500/10 text-xs font-bold text-sky-300"
             >
               {t('pro.useTempo', 'Set the session to this')}
             </button>
@@ -7219,7 +7224,7 @@ function LaneRow({
                 onClick={() => onChange({
                   clean: { ...(lane.clean ?? NOTHING_OFF), [key]: !on },
                 })}
-                className={`min-h-[44px] rounded-lg border px-3 py-2 text-xs font-bold ${
+                className={`min-h-[44px] rounded-xl border px-3 py-2 text-xs font-bold ${
                   on
                     ? 'border-sky-500 bg-sky-500/15 text-white'
                     : 'border-zinc-700 bg-zinc-950 text-zinc-500 hover:text-zinc-200'
@@ -7236,7 +7241,7 @@ function LaneRow({
             type="button"
             onClick={onDeRoom}
             disabled={busy}
-            className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white disabled:opacity-40"
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white disabled:opacity-40"
           >
             {t('pro.deRoom', 'Take the room off')}
           </button>
@@ -7289,7 +7294,7 @@ function LaneRow({
             type="button"
             onClick={() => onChange({ tone: { ...tone, cabinet: !tone.cabinet } })}
             aria-pressed={tone.cabinet}
-            className={`px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border text-xs font-bold ${
+            className={`px-2.5 py-2 sm:py-1 min-h-[44px] rounded-xl border text-xs font-bold ${
               tone.cabinet
                 ? 'bg-sky-500/15 border-sky-500 text-sky-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
@@ -7300,7 +7305,7 @@ function LaneRow({
           <button
             type="button"
             onClick={() => onChange({ tone: CLEAN })}
-            className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
+            className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
           >
             {t('pro.clean', 'Straight')}
           </button>
@@ -7379,7 +7384,7 @@ function LaneRow({
                 <button
                   type="button"
                   onClick={() => onChange({ amped: undefined })}
-                  className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white"
+                  className="px-2.5 py-1.5 min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white"
                 >
                   {t('pro.ampOff', 'Take it off')}
                 </button>
@@ -7439,7 +7444,7 @@ function LaneRow({
                       aria-pressed={on}
                       title={one.from}
                       data-useamp={one.id}
-                      className={`min-h-[44px] px-2.5 py-1.5 rounded-lg border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
+                      className={`min-h-[44px] px-2.5 py-1.5 rounded-xl border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
                         on
                           ? 'border-sky-500 bg-sky-500/15 text-sky-300'
                           : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:text-white hover:border-zinc-500'
@@ -7454,7 +7459,7 @@ function LaneRow({
                       onClick={() => setShelf(favouriteAmp(one.id, !one.favourite))}
                       aria-pressed={Boolean(one.favourite)}
                       aria-label={t('pro.ampKeep', 'Keep this amp on the shelf')}
-                      className={`min-h-[44px] px-1.5 rounded-lg border border-zinc-700 bg-zinc-950 ${
+                      className={`min-h-[44px] px-1.5 rounded-xl border border-zinc-700 bg-zinc-950 ${
                         one.favourite ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300'
                       }`}
                     >
@@ -7464,7 +7469,7 @@ function LaneRow({
                       type="button"
                       onClick={() => void forgetAmp(one.id).then(() => setShelf(loadAmps()))}
                       aria-label={t('pro.ampForget', 'Take this amp off this device')}
-                      className="min-h-[44px] px-1.5 rounded-lg border border-rose-500/25 bg-rose-500/[0.06] text-zinc-600 hover:text-rose-300 hover:border-rose-500/50"
+                      className="min-h-[44px] px-1.5 rounded-xl border border-rose-500/25 bg-rose-500/[0.06] text-zinc-600 hover:text-rose-300 hover:border-rose-500/50"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -7529,7 +7534,7 @@ function LaneRow({
                 type="button"
                 data-amplicencedone
                 onClick={() => setAsking(null)}
-                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-bold text-zinc-200"
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-bold text-zinc-200"
               >
                 {t('pro.ampAskDone', 'That is right')}
               </button>

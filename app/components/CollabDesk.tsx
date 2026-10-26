@@ -142,7 +142,7 @@ export default function CollabDesk({
             <button
               type="button"
               onClick={() => setMode('radar')}
-              className="min-h-[40px] rounded-xl border border-white/10 bg-zinc-800/40 px-3 text-xs font-bold text-zinc-300 hover:text-white"
+              className="min-h-[44px] rounded-xl border border-white/10 bg-zinc-800/40 px-3 text-xs font-bold text-zinc-300 hover:text-white"
             >
               {t('collab.backToRadar', 'Back to the radar')}
             </button>

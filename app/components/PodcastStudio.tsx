@@ -445,7 +445,7 @@ export default function PodcastStudio({
             <button
               type="button"
               onClick={() => setPrompterOpen(!prompterOpen)}
-              className={`min-h-[40px] px-3 py-1.5 rounded-xl border text-xs font-bold inline-flex items-center gap-1.5 transition-all ${
+              className={`min-h-[44px] px-3 py-1.5 rounded-xl border text-xs font-bold inline-flex items-center gap-1.5 transition-all ${
                 prompterOpen
                   ? 'border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                   : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'
@@ -950,7 +950,7 @@ export default function PodcastStudio({
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1500);
                   }}
-                  className="min-h-[44px] px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 shrink-0"
+                  className="min-h-[44px] px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 shrink-0"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? t('make.copied', 'Copied') : t('pod.copy', 'Copy')}
@@ -962,7 +962,7 @@ export default function PodcastStudio({
                     key={where}
                     type="button"
                     onClick={() => share(where)}
-                    className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-xs hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-2.5 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-xs hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                   >
                     <Link2 className="w-3 h-3" />
                     {where}
@@ -995,7 +995,7 @@ export default function PodcastStudio({
                         type="button"
                         onClick={() => setDubbing(dubbing === ep.id ? null : ep.id)}
                         aria-expanded={dubbing === ep.id}
-                        className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
                           dubbing === ep.id
                             ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
                             : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600'
@@ -1008,7 +1008,7 @@ export default function PodcastStudio({
                         type="button"
                         onClick={() => setReading(reading === ep.id ? null : ep.id)}
                         aria-expanded={reading === ep.id}
-                        className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
                           reading === ep.id
                             ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
                             : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600'
@@ -1021,7 +1021,7 @@ export default function PodcastStudio({
                         <button
                           type="button"
                           onClick={() => onToVideo(ep.title)}
-                          className="min-h-[40px] inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+                          className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
                         >
                           <Clapperboard className="w-3.5 h-3.5" />
                           {t('pod.toVideo', 'Put it on a video')}

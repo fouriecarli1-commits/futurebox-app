@@ -771,7 +771,7 @@ export default function Storyboard({
                     type="button"
                     onClick={() => setBoard((was) => changed(was, shot.id, { seconds: one.seconds }))}
                     aria-pressed={shot.seconds === one.seconds}
-                    className={`min-h-[44px] px-3 py-2 rounded-lg text-sm border ${
+                    className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border ${
                       shot.seconds === one.seconds
                         ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -1282,7 +1282,7 @@ function Trim({
           type="button"
           onClick={preview}
           disabled={!ready}
-          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white disabled:opacity-50"
         >
           <Play className="w-3.5 h-3.5" />
           {playing ? t('trim.playing', 'Playing') : t('trim.preview', 'Play just this bit')}
@@ -1291,7 +1291,7 @@ function Trim({
           <button
             type="button"
             onClick={() => onChange({ from: undefined, to: undefined })}
-            className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-500 hover:text-white"
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-500 hover:text-white"
           >
             {t('trim.whole', 'Use all of it')}
           </button>

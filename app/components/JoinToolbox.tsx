@@ -176,7 +176,7 @@ export default function JoinToolbox({
                       if (next.has(group.id)) next.delete(group.id); else next.add(group.id);
                       return next;
                     })}
-                    className="flex h-11 w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-2 text-left text-sm font-bold text-zinc-200"
+                    className="flex h-11 w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-2 text-left text-sm font-bold text-zinc-200"
                   >
                     <span>{groupName(group.id)}</span>
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">

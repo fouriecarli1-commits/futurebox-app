@@ -110,7 +110,7 @@ import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook
  * the one thing that does not read as a control, which is a fault this
  * project has already fixed once in the photo room.
  */
-const SMALL = 'min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2'
+const SMALL = 'min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm'
   + ' text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600';
 import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
 import { STARTS, dressed } from '../lib/filmstart';
@@ -3867,7 +3867,7 @@ async function smallerFrame(url: string): Promise<string> {
           One box and one button for both, with a switch, because
           two boxes and two buttons is the same room twice and
           nobody finds the second one. */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="grid grid-flow-col auto-cols-fr gap-2">
         {([
           ['start', t('edit.frameOpening', 'Opening frame'), shotPic],
           ['end', t('edit.frameClosing', 'Closing frame'), shotEnd],
@@ -3878,7 +3878,7 @@ async function smallerFrame(url: string): Promise<string> {
             data-editorshotinto={which}
             aria-pressed={drawInto === which}
             onClick={() => setDrawInto(which)}
-            className={`rounded-lg border px-2 py-1 text-[12px] ${
+            className={`min-h-[44px] rounded-xl border px-3 text-sm font-semibold ${
               drawInto === which ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
             }`}
             style={{ color: INK }}
@@ -3896,7 +3896,7 @@ async function smallerFrame(url: string): Promise<string> {
               setDrawInto('start');
               setShotReady(null);
             }}
-            className="rounded-lg border border-zinc-700 px-2 py-1 text-[12px]"
+            className="min-h-[44px] rounded-xl border border-zinc-700 px-3 text-sm"
             style={{ color: INK_DIM }}
           >
             {t('edit.frameClosingOff', 'No closing frame')}
@@ -3945,7 +3945,7 @@ async function smallerFrame(url: string): Promise<string> {
           }`}
         />
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-flow-col auto-cols-fr gap-2">
         <button
           type="button"
           data-editorshotdraw
@@ -3970,7 +3970,7 @@ async function smallerFrame(url: string): Promise<string> {
       </div>
       {shotPic && (
         <>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-flow-col auto-cols-fr gap-2">
             {([4, 6, 8] as const).map((many) => (
               <button
                 key={many}
@@ -3984,7 +3984,7 @@ async function smallerFrame(url: string): Promise<string> {
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-flow-col auto-cols-fr gap-2">
             {(['standard', 'better', 'premium'] as const).map((rung) => (
               <button
                 key={rung}
@@ -4197,7 +4197,7 @@ async function smallerFrame(url: string): Promise<string> {
                       commit((was) => (was.shape === one.id ? was : { ...was, shape: one.id }));
                       setSizeOpen(false);
                     }}
-                    className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
+                    className={`min-h-[44px] rounded-xl border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
                   >
                     {one.says}
                   </button>
@@ -4240,7 +4240,7 @@ async function smallerFrame(url: string): Promise<string> {
                   data-editorsizeheight
                   className="h-11 w-[72px] min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
                 />
-                <button type="submit" data-editorsizego className="min-h-[44px] flex-1 rounded-lg border border-emerald-400 bg-emerald-500 px-2 text-xs font-bold text-onAccent">
+                <button type="submit" data-editorsizego className="min-h-[44px] flex-1 rounded-xl border border-emerald-400 bg-emerald-500 px-2 text-xs font-bold text-onAccent">
                   {t('edit.sizeUse', 'Use')}
                 </button>
               </form>
@@ -6106,7 +6106,7 @@ async function smallerFrame(url: string): Promise<string> {
               data-editorwandshut
               onClick={() => setWandOpen(false)}
               aria-label={t('edit.wandShut', 'Put the wand away')}
-              className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-700"
               style={{ color: INK }}
             >
               <X className="h-4 w-4" />
@@ -6923,7 +6923,7 @@ async function smallerFrame(url: string): Promise<string> {
                 </ol>
                 <div className="flex flex-wrap gap-1.5">
                   {keys.map((one, k) => (
-                    <button key={k} type="button" data-editorkeyframe={k} onClick={() => scrubTo(startsAt(edit, piece.id) + one.at * length)} aria-pressed={one === keyOn} className={`min-h-[44px] rounded-lg border px-2.5 text-[11px] font-bold ${one === keyOn ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
+                    <button key={k} type="button" data-editorkeyframe={k} onClick={() => scrubTo(startsAt(edit, piece.id) + one.at * length)} aria-pressed={one === keyOn} className={`min-h-[44px] rounded-xl border px-2.5 text-[11px] font-bold ${one === keyOn ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
                       ◆ {Math.round(one.at * 100)}%
                     </button>
                   ))}
@@ -6935,7 +6935,7 @@ async function smallerFrame(url: string): Promise<string> {
                         const pose = keys.length ? keyPose(keys, here) : STILL;
                         setMotion({ ...motion, keys: [...keys, { ...pose, at: here, ease: 'inOut' as Ease }] });
                       }}
-                      className="min-h-[44px] rounded-lg border border-dashed border-emerald-500/60 px-2.5 text-[11px] font-bold text-emerald-200"
+                      className="min-h-[44px] rounded-xl border border-dashed border-emerald-500/60 px-2.5 text-[11px] font-bold text-emerald-200"
                     >
                       + {t('edit.keyAdd', 'Keyframe here')}
                     </button>
@@ -6950,11 +6950,11 @@ async function smallerFrame(url: string): Promise<string> {
                     {dial(t('edit.keySolid', 'How solid'), keyOn.opacity, 0, 1, 0.01, (v) => setKey(keyOn, { opacity: v }, true), 'opacity')}
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {EASES.map((one) => (
-                        <button key={one.id} type="button" aria-pressed={keyOn.ease === one.id} onClick={() => setKey(keyOn, { ease: one.id })} className={`min-h-[44px] rounded-lg border px-2.5 text-[11px] font-bold ${keyOn.ease === one.id ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
+                        <button key={one.id} type="button" aria-pressed={keyOn.ease === one.id} onClick={() => setKey(keyOn, { ease: one.id })} className={`min-h-[44px] rounded-xl border px-2.5 text-[11px] font-bold ${keyOn.ease === one.id ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
                           {lang === 'af' ? one.af : one.en}
                         </button>
                       ))}
-                      <button type="button" data-editorkeydrop onClick={() => setMotion({ ...motion, keys: keys.filter((one) => one !== keyOn) })} className="min-h-[44px] rounded-lg border border-zinc-700 px-2.5 text-[11px] font-bold text-zinc-300">
+                      <button type="button" data-editorkeydrop onClick={() => setMotion({ ...motion, keys: keys.filter((one) => one !== keyOn) })} className="min-h-[44px] rounded-xl border border-zinc-700 px-2.5 text-[11px] font-bold text-zinc-300">
                         {t('edit.keyDrop', 'Take this keyframe away')}
                       </button>
                     </div>
@@ -6962,7 +6962,7 @@ async function smallerFrame(url: string): Promise<string> {
                 )}
               </div>
               {moves(motion) && (
-                <button type="button" data-editormotionclear onClick={() => tweak({ motion: motion.solid !== undefined ? { solid: motion.solid } : undefined })} className="min-h-[44px] w-full rounded-xl border border-zinc-700 text-xs font-bold text-zinc-300">
+                <button type="button" data-editormotionclear onClick={() => tweak({ motion: motion.solid !== undefined ? { solid: motion.solid } : undefined })} className="min-h-[44px] w-full rounded-xl border border-zinc-700 text-sm font-bold text-zinc-300">
                   {t('edit.motionClear', 'Keep the picture still')}
                 </button>
               )}
@@ -7341,7 +7341,7 @@ async function smallerFrame(url: string): Promise<string> {
               type="button"
               disabled={!piece}
               onClick={() => void animateFrameWithVeo()}
-              className="mt-2 min-h-[44px] w-full px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center justify-center gap-2 transition-colors"
+              className="mt-2 min-h-[44px] w-full px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center justify-center gap-2 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {t('veo.action', 'Take this frame and animate it')}

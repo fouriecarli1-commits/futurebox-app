@@ -263,7 +263,7 @@ export default function CollabFinder({
                         setCopied(entry.match.track.id);
                         setTimeout(() => setCopied(null), 1500);
                       }}
-                      className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
+                      className="min-h-[44px] px-2.5 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
                     >
                       {copied === entry.match.track.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       {copied === entry.match.track.id ? t('make.copied', 'Copied') : t('radar.copyNote', 'Copy the message')}

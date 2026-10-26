@@ -693,7 +693,7 @@ function Script({ lines }: { readonly lines: readonly string[] }): React.ReactEl
         type="button"
         aria-label="Copy the script"
         onClick={() => { void navigator.clipboard?.writeText(lines.join('\n')).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}
-        className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl border border-sky-400/30 text-sky-200"
+        className="absolute right-3 top-3 grid h-11 w-10 place-items-center rounded-xl border border-sky-400/30 text-sky-200"
       >
         {copied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
       </button>

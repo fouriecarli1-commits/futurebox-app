@@ -52,7 +52,7 @@ function CopyButton({ text, label, done }: { text: string; label: string; done: 
           () => setCopied(false),
         );
       }}
-      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
+      className="min-h-[44px] px-2.5 py-1 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
     >
       {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
       <span>{copied ? done : label}</span>
@@ -500,7 +500,7 @@ export default function CollabRadar({
                   <button
                     type="button"
                     onClick={() => openPitch(podcast, 'email')}
-                    className="px-3 py-2.5 min-h-[40px] rounded-lg text-sm font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
+                    className="px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
                   >
                     <Send className="w-3 h-3" />
                     <span>{t('radar.draftEmail', "Draft email")}</span>
@@ -508,7 +508,7 @@ export default function CollabRadar({
                   <button
                     type="button"
                     onClick={() => openPitch(podcast, 'dm')}
-                    className="px-3 py-2.5 min-h-[40px] rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                    className="px-3 py-2.5 min-h-[44px] rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all"
                   >
                     {t('radar.draftDm', 'Draft DM')}
                   </button>
@@ -517,7 +517,7 @@ export default function CollabRadar({
                       href={podcast.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-2.5 min-h-[40px] rounded-lg text-sm text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
+                      className="px-3 py-2.5 min-h-[44px] rounded-lg text-sm text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span>{t('radar.findContact', "Find their contact page")}</span>
@@ -567,7 +567,7 @@ export default function CollabRadar({
                 type="button"
                 data-radaradd
                 onClick={addOwnTarget}
-                className="min-h-[44px] w-full px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center space-x-1"
+                className="min-h-[44px] w-full px-3 py-2 rounded-xl text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center space-x-1"
               >
                 <Plus className="w-3 h-3" />
                 <span>{t('radar.add', 'Add it to the list')}</span>
@@ -961,7 +961,7 @@ export default function CollabRadar({
                       <button
                         type="button"
                         onClick={onUpgrade}
-                        className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
+                        className="min-h-[44px] px-2.5 py-1 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
                       >
                         <Lock className="w-3 h-3" />
                         {t('radar.postingPro', 'Posting is Pro')}
@@ -970,7 +970,7 @@ export default function CollabRadar({
                     <button
                       type="button"
                       onClick={() => (canBoost ? setBoostFor(caption) : onUpgrade())}
-                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                      className="min-h-[44px] px-2.5 py-1 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                     >
                       {!canBoost && <Lock className="w-3 h-3 text-amber-400" />}
                       {t('radar.askBoost', 'Ask FutureBox to boost')}
@@ -1028,7 +1028,7 @@ export default function CollabRadar({
                       setBoostUrl('');
                     });
                   }}
-                  className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
+                  className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
                 >
                   {t('radar.sendIt', 'Send it to FutureBox')}
                 </button>

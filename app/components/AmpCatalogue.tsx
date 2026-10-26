@@ -202,7 +202,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
         data-ampfind
         onClick={() => setOpen((was) => !was)}
         aria-expanded={open}
-        className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white"
+        className="px-2.5 py-1.5 min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white"
       >
         <Search className="w-3.5 h-3.5" />
         {t('pro.ampFind', 'Find an amp')}
@@ -278,7 +278,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                     data-amptake={row.id}
                     onClick={() => void take(row)}
                     disabled={fetching !== null}
-                    className="flex-1 min-w-0 text-left px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 hover:border-emerald-500/50 disabled:opacity-60"
+                    className="flex-1 min-w-0 text-left px-2.5 py-1.5 min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 hover:border-emerald-500/50 disabled:opacity-60"
                   >
                     <span className="block text-xs font-bold text-zinc-100 truncate">{row.name}</span>
                     {/* The maker, every time. The credit names a person. */}
@@ -297,7 +297,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                       onClick={() => void remove(row)}
                       aria-label={t('pro.ampRemove', 'Take it out of the catalogue')}
                       title={t('pro.ampRemove', 'Take it out of the catalogue')}
-                      className="min-h-[44px] min-w-[44px] rounded-lg border border-zinc-800 text-zinc-500 hover:text-red-300 flex items-center justify-center"
+                      className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-800 text-zinc-500 hover:text-red-300 flex items-center justify-center"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -314,7 +314,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                 type="button"
                 onClick={() => setAdding((was) => !was)}
                 aria-expanded={adding}
-                className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-emerald-300"
+                className="px-2.5 py-1.5 min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-emerald-300"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {t('pro.ampAdd', 'Add to the catalogue')}
@@ -378,7 +378,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                     data-ampaddgo
                     onClick={() => void add()}
                     disabled={busy}
-                    className="min-h-[44px] w-full rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 text-xs font-bold text-emerald-200 disabled:opacity-60"
+                    className="min-h-[44px] w-full rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 text-sm font-bold text-emerald-200 disabled:opacity-60"
                   >
                     {busy ? t('pro.ampAdding', 'Adding…') : t('pro.ampAddGo', 'Add it')}
                   </button>

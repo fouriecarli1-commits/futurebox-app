@@ -232,7 +232,7 @@ export default function SignaturePad({ what = 'signature', words, onClose, onMad
         />
         {how === 'type' && <input className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm" value={typed} onChange={(e) => setTyped(e.target.value.slice(0, 40))} placeholder={words.name} aria-label={words.name} data-pdfpadtyped />}
         {how === 'upload' && (
-          <button type="button" onClick={() => picker.current?.click()} className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-600 px-3 text-xs font-semibold text-zinc-300">
+          <button type="button" onClick={() => picker.current?.click()} className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-600 px-3 text-sm font-semibold text-zinc-300">
             <ImagePlus className="h-4 w-4" />
             {words.uploadHint}
           </button>

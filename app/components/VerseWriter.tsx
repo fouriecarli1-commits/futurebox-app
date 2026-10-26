@@ -422,7 +422,7 @@ export default function VerseWriter({
                                 type="button"
                                 data-verseuse="replace"
                                 onClick={() => putOption(sec, one.text, 'replace')}
-                                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-bold text-onAccent"
+                                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3 text-xs font-bold text-onAccent"
                               >
                                 <Check className="h-3.5 w-3.5" />
                                 {hasContent ? t('versewriter.useReplace', 'Use this instead') : t('versewriter.use', 'Use this')}
@@ -432,7 +432,7 @@ export default function VerseWriter({
                                   type="button"
                                   data-verseuse="add"
                                   onClick={() => putOption(sec, one.text, 'add')}
-                                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-zinc-700 px-3 text-xs font-semibold text-zinc-200"
+                                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-xs font-semibold text-zinc-200"
                                 >
                                   <Plus className="h-3.5 w-3.5" />
                                   {t('versewriter.useAdd', 'Add under mine')}

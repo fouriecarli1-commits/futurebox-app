@@ -170,7 +170,7 @@ export default function BoothAsk({
                 key={k}
                 type="button"
                 onClick={() => setQuestion(promptText)}
-                className="min-h-[44px] rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-sky-500/40 hover:bg-sky-950/30 hover:text-sky-200 active:scale-[0.98]"
+                className="min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-sky-500/40 hover:bg-sky-950/30 hover:text-sky-200 active:scale-[0.98]"
               >
                 {promptText}
               </button>

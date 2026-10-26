@@ -63,7 +63,7 @@ export default function FileSize({
             data-filesizepick={one ?? 'none'}
             aria-pressed={limit === one}
             onClick={() => onLimit(one)}
-            className={`inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border px-2 text-xs font-bold ${
+            className={`inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border px-2 text-sm font-bold ${
               limit === one
                 ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
                 : 'border-zinc-700 bg-zinc-950 text-zinc-300'

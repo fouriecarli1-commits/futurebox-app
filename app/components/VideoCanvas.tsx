@@ -1339,7 +1339,7 @@ export default function VideoCanvas({
       />
 
       {/* ── The desk ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      <div className="fb-fill grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {SCENES.map((one) => {
           const active = scene?.id === one.id;
           return (

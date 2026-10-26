@@ -549,7 +549,7 @@ export default function CollabRoom({
                           type="button"
                           onClick={() => void intoMyBooth(one.trackId as string, room?.name ?? t('collab.them', 'them'))}
                           disabled={taking !== null}
-                          className="mt-1.5 w-full min-h-[40px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                          className="mt-1.5 w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                           {taking === one.trackId ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -604,7 +604,7 @@ export default function CollabRoom({
                       type="button"
                       onClick={() => void send(track.id)}
                       disabled={busy === 'say'}
-                      className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-sm text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+                      className="min-h-[44px] px-2.5 py-1 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
                     >
                       <Music className="w-3 h-3 shrink-0" />
                       <span className="truncate max-w-[10rem]">{track.title}</span>

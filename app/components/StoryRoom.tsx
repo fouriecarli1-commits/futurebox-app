@@ -319,7 +319,7 @@ export default function StoryRoom(): React.ReactElement {
               onClick={() => void help('write')}
               disabled={Boolean(helping) || (!idea.trim() && !story.trim())}
               data-storywrite
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 text-sm font-bold text-onAccent disabled:opacity-40"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 text-sm font-bold text-onAccent disabled:opacity-40"
             >
               {helping === 'write' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {story.trim() ? t('story.writeOn', 'Write the rest') : t('story.writeIt', 'Write it for me')}
@@ -330,7 +330,7 @@ export default function StoryRoom(): React.ReactElement {
                 onClick={() => void help('better')}
                 disabled={Boolean(helping)}
                 data-storybetter
-                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-emerald-500/50 px-3.5 text-sm font-bold text-emerald-300 disabled:opacity-40"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-emerald-500/50 px-3.5 text-sm font-bold text-emerald-300 disabled:opacity-40"
               >
                 {helping === 'better' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                 {t('story.better', 'Make mine better')}
@@ -341,7 +341,7 @@ export default function StoryRoom(): React.ReactElement {
                 type="button"
                 onClick={() => { setStory(mine.story); setLook(mine.look); setMine(null); setMade({}); setHelperSays(''); }}
                 data-storymine
-                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300"
               >
                 <Undo2 className="h-4 w-4" />
                 {t('story.mineBack', 'Put mine back')}
@@ -434,7 +434,7 @@ export default function StoryRoom(): React.ReactElement {
                     type="button"
                     onClick={() => { void new Audio(URL.createObjectURL(made[page.id]!.audio!)).play(); }}
                     aria-label={t('story.hear', 'Hear this page')}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-300"
                   >
                     <Play className="h-4 w-4" />
                   </button>

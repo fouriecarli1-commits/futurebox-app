@@ -769,7 +769,7 @@ export default function SongSections({
               <button
                 type="button"
                 onClick={() => setLanesOpen(true)}
-                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/10 bg-zinc-900 px-3.5 text-xs font-semibold text-cyan-400 transition-all hover:bg-zinc-800"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-white/10 bg-zinc-900 px-3.5 text-xs font-semibold text-cyan-400 transition-all hover:bg-zinc-800"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 {t('sec.lanes', 'Lay it out in tracks')}

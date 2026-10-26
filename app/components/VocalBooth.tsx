@@ -1611,7 +1611,7 @@ export default function VocalBooth({
             <button
               type="button"
               onClick={() => setIntroAt(at)}
-              className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
+              className="min-h-[44px] px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
             >
               {t('booth.startHere', 'Start them here')}
             </button>
@@ -1639,7 +1639,7 @@ export default function VocalBooth({
                 type="button"
                 data-boothlisten
                 onClick={() => { setIntroAt(null); setWordsShift(0); }}
-                className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-sky-400 hover:text-sky-300"
+                className="min-h-[44px] px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-sky-400 hover:text-sky-300"
               >
                 {t('booth.listenWords', 'Listen to the words')}
                 <span className="pl-1.5 text-zinc-500">{t('play.free', 'no credits')}</span>
@@ -1648,7 +1648,7 @@ export default function VocalBooth({
             <button
               type="button"
               onClick={() => setPointing((on) => !on)}
-              className={`min-h-[44px] px-2.5 py-1 rounded-lg border ${
+              className={`min-h-[44px] px-2.5 py-1 rounded-xl border ${
                 pointing
                   ? 'bg-amber-500/20 border-amber-400 text-amber-300'
                   : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300'

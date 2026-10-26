@@ -510,7 +510,7 @@ export default function Darkroom({
                 data-darkdropper
                 aria-pressed={dropper}
                 onClick={() => setDropper((was) => !was)}
-                className={`inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border text-xs font-bold ${dropper ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : 'border-zinc-700 text-zinc-200'}`}
+                className={`inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border text-sm font-bold ${dropper ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : 'border-zinc-700 text-zinc-200'}`}
               >
                 <Pipette className="h-4 w-4" />
                 {dropper ? w('dropperOn') : w('dropper')}

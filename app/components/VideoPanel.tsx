@@ -686,7 +686,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                           event.preventDefault();
                           setAlsoIn(one);
                         }}
-                        className={`min-h-[44px] rounded-lg border px-2.5 py-1.5 text-sm ${
+                        className={`min-h-[44px] rounded-xl border px-2.5 py-1.5 text-sm ${
                           alsoIn === one
                             ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
                             : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'

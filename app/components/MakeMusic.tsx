@@ -1451,7 +1451,7 @@ export default function MakeMusic({
                   data-makewaypick={one}
                   aria-selected={way === one}
                   onClick={() => chooseWay(one)}
-                  className={`min-h-[40px] rounded-xl px-3.5 text-sm font-semibold ${
+                  className={`min-h-[44px] rounded-xl px-3.5 text-sm font-semibold ${
                     way === one ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -1874,7 +1874,7 @@ export default function MakeMusic({
                 data-maketool={id}
                 aria-expanded={pop === id}
                 onClick={() => setPop((was) => (was === id ? null : id))}
-                className={`flex min-h-[40px] max-w-[11rem] items-center gap-1.5 rounded-xl px-2.5 text-sm ${
+                className={`flex min-h-[44px] max-w-[11rem] items-center gap-1.5 rounded-xl px-2.5 text-sm ${
                   pop === id ? 'bg-zinc-800 text-white' : 'text-zinc-300 hover:bg-zinc-800/60'
                 }`}
               >
@@ -1884,7 +1884,7 @@ export default function MakeMusic({
             ))}
             <span
               data-makecost
-              className="ml-auto flex min-h-[36px] items-center gap-1.5 rounded-full bg-zinc-950/70 px-3 text-xs font-semibold text-zinc-300"
+              className="ml-auto flex min-h-[44px] items-center gap-1.5 rounded-full bg-zinc-950/70 px-3 text-xs font-semibold text-zinc-300"
             >
               {songCost(pricedFor(seconds), singer)} {t('video.credits', 'credits')}
             </span>
@@ -1920,7 +1920,7 @@ export default function MakeMusic({
                   title={t('wand.words', 'Write the next part for me')}
                   onClick={() => void wave('words')}
                   disabled={wanding !== null}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 text-emerald-400 hover:border-emerald-500 disabled:opacity-50"
+                  className="flex h-11 w-10 items-center justify-center rounded-xl border border-zinc-800 text-emerald-400 hover:border-emerald-500 disabled:opacity-50"
                 >
                   {wanding === 'words' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                 </button>
@@ -1978,7 +1978,7 @@ export default function MakeMusic({
                   <button
                     type="button"
                     onClick={() => setCanvas((was) => ({ ...was, style: '' }))}
-                    className="min-h-[40px] rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                    className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-2.5 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
                   >
                     {t('make.clear')}
                   </button>
@@ -1990,7 +1990,7 @@ export default function MakeMusic({
                     title={t('wand.style', 'Work the style out from the words')}
                     onClick={() => void wave('style')}
                     disabled={wanding !== null}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 text-emerald-400 hover:border-emerald-500 disabled:opacity-50"
+                    className="flex h-11 w-10 items-center justify-center rounded-xl border border-zinc-800 text-emerald-400 hover:border-emerald-500 disabled:opacity-50"
                   >
                     {wanding === 'style' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   </button>

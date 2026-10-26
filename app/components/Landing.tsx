@@ -319,7 +319,7 @@ export default function Landing({
                 role="tab"
                 aria-selected={mode !== 'signup'}
                 onClick={() => onMode('signin')}
-                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                className={`min-h-[44px] flex-1 rounded-xl text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
               >
                 {t('landing.tabSignIn', 'Sign In')}
               </button>
@@ -328,7 +328,7 @@ export default function Landing({
                 role="tab"
                 aria-selected={mode === 'signup'}
                 onClick={() => onMode('signup')}
-                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                className={`min-h-[44px] flex-1 rounded-xl text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
               >
                 {t('landing.tabCreate', 'Create Account')}
               </button>
@@ -456,7 +456,7 @@ export default function Landing({
                   <button
                     type="button"
                     onClick={onStart}
-                    className={`mt-8 min-h-[44px] w-full rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                    className={`mt-8 min-h-[44px] w-full rounded-xl text-sm font-bold uppercase tracking-wider transition-all ${
                       lead
                         ? 'bg-linear-to-r from-emerald-500 to-cyan-500 text-onAccent shadow-lg shadow-emerald-500/20 hover:scale-[1.02]'
                         : 'border border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700'

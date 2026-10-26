@@ -1087,9 +1087,9 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
           <li key={one.id} className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 p-2" data-pdfpart>
             <span className="w-6 text-center text-xs font-bold text-zinc-500">{k + 1}</span>
             <span className="min-w-0 flex-1 truncate text-sm text-zinc-100">{one.name}</span>
-            <button type="button" aria-label={w('earlier')} className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700" disabled={k === 0} onClick={() => setParts((was) => { const next = [...was]; [next[k - 1], next[k]] = [next[k], next[k - 1]]; return next; })}><ChevronLeft className="h-4 w-4 rotate-90" /></button>
-            <button type="button" aria-label={w('later')} className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700" disabled={k === parts.length - 1} onClick={() => setParts((was) => { const next = [...was]; [next[k + 1], next[k]] = [next[k], next[k + 1]]; return next; })}><ChevronRight className="h-4 w-4 rotate-90" /></button>
-            <button type="button" aria-label={w('remove')} className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700" onClick={() => setParts((was) => was.filter((x) => x.id !== one.id))}><Trash2 className="h-4 w-4" /></button>
+            <button type="button" aria-label={w('earlier')} className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-700" disabled={k === 0} onClick={() => setParts((was) => { const next = [...was]; [next[k - 1], next[k]] = [next[k], next[k - 1]]; return next; })}><ChevronLeft className="h-4 w-4 rotate-90" /></button>
+            <button type="button" aria-label={w('later')} className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-700" disabled={k === parts.length - 1} onClick={() => setParts((was) => { const next = [...was]; [next[k + 1], next[k]] = [next[k], next[k + 1]]; return next; })}><ChevronRight className="h-4 w-4 rotate-90" /></button>
+            <button type="button" aria-label={w('remove')} className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-700" onClick={() => setParts((was) => was.filter((x) => x.id !== one.id))}><Trash2 className="h-4 w-4" /></button>
           </li>
         ))}
       </ol>

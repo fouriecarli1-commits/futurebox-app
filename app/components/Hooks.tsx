@@ -806,7 +806,7 @@ export default function Hooks({
   const SOURCE_ON = 'w-full text-left p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-xs font-bold text-emerald-300 flex items-center justify-between gap-2 min-h-[44px]';
   const SOURCE_OFF = 'w-full text-left p-2.5 rounded-xl bg-zinc-800/40 hover:bg-zinc-700/40 border border-white/5 text-xs text-zinc-300 flex items-center justify-between gap-2 min-h-[44px] disabled:opacity-50';
   const PANEL = 'rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md';
-  const BRING = 'w-full py-2 min-h-[44px] rounded-xl bg-zinc-800/40 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition flex items-center justify-center gap-1.5 disabled:opacity-50';
+  const BRING = 'w-full py-2 min-h-[44px] rounded-xl bg-zinc-800/40 border border-white/10 text-sm font-bold text-zinc-300 hover:text-white transition flex items-center justify-center gap-1.5 disabled:opacity-50';
 
   return (
     <div className="space-y-4" data-hooksroom>
@@ -834,7 +834,7 @@ export default function Hooks({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="bg-zinc-950 p-1 rounded-full border border-white/10 flex items-center text-xs font-bold" data-hooklengths>
+          <div className="bg-zinc-950 p-1 rounded-full border border-white/10 flex items-center text-sm font-bold" data-hooklengths>
             {LENGTHS.map((option) => (
               <button
                 key={option}

@@ -410,7 +410,7 @@ export default function AdScheduleModal({
                 <button
                   type="button"
                   onClick={copyGoogleBundle}
-                  className="min-h-[40px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:border-zinc-700 flex items-center gap-1.5"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:border-zinc-700 flex items-center gap-1.5"
                 >
                   {copiedKey === 'google_bundle' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {lang === 'af' ? 'Kopieer Google Ads-pakket' : 'Copy Google Ads Asset Pack'}
@@ -419,7 +419,7 @@ export default function AdScheduleModal({
                   href="https://ads.google.com/aw/campaigns/new"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-[40px] px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center gap-1.5 shadow-xs"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center gap-1.5 shadow-xs"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   {lang === 'af' ? 'Maak Google Ads oop' : 'Launch Google Ads'}
@@ -508,7 +508,7 @@ export default function AdScheduleModal({
                 <button
                   type="button"
                   onClick={copyMetaBundle}
-                  className="min-h-[40px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:border-zinc-700 flex items-center gap-1.5"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:border-zinc-700 flex items-center gap-1.5"
                 >
                   {copiedKey === 'meta_bundle' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {lang === 'af' ? 'Kopieer Meta Ads-pakket' : 'Copy Meta Ads Pack'}
@@ -517,7 +517,7 @@ export default function AdScheduleModal({
                   href="https://adsmanager.facebook.com/adsmanager/manage/campaigns"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-[40px] px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white flex items-center gap-1.5 shadow-xs"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white flex items-center gap-1.5 shadow-xs"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   {lang === 'af' ? 'Maak Meta Ads Manager oop' : 'Launch Meta Ads Manager'}
@@ -538,13 +538,13 @@ export default function AdScheduleModal({
                     value={scheduledDate}
                     min={today()}
                     onChange={(e) => setScheduledDate(e.target.value)}
-                    className="min-h-[40px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-200 focus:outline-hidden focus:border-emerald-500"
+                    className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-200 focus:outline-hidden focus:border-emerald-500"
                   />
                   <input
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="min-h-[40px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-200 focus:outline-hidden focus:border-emerald-500"
+                    className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-200 focus:outline-hidden focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -606,7 +606,7 @@ export default function AdScheduleModal({
                   type="button"
                   disabled={scheduling || selectedPlatforms.length === 0}
                   onClick={() => void handleConfirmSchedule()}
-                  className="min-h-[42px] px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-onAccent text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-onAccent text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   <CalendarClock className="w-4 h-4" />
                   {lang === 'af' ? 'Voeg by Skedule & Ad Runs' : 'Confirm & Add to Ad Runs'}
@@ -614,7 +614,7 @@ export default function AdScheduleModal({
                 <button
                   type="button"
                   onClick={downloadCsv}
-                  className="min-h-[42px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5"
                 >
                   <Download className="w-3.5 h-3.5" />
                   {lang === 'af' ? 'Laai veldtog-CSV af' : 'Download Campaign CSV'}

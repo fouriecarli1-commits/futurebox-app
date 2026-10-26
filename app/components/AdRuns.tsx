@@ -219,7 +219,7 @@ export default function AdRuns({
                 type="button"
                 onClick={() => setRuns((was) => was.filter((one) => one.id !== run.id))}
                 aria-label={`${t('run.remove', 'Take this run out')} ${run.campaign || ''}`}
-                className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-rose-300 flex items-center justify-center"
+                className="w-11 h-11 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-rose-300 flex items-center justify-center"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -268,7 +268,7 @@ export default function AdRuns({
                       type="button"
                       onClick={() => tick(run.id, step.platform)}
                       aria-pressed={step.done}
-                      className={`min-h-[44px] inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold ${
+                      className={`min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold ${
                         step.done
                           ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300'
                           : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
@@ -292,7 +292,7 @@ export default function AdRuns({
                           type="button"
                           onClick={() => void copy(key, link)}
                           aria-label={`${t('run.copy', 'Copy the tagged link for')} ${channel.name}`}
-                          className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
+                          className="w-11 h-11 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
                         >
                           {copied === key ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                         </button>

@@ -3804,3 +3804,91 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   background: rgba(52, 211, 153, 0.34) !important;
   box-shadow: 0 0 0 1.5px rgba(52, 211, 153, 0.8) inset !important;
 }
+
+/* ── A grid of tiles never ends on a half-empty row ──────────────────────
+   The owner, 27 October 2026: *"Hier is weer 'n weird shape."* A last tile
+   alone in its row stood in one column with the rest of the row empty. On
+   a `fb-fill` grid it takes the whole row instead: two columns on a phone,
+   three from `sm` up. */
+@media (max-width: 639.98px) {
+  .fb-fill > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (min-width: 640px) {
+  .fb-fill > :last-child:nth-child(3n + 1) { grid-column: 1 / -1; }
+}
+
+/* ── A bar that slides sideways says so, softly ──────────────────────────
+   The owner asked for these bars to slide (20 October 2026), and a bar that
+   slides has a last button half off the edge: "Cl" with the rest cut by the
+   screen, which read as a mistake rather than as "there is more". The edge
+   now fades, so the half button reads as more to come, and the bar ends
+   with room to bring its last button fully clear of the fade. */
+[data-sideways] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  padding-right: 32px;
+  scroll-padding-right: 32px;
+}
+
+/* ── Movement: the rooms are alive ────────────────────────────────────────
+   The owner, 27 October 2026: *"kamers moet beweging hê vir die futuristic
+   gevoel."* Two movements, both quiet, both the same in every room:
+
+     · the line of light along the top of every tile and card travels from
+       left to right and back into the dark, slowly, each card a little out
+       of step with its neighbour so a room does not pulse as one block;
+     · a room's contents rise into place when the room opens, one after the
+       other, over about half a second.
+
+   Neither moves anything a finger is aiming at: the line is a pixel high
+   and the rise ends before a hand can get there. Off entirely for anybody
+   who has asked their phone for less motion. */
+@keyframes fb-line-run {
+  0% { background-position: -60% 0; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { background-position: 160% 0; opacity: 0; }
+}
+.fb-fx-card { position: relative; }
+.fb-fx-card::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--fb-secondary-300) / 0.8), transparent);
+  pointer-events: none;
+}
+.fb-fx-tile::before,
+.fb-fx-card::before,
+.fb-fx-booth-tile::before {
+  background-repeat: no-repeat;
+  background-size: 45% 100%;
+  animation: fb-line-run 6s ease-in-out infinite;
+}
+:nth-child(3n + 2) > .fb-fx-card::before,
+.fb-fx-card:nth-child(3n + 2)::before,
+.fb-fx-tile:nth-child(3n + 2)::before,
+.fb-fx-booth-tile:nth-child(3n + 2)::before { animation-delay: -2s; }
+.fb-fx-card:nth-child(3n)::before,
+.fb-fx-tile:nth-child(3n)::before,
+.fb-fx-booth-tile:nth-child(3n)::before { animation-delay: -4s; }
+
+@keyframes fb-room-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+[data-roomstage] > * {
+  animation: fb-room-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+[data-roomstage] > :nth-child(2) { animation-delay: 60ms; }
+[data-roomstage] > :nth-child(3) { animation-delay: 120ms; }
+[data-roomstage] > :nth-child(n + 4) { animation-delay: 180ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-fx-tile::before,
+  .fb-fx-card::before,
+  .fb-fx-booth-tile::before { animation: none; background-size: 100% 100%; }
+  [data-roomstage] > * { animation: none; }
+}

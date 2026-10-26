@@ -815,7 +815,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             type="button"
             data-livemode="feed"
             onClick={() => setMode('feed')}
-            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'feed' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+            className={`min-h-[44px] rounded-full px-4 py-1.5 transition ${mode === 'feed' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
           >
             {t('live.modeFeed', 'Room feed')}
           </button>
@@ -823,7 +823,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
             type="button"
             data-livemode="jam"
             onClick={() => setMode('jam')}
-            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'jam' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+            className={`min-h-[44px] rounded-full px-4 py-1.5 transition ${mode === 'jam' ? 'fb-fx-go font-extrabold' : 'text-zinc-400 hover:text-white'}`}
           >
             {t('live.modeJam', 'Live jam room')}
           </button>

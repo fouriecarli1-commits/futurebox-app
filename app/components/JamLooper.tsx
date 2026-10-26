@@ -519,7 +519,7 @@ export default function JamLooper({ ctx, stream, padTap, onToBooth, out, onState
           data-loopsend
           onClick={() => void toBooth()}
           disabled={sending || Boolean(recording)}
-          className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3 text-xs font-extrabold text-sky-100 disabled:opacity-50"
+          className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3 text-sm font-extrabold text-sky-100 disabled:opacity-50"
         >
           <Send className="h-3.5 w-3.5" />
           {sending ? t('loop.sending', 'Making it a lane…') : t('loop.toBooth', 'Send to ProBooth')}

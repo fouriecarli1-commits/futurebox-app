@@ -254,7 +254,7 @@ export default function MakeSound({
             data-makesoundkind={one}
             aria-pressed={kind === one}
             onClick={() => { setKind(one); setProblem(''); }}
-            className={`min-h-[40px] rounded-xl border px-3.5 text-sm font-bold ${
+            className={`min-h-[44px] rounded-xl border px-3.5 text-sm font-bold ${
               kind === one ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200' : 'border-zinc-700 text-zinc-300'
             }`}
           >

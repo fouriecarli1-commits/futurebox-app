@@ -859,7 +859,7 @@ export default function ArtMarket(): React.ReactElement {
                filled in: that is the control every phone uses to say
                "one screen, three ways", and it is the most app-shaped
                thing on here. */
-            className={`flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-[11px] px-2 text-[14px] font-semibold transition ${
+            className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-[14px] font-semibold transition ${
               tab === one.id
                 ? 'bg-[var(--blad)] text-[color:var(--aksent)] ring-1 ring-[var(--lyn)]'
                 : 'text-[color:var(--ink-2)]'
