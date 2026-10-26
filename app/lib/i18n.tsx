@@ -5724,7 +5724,7 @@ export const STRINGS: Dict = {
   "pro.wordsWhere": { en: "The words on screen, and the AI voice in your ear to sing next to, are in The Booth — the room this one opened from. Your lanes here are saved, so you can go and come back.", af: "Die woorde op die skerm, en die AI-stem in jou oor om langs te sing, is in Die Booth — die kamer waaruit hierdie een oopgemaak het. Jou bane hier is gestoor, so jy kan gaan en terugkom." },
   "pro.keepWhat": { en: "Every lane you can hear becomes one song, with its levels, cuts and tone baked in. It lands in your Library and this room closes.", af: "Elke baan wat jy kan hoor word een liedjie, met sy vlakke, waar dit gesny is en sy toon ingebak. Dit beland in jou Biblioteek en hierdie kamer maak toe." },
   "pro.keepNone": { en: "Record a take or bring audio in, and this makes one song out of all of it.", af: "Neem ’n opname of bring klank in, en hierdie maak een liedjie van alles saam." },
-  "pro.take": { en: "Take", af: "Opname" },
+  "pro.take": { en: "Take", af: "Vat" },
   "pro.laneMove": { en: "Move this lane one place up or down the stack.", af: "Skuif hierdie baan een plek op of af in die stapel." },
   "pro.laneMoveLocked": { en: "Move this lane, and everything locked to it, one place. They travel together.", af: "Skuif hierdie baan, en alles wat aan hom vasgemaak is, een plek. Hulle beweeg saam." },
   "pro.mute": { en: "M", af: "D" },
