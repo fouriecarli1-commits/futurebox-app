@@ -2242,8 +2242,16 @@ jobs:
       # optional on a bare runner: without it Chromium installs and then
       # refuses to start, which reads as a broken app rather than a missing
       # libnss3.
+      #
+      # apt is told to give up on a stalled download after 20 seconds and
+      # try again, up to five times. On 26 October 2026 one font package
+      # from the Azure mirror hung for eight minutes before apt's default
+      # timeout let go, the step took sixteen minutes instead of one, and
+      # "rooms" was stopped at its 30-minute limit with no probe failing.
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "20";\nAcquire::https::Timeout "20";\n' | sudo tee /etc/apt/apt.conf.d/80-quick-retry > /dev/null
+          npx playwright install --with-deps chromium
 
       # Built once here. The eight probes that need their own probe page
       # rebuild on top of this; the rest start the server against it.
