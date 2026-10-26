@@ -72,5 +72,5 @@ must be able to do steps 2 to 4. **Decide who that is before launch.**
   dashboard. A button in the owner's report list that hides the post,
   suspends the account and keeps the file aside would do steps 2 and 3 in
   one press.
-- **A help link for victims** on the help page: Take It Down (NCMEC), for
+- ~~**A help link for victims**~~ — on the help page since 26 October 2026: Take It Down (NCMEC), for
   images from when somebody was under 18, and StopNCII.org for adults.

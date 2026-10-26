@@ -44,6 +44,44 @@ export default function Help(): React.ReactElement {
 
         <HelpDesk />
 
+        {/* For somebody whose intimate picture has been shared, or is being
+            threatened. Added 26 October 2026 with the reporting procedure
+            (docs/CHILD-SAFETY-REPORTING.md): both services make a fingerprint
+            of the picture on the person's own device, so the picture itself
+            never has to be sent to anybody to be blocked. */}
+        <section data-helpimages className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+          <h2 className="text-lg font-bold text-white">
+            If somebody has shared an intimate picture of you
+          </h2>
+          <p className="text-sm text-zinc-300 leading-relaxed">
+            Or is threatening to. It is not your fault, and there are people whose whole job is
+            getting it taken down.
+          </p>
+          <ul className="space-y-2 pl-5 list-disc marker:text-zinc-600 text-sm text-zinc-300 leading-relaxed">
+            <li>
+              <strong className="text-white">If it is here,</strong> press <strong className="text-white">Report</strong> on
+              it. Every report reaches the person who runs FutureBox the moment it is sent.
+            </li>
+            <li>
+              <strong className="text-white">If it was taken when you were under 18:</strong>{' '}
+              <a href="https://takeitdown.ncmec.org" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center text-emerald-400 hover:text-emerald-300 underline underline-offset-4">Take It Down</a>.
+              It makes a fingerprint of the picture on your own phone, so the picture never leaves it,
+              and the sites that take part block anything that matches.
+            </li>
+            <li>
+              <strong className="text-white">If you are 18 or older:</strong>{' '}
+              <a href="https://stopncii.org" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center text-emerald-400 hover:text-emerald-300 underline underline-offset-4">StopNCII.org</a>,
+              which works the same way.
+            </li>
+            <li>
+              <strong className="text-white">It is a crime in South Africa.</strong> Sharing an intimate picture of
+              somebody without their consent is an offence under the Cybercrimes Act. You can report it at
+              any police station. If you are a child, Childline answers on <strong className="text-white">116</strong>,
+              free, at any hour.
+            </li>
+          </ul>
+        </section>
+
         {/* Help, the guide, terms and privacy are in the site footer under
             every page, so they are not repeated here. What stays is what only
             this page offers. Standing on their own so they are sized as
