@@ -29,6 +29,7 @@ import {
   QrCode, Barcode, Check, Copy, Download, Plus, X, Sparkles, Crown,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { SITE_URL } from '../lib/brand';
 import {
   generateBarcodeDataUrl,
   QR_TEMPLATES,
@@ -50,7 +51,7 @@ export default function BarcodeGeneratorModal({
   useBackLayer(true, onClose);
   const [type, setType] = useState<BarcodeType>('qr');
   const [template, setTemplate] = useState<QrTemplateId>('plain');
-  const [data, setData] = useState('https://futurebox.app');
+  const [data, setData] = useState(SITE_URL);
   const [color, setColor] = useState('#000000');
   const [bg, setBg] = useState('#ffffff');
   const [copied, setCopied] = useState(false);
@@ -73,7 +74,7 @@ export default function BarcodeGeneratorModal({
     for (const tpl of QR_TEMPLATES) {
       map[tpl.id] = generateBarcodeDataUrl({
         type: 'qr',
-        data: 'https://futurebox.app',
+        data: SITE_URL,
         color: '#000000',
         background: '#ffffff',
         template: tpl.id,
@@ -147,7 +148,7 @@ export default function BarcodeGeneratorModal({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => { setType('qr'); if (!data.startsWith('http')) setData('https://futurebox.app'); }}
+                onClick={() => { setType('qr'); if (!data.startsWith('http')) setData(SITE_URL); }}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                   type === 'qr'
                     ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-xs'
@@ -206,13 +207,6 @@ export default function BarcodeGeneratorModal({
                 className="rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-200"
               >
                 💬 WhatsApp
-              </button>
-              <button
-                type="button"
-                onClick={() => setData('https://futurebox.app/tickets')}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-200"
-              >
-                🎟️ {t('barcode.ticketsPreset', 'Tickets')}
               </button>
             </div>
           </div>
