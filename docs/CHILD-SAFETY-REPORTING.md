@@ -36,10 +36,10 @@ e-mailed to the owner the same moment.
    the Live room, delete it from the Supabase dashboard. Write down first: the post's id, the account that posted it
    (`owner`), the date and time, and the report's id.
 3. **Keep the evidence, out of sight.** Do not delete the account or the
-   original file permanently until the police say so: move the file to a
-   private bucket that only the owner can reach, and suspend the account
-   (no sign-in, no generating). The police may need it, and deleting it can
-   destroy the case.
+   original file until the police say so. **Take down** already stops the
+   account signing in and leaves the song or episode where it is, in the
+   member's own storage, which nobody else can open. The police may need
+   it, and deleting it can destroy the case.
 4. **Report to the SAPS the same day.** At a police station, or through the
    SAPS crime-stop line 08600 10111. Give the facts written down in step 2,
    not the material. Write down the case number.
