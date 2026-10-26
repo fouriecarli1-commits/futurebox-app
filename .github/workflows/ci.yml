@@ -2187,6 +2187,10 @@ jobs:
     # two each rather than given more time, so a hang is still caught at 30.
     # The first run after that put "whole" at 25 and "doors" at 23 on the
     # same slow evening, so those two were split as well.
+    # On 26 October 2026 "doors two" reached 30 with four new probes still
+    # waiting (afwrap, voiceover, versions, spectrogramwalk): its build took
+    # fourteen minutes that morning and its probes sixteen. They moved to
+    # "doors", which had finished in ten.
     timeout-minutes: 30
     strategy:
       # Which rooms broke is the answer worth having. Stopping at the first
@@ -2195,9 +2199,9 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:afwrap check:voiceover check:versions check:spectrogramwalk
           - group: doors two
-            probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye check:afwrap check:voiceover check:versions check:spectrogramwalk
+            probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
