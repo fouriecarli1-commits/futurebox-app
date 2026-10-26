@@ -19,6 +19,7 @@ import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { refuseIfTooMany } from '@/app/lib/server/brake';
 import { tellOwner } from '@/app/lib/server/email';
 import { opened } from '@/app/lib/server/ownerdoor';
+import { wrote } from '@/app/lib/server/wrote';
 import { cleanReport, urgent, REPORT_REASONS } from '@/app/lib/reports';
 
 export const runtime = 'nodejs';
@@ -155,7 +156,8 @@ export async function PATCH(request: Request): Promise<Response> {
   if (!report) return Response.json({ message: 'There is no such report.' }, { status: 404 });
 
   if (action === 'handled') {
-    await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id);
+    const closed = wrote(await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id), 'report marked handled');
+    if (!closed) return Response.json({ message: 'That could not be saved just now. Try again.' }, { status: 503 });
     return Response.json({ ok: true, handled: true });
   }
 
@@ -178,7 +180,7 @@ export async function PATCH(request: Request): Promise<Response> {
     suspended = !error;
   }
 
-  await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id);
+  const closed = wrote(await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id), 'report closed after a takedown');
 
   const why = REPORT_REASONS.find((one) => one.id === report.reason)?.says[1] ?? report.reason;
   const told = await tellOwner(
@@ -205,5 +207,5 @@ export async function PATCH(request: Request): Promise<Response> {
     { kind: 'report' },
   ).catch(() => null);
 
-  return Response.json({ ok: true, removed: removed !== null, suspended, recorded: told?.ok === true });
+  return Response.json({ ok: true, removed: removed !== null, suspended, closed, recorded: told?.ok === true });
 }
