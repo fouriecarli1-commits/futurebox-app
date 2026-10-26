@@ -149,6 +149,53 @@ The main agreement that the DPA and the API terms hang off. What it adds:
    competes with the model that made it. This app trains nothing on fal.ai
    output, and must not start.
 
+## The Privacy Policy (22 July 2026) and the Acceptable Use Policy, read the same day
+
+**The privacy policy is about the owner's own fal.ai account, not our
+members.** Members' clips are handled under the DPA, as a processor. What
+it says that matters to us: fal.ai and its providers store data "in the
+United States and other countries", which the section 72 reading above
+already assumes; account information is deleted within 30 days of closing
+the account, or after two years unused. It still says nothing about how
+long a clip sent through the API is kept, so the question to them stands.
+
+**The acceptable-use policy binds our members**, through us. Set against
+the prompt check (`app/lib/server/safety.ts`, `app/lib/moderation.ts`):
+
+| fal.ai forbids | Our check |
+|---|---|
+| Sexual content involving minors | `minors` |
+| Sexual imagery of a real person without consent, and explicit content | `likeness`, `explicit` |
+| Self-harm, suicide | `self-harm` |
+| Terrorism, violent extremism | `extremism` |
+| Threats, inciting violence | `violence` |
+| Deepfakes, impersonation, scams | `likeness`, `fabricated-news`, `fraud` |
+| Harassment or bullying of a person | **not covered** |
+| Slurs and hate speech short of "less than human" | **partly** (`extremism`) |
+| Gratuitous gore, torture, animal abuse | **not covered** |
+| Misinformation about elections or public health | **partly** (`fabricated-news`) |
+
+So these buttons get their own surface in the check, **strict** like video
+(refused when the classifier cannot be reached), with those four gaps added
+to what it reads. A song keeps today's categories: a lyric may be about a
+violent thing, and the classifier is told so on purpose.
+
+Three more rules from the policy:
+
+- **Never switch off a model's safety checker.** Section 7 forbids
+  "circumventing any safety guardrails, content filters". Where a model has
+  one, the app leaves it on.
+- **Under 18 may not use it** (section 8), and failing to apply age-gating
+  where the law requires it is itself a breach (section 9). The "I am 18 or
+  older" confirmation covers this.
+- **Child sexual abuse material must be reported** (section 9: "Fail to
+  report" is a breach). South African law already requires it: the Films
+  and Publications Act, section 24B, obliges anyone who learns of it to
+  report it to the police. **The app has no written procedure for this yet,
+  for any room, not only these buttons.** It needs one before launch: who
+  receives a report, that the material is kept as evidence and never passed
+  on, and that it goes to the SAPS.
+
 ## Commitment minimums
 
 Only matter when volume grows. They offered a 15-minute call; nothing has to
@@ -170,7 +217,9 @@ price is set, the same rule as every other engine.
 3. Their answer on deleting the clip and the result after each job (above).
 4. Each model's page checked: not "Pending Enterprise Ready", and not a
    partner API (or that partner added as a processor first).
-5. The consent box on each button: the clip goes to fal.ai outside South
+5. Their own surface in the prompt check, strict, with the four categories
+   above added; and no model's safety checker switched off.
+6. The consent box on each button: the clip goes to fal.ai outside South
    Africa, and the member is 18 or older.
-6. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
+7. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
    red until it is there.
