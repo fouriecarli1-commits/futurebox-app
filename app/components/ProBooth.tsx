@@ -3320,7 +3320,7 @@ export default function ProBooth({
             <button
               type="button"
               onClick={cutHere}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100"
             >
               <Scissors className="h-4 w-4" />
               {t('pro.cutAt', 'Cut where the line is')}
@@ -7000,7 +7000,7 @@ function LaneRow({
             somebody must know BEFORE the file is on their machine and not
             after they have built a session on it. `check:midi` holds that
             sentence to being on the screen. */}
-        <div className="relative">
+        <div className="relative min-w-0 flex-1">
           <button
             type="button"
             data-lanesave
@@ -7016,7 +7016,7 @@ function LaneRow({
             }}
             aria-expanded={saving}
             title={t('pro.save', 'Take this lane away')}
-            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-xl border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-sky-500/50 hover:text-sky-400"
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 hover:border-sky-500/50 hover:text-sky-300"
           >
             <ArrowDownToLine className="h-4 w-4 shrink-0" />
             {t('pro.save', 'Take this lane away')}

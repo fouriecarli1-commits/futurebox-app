@@ -196,7 +196,7 @@ export default function BoothAsk({
         type="button"
         onClick={() => void ask()}
         disabled={asking || !question.trim()}
-        className="flex min-h-[44px] items-center gap-2 fb-fx-go rounded-xl px-5 text-sm font-bold disabled:opacity-40 transition-all"
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 fb-fx-go rounded-xl px-5 text-sm font-bold disabled:opacity-40 transition-all"
       >
         {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
         {asking ? t('ask.asking', 'Reading the desk…') : t('ask.go', 'Ask')}
