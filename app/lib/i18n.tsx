@@ -4043,7 +4043,7 @@ export const STRINGS: Dict = {
   "hooks.arrives": { en: "Something arrives here", af: "Hier kom iets aan" },
   "hooks.fullest": { en: "The fullest part of the track", af: "Die volste deel van die liedjie" },
   "hooks.safe": { en: "Steady and clear \u2014 safe pick", af: "Bestendig en helder \u2014 veilige keuse" },
-  "hooks.andDrops": { en: "& drops", af: "& vrystellings" },
+  "hooks.andDrops": { en: "& drops", af: "& drops" },
   "hooks.songShorter": { en: "That song is shorter than the clip length, so the whole of it is the moment.", af: "Daardie liedjie is korter as die greep se lengte, so die hele ding is die oomblik." },
   "hooks.tagline": { en: "The bit of your song worth posting.", af: "Die stukkie van jou liedjie wat werd is om te plaas." },
   "hooks.short15": { en: "15s Short", af: "15s Kort" },
