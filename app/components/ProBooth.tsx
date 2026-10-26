@@ -3636,72 +3636,50 @@ export default function ProBooth({
       title={t('daw.mixerTitle', 'Mixer')}
       what={t('daw.mixerWhat', 'Every lane side by side: its level, where it sits left to right, mute and solo. Press a fader twice to put it back to 100.')}
     >
-      {/* Strips that wrap onto another row rather than slide out of
-          sight past the edge: on a phone three sit side by side, on a desk a
-          dozen. */}
-      <div data-mixer className="grid grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-2">
+      {/* One lane to a row, lying on its side. The owner, 27 October 2026:
+          *"Daai mixer moet eerder sideways."* Upright strips wrapped three to
+          a phone and left one lane standing in a third of the card with the
+          rest empty. Lying down, every lane uses the full width, the two
+          sliders are as long as the screen allows, and the rows line up:
+          name and the three buttons on top, then level and pan, each with
+          its label on the left and its value on the right in the same
+          columns on every lane. On a desk two lanes sit side by side. */}
+      <div data-mixer className="grid gap-2 lg:grid-cols-2">
         {lanes.map((lane) => {
           const db = lane.gain > 0 ? 20 * Math.log10(lane.gain) : -Infinity;
+          const fxCount = lane.fx ? Object.keys(lane.fx).length : 0;
+          const on = picked === lane.id;
           return (
             <div
               key={lane.id}
               data-strip={lane.id}
-              className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border px-1.5 py-2"
-              style={{ borderColor: picked === lane.id ? LIT : EDGE, background: 'rgba(255,255,255,0.02)' }}
+              className="min-w-0 rounded-2xl border p-2.5"
+              style={{
+                borderColor: on ? LIT : EDGE,
+                background: on
+                  ? 'linear-gradient(135deg, rgba(56,189,248,0.10), rgba(255,255,255,0.02) 60%)'
+                  : 'rgba(255,255,255,0.02)',
+                boxShadow: on ? '0 0 0 1px rgba(56,189,248,0.25), 0 0 18px rgba(56,189,248,0.15)' : undefined,
+              }}
             >
-              <button
-                type="button"
-                onClick={() => setPicked(lane.id)}
-                className="min-h-[44px] w-full truncate rounded-lg px-1 text-[11px] font-bold"
-                style={{ color: picked === lane.id ? LIT : INK }}
-                title={lane.name}
-              >
-                {lane.name}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={150}
-                value={Math.round(lane.gain * 100)}
-                data-stripfader={lane.id}
-                /* A desk fader stands upright and is tall on purpose; held
-                   to the 44-pixel floor, not to the one-height rule for a
-                   row of buttons (check:tidybars). */
-                data-tidycard=""
-                onChange={(event) => change(lane.id, { gain: Number(event.target.value) / 100 })}
-                onDoubleClick={() => change(lane.id, { gain: 1 })}
-                aria-label={`${t('pro.level', 'Level')} · ${lane.name}`}
-                className="h-36 w-11 accent-sky-500 touch-manipulation"
-                style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
-              />
-              <span className="text-[10px] tabular-nums" style={{ color: INK_DIM }}>
-                {Number.isFinite(db) ? `${db > 0 ? '+' : ''}${db.toFixed(1)} dB` : '−∞'}
-              </span>
-              <input
-                type="range"
-                min={-100}
-                max={100}
-                value={Math.round((lane.pan ?? 0) * 100)}
-                data-strippan={lane.id}
-                onChange={(event) => change(lane.id, { pan: Number(event.target.value) / 100 })}
-                onDoubleClick={() => change(lane.id, { pan: 0 })}
-                aria-label={`${t('daw.pan', 'Left or right')} · ${lane.name}`}
-                className="h-11 w-full accent-sky-500 touch-manipulation"
-              />
-              <span className="text-[10px] tabular-nums" style={{ color: INK_DIM }}>
-                {Math.abs(lane.pan ?? 0) < 0.01
-                  ? t('daw.centre', 'centre')
-                  : `${(lane.pan ?? 0) < 0 ? 'L' : 'R'} ${Math.round(Math.abs(lane.pan ?? 0) * 100)}`}
-              </span>
-              <div className="grid w-full grid-cols-2 gap-1">
+              <div className="grid grid-cols-[minmax(0,1fr)_44px_44px_auto] items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPicked(lane.id)}
+                  className="min-h-[44px] min-w-0 truncate rounded-lg px-2 text-left text-sm font-bold"
+                  style={{ color: on ? LIT : INK }}
+                  title={lane.name}
+                >
+                  {lane.name}
+                </button>
                 <button
                   type="button"
                   aria-pressed={lane.muted}
                   aria-label={`${t('daw.mute', 'Mute')} · ${lane.name}`}
                   onClick={() => change(lane.id, { muted: !lane.muted })}
-                  className="h-11 rounded-lg border text-xs font-black"
+                  className="h-11 w-11 rounded-xl border text-xs font-black transition-colors"
                   style={lane.muted
-                    ? { borderColor: '#f87171', background: 'rgba(248,113,113,0.18)', color: '#fecaca' }
+                    ? { borderColor: '#f87171', background: 'rgba(248,113,113,0.18)', color: '#fecaca', boxShadow: '0 0 12px rgba(248,113,113,0.35)' }
                     : { borderColor: EDGE, color: INK_DIM }}
                 >
                   {t('pro.mute', 'M')}
@@ -3711,23 +3689,57 @@ export default function ProBooth({
                   aria-pressed={lane.soloed}
                   aria-label={`${t('daw.solo', 'Solo')} · ${lane.name}`}
                   onClick={() => change(lane.id, { soloed: !lane.soloed })}
-                  className="h-11 rounded-lg border text-xs font-black"
+                  className="h-11 w-11 rounded-xl border text-xs font-black transition-colors"
                   style={lane.soloed
-                    ? { borderColor: '#fbbf24', background: 'rgba(251,191,36,0.18)', color: '#fde68a' }
+                    ? { borderColor: '#fbbf24', background: 'rgba(251,191,36,0.18)', color: '#fde68a', boxShadow: '0 0 12px rgba(251,191,36,0.35)' }
                     : { borderColor: EDGE, color: INK_DIM }}
                 >
                   {t('pro.solo', 'S')}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setPicked(lane.id); setDeskOpen('effects'); }}
+                  className="h-11 min-w-[88px] rounded-xl border px-3 text-xs font-bold transition-colors"
+                  style={{ borderColor: fxCount ? LIT : EDGE, color: fxCount ? LIT : INK_DIM }}
+                >
+                  {t('daw.fx', 'Effects')}
+                  {fxCount ? ` · ${fxCount}` : ''}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => { setPicked(lane.id); setDeskOpen('effects'); }}
-                className="h-11 w-full rounded-lg border text-[11px] font-bold"
-                style={{ borderColor: lane.fx && Object.keys(lane.fx).length ? LIT : EDGE, color: lane.fx && Object.keys(lane.fx).length ? LIT : INK_DIM }}
-              >
-                {t('daw.fx', 'Effects')}
-                {lane.fx && Object.keys(lane.fx).length ? ` · ${Object.keys(lane.fx).length}` : ''}
-              </button>
+              <div className="mt-1 grid grid-cols-[3.5rem_minmax(0,1fr)_4rem] items-center gap-x-2">
+                <span className="text-[11px] font-semibold" style={{ color: INK_DIM }}>{t('pro.level', 'Level')}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={150}
+                  value={Math.round(lane.gain * 100)}
+                  data-stripfader={lane.id}
+                  onChange={(event) => change(lane.id, { gain: Number(event.target.value) / 100 })}
+                  onDoubleClick={() => change(lane.id, { gain: 1 })}
+                  aria-label={`${t('pro.level', 'Level')} · ${lane.name}`}
+                  className="h-11 w-full min-w-0 accent-sky-500 touch-manipulation"
+                />
+                <span className="text-right text-[11px] tabular-nums" style={{ color: INK }}>
+                  {Number.isFinite(db) ? `${db > 0 ? '+' : ''}${db.toFixed(1)} dB` : '−∞'}
+                </span>
+                <span className="text-[11px] font-semibold" style={{ color: INK_DIM }}>{t('daw.panShort', 'Pan')}</span>
+                <input
+                  type="range"
+                  min={-100}
+                  max={100}
+                  value={Math.round((lane.pan ?? 0) * 100)}
+                  data-strippan={lane.id}
+                  onChange={(event) => change(lane.id, { pan: Number(event.target.value) / 100 })}
+                  onDoubleClick={() => change(lane.id, { pan: 0 })}
+                  aria-label={`${t('daw.pan', 'Left or right')} · ${lane.name}`}
+                  className="h-11 w-full min-w-0 accent-sky-500 touch-manipulation"
+                />
+                <span className="text-right text-[11px] tabular-nums" style={{ color: INK }}>
+                  {Math.abs(lane.pan ?? 0) < 0.01
+                    ? t('daw.centre', 'centre')
+                    : `${(lane.pan ?? 0) < 0 ? 'L' : 'R'} ${Math.round(Math.abs(lane.pan ?? 0) * 100)}`}
+                </span>
+              </div>
             </div>
           );
         })}

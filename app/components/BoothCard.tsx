@@ -164,6 +164,48 @@ export function Row({
  * scrolls away. Somebody three cards down a desk should not have to scroll up
  * to find out how to leave.
  */
+/**
+ * Two columns of cards with no hole in them.
+ *
+ * The owner, 27 October 2026, with a photograph of the stems desk: *"Hier
+ * is weer 'n weird shape."* A card that is not `wide` takes one column. When
+ * it is the only one between two wide cards, or the last one after a wide
+ * card, it stood in the left half with the right half empty, and its
+ * buttons, squeezed into 166 pixels, wrapped to three lines.
+ *
+ * Such a card now takes the whole row. Worked out from the order of the
+ * children, the way the grid itself places them (a wide card always starts
+ * a row; nothing is reordered), and again whenever the children change.
+ */
+function CardGrid({ children }: { readonly children: React.ReactNode }): React.ReactElement {
+  const box = React.useRef<HTMLDivElement>(null);
+  React.useLayoutEffect(() => {
+    const grid = box.current;
+    if (!grid) return undefined;
+    const settle = (): void => {
+      const cells = (Array.from(grid.children) as HTMLElement[]).filter((one) => one.offsetParent !== null || one.getClientRects().length > 0);
+      let column = 0;
+      cells.forEach((cell, at) => {
+        if (cell.classList.contains('col-span-2')) {
+          column = 0;
+          return;
+        }
+        const next = cells[at + 1];
+        const alone = column === 0 && (!next || next.classList.contains('col-span-2'));
+        cell.style.gridColumn = alone ? 'span 2 / span 2' : '';
+        if (alone) cell.setAttribute('data-alone', '');
+        else cell.removeAttribute('data-alone');
+        column = alone ? 0 : 1 - column;
+      });
+    };
+    settle();
+    const watch = new MutationObserver(settle);
+    watch.observe(grid, { childList: true, subtree: false, attributes: true, attributeFilter: ['class'] });
+    return () => watch.disconnect();
+  });
+  return <div ref={box} data-cardgrid className="grid grid-cols-2 gap-2.5">{children}</div>;
+}
+
 export default function DeskSheet({
   icon,
   title,
@@ -339,7 +381,7 @@ export default function DeskSheet({
               — the few that genuinely do are marked `wide` and take the row.
               At 360 pixels a column is 166, which is why every `Row` wraps
               rather than squeezes. */
-          <div className={single ? 'space-y-3' : 'grid grid-cols-2 gap-2.5'}>{children}</div>
+          single ? <div className="space-y-3">{children}</div> : <CardGrid>{children}</CardGrid>
         )}
       </div>
     </div>
