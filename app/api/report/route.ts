@@ -109,3 +109,101 @@ export async function GET(request: Request): Promise<Response> {
     reports: [...rows.filter((one) => urgent(one)), ...rows.filter((one) => !urgent(one))],
   });
 }
+
+/**
+ * The owner acting on a report: `handled`, or `takedown`. Owner only.
+ *
+ * `takedown` is steps 2 and 3 of `docs/CHILD-SAFETY-REPORTING.md` in one
+ * press, because those are the steps that have to happen in minutes and
+ * were, until 26 October 2026, a row deleted by hand in the database:
+ *
+ *   - the post or the message comes out of the Live room (its row goes);
+ *   - the account that posted it can no longer sign in (a ban on the auth
+ *     user, which outlasts anything the app itself holds);
+ *   - the song or episode BEHIND a post is not touched. It is the evidence,
+ *     and deleting it can destroy the case. It stays where it is, and a
+ *     suspended member's podcast feed stops answering (`app/rss/[show]`);
+ *   - and a record goes to the owner's inbox: what the row said, whose it
+ *     was, when, and what was done. That letter is step 6's record, and it
+ *     carries the reminder of step 4, because the SAPS report is the one
+ *     step no button can take.
+ */
+export async function PATCH(request: Request): Promise<Response> {
+  const door = await opened(request);
+  if (!door.open) return door.answer;
+  const client = admin();
+  if (!client) return Response.json({ message: 'No database on this deployment.' }, { status: 503 });
+
+  let raw: { id?: unknown; action?: unknown };
+  try {
+    raw = await request.json() as typeof raw;
+  } catch {
+    return Response.json({ message: 'Could not read that.' }, { status: 400 });
+  }
+  const id = Number(raw.id);
+  const action = raw.action === 'takedown' ? 'takedown' : raw.action === 'handled' ? 'handled' : null;
+  if (!Number.isInteger(id) || id <= 0 || !action) {
+    return Response.json({ message: 'Say which report, and what to do with it.' }, { status: 400 });
+  }
+
+  const { data: found } = await client
+    .from('reports')
+    .select('id, kind, reason, ref, about, seen_in, note, created_at')
+    .eq('id', id)
+    .maybeSingle();
+  const report = found as { id: number; kind: string; reason: string; ref: string; about: string | null; seen_in: string; note: string; created_at: string } | null;
+  if (!report) return Response.json({ message: 'There is no such report.' }, { status: 404 });
+
+  if (action === 'handled') {
+    await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id);
+    return Response.json({ ok: true, handled: true });
+  }
+
+  /* The post, written down before it goes. */
+  let removed: Record<string, unknown> | null = null;
+  if (report.kind !== 'ai' && UUID.test(report.ref)) {
+    const table = report.seen_in === 'live-link' ? 'live_says' : 'live_posts';
+    const { data: row } = await client.from(table).select('*').eq('id', report.ref).maybeSingle();
+    if (row) {
+      const { error } = await client.from(table).delete().eq('id', report.ref);
+      if (!error) removed = { table, ...(row as Record<string, unknown>) };
+    }
+  }
+
+  /* The account. A hundred years is how the auth service spells "until lifted". */
+  let suspended = false;
+  const whose = typeof removed?.owner === 'string' ? removed.owner : report.about;
+  if (whose && UUID.test(whose)) {
+    const { error } = await client.auth.admin.updateUserById(whose, { ban_duration: '876000h' });
+    suspended = !error;
+  }
+
+  await client.from('reports').update({ handled_at: new Date().toISOString() }).eq('id', id);
+
+  const why = REPORT_REASONS.find((one) => one.id === report.reason)?.says[1] ?? report.reason;
+  const told = await tellOwner(
+    `Taken down — report ${report.id}: ${why}`,
+    [
+      `Report ${report.id}, made ${report.created_at}, acted on ${new Date().toISOString()}.`,
+      `Why it was reported: ${why}`,
+      `Where: ${report.seen_in || '—'}`,
+      '',
+      removed
+        ? `Removed from the Live room (${String(removed.table)}). What the row said:\n${JSON.stringify(removed, null, 2)}`
+        : 'Nothing was removed: the report did not point at a post or a message that still exists.',
+      '',
+      suspended
+        ? `The account ${whose} can no longer sign in. Lifting that is done from the Supabase dashboard (Authentication → the user → unban).`
+        : 'No account was suspended: the report does not say whose it was.',
+      '',
+      'Nothing behind the post was deleted: the song or episode stays where it is, as evidence. A suspended member\'s podcast feed no longer answers.',
+      '',
+      'If this is child sexual abuse material: report it to the SAPS today (any police station, or Crime Stop 08600 10111),',
+      'and to the Film and Publication Board. Do not download, copy or forward it. Keep this letter: it is the record.',
+      'The full steps are in docs/CHILD-SAFETY-REPORTING.md.',
+    ].join('\n'),
+    { kind: 'report' },
+  ).catch(() => null);
+
+  return Response.json({ ok: true, removed: removed !== null, suspended, recorded: told?.ok === true });
+}

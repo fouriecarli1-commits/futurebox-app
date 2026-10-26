@@ -39,6 +39,7 @@ import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
 import OwnerCubed from './OwnerCubed';
+import OwnerReports from './OwnerReports';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
@@ -253,6 +254,8 @@ export default function Account({
 
         {/* The owner's Cubed³ desk. Renders nothing for anybody else. */}
         <OwnerCubed />
+        {/* The owner's open reports, with a takedown. Nothing for anybody else. */}
+        <OwnerReports />
 
         {/* ── The banner: who, and the wallet with its refill ──────────── */}
         <div className="rounded-2xl p-5" style={PROFILE_GLASS} data-accountbanner>

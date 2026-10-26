@@ -63,6 +63,12 @@ export async function GET(
   const { show: showId } = await params;
   const { data: show } = await client.from('shows').select('*').eq('id', showId).maybeSingle();
   if (!show) return new Response('No such show', { status: 404 });
+  /* A show whose owner was taken down (`PATCH /api/report`) goes dark with
+     the account. The episodes are not deleted: they may be evidence. They
+     are just no longer handed to every podcast app that asks. */
+  const { data: holder } = await client.auth.admin.getUserById(String(show.owner));
+  const bannedUntil = (holder?.user as { banned_until?: string } | undefined)?.banned_until;
+  if (bannedUntil && Date.parse(bannedUntil) > Date.now()) return new Response('No such show', { status: 404 });
 
   const { data: episodes } = await client
     .from('episodes')

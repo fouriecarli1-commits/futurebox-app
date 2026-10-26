@@ -31,9 +31,9 @@ e-mailed to the owner the same moment.
 1. **Do not download, copy, forward or screenshot it.** Possessing or
    passing it on is itself an offence, even to show somebody. Look only as
    far as needed to see that it is what the report says.
-2. **Take it out of public view at once.** Delete the post's row
-   (`live_posts` or `live_says`) or the file from storage, from the Supabase
-   dashboard. Write down first: the post's id, the account that posted it
+2. **Take it out of public view at once.** Press **Take down** on the
+   report in the Reports panel of your You tab (twice). If it is not in
+   the Live room, delete it from the Supabase dashboard. Write down first: the post's id, the account that posted it
    (`owner`), the date and time, and the report's id.
 3. **Keep the evidence, out of sight.** Do not delete the account or the
    original file permanently until the police say so: move the file to a
@@ -68,9 +68,12 @@ must be able to do steps 2 to 4. **Decide who that is before launch.**
 
 ## What the app still lacks
 
-- **A takedown button for the owner.** Today step 2 is done in the Supabase
-  dashboard. A button in the owner's report list that hides the post,
-  suspends the account and keeps the file aside would do steps 2 and 3 in
-  one press.
+- ~~**A takedown button for the owner.**~~ Built 26 October 2026: the
+  **Reports** panel in the owner's You tab lists open reports, urgent ones
+  first. **Take down** (pressed twice) removes the post from the Live room,
+  stops the account signing in, closes the report and e-mails the record,
+  with the SAPS reminder. Nothing behind the post is deleted, and a
+  suspended member's podcast feed stops answering. Steps 1, 4, 5 and 7 are
+  still the owner's. Lifting a suspension is done in the Supabase dashboard.
 - ~~**A help link for victims**~~ — on the help page since 26 October 2026: Take It Down (NCMEC), for
   images from when somebody was under 18, and StopNCII.org for adults.
