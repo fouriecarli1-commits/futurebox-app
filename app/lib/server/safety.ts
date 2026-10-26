@@ -47,7 +47,7 @@ import { admin, type Caller } from '@/app/lib/server/account';
 import { addressKey } from '@/app/lib/server/identity';
 
 /** Surfaces that refuse rather than proceed when the classifier is down. */
-const STRICT: readonly Surface[] = ['video', 'name', 'finetune'];
+const STRICT: readonly Surface[] = ['video', 'name', 'finetune', 'footage'];
 
 /** Counted refusals in thirty days before an account is stopped. */
 const WARN_AT = 3;
@@ -167,6 +167,15 @@ Answer only about these categories. Nothing else is your business, and a prompt 
   fraud           a script for deceiving somebody out of money or credentials,
                   including anything read in the name of a bank or an authority
   self-harm       encouragement of, or a method for, suicide or self-harm
+
+Only when the surface is "footage" (somebody changing video they filmed),
+also answer about these four. On every other surface they are allowed:
+
+  harassment      bullying, humiliating or harassing a real, identifiable person
+  hate            slurs, or contempt for a group of people for what they are
+  gore            gore, torture or cruelty to animals shown for its own sake
+  misinformation  a false claim built to mislead people about an election or
+                  about public health
 
 Reply with JSON only: {"allow": true} or {"allow": false, "rule": "<one of the above>", "why": "<one sentence, addressed to the person who typed it, saying what was refused and what would work instead>"}.`;
 

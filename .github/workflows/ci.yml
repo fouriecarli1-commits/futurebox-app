@@ -1418,6 +1418,12 @@ jobs:
       - name: The picture engine is called the way her console says
         run: npm run check:prent
 
+      # fal.ai's acceptable-use policy binds our members through us. The
+      # footage surface reads four things a song does not, and refuses
+      # rather than goes ahead when the classifier cannot be asked.
+      - name: A prompt about somebody's own film is screened as footage
+        run: npm run check:footage
+
       # Her phonetic technique, applied to the words on their way to the
       # music engine and to nothing else: not the section names, not the
       # styles, and not a line that is English.

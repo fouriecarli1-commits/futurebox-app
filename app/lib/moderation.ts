@@ -97,7 +97,21 @@ export type Surface =
    * saying something they never said is the same wrong as the clip, and the
    * fact that it does not move has never made a fake photograph harmless.
    */
-  | 'picture';
+  | 'picture'
+  /**
+   * What somebody typed to change footage they brought in: take an item
+   * out of a shot, fill in a missing piece. The footage itself goes to
+   * fal.ai, whose acceptable-use policy binds our members through us
+   * (`docs/FAL-TERME.md`).
+   *
+   * It carries `video`'s rules, and the classifier reads four more things on
+   * this surface only: harassment of a person, hate short of "less than
+   * human", gratuitous gore or cruelty to animals, and false claims about an
+   * election or public health. Those are in fal.ai's policy and not in the
+   * song rules on purpose — a lyric may be about any of them, and the
+   * classifier is told so.
+   */
+  | 'footage';
 
 export type Rule =
   | 'minors'
@@ -110,6 +124,14 @@ export type Rule =
   | 'drugs'
   | 'fraud'
   | 'self-harm'
+  /** Footage only (see `footage` above): bullying or harassing a real person. */
+  | 'harassment'
+  /** Footage only: slurs, or contempt for a group for what it is. */
+  | 'hate'
+  /** Footage only: gore, torture or cruelty to animals for its own sake. */
+  | 'gore'
+  /** Footage only: false claims built to mislead about an election or public health. */
+  | 'misinformation'
   /**
    * Somebody swearing AT the assistant, rather than about anything.
    *
@@ -484,7 +506,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
     );
   }
 
-  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture' || surface === 'footage') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
     return refuse(
       'likeness',
       'This names a person in public office. Putting words in the mouth of a real official is the one use of this technology that reliably ends in court, so it is refused.',
@@ -492,7 +514,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   }
 
   // 3. Something made to be mistaken for a record of an event.
-  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture') && hit(NEWS)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture' || surface === 'footage') && hit(NEWS)) {
     return refuse(
       'fabricated-news',
       'This asks for something that would be taken as real footage or a real report. Anything made here can be fiction, comedy or drama, but not a fake record of something that happened.',
@@ -502,7 +524,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   // 4. Sexual content. This is a music, podcast and video app, and there is no
   //    version of it where making explicit material is worth the moderation
   //    burden that comes with it.
-  if (hit(SEXUAL) && (surface === 'video' || surface === 'brief' || surface === 'name' || surface === 'picture')) {
+  if (hit(SEXUAL) && (surface === 'video' || surface === 'brief' || surface === 'name' || surface === 'picture' || surface === 'footage')) {
     return refuse(
       'explicit',
       'Sexually explicit material is outside what this app makes.',

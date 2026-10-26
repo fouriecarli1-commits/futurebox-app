@@ -253,8 +253,10 @@ price is set, the same rule as every other engine.
 3. Their answer on deleting the clip and the result after each job (above).
 4. Each model's page checked: not "Pending Enterprise Ready", and not a
    partner API (or that partner added as a processor first).
-5. Their own surface in the prompt check, strict, with the four categories
-   above added; and no model's safety checker switched off.
+5. ~~Their own surface in the prompt check~~ — built 26 October 2026: the
+   `footage` surface, strict, with the four categories, held by
+   `check:footage`. Each route still has to call `guard(..., 'footage', ...)`,
+   and no model's safety checker is ever switched off.
 6. The consent box on each button: the clip goes to fal.ai outside South
    Africa, and the member is 18 or older.
 7. Handling for a job fal.ai's moderation refuses: credits back, a plain
