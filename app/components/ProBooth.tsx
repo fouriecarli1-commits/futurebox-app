@@ -5679,42 +5679,6 @@ export default function ProBooth({
           </button>
         )}
 
-        {/* ── The way to the words ─────────────────────────────────────────
-
-            The owner: "wanneer mens record moet daar op 'n manier 'n baie meer
-            duidelike riglyn wees hoe om te kom by die plek waar mens saam met
-            die woorde kan record en dan die opsie om saam met die AI stem te
-            record."
-
-            Both of those exist, and both are in The Booth, one step back: the
-            words move with the song there, and "Sing next to the AI voice"
-            takes the singer off the record and puts it in your headphones
-            without leaving it in what you keep.
-
-            This room has neither and never said so. Somebody who came here to
-            sing — and this is the room with the big green Record button — had
-            no way to know they were in the wrong one, and the way out was a
-            "Back" that named nothing.
-
-            The button is offered next to Record rather than in a note, because
-            what is wanted at that moment is not an explanation, it is the
-            other room.
-
-            Not while a take is running. Leaving mid-recording would throw the
-            take away, and a button that does that beside "Stop recording" is
-            a trap. */}
-        {!recording && (
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
-          >
-            <Mic2 className="w-4 h-4" />
-            {t('pro.toWords', 'Sing with the words')}
-          </button>
-        )}
-
         <button
           type="button"
           onClick={() => (playing ? stopPlaying() : play(at))}
@@ -5776,6 +5740,47 @@ export default function ProBooth({
           {t('pro.toStart', 'Back to the start')}
         </button>
 
+        {/* ── The way to the words ─────────────────────────────────────────
+
+            The owner: "wanneer mens record moet daar op 'n manier 'n baie meer
+            duidelike riglyn wees hoe om te kom by die plek waar mens saam met
+            die woorde kan record en dan die opsie om saam met die AI stem te
+            record."
+
+            Both of those exist, and both are in The Booth, one step back: the
+            words move with the song there, and "Sing next to the AI voice"
+            takes the singer off the record and puts it in your headphones
+            without leaving it in what you keep.
+
+            This room has neither and never said so. Somebody who came here to
+            sing — and this is the room with the big green Record button — had
+            no way to know they were in the wrong one, and the way out was a
+            "Back" that named nothing.
+
+            The button is offered next to Record rather than in a note, because
+            what is wanted at that moment is not an explanation, it is the
+            other room.
+
+            Not while a take is running. Leaving mid-recording would throw the
+            take away, and a button that does that beside "Stop recording" is
+            a trap.
+
+            Last in the grid and across both columns: it leaves the room, so it
+            is not one of the pairs, and five in a grid of two left "Back to the
+            start" alone in half a row. */}
+        {!recording && (
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className={`${BAR} col-span-2 border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
+          >
+            <Mic2 className="w-4 h-4" />
+            {t('pro.toWords', 'Sing with the words')}
+          </button>
+        )}
+
+
         {/* Minutes, and bars.
 
             `docs/MUSIEKDENKE.md` §3.6. This room's whole subject is a
@@ -5806,7 +5811,7 @@ export default function ProBooth({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy || recording}
-          className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
+          className={`${BAR} col-span-2 border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
         >
           <Plus className="w-4 h-4" />
           {t('pro.bringIn', 'Bring audio in')}

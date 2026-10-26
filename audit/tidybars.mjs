@@ -377,6 +377,43 @@ try {
         ragged.map((row) => row.map((one) => `${one.says || '?'} ${one.w}`).join(' / ')).join(' | ')
         + ' — a wrapping flex sizes each button to its own text, and the ragged'
         + ' right-hand edge is what reads as untidy');
+
+      /* No row of a grid left half empty. The owner, 27 October 2026, with a
+         photograph of the stems desk: "Hier is weer 'n weird shape." A card
+         standing alone in the left column of a two-column desk, the right
+         half dark and its buttons squeezed to three lines. A grid row that
+         holds fewer cells than the grid has columns, and uses less than
+         three fifths of the width, is that shape. */
+      const holes = await page.evaluate(() => {
+        const sheet = document.querySelector('[data-desk]');
+        const out = [];
+        for (const grid of [sheet, ...Array.from(sheet?.querySelectorAll('*') ?? [])]) {
+          if (!grid) continue;
+          const cs = getComputedStyle(grid);
+          if (cs.display !== 'grid') continue;
+          const columns = cs.gridTemplateColumns.split(' ').filter(Boolean).length;
+          const box = grid.getBoundingClientRect();
+          if (columns < 2 || box.width < 200) continue;
+          const cells = Array.from(grid.children).map((one) => Object.assign(one.getBoundingClientRect().toJSON(), { says: (one.textContent ?? '').trim().slice(0, 16) })).filter((one) => one.width > 4 && one.height > 4);
+          /* A row is the cells whose heights overlap, not the ones with the
+             same top: a label centred beside a slider starts lower than it. */
+          const rows = [];
+          for (const one of cells) {
+            const row = rows.find((cells2) => cells2.some((other) => one.top < other.bottom - 2 && other.top < one.bottom - 2));
+            if (row) row.push(one); else rows.push([one]);
+          }
+          for (const row of rows) {
+            const used = row.reduce((sum, one) => sum + one.width, 0);
+            if (row.length < columns && used < box.width * 0.6) {
+              const named = [...grid.attributes].filter((a) => a.name.startsWith('data-')).map((a) => a.name).join(' ');
+              const first = (grid.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 30);
+              out.push(`${named || String(grid.className).slice(0, 40)} ("${first}"): "${row.map((one) => one.says).join('", "')}" is ${row.length} of ${columns} columns, ${Math.round((100 * used) / box.width)}% of the width`);
+            }
+          }
+        }
+        return out;
+      });
+      check(`  and no row is left half empty`, holes.length === 0, holes.slice(0, 3).join(' | '));
     }
   }
 
@@ -395,5 +432,6 @@ if (problems.length) {
 }
 console.log(
   '\ncheck:tidybars — every bench on a room’s bar holds controls of one height,'
-  + ' tall enough for a thumb, and every row of them is the same width across.',
+  + ' tall enough for a thumb, every row of them is the same width across,'
+  + ' and no row of a grid is left half empty.',
 );

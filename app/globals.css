@@ -3892,3 +3892,15 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   .fb-fx-booth-tile::before { animation: none; background-size: 100% 100%; }
   [data-roomstage] > * { animation: none; }
 }
+
+/* The same rule for every two-column grid inside a room or a desk: a last
+   cell on its own takes the whole row. `check:tidybars` fails any desk
+   where a row is left half empty. */
+:is([data-desk], [data-roomstage]) .grid-cols-2:not([class*="sm:grid-cols-"]):not([class*="md:grid-cols-"]) > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+@media (max-width: 639.98px) {
+  :is([data-desk], [data-roomstage]) .grid-cols-2[class*="sm:grid-cols-"] > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
