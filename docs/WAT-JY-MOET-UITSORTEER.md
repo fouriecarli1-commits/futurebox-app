@@ -21,7 +21,7 @@ Niks hier is kode nie. Alles hier is iets wat net jy kan doen.
 | 4 | Vra Music.ai, Resend en Kling (`private/EPOS-DPA-KORT.md`) | 15 min | jy |
 | 5 | Sit `FUTUREBOX_LEGAL_EMAIL` in Vercel | 2 min | jy |
 | 6 | Laat 'n prokureur die lys teen die Staatskoerant hou | — | iemand anders |
-| 7 | Besluit wie 'n kindermishandeling-beeld aan die SAPS rapporteer (Films and Publications Act, artikel 24B), en laat 'n prokureur die prosedure nagaan — sien `docs/FAL-TERME.md` | 20 min | jy |
+| 7 | Besluit wie 'n kindermishandeling-beeld aan die SAPS rapporteer (Films and Publications Act, artikel 24B), en laat 'n prokureur die prosedure nagaan — die konsep staan in `docs/CHILD-SAFETY-REPORTING.md`; kies 'n tweede persoon | 20 min | jy |
 
 **Al vier die briewe is klaar geskryf.** Jy hoef niks op te stel nie — vul jou
 naam en 'n kontak-e-pos in en stuur. Items 1 en 2 is die twee wat regtig iets

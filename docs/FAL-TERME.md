@@ -127,7 +127,7 @@ The main agreement that the DPA and the API terms hang off. What it adds:
    what their "standard backup, archival, or record-retention practices"
    keep. Which is the retention question again.
 4. **Their acceptable-use policy binds our members too** (section 8,
-   https://fal.ai/legal/acceptable-use-policy). Not read yet. The prompt
+   https://fal.ai/legal/acceptable-use-policy). Read below: the prompt
    check in front of these buttons has to refuse at least what it refuses.
 5. **The terms can change on notice; the DPA cannot.** The DPA (section 7)
    needs both parties in writing to change. Re-read the Terms and the API
@@ -191,10 +191,8 @@ Three more rules from the policy:
 - **Child sexual abuse material must be reported** (section 9: "Fail to
   report" is a breach). South African law already requires it: the Films
   and Publications Act, section 24B, obliges anyone who learns of it to
-  report it to the police. **The app has no written procedure for this yet,
-  for any room, not only these buttons.** It needs one before launch: who
-  receives a report, that the material is kept as evidence and never passed
-  on, and that it goes to the SAPS.
+  report it to the police. A draft procedure is in `docs/CHILD-SAFETY-REPORTING.md`, for an attorney
+  to read before launch.
 
 ## The Trust & Safety page, read the same day
 
