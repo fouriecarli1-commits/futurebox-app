@@ -196,6 +196,44 @@ Three more rules from the policy:
   receives a report, that the material is kept as evidence and never passed
   on, and that it goes to the SAPS.
 
+## The Trust & Safety page, read the same day
+
+What fal.ai does to everything that passes through it, our members' clips
+included:
+
+- **Known child sexual abuse material is hash-matched** (NCMEC and Thorn)
+  and reported under US law. **Non-consensual intimate images** are matched
+  through StopNCII.org.
+- **Every request is run through an automated moderation model** from
+  another AI company, across text, image and video.
+
+What it means here:
+
+1. **It covers the gap our own check cannot.** Our check reads words; the
+   background and item buttons send footage with no words at all. fal.ai's
+   screening reads the footage. It is a second layer, not a reason to drop
+   ours: hash-matching only catches material already known.
+2. **That moderation model is a sub-processor.** A member's clip may be
+   read by it. It belongs on fal.ai's sub-processor list
+   (https://trust.fal.ai/subprocessors); check it is there when that list is
+   read. The privacy page names fal.ai and points to that list rather than
+   naming the companies behind it.
+3. **The privacy page must say it.** One sentence: what is sent to fal.ai is
+   checked automatically for illegal material, and child abuse material is
+   reported to the authorities. The terms page already says "Where the law
+   requires it, the matter is reported."
+4. **A refusal from fal.ai is a refusal, not an error.** When their
+   moderation stops a job, the member gets the credits back and a plain
+   sentence saying the clip could not be processed. It is recorded in the
+   same refusals log as our own check, so a pattern is visible.
+5. **It does not replace our own reporting procedure** (item 7 on
+   `docs/WAT-JY-MOET-UITSORTEER.md`). fal.ai reports what reaches fal.ai,
+   under US law. What sits in our own storage is ours to report, under
+   South African law.
+6. **Help for a member who is the victim**, worth linking from the help
+   page: Take It Down (NCMEC, for images from when somebody was under 18)
+   and StopNCII.org (18 and older).
+
 ## Commitment minimums
 
 Only matter when volume grows. They offered a 15-minute call; nothing has to
@@ -221,5 +259,8 @@ price is set, the same rule as every other engine.
    above added; and no model's safety checker switched off.
 6. The consent box on each button: the clip goes to fal.ai outside South
    Africa, and the member is 18 or older.
-7. A line for fal.ai on the privacy page. `check:verwerkers` keeps the build
+7. Handling for a job fal.ai's moderation refuses: credits back, a plain
+   sentence, a row in the refusals log.
+8. A line for fal.ai on the privacy page, including that what is sent is
+   screened for illegal material. `check:verwerkers` keeps the build
    red until it is there.
