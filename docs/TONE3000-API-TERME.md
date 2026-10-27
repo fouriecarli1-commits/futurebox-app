@@ -5,6 +5,23 @@ tone3000.com cannot be reached from the build machine. Their design
 requirements are in `docs/TONE3000-ONTWERPVEREISTES.md`; their answer on
 commercial terms is in `docs/OPEN-QUESTIONS.md` (A2).
 
+## Where it stands at launch (27 October 2026)
+
+**The TONE3000 button is not in the app.** It was replaced by the owner's own
+amp catalogue (`AmpCatalogue.tsx`) after their site did not bring her back
+on her phone. The API routes (`/api/tone3000/*`) are still on the server,
+but nothing on any screen sends a member to them. So at launch:
+
+- nothing from TONE3000's API reaches a member, and their sign-off is not
+  needed for launch day;
+- the catalogue holds a TONE3000 capture back from members unless the owner
+  noted written permission from its maker and from TONE3000
+  (`lib/ampsource.ts`, `check:ampsource`), and every capture shows its maker
+  and licence, with a non-commercial warning where the licence says so
+  (`lib/amplicence.ts`);
+- if the button comes back, every row in the table below applies first,
+  starting with their written sign-off.
+
 ## What binds us
 
 | Their term | What it means here | Where we stand |
