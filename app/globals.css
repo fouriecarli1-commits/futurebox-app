@@ -3837,11 +3837,11 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
      · the line of light along the top of every tile and card travels from
        left to right and back into the dark, slowly, each card a little out
        of step with its neighbour so a room does not pulse as one block;
-     · a room's contents rise into place when the room opens, one after the
-       other, over about half a second.
+     · a room's contents fade in when the room opens, one after the
+       other, over about a third of a second.
 
    Neither moves anything a finger is aiming at: the line is a pixel high
-   and the rise ends before a hand can get there. Off entirely for anybody
+   and the fade does not move anything at all. Off entirely for anybody
    who has asked their phone for less motion. */
 @keyframes fb-line-run {
   0% { background-position: -60% 0; opacity: 0; }
@@ -3875,12 +3875,17 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 .fb-fx-tile:nth-child(3n)::before,
 .fb-fx-booth-tile:nth-child(3n)::before { animation-delay: -4s; }
 
+/* A fade, not a rise. The first version also lifted each part 10px into
+   place, and for the length of that lift a room's own bottom bar stood
+   10px off the bottom of the screen: check:underbar, check:editor and
+   check:postwalk all caught it, at 834 in an 844 window. A room that
+   moves under the thumb as it opens is the opposite of what was asked. */
 @keyframes fb-room-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 [data-roomstage] > * {
-  animation: fb-room-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: fb-room-in 320ms ease-out both;
 }
 [data-roomstage] > :nth-child(2) { animation-delay: 60ms; }
 [data-roomstage] > :nth-child(3) { animation-delay: 120ms; }
