@@ -346,6 +346,24 @@ Fourth to sixth pages:
 | `topaz/upscale/image/generative`, `…/creative`, `clarityai/crystal-upscaler` (faces) | upscaling that adds detail |
 | `flux-2/flash/edit`, `flux-2/turbo/edit`, `flux-2/klein/4b/edit`, `flux-2-flex/edit`, `flux-2-max/edit`, `flux-2/lora/edit`, `flux-kontext/dev`, `flux-kontext-lora`, `flux-pro/kontext/max/multi`, `flux-pro/kontext/multi`, `flux/dev/image-to-image`, `flux-lora/image-to-image`, `alibaba/qwen-image-3/edit`, `qwen-image-edit`, `qwen-image-edit-plus`, `bytedance/seedream/v5/lite/edit`, `gemini-3.1-flash-image-preview/edit`, `xai/grok-imagine-image/quality/edit`, `kling-image/o3/image-to-image`, `wan/v2.7/edit`, `wan/v2.7/pro/edit`, `z-image/turbo/image-to-image` | more ways to edit in words; the fast ones (flash, turbo, z-image) for drafts, the max and pro ones for finals |
 
+Seventh to ninth pages:
+
+| Model | Note |
+|---|---|
+| `ideogram/character` | partner; **the same character kept the same across many pictures**: a comic, a children's book, a mascot for an artist |
+| `bria/product-shot`, `bria/background/replace` | partner, licensed data; **any product put into any scene**: a member's merch, vinyl or book photographed in a studio they never visited |
+| `image-editing/photo-restoration`, `ddcolor` | **old or damaged photos repaired and coloured**: with `codeformer` and colourised video, the family-history product |
+| `seedvr/upscale/image/seamless` | a pattern that tiles without seams: fabric, wrapping paper, phone cases |
+| `topaz/upscale/image/transparent` | partner; enlarges logos and stickers and keeps them see-through |
+| `patina` | textures for 3D surfaces from a picture, for the 3D models above |
+| `image-apps-v2/virtual-try-on`, `bria/fibo-edit-1.5/virtual-try-on` | more try-on, beside `fashn` |
+| `recraft/v3/image-to-image` | partner; vector-style pictures in a brand's own style, long words included |
+| `ideogram/v3/reframe`, `image-apps-v2/outpaint` | a picture made wider or taller for another shape: one cover, every platform |
+| `finegrain-eraser/mask`, `object-removal/mask`, `ideogram/object-removal` | an item taken out with its shadow and reflection |
+| `bria/guided-remove-background`, `feynobg`, `sam-3/image-rle`, `sam2/auto-segment`, `florence-2-large/…` (detection, captions, grounding) | cutting out and finding things |
+| `imageutils/depth`, `imageutils/marigold-depth` | depth maps |
+| `microsoft/mai-image-2.5/edit`, `gpt-image-1/edit-image`, `hunyuan-image/v3/instruct/edit`, `kling-image/v3/image-to-image`, `kling-image/o1`, `qwen-image-edit/inpaint`, `qwen-image-edit-2511/lora`, `flux-lora-fill`, `flux-general/image-to-image`, `flux-2/klein/9b/base/edit` (+ `/lora`), `wan/v2.6/image-to-image`, `ideogram/v3/edit`, `bytedance/seedream/v5/flash/layerize`, `workflow-utilities/extract-nth-frame` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -379,6 +397,8 @@ Fourth to sixth pages:
   does not yet: captions and transcripts in Afrikaans are possible now.
 - **Lyrics on the beat**: forced alignment times every word to the song,
   for karaoke and lyric videos.
+- **A family-history studio**: old photos repaired and coloured, old
+  films coloured, a tribute song over them.
 - **Ready to print**: vectorize turns a member's logo or art into a file a
   printer can use at any size. With the merch try-on, that is a merch line
   from one drawing.
