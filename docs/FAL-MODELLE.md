@@ -258,6 +258,28 @@ Seventh and eighth pages:
 | `editto`, `vidu/q2/video-extension/pro`, `magi-distilled/extend-video`, `blackforestlabs/flux-3/extend-video/draft`, `wan/v2.6/reference-to-video/flash`, `wan-vace-apps/long-reframe`, `bytedance/bernini-r/edit-video`, LTX multiconditioning, `ltx-2.3-22b/video-to-video`, `hunyuan-video/video-to-video`, `cogvideox-5b/video-to-video`, `fast-animatediff/turbo/video-to-video`, `amt-interpolation` | more of the jobs above |
 | `topaz/denoise/video`, `ltx-2.3-quality/hdr`, `kandinsky6-vsr/lite`, `bria/video/increase-resolution` (to 8K, licensed data), `bria/video/background-removal/green-screen-despill` | clean-up and finishing |
 
+Last page:
+
+| Model | Note |
+|---|---|
+| `heygen/v3/filler-word-removal` | partner; **the "uhm"s and "you know"s cut out of a talking clip**: the podcast and vlog clean-up people ask for most |
+| `ltx-2.3-quality/day-to-night`, `…/deblur`, `…/decompression`, `…/water-simulation` | night from day, sharp from shaky, clean from a squashed WhatsApp copy, water made to move |
+| `ltx-2.3-quality/instant-shave`, `…/cross-eyed` | changes to a person's look; novelty, and only on the member's own face |
+| `bria/video/background-removal/realtime` | partner; background out of a live stream: a clean backdrop for the Live room |
+| `krea-wan-14b/video-to-video` | real-time video edits |
+| `flux-3-action/so101` | robot control; not for us |
+| remaining LTX and Wan extend, inpaint, outpaint and LoRA variants | more of the same |
+
+### Sound from a clip (video to audio), 5
+
+| Model | Note |
+|---|---|
+| `sonilo/v1.1/video-to-music` | reads a clip's pace, mood and cuts and writes **licensed, commercial-use-safe music** to fit, in seconds |
+| `sonilo/v1.1/video-to-sound-effects` | royalty-free effects timed to what is seen |
+| `mirelo-ai/sfx2.0/video-to-audio` | effects as a separate track, speech kept apart, with words for sounds off screen |
+| `kling-video/video-to-audio` | partner; sound for a Kling clip |
+| `sam-audio/visual-separate` | **a sound picked out by what makes it on screen**: point at the guitar, keep the guitar |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
