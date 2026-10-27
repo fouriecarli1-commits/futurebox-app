@@ -453,6 +453,27 @@ Twenty-seventh to thirty-first pages:
 | `bria/reimagine` | partner, licensed data; a new picture keeping the shape of the old one |
 | `playground-v25/…`, `flowedit`, `luma-photon/flash/modify`, `flux-pro/v1/fill-finetuned`, `flux/krea/redux`, `flux-general/rf-inversion`, `ideogram/v2/edit`, `…/v2/turbo/edit`, `…/v2/turbo/remix`, `…/v2a/remix`, `…/v2a/turbo/remix`, `rundiffusion-fal/juggernaut-flux/base/…`, `fast-lightning-sdxl/inpainting`, `qwen-image-edit-2509-lora-gallery/…` (integrate-product, next-scene, add-background, face-to-full-portrait, shirt-design), `florence-2-large/region-proposal`, `…/region-to-segmentation`, `image-preprocessors/pidi`, `/scribble` | more of the same jobs |
 
+Last page of image to image: `qwen-image-edit-2509-lora-gallery/group-photo`,
+`blackforestlabs/flux-3/klein/edit-image/lora`, `…/klein/base/edit-image/lora`
+(edits in a member's own trained style, up to three LoRAs).
+
+### Reading a picture (image to text), 2
+
+| Model | Note |
+|---|---|
+| `nvidia/nemotron-3-5-super/vision`, `nvidia/nemotron-3-nano-omni/vision` | partner; describes a picture, reads its words and charts: **the copilot looks at a member's cover and says what works**. The copilot's own model may already do this; compare before adding a processor |
+
+### Pictures that move (image to video), 190: first two pages
+
+| Model | Note |
+|---|---|
+| `kling/v4/image-to-video` | partner; a picture moved for 3 to 30 seconds, with an end frame and a prompt per shot: **a cover that comes alive, a still that becomes a music video scene** |
+| `kling-video/o3/pro/image-to-video` | start and end frame, the movement between them in words: **a transition from one cover to the next** |
+| `kling-video/o3/pro/reference-to-video`, `minimax/h3/reference-to-video`, `minimax/h3-max/reference-to-video`, `bytedance/seedance-2.5/us/reference-to-video` (up to 30 pictures, 10 clips, 10 sounds) | a clip that keeps characters and places from reference pictures: the same artist in every shot. Face rule |
+| `minimax/h3-max/lip-sync/image-to-video`, `bytedance/omnihuman/v1.5`, `kling-video/ai-avatar/v2/standard`, `…/pro` | **a picture of a person singing the member's song**, mouth on the words. The member's own face only, or a made-up character |
+| `google/gemini-omni-flash/v1.1/image-to-video` | a still moved with sound |
+| `kling-video/v3/pro/…`, `v3/standard/…`, `v2.6/pro/…`, `v2.5-turbo/pro/…`, `minimax/h3-max/image-to-video`, `h3-max-turbo/…`, `h3/image-to-video`, `blackforestlabs/flux-3-max/image-to-video`, `alibaba/wan-3.0/image-to-video`, `bytedance/seedance-2.5/us/image-to-video`, `seedance-2.0/fast/…`, `seedance/v1.5/pro/…`, `xai/grok-imagine-video/image-to-video` | the same job by every family; draft with the turbo and fast ones, finish with pro and max |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
