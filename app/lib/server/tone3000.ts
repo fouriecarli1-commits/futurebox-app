@@ -46,15 +46,28 @@ export const TOKEN = 'https://www.tone3000.com/api/v1/oauth/token';
 export const API = 'https://www.tone3000.com/api/v1';
 
 /**
- * Where a tone's files are asked for.
+ * Where a tone's models are listed, one at a time.
  *
- * `filenames=id` and not the default `name`. A name inside that archive comes
- * from whoever uploaded the tone: two files can share one, and a name
- * carrying `../` is zip-slip — an entry that unpacks outside the folder it is
- * unpacked into. Ids collide with nothing and carry nothing.
+ * Not `/tones/{id}/download`: that one hands back a zip of the whole tone and
+ * is for approved partners only (it answers 403 to everybody else). TONE3000
+ * asked on 13 October that we use the per-model route, and their API page
+ * says it plainly: list the models, then fetch one by its `model_url`.
+ *
+ * No `architecture`: left out, they return A1 and custom captures and keep
+ * back A2, which `lib/nam.ts` (`@opendaw/nam-wasm` 1.2.0) does not run.
  */
-export function downloadPath(toneId: string): string {
-  return `/tones/${encodeURIComponent(toneId)}/download?filenames=id`;
+export function modelsPath(toneId: string): string {
+  return `/models?tone_id=${encodeURIComponent(toneId)}&page_size=25`;
+}
+
+/** Only their own host is ever sent a member's TONE3000 token. */
+export function isTheirs(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return new URL(url).protocol === 'https:' && (host === 'www.tone3000.com' || host === 'tone3000.com');
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -258,9 +258,12 @@ the ones we ship.
 **13 October 2026, their answer to the enquiry:** the bulk route that returns
 an entire `.zip` is restricted to partners who specifically need it; they
 prefer the on-demand route that downloads one model at a time, and asked
-whether there is a technical reason we cannot use it. There is none: the app
-has only ever called `GET /tones/{id}/download`, the per-model route, through
-`lib/server/tone3000session.ts`, and never the bulk one. The reply says so and
+whether there is a technical reason we cannot use it. There is none.
+**Correction, 27 October:** their API page (pasted by the owner) shows that
+`GET /tones/{id}/download`, which the app did call, IS the whole-tone zip
+and is partner-only. The app now lists a tone's models
+(`GET /models?tone_id=`) and fetches one NAM capture by its `model_url`
+(`lib/server/tone3000session.ts`, held by `check:tone3000`). The reply says so and
 asks the two questions the enquiry raised that this answer does not touch:
 the attribution wording they want, and whether commercial terms attach.
 
