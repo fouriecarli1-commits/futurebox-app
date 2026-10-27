@@ -474,6 +474,20 @@ Last page of image to image: `qwen-image-edit-2509-lora-gallery/group-photo`,
 | `google/gemini-omni-flash/v1.1/image-to-video` | a still moved with sound |
 | `kling-video/v3/pro/…`, `v3/standard/…`, `v2.6/pro/…`, `v2.5-turbo/pro/…`, `minimax/h3-max/image-to-video`, `h3-max-turbo/…`, `h3/image-to-video`, `blackforestlabs/flux-3-max/image-to-video`, `alibaba/wan-3.0/image-to-video`, `bytedance/seedance-2.5/us/image-to-video`, `seedance-2.0/fast/…`, `seedance/v1.5/pro/…`, `xai/grok-imagine-video/image-to-video` | the same job by every family; draft with the turbo and fast ones, finish with pro and max |
 
+Third to seventh pages of image to video:
+
+| Model | Note |
+|---|---|
+| `minimax/h3-max/camera-controls` | partner; **one picture turned into a camera move around it** (orbit, rise, push in) set by keyframes: a still cover becomes a 3D-feeling shot |
+| `blackforestlabs/flux-3-max/keyframes-to-video` | several pictures in order, the movement between them made: **a slideshow that flows**, a storyboard played |
+| `heygen/heygen-video/reference-to-video`, `heygen/heygen-video/image-to-video`, `heygen/avatar4/image-to-video`, `bytedance/omnihuman/v2` | partner; products, people and places kept from references; a photo that speaks or sings. Face rule |
+| `pixverse/swap` | partner; a person, object or background swapped in a clip. Face rule twice |
+| `lightricks/ltx-2.5/image-to-video/pro`, `ltx-2.3/image-to-video/fast` | open; picture and sound in one pass, cheap |
+| `luma/agent/ray/v3.2/image-to-video` | partner; keeps the first frame's look exactly: the cover moving without changing |
+| drafts: `bytedance/seedance-2.0/mini/…`, `seedance-2.0/fast/reference-to-video`, `seedance/v1/pro/fast/…`, `kling-video/v3/turbo/…`, `v2.5-turbo/standard/…`, `minimax/hailuo-2.3-fast/standard/…`, `xai/grok-imagine-video/v1.5/lite/…`, `wan/v2.2-a14b/image-to-video/turbo` | the cheap first look |
+| finals: `kling-video/v3/4k/…`, `kling-video/v3/standard/…`, `o3/standard/…`, `o3/standard/reference-to-video`, `o1/image-to-video`, `blackforestlabs/flux-3/image-to-video`, `alibaba/wan-3.0-prime/…`, `wan/v2.7/…`, `wan/v2.6/…`, `wan-25-preview/…`, `wan/v2.2-a14b/…`, `google/gemini-omni-flash/…` and `/v1.1/reference-to-video`, `xai/grok-imagine-video/v1.5/…` and `reference-to-video`, `pixverse/v6/…`, `seedance/v1/pro/…`, `minimax/hailuo-2.3/standard/…`, `hailuo-02/standard/…` | to be compared on the same picture |
+| `veed/fabric-1.0` | VEED; stays out |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
