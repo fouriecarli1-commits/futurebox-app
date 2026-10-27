@@ -7792,7 +7792,7 @@ export default function PostStudio({
               'Photograph a poster, a sign, a label or a page, and this turns the words printed in it into text — to put on the picture, or to copy out. It all happens on your own phone.',
             )}
           </p>
-          <div className={RY3}>
+          <div className="grid grid-flow-col auto-cols-fr gap-2">
             {(['eng', 'afr'] as const).map((one) => (
               <button
                 key={one}
@@ -9981,7 +9981,7 @@ export default function PostStudio({
           data-postcustomsize
           onClick={() => setShowSizeModal(true)}
           title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-          className="block min-h-[44px] max-w-full truncate rounded-xl border px-2 text-left font-mono text-xs leading-tight"
+          className="block min-h-[44px] max-w-full truncate rounded-xl border px-2 text-left font-mono text-[11px] leading-tight"
           style={{ color: INK_DIM, borderColor: PHOTO.edge }}
         >
           {/* The name only where there is room for it: on a phone the
@@ -10004,7 +10004,7 @@ export default function PostStudio({
         title={plain
           ? t('post.showAllWhat', 'Show every setting there is')
           : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
-        className="flex h-9 shrink-0 items-center rounded-xl px-1.5 text-xs font-bold sm:px-2"
+        className="flex h-9 shrink-0 items-center rounded-xl px-1.5 text-[11px] font-bold sm:px-2 sm:text-xs"
         style={chipStyle}
       >
         {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
@@ -10027,7 +10027,7 @@ export default function PostStudio({
           aria-pressed={asking}
           onClick={() => { setAsking(!asking); setBench(null); }}
           aria-label={t('post.ask', 'Ask')}
-          className="flex h-9 items-center gap-1 rounded-xl px-2 text-xs font-bold"
+          className="flex h-9 items-center gap-1 rounded-xl px-2 text-[11px] font-bold sm:text-xs"
           style={chipStyle}
         >
           <Sparkles className="h-4 w-4" />
@@ -10039,7 +10039,7 @@ export default function PostStudio({
         data-postexportopen
         aria-pressed={bench === 'save'}
         onClick={() => openBench('save')}
-        className="flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-extrabold"
+        className="flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-extrabold sm:text-xs"
         style={{ background: PHOTO.accent, color: PHOTO.floor }}
       >
         <Download className="h-3.5 w-3.5" />

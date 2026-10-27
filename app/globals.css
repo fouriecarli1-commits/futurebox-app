@@ -2094,8 +2094,8 @@ html[data-singing] [data-tabbar] { display: none !important; }
    their dark edge to read over the picture. */
 [data-postpop][data-neon][data-passthrough="yes"] {
   background: transparent !important;
-  backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border-top: 0;
 }
 [data-postpop][data-neon][data-passthrough="yes"] * { text-shadow: 0 0 2px #000, 0 0 4px #000, 0 1px 2px #000; }
@@ -3783,10 +3783,19 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 /* Clear where the film is (the top third), darkening over the clock and the
    transport beneath it so the bench's lower tiles do not tangle with the
    lane's own words. The film stays visible; the clutter does not. */
-[data-cutfloat] { background: linear-gradient(to bottom, rgba(10, 12, 16, 0) 0%, rgba(10, 12, 16, 0.78) 38%, rgba(10, 12, 16, 0.92) 100%); }
+/* Glass, not a window. With no clip in yet, what stood behind a floating
+   bench was the room's own writing, and a bench with a clear top put its
+   words on top of those (27 October 2026, the sweep's photographs). The
+   blur keeps the colour and light of the film behind it, which is what
+   see-through was for, and takes away the letters. */
+[data-cutfloat] {
+  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.5) 0%, rgba(10, 12, 16, 0.84) 30%, rgba(10, 12, 16, 0.94) 100%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
 [data-cutfloat] > div { max-height: none !important; height: 100%; }
-[data-cutfloat] [data-desk] { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-[data-cutfloat] [data-desk] > header { background: rgba(10, 12, 16, 0.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+[data-cutfloat] [data-desk] { background: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+[data-cutfloat] [data-desk] > header { background: rgba(10, 12, 16, 0.55) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 [data-cutfloat] [data-desk] :is(div, section, fieldset) { background: transparent !important; box-shadow: none !important; }
 /* Light ink on every tile, in both themes: the tiles are dark glass whatever
    the room's theme, and the light theme's dark ink on them measured 1.02:1
@@ -3796,8 +3805,8 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 [data-cutfloat] [data-desk] :is(select, option) { background: #131a22 !important; }
 [data-cutfloat] [data-desk] :is(button, select, textarea, input[type="text"], input[type="number"], input[type="search"], a[href]) {
   background: rgba(19, 26, 34, 0.74) !important;
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.16) inset !important;
 }
 [data-cutfloat] [data-desk] :is(button[aria-pressed="true"], button[data-picked="true"]) {
@@ -3823,7 +3832,10 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
    screen, which read as a mistake rather than as "there is more". The edge
    now fades, so the half button reads as more to come, and the bar ends
    with room to bring its last button fully clear of the fade. */
-[data-sideways] {
+/* Only a bar of buttons. The photo editor's bench panel is also marked
+   sideways (its sections are columns that scroll on a phone), and the fade
+   and the padding made each of its sections look cut off on the right. */
+[data-sideways]:not([data-postbenchpanel]) {
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
   mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
   padding-right: 32px;

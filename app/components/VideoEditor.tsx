@@ -6268,7 +6268,7 @@ async function smallerFrame(url: string): Promise<string> {
           {/* ── Bring the material in ──────────────────────────────── */}
           <label
             data-editorbring
-            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
+            className="min-h-[44px] w-full justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
           >
             {busy === 'bring' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             {t('edit.bring', 'Bring clips in')}
@@ -7773,7 +7773,7 @@ async function smallerFrame(url: string): Promise<string> {
                 aria-pressed={voicing === 'on'}
                 disabled={voicing === 'asking' || (voicing !== 'on' && edit.pieces.length === 0)}
                 onClick={() => { if (voicing === 'on') stopVoice(); else void startVoice(); }}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold"
                 style={voicing === 'on'
                   ? { background: '#be123c', color: '#ffffff' }
                   : { background: 'rgba(52,211,153,0.16)', color: '#a7f3d0', boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.45)' }}
@@ -7823,7 +7823,7 @@ async function smallerFrame(url: string): Promise<string> {
           </div>
           <label
             data-editorunder
-            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
+            className="min-h-[44px] w-full justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
           >
             <Plus className="w-4 h-4" />
             {edit.under ? t('edit.underSwap', 'Change the track under it') : t('edit.underAdd', 'Put a track under it')}
