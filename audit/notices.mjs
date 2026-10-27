@@ -89,6 +89,28 @@ try {
   now = await said();
   check('a button that cannot be pressed yet still answers, with why', now?.kind === 'why' && /clip in first/.test(now.words), JSON.stringify(now));
 
+  /* ── A button with only an icon says what it does ──
+     The owner, 27 October 2026: "Hierdie klein buttons in probooth ook. Ek
+     weet nie wat dit doen nie." (`IconTips.tsx`) */
+  await page.evaluate(() => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', 'Loop this part');
+    b.setAttribute('data-zzicon', '');
+    b.innerHTML = '<svg width="16" height="16"></svg>';
+    b.style.cssText = 'position:fixed;right:4px;top:300px;width:44px;height:44px;z-index:300';
+    document.body.append(b);
+  });
+  await page.locator('[data-zzicon]').click();
+  await page.waitForTimeout(250);
+  const tipped = await page.evaluate(() => {
+    const el = document.querySelector('[data-icontip]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { words: el.textContent, inside: r.left >= 0 && r.right <= window.innerWidth && r.bottom <= 300 + 1 };
+  });
+  check('a button with only an icon says what it does when pressed', tipped?.words === 'Loop this part', JSON.stringify(tipped));
+  check('  above it, and on the screen even at the edge', tipped?.inside === true, JSON.stringify(tipped));
+
   /* ── Nobody pressed anything: the app's own saves stay quiet ── */
   await page.waitForTimeout(9000);
   await page.evaluate(async () => { try { await fetch('/api/zz-refused', { method: 'POST', body: '{}' }); } catch { /* */ } });

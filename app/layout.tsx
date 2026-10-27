@@ -8,6 +8,7 @@ import { SiteFooter } from './components/SiteFooter';
 import WorkingBar from './components/WorkingBar';
 import Notices from './components/Notices';
 import NewVersion from './components/NewVersion';
+import IconTips from './components/IconTips';
 import Watchdog from './components/Watchdog';
 import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
@@ -198,6 +199,8 @@ export default function RootLayout({
           <Notices />
           {/* A tab left open on an older build is offered the new one. */}
           <NewVersion />
+          {/* A button with only an icon says what it does when pressed. */}
+          <IconTips />
           {/* The one thing the watchdog cannot do: be seen. */}
           <Blankscreen />
           {/* First in the markup so it is painted first, and the only thing

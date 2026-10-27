@@ -42,7 +42,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, PersonStanding, Play, Scissors,
+  ChevronDown, ChevronUp, Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, PersonStanding, Play, Scissors,
   SkipBack, SkipForward, Sparkles, Type, Wand2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
@@ -378,6 +378,11 @@ export default function CutDock({
     const gone = window.setTimeout(() => setBenchSay(null), 2000);
     return () => window.clearTimeout(gone);
   }, [benchSay]);
+  /* A bench tucked down to one button: the tool stays on, the film gets
+     the screen. The owner, 27 October 2026: *"The photo editor fix has to
+     be a video editor fix as well."* Opening another bench opens it. */
+  const [tucked, setTucked] = useState(false);
+  useEffect(() => { setTucked(false); }, [open]);
   const openSaying = (which: Bench): void => {
     const spec = [...upper, ...lower].find((one) => one.id === which);
     setBenchSay(spec && which !== open
@@ -530,6 +535,28 @@ export default function CutDock({
      wil gebruik, en dan gaan die buttons weer beter werk aan die kant van die
      skerm en nie onder nie"* — and a cutting room is MORE likely to be held
      sideways than a booth, because a wide film is the shape of the screen. */
+  /* The handle: above a floating bench, as a small pill over the film's
+     foot; above a bench under the clock, as a slim row. Tucked, it is the
+     one button left, just above the tools. */
+  const tuck = (where: 'float' | 'inline'): React.ReactElement => (
+    <button
+      type="button"
+      data-cuttuck={tucked ? 'down' : 'up'}
+      aria-expanded={!tucked}
+      onClick={() => setTucked((was) => !was)}
+      className={`z-30 inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-4 text-[12px] font-bold ${where === 'float' ? 'absolute left-1/2 -translate-x-1/2' : 'mx-auto my-1 shrink-0'}`}
+      style={{
+        background: 'rgba(10,12,16,0.82)',
+        color: INK,
+        boxShadow: `0 0 0 1px ${EDGE}`,
+        ...(where === 'float' ? { bottom: tucked ? 8 : 'calc(34dvh + 6px)' } : {}),
+      }}
+    >
+      {tucked ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      {tucked ? t('cut.tuckShow', 'Show the tool') : t('cut.tuckHide', 'Hide, to see the film')}
+    </button>
+  );
+
   if (edge) {
     return (
       <>
@@ -605,11 +632,19 @@ export default function CutDock({
           motion's keyframes sit on the ruler — a bench floating over the
           lane would cover the very thing the finger has to reach. Those
           three keep the capped sheet under the clock; the rest float. */}
-      {sheet && open && ON_CLOCK.has(open) ? sheet : sheet ? (
+      {sheet && open && ON_CLOCK.has(open) ? (
+        <>
+          {tuck('inline')}
+          <div className={tucked ? 'hidden' : 'contents'}>{sheet}</div>
+        </>
+      ) : sheet ? (
         <div className="relative shrink-0">
-          <div data-cutfloat="" className="absolute inset-x-0 bottom-0 z-20 flex h-[46dvh] flex-col">
+          {/* A third of the screen, not half: the film above it is what
+              is being worked on (27 October 2026). */}
+          <div data-cutfloat="" className={`absolute inset-x-0 bottom-0 z-20 h-[34dvh] flex-col ${tucked ? 'hidden' : 'flex'}`}>
             {sheet}
           </div>
+          {tuck('float')}
         </div>
       ) : null}
       <div
