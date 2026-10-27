@@ -68,3 +68,16 @@ knowing for our privacy page:
 - Our privacy page already says it: the sign-in is on TONE3000's own page,
   FutureBox keeps only the token on its server, and deleting the account
   here deletes the token (`app/privacy/page.tsx`, "Your TONE3000 sign-in").
+
+## Their Tone Sharing guidelines
+
+Also pasted on 27 October. They are rules for people who **upload** tones
+to TONE3000 (real gear only, one piece of primary gear per pack, titles,
+photos, no captures of current plugins or modelers). FutureBox uploads
+nothing, so they bind us only through the licence each tone carries.
+
+Two things worth knowing: **paid tones are coming** ("Monetization is coming
+soon"), and the API terms say access to paid content may come with
+additional terms, so a paid tone is a question for TONE3000 before the app
+loads one. And their own words for what is on the library, *"NAM captures
+and IRs of real gear"*, are the honest description for our help page.
