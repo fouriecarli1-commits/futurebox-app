@@ -206,6 +206,25 @@ Second page:
 | `depth-anything-video` | depth for every frame: background blur, 3D-looking parallax |
 
 
+Third and fourth pages:
+
+| Model | Note |
+|---|---|
+| `ben/v2/video`, `void-video-inpainting` | **the two the Video Editor already uses**, seen in the catalogue as fal.ai's own (no company in front of the name). VOID also takes out what the item did to the scene (its shadow, its splash) |
+| `ltx-2.3/reframe`, `minimax/h3-max/reframe-video`, `luma/agent/ray/v3.2/reframe` | **a wide clip made tall, or the other way**, by filling in the sides instead of cropping: one video, every platform's shape |
+| `sonilo/v1.1/video-to-video-music` | **licensed music written to fit a clip, cleared for commercial use**. With Sonilo's text-to-music this is the strongest music candidate so far |
+| `mirelo-ai/sfx2.0/video-to-video`, `hunyuan-video-foley` | sound effects laid on a clip, speech kept |
+| `heygen/v2/translate/precision`, `heygen/v3/lipsync/precision` | partner; a clip spoken in another language with the mouth matched. Face and voice rules apply |
+| `minimax/h3-max/relight` | the light in a clip changed after filming |
+| `minimax/h3-max/3d-to-video`, `ltx-2.3-quality/render-to-real` | a rough 3D scene turned into a real-looking clip: with the 3D models above, **plan a shot in 3D, film it in words** |
+| `decart/lucy-restyle` | partner; a whole clip, up to 30 minutes, in a new style |
+| extend: `minimax/h3-max-turbo/extend-video`, `xai/grok-imagine-video/extend-video`, `blackforestlabs/flux-3/extend-video`, `ltx-2.3/extend-video` | to be compared with `h3-max/extend-video` |
+| slow motion: `topaz/interpolate/video` (to 120 fps), `film/video` | beside `rife/video`; Topaz is a partner |
+| upscale: `flashvsr/upscale/video` (fastest), `video-upscaler`, `topaz/upscale/video/creative` | beside the upscalers above |
+| masks: `sam-3-1/video`, `…/video-rle`, `sam2/video` | following several things at once |
+| `wan-vace-14b/inpainting`, `wan-vace-14b/depth`, `ltx-2.3-quality/inpaint`, `ltx-2.3-quality/reference-video-to-video`, `wan-motion`, `kling-video/o1/…/reference`, `kling-video/o3/4k/video-to-video/edit`, `kling-video/o1/standard/video-to-video/edit`, `google/gemini-omni-flash/edit`, `minimax/h3/reference-to-video/lora`, `sync-lipsync/react-1` | more of the same jobs, to compare |
+| `bria/video/background-removal`, `bria/video/erase/mask`, `pixelcut/video-background-removal` | partners doing what `ben` and `void` already do; not needed |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -230,6 +249,8 @@ Second page:
 - **A song in, a video out**: VibeMV, lyric videos and beat-timed LTX
   turn a finished song into something to post, without the member writing
   a word. That is the shortest road from the Music room to the Live room.
+- **One video, every shape**: reframe fills in the sides, so a member's
+  wide clip becomes a tall one for stories without cutting anybody out.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
