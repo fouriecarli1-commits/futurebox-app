@@ -364,6 +364,24 @@ Seventh to ninth pages:
 | `imageutils/depth`, `imageutils/marigold-depth` | depth maps |
 | `microsoft/mai-image-2.5/edit`, `gpt-image-1/edit-image`, `hunyuan-image/v3/instruct/edit`, `kling-image/v3/image-to-image`, `kling-image/o1`, `qwen-image-edit/inpaint`, `qwen-image-edit-2511/lora`, `flux-lora-fill`, `flux-general/image-to-image`, `flux-2/klein/9b/base/edit` (+ `/lora`), `wan/v2.6/image-to-image`, `ideogram/v3/edit`, `bytedance/seedream/v5/flash/layerize`, `workflow-utilities/extract-nth-frame` | more of the same jobs |
 
+Tenth to twelfth pages:
+
+| Model | Note |
+|---|---|
+| `ideogram/v3/layerize-text` | partner; **the words on a flat poster or cover lifted out as editable text**: fix a typo on a finished cover without remaking it |
+| `image-editing/text-removal` | all writing taken off a picture, background kept: a clean cover to letter again |
+| `smart-resize`, `image-editing/reframe`, `luma-photon/flash/reframe` | **one picture to any size**, re-composed rather than cropped: every platform's cover and banner from one design |
+| `flux-2/klein/realtime` | partner-free (Black Forest Labs via fal); **pictures that change as the member types or draws**: the live preview for guided asking |
+| `iclight-v2` | a product or portrait relit, with a new background, from words |
+| `topaz/restore/image`, `image-apps-v2/photo-restoration` | dust, scratches and fading taken out of old photos |
+| `ben/v2/image` | the photo twin of the video cutter already in use; same family, fal.ai's own |
+| `image2svg` | a third vectoriser, fal.ai's own: try first, before the partners |
+| `patina/material/extract`, `bria/extract-object` | a tiling texture from a photo; one object cut out as a PNG |
+| `google/virtual-try-on`, `flux-pro/v1/vto` | more try-on |
+| `instant-character`, `live-portrait/image`, `hy-wu-edit` | characters from words; an expression moved onto a portrait; outfit and face swaps. **Face rule**: the member's own face only |
+| `bria/genfill`, `bria/fibo-edit-1.5/edit` | partner, licensed data; adding things to a picture safely for commercial use |
+| `luma/agent/uni-1/v1/edit`, `…/max/edit`, `phota/edit`, `phota/enhance`, `ideogram/v4/image-to-image`, `microsoft/mai-image-2.5-pro/edit`, `gpt-image-1-mini/edit`, `qwen-image-edit-plus-lora-gallery/multiple-angles`, `z-image/turbo/image-to-image/lora`, `z-image/turbo/inpaint`, `flux-general/inpainting`, `flux-kontext-lora/inpaint`, `flux-2/klein/9b/edit/lora`, `flux-2/klein/4b/base/edit`, `fast-sdxl/image-to-image`, `sam-3-1/image-rle`, `marigold-v2`, `dwpose`, `film`, `creative-upscaler` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -371,6 +389,10 @@ Seventh to ninth pages:
   always show a cheap draft first and charge for the final only once the
   member likes it. That is the single biggest help to "get the product
   they are after", and it saves credits.
+- **A live preview while asking**: `flux-2/klein/realtime` and
+  `z-image/turbo` are fast enough to redraw the picture as somebody types,
+  so guided asking can *show* where the words are heading before a credit
+  is spent on the final.
 - **Style cards come free with the catalogue**: MiniMax's styles, LoRAs,
   the 3D low-poly options. Guided asking can start from pictures of looks.
 - **Voices without likeness questions**: voice design makes a new narrator
