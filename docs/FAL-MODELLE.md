@@ -68,6 +68,121 @@ may sell it, is the question that decided ElevenLabs. Each one needs that
 answer from its own licence before it is offered for a song a member
 releases.
 
+### Sound and music (text to audio), the rest
+
+| Model | Note |
+|---|---|
+| `sonilo/v1.1/text-to-music`, `sonilo/v1.1/text-to-sound-effects` | calls itself "licensed, commercial-use-safe": **the first candidate for songs a member may release**, once its licence is read |
+| `mirelo-ai/sfx2.0` | sound effects and ambience up to ten minutes: room tone, rain, a crowd |
+| `cassetteai/sound-effects-generator`, `stable-audio-3/small/sfx`, `…/small/music`, `…/base` | quick effects and sketches |
+| `mmaudio-v2/text-to-audio` | effects from words; its video-to-audio twin puts sound on a silent clip |
+| `diffrhythm` | words to a whole song in under 30 seconds: the fastest full-song sketch |
+| `ace-step/prompt-to-audio` | a song from one sentence, no lyrics needed |
+| `mureka/api/generate/song`, `…/instrumental`, `…/podcast` | partner; songs, beds and a two-voice podcast from a topic |
+| `minimax-music/v1.5`, `v2.5`, `minimax-music` | older versions of the song models above |
+| `elevenlabs/music/v2`, `elevenlabs/text-to-dialogue/eleven-v3` | see the ElevenLabs licence note above |
+| `ltx-2.3-quality/text-to-audio`, `…/lora` | sound from Lightricks' video model; the LoRA takes a trained sound |
+
+### Voices (text to speech), 41
+
+| Model | Note |
+|---|---|
+| `elevenlabs/tts/eleven-v4`, `…/eleven-v4-turbo`, `…/turbo-v2.5`, `elevenlabs/text-to-dialogue/eleven-v3` | audio tags, stability and IPA pronunciation; the licence note above applies |
+| `google/gemini-3.8-flash-tts`, `…-flash-lite-tts`, `gemini-3.1-flash-tts` | 30 voices, style told in words, two-speaker dialogue: **the podcast desk's two hosts** |
+| `minimax/speech-2.8-hd`, `-2.8-turbo`, `-2.6-hd`, `-2.6-turbo`, `-02-hd`, `-02-turbo`, `preview/speech-2.5-hd`, `…-turbo` | partner; HD for finals, turbo for drafts |
+| `minimax/voice-design`, `qwen-3-tts/voice-design/1.7b` | **a new voice made from a description** ("an old man, warm, slow"): nobody's real voice, so no likeness question. Narrators for stories and ads |
+| `minimax/voice-clone`, `qwen-3-tts/text-to-speech/1.7b` and `/0.6b` (clone), `zonos2`, `zonos`, `f5-tts`, `heygen/heygen-voice`, `…/turbo`, `resemble-ai/chatterboxhd/text-to-speech`, `chatterbox/text-to-speech`, `…/multilingual`, `async/tts-pro/v1.0` | **voice cloning.** Only the member's own voice, with the consent step the Voice desk already has; never a famous voice |
+| `vibevoice`, `vibevoice/7b`, `vibevoice/0.5b`, `dia-tts`, `csm-1b` | long multi-voice talk with laughter and breaths: full podcast episodes from a script |
+| `kokoro/american-english`, `…/british-english` and seven other languages | the cheapest narration; no Afrikaans |
+| `orpheus-tts`, `maya`, `maya/batch`, `maya/stream`, `inworld-tts`, `index-tts-2/text-to-speech`, `xai/tts/v1`, `kling-video/v1/tts`, `bytedance/seed-speech/tts/v2`, `alibaba/qwen-audio-3-tts` | expressive or fast alternatives, to be compared by ear |
+| `kotoba-technologies/kotoba-tts/v2/tts/ws` | Japanese, streamed, tagged commercial-use |
+
+**Afrikaans:** no model names it. The multilingual ones (Gemini, Eleven v4,
+Chatterbox multilingual, Qwen) must be tried by ear before the app promises
+an Afrikaans voice.
+
+### 3D (text to 3D), 14
+
+| Model | Note |
+|---|---|
+| `tripo3d/h3.1/text-to-3d`, `tripo3d/p2/…`, `tripo3d/p1/…` | partner; P2 has PBR textures, face counts, low-poly |
+| `hunyuan-3d/v3.1/pro/text-to-3d`, `…/rapid/…`, `hunyuan3d-v3/text-to-3d` | textured models ready for Unity, Unreal and Blender |
+| `meshy/v7.1/text-to-3d`, `meshy/v7`, `meshy/v6`, `meshy/v6-preview` | partner; untextured preview first, then textured: a cheap draft before the paid final |
+| `hyper3d/rodin/v2.5/text-to-3d`, `…/fast` | partner; production meshes, fast drafts |
+| `hunyuan-motion`, `hunyuan-motion/fast` | **3D human motion from words**: a dance for an avatar, to a member's song |
+
+### Video (text to video), 130: the ones that matter
+
+| Model | Note |
+|---|---|
+| `kling-video/v3/pro`, `v3/standard`, `v3/turbo/…`, `v3/4k`, `o3/pro`, `o3/standard`, `o3/4k`, `kling/v4` (3 to 30 seconds, per-shot prompts), `v2.6/pro`, `v2.5-turbo/pro` | partner; cinematic, native sound, several shots: **the music video** |
+| `minimax/h3`, `h3-max`, `h3-max-turbo`, `hailuo-2.3/pro`, `…/standard`, `hailuo-02/…`, `video-01`, `video-01-live` | partner; `h3/text-to-video/lora` keeps a trained character or style |
+| `minimax/h3-max/styles/hand-drawn`, `…/vhs`, `…/16bit-pixel`, `…/retro-toon-70s`, `…/low-poly` | **ready-made looks**: exactly the style cards for guided asking |
+| `bytedance/seedance-2.0/fast`, `…/mini`, `…/us`, `seedance-2.5/us` (to 30 seconds), `seedance/v1.5/pro`, `v1/pro`, `v1/pro/fast` | partner; multi-shot with sound; `mini` is the cheap draft |
+| `google/gemini-omni-flash`, `…/v1.1` | video with sound, grounded in real-world knowledge |
+| `blackforestlabs/flux-3/text-to-video`, `…/draft`, `flux-3-max` | `draft` keeps a cache so the final costs less: **draft, then final** |
+| `alibaba/wan-3.0`, `wan-3.0-prime`, `wan/v2.7`, `v2.6`, `v2.2-a14b` (+ `/turbo`, `/lora`), `v2.2-5b` (+ `fast-wan`), `wan-25-preview`, `wan-t2v`, `wan-t2v-lora` | open weights; LoRAs for a member's own style |
+| `alibaba/happy-horse`, `…/v1.1` | 1080p with sound and lip-sync in several languages |
+| `ltx-2.3/text-to-video`, `…/fast`, `ltx-2.3-22b/…`, `…/distilled`, `ltx-2.3-quality`, `lightricks/ltx-2.5/…/fast`, `…/pro`, older `ltx-video` | open; sound and picture in one pass, cheap |
+| `xai/grok-imagine-video/…`, `v1.5`, `v1.5/lite` | video with sound |
+| `pixverse/v6`, `v5.5`, `v5`, `v4.5`, `c1` | partner; `c1` is film-grade with sound to 15 seconds |
+| `vidu/q3`, `q3/turbo`, `q2`, `q1`; `luma/agent/ray/v3.2` (seamless loops); `kandinsky6-pro`, `kandinsky6-lite`, `kandinsky5-pro`, `kandinsky5/distill`; `hunyuan-video`, `hunyuan-video-v1.5`; `longcat-video/distilled/720p`, `/480p` (long clips); `cogvideox-5b`; `fast-animatediff`; `kling-video/v1.6/…/effects` | alternatives; **Luma's loops are the moving album cover** |
+| `creatify/boreal` | product, UGC and presenter videos with sound: **an ad for a member's own release** |
+| `heygen/heygen-video`, `heygen/v3/video-agent`, `heygen/avatar5/digital-twin`, `veed/avatars/…`, `veed/fabric-1.0/text`, `infinitalk/single-text`, `kling-video/lipsync/audio-to-video` | talking people and lip-sync. **A real person's face only with that person's own consent, and only their own**: the same rule as voices. VEED is a partner and stays out |
+
+Also in text to video: `moonvalley/marey/t2v` (partner; **trained only on
+fully licensed material**, the safest video to sell), `bytedance/bernini-r`
+(makes and edits in one model), `ovi` (picture and sound together),
+`minimax/video-01-director` (camera moves in words), `kling-video/lipsync/text-to-video`,
+`cosmos-predict-2.5` (+ `/distilled`), `infinity-star` (ten times faster),
+`magi-distilled` (real physics), `krea-wan-14b`, `wan-pro`, `t2v-turbo`,
+`fast-svd`, `fast-svd-lcm`, `fast-animatediff/turbo`, `longcat-video/text-to-video/720p`,
+`/480p`, `pixverse/v5.6`, `v4`, `v3.5` (+ `/fast`), `kling-video/v1/standard/effects`,
+`v1.5/pro/effects`, LTX LoRA variants, and more avatars
+(`heygen/avatar3`, `avatar4/digital-twin`, `heygen/v2/video-agent`,
+`argil/avatars/text-to-video`) under the same face rule.
+
+### Sound in, sound out (audio to audio), 42
+
+| Model | Note |
+|---|---|
+| `demucs` | stems: voice, drums, bass, guitar and more. The one fal.ai's own email pointed to |
+| `sam-audio/separate`, `sam-audio/span-separate` | **take out any sound by naming it** ("the dog barking", "the crowd"): a member's own recording cleaned in words |
+| `deepfilternet3`, `veed/clean-audio` | noise out of speech, up to 48 kHz; VEED is a partner and stays out |
+| `elevenlabs/audio-isolation`, `elevenlabs/voice-changer` | licence note above applies |
+| `audio-understanding` | answers questions about a recording: **lets the copilot hear a member's song** and say what it is, its tempo, its mood |
+| `ace-step/audio-to-audio`, `ace-step/audio-outpaint`, `ace-step/audio-inpaint` | a song in the style of an example; **make a song longer**; rewrite one part of it with new words |
+| `stable-audio-3/medium/audio-to-audio`, `…/audio-inpainting`, `…/audio-outpainting`, the `small/music`, `small/sfx` and `base` variants of each, `stable-audio-25/audio-to-audio`, `stable-audio-25/inpaint` | variations, fixing a bad bar, extending an intro or outro |
+| `qwen-3-tts/clone-voice/1.7b`, `/0.6b`, `dia-tts/voice-clone`, `kling-video/create-voice` | voice cloning: the member's own voice only |
+| `personaplex`, `personaplex/realtime` | a real-time two-way spoken conversation with a set character: **talk to the copilot out loud** |
+| `tada/3b/text-to-speech`, `tada/1b/…` | speech kept in step with its words |
+| `ffmpeg-api/merge-audios`, `workflow-utilities/audio-compressor`, `workflow-utilities/impulse-response` | plain tools: the app already does these on the phone, without credits |
+
+## Where this is pointing, so far
+
+- **Every category has a draft tier and a final tier** (Flux 3 draft,
+  Seedance mini, Meshy preview, MiniMax turbo, schnell). The router can
+  always show a cheap draft first and charge for the final only once the
+  member likes it. That is the single biggest help to "get the product
+  they are after", and it saves credits.
+- **Style cards come free with the catalogue**: MiniMax's styles, LoRAs,
+  the 3D low-poly options. Guided asking can start from pictures of looks.
+- **Voices without likeness questions**: voice design makes a new narrator
+  from a sentence; cloning stays for the member's own voice only.
+- **Whole new products** now visible: a podcast episode from a script with
+  two hosts; a music video from a song; a dance for a 3D avatar
+  (`hunyuan-motion`); an ad for a release (`creatify/boreal`); a moving
+  album cover (Luma loops); sound for a silent clip (`mmaudio`).
+- **Editing a song, not only making one**: extend it, rewrite one part,
+  take a named sound out, make variations. Together with stems this is a
+  whole repair-and-remix desk.
+- **The copilot can listen** (`audio-understanding`) and **talk back out
+  loud** (`personaplex`): guidance by voice, for people who do not know
+  what to type.
+- **What is safest to sell** decides the default: Sonilo for music and
+  Marey for video say they are trained on licensed material. Their own
+  terms are read before that is promised.
+
 ## The shape this is heading for
 
 - **A router per capability**: picture, picture edit, video, video edit,
