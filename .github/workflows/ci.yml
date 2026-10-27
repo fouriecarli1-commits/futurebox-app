@@ -27,6 +27,13 @@ on:
   push:
     branches: [main]
 
+# A newer push to the same branch makes the older run moot: only the head
+# can ship, and twenty small commits in a row otherwise queue twenty
+# twenty-minute runs behind each other.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest

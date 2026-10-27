@@ -488,6 +488,21 @@ Third to seventh pages of image to video:
 | finals: `kling-video/v3/4k/…`, `kling-video/v3/standard/…`, `o3/standard/…`, `o3/standard/reference-to-video`, `o1/image-to-video`, `blackforestlabs/flux-3/image-to-video`, `alibaba/wan-3.0-prime/…`, `wan/v2.7/…`, `wan/v2.6/…`, `wan-25-preview/…`, `wan/v2.2-a14b/…`, `google/gemini-omni-flash/…` and `/v1.1/reference-to-video`, `xai/grok-imagine-video/v1.5/…` and `reference-to-video`, `pixverse/v6/…`, `seedance/v1/pro/…`, `minimax/hailuo-2.3/standard/…`, `hailuo-02/standard/…` | to be compared on the same picture |
 | `veed/fabric-1.0` | VEED; stays out |
 
+Eighth to twelfth pages of image to video:
+
+| Model | Note |
+|---|---|
+| `ffmpeg-api/images-to-video` | fal.ai's own plain tool: pictures stitched into an MP4. **The phone does this already, without credits** |
+| `vidu/q4/reference-to-video` | partner; up to 12 pictures and 3 voice clips, characters and **voices** kept the same for 16 seconds |
+| `creatify/aurora`, `sync-lipsync/v3/image-to-video`, `musetalk`, `bytedance/omnihuman`, `kling-video/v1/standard/ai-avatar` | **a still picture that speaks or sings to the member's audio**; MuseTalk is real-time. Face rule: the member's own face, or a drawn character |
+| `blackforestlabs/flux-3/first-last-frame-to-video`, `pixverse/v6/transition`, `kling-video/o1/standard/image-to-video` | start and end picture, the move between them: **transitions for a slideshow or a lyric video** |
+| `blackforestlabs/flux-3/image-to-video/draft` | the draft with a reusable cache, so the kept one costs less to finish |
+| `pixverse/v5.5/effects` | partner; ready-made effects on a picture: one-press fun for social posts |
+| `alibaba/happy-horse/…` (+ `/v1.1`, reference-to-video) | 1080p with sound and lip-sync in several languages |
+| `vidu/q4/image-to-video` (to 4K, 3–16 s), `vidu/q3/…`, `/turbo` | partner |
+| `pixverse/c1/image-to-video`, `v5.5`, `v5` | partner |
+| `google/gemini-omni-flash/reference-to-video`, `minimax/hailuo-2.3/pro/…`, `hailuo-2.3-fast/pro/…`, `hailuo-02/pro/…`, `hailuo-02-fast/…`, `bytedance/seedance-2.0/us/…` (+ reference), `kling-video/o3/4k/…` (+ reference), `kling-video/o1/reference-to-video`, `wan/v2.7/reference-to-video`, `wan/v2.6/image-to-video/flash`, `wan/v2.2-5b/…`, `wan-i2v`, `ltx-2.3/image-to-video`, `lightricks/ltx-2.5/image-to-video/fast`, `ltx-video/image-to-video`, `blackforestlabs/flux-3/keyframes-to-video` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
