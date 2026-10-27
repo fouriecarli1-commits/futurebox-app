@@ -186,7 +186,25 @@ fully licensed material**, the safest video to sell), `bytedance/bernini-r`
 | `sync-lipsync/v3`, `sync-lipsync/v2`, `…/v2/pro`, `latentsync` | mouth moved to new audio: a dubbed clip, a corrected line. Face rule applies |
 | `topaz/upscale/video/precision`, `bytedance-upscaler/upscale/video`, `seedvr/upscale/video` | up to four times sharper: **phone footage to a clean final**. Topaz is a partner |
 | `mmaudio-v2` | **sound for a silent clip**, timed to the picture |
-| `ffmpeg-api/merge-videos`, `ffmpeg-api/merge-audio-video`, `ffmpeg-api/compose`, `workflow-utilities/trim-video` | plain tools the Video Editor already does on the phone, without credits |
+| `ffmpeg-api/merge-videos`, `ffmpeg-api/merge-audio-video`, `ffmpeg-api/compose`, `workflow-utilities/trim-video`, `workflow-utilities/scale-video` | plain tools the Video Editor already does on the phone, without credits |
+
+Second page:
+
+| Model | Note |
+|---|---|
+| `birefnet/v2/video` | background out of a clip: **a second engine beside `ben/v2/video`**, to compare on the first real clips. `bria/video/background-removal/v3` is a partner; VEED's stays out |
+| `sam-3/video`, `sam-3/video-rle` | finds and follows a named thing through a clip ("the red car"): **a sharper mask for "take an item out"** than the words alone |
+| `minimax/h3-max/extend-video` | a clip made longer, guided by words |
+| `rife/video` | frames filled in between: **smooth slow motion** from phone footage |
+| `workflow-utilities/auto-subtitle` | captions burned in. The Video Editor's own captions stay the default; this is the fallback for a language the phone cannot hear |
+| `decart/lucy-2-5/realtime` | partner; **restyles a live webcam picture as it streams**: a look for the Live room. Live video of a person, so the face rule and the 18+ rule both apply |
+| `bytedance/seedance-2.5/draft/complete` | the draft is made cheap, and only the one the member keeps is finished at 1080p: the draft-then-final pattern, built in |
+| `kling-video/o1/video-to-video/edit`, `kling-video/o3/…/video-to-video/reference`, `wan/v2.7/edit-video`, `xai/grok-imagine-video/edit-video`, `alibaba/happy-horse/video-edit`, `blackforestlabs/flux-3/edit-video`, `luma/agent/ray/v3.2/video-to-video` | more ways to change a clip in words; to be compared on the same clip before one is picked |
+| `kling-video/v2.6/pro/motion-control`, `wan/v2.2-14b/animate/move`, `bytedance/dreamactor/v2` | movement copied from a clip onto a picture of a character (Dreamactor also for animals and objects). Face rule |
+| `sync-lipsync`, `pixverse/lipsync`, `veed/lipsync`, `…/v2`, `infinitalk` | more lip-sync; VEED stays out |
+| `topaz/upscale/video/generative`, `blackforestlabs/flux-video-upscale` | upscaling that rebuilds detail, to 4K |
+| `depth-anything-video` | depth for every frame: background blur, 3D-looking parallax |
+
 
 ## Where this is pointing, so far
 
