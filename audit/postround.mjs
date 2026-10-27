@@ -61,11 +61,14 @@ try {
     const bg = panel ? getComputedStyle(document.querySelector('[data-postunder]')).backgroundImage : '';
     return panel && photo ? { top: panel.top, bottom: photo.bottom, tall: panel.height, photoTall: photo.height, bg } : null;
   });
-  check('a tool opens docked under the photograph, never over it',
-    !!reach && reach.top >= reach.bottom - 1 && reach.tall >= 170 && reach.photoTall >= 150,
+  /* Since the evening of 27 October the glass's top edge rides a little
+     over the photograph's foot so it shows through — never more than a
+     sixth of the screen, so the middle of the photo stays clear. */
+  check('a tool opens under the photograph, its glass over no more than the photo\u2019s foot',
+    !!reach && reach.top >= reach.bottom - 760 / 6 && reach.tall >= 170 && reach.photoTall >= 150,
     JSON.stringify(reach));
-  check('  and its panel is the Video Editor\u2019s dark glass',
-    !!reach && /linear-gradient/.test(reach.bg) && /rgba\(10, 12, 16, 0\.94\)/.test(reach.bg),
+  check('  and its panel is see-through glass, clearest at the top where the photo shows through',
+    !!reach && /^linear-gradient\(rgba\(10, 12, 16, 0\.[0-3]\d*\)/.test(reach.bg),
     reach?.bg ?? 'no panel');
   await pic.click();
   await page.waitForTimeout(400);

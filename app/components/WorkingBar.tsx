@@ -84,5 +84,14 @@ export default function WorkingBar(): React.ReactElement | null {
     };
   }, []);
 
-  return on ? <div className="fb-workbar" data-workbar role="progressbar" aria-label="Working" /> : null;
+  /* And a pulse of light that sweeps across the whole screen until it is
+     done. The owner, 27 October 2026: *"wanneer iets besig is om te gebeur
+     en load dat die skerm so futuristic pulse deurskuif tot dit klaar is."*
+     Never in the way: it takes no taps and is light enough to read through. */
+  return on ? (
+    <>
+      <div className="fb-workbar" data-workbar role="progressbar" aria-label="Working" />
+      <div className="fb-worksweep-screen" data-worksweep aria-hidden />
+    </>
+  ) : null;
 }

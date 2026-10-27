@@ -2076,16 +2076,16 @@ html[data-singing] [data-tabbar] { display: none !important; }
    the Video Editor's glass (`[data-cutfloat]`): a dark see-through panel,
    blurred, with see-through tiles and a thin light edge rather than neon. */
 [data-postpop][data-neon] {
-  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.5) 0%, rgba(10, 12, 16, 0.84) 30%, rgba(10, 12, 16, 0.94) 100%) !important;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.18) 0%, rgba(10, 12, 16, 0.5) 22%, rgba(10, 12, 16, 0.64) 100%) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border-top: 1px solid rgba(226, 232, 240, 0.12);
   padding: 6px 8px;
 }
 [data-postpop][data-neon] :is(div, section, aside, header, fieldset) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
-[data-postpop][data-neon] :is(p, span, label, h3, h4) { color: #eafff4 !important; }
+[data-postpop][data-neon] :is(p, span, label, h3, h4) { color: #eafff4 !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
 [data-postpop][data-neon] :is(button, select, textarea, input[type="text"], input[type="number"]) {
-  background: rgba(19, 26, 34, 0.74) !important;
+  background: rgba(19, 26, 34, 0.55) !important;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   border: 0 !important;
@@ -2281,6 +2281,27 @@ button:has(.animate-spin) {
   background: linear-gradient(90deg, transparent, rgb(var(--fb-secondary-400)), #ffffff, rgb(var(--fb-primary-300)), transparent);
   box-shadow: 0 0 14px 4px rgb(var(--fb-secondary-400) / 0.8);
   animation: fb-workruler 1.15s linear infinite;
+}
+/* The pulse across the whole screen while the app works (`WorkingBar`). */
+.fb-worksweep-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, transparent 38%, rgb(var(--fb-primary-400) / 0.07) 46%, rgb(255 255 255 / 0.11) 50%, rgb(var(--fb-secondary-400) / 0.07) 54%, transparent 62%),
+    repeating-linear-gradient(0deg, rgb(var(--fb-primary-400) / 0.025) 0 1px, transparent 1px 4px);
+  background-size: 260% 100%, 100% 100%;
+  mix-blend-mode: screen;
+  animation: fb-worksweep-screen 1.6s linear infinite, fb-worksweep-fade 0.4s ease-out both;
+}
+@keyframes fb-worksweep-screen {
+  from { background-position: 130% 0, 0 0; }
+  to { background-position: -130% 0, 0 0; }
+}
+@keyframes fb-worksweep-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .fb-worksweep-screen { animation-duration: 4s, 0.4s; }
 }
 @media (prefers-reduced-motion: reduce) {
   button:not(:disabled):active, [role="button"]:active, summary:active, a[href]:active { scale: none; }
@@ -3985,6 +4006,14 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   from { opacity: 0; transform: translateY(-10px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
+/* The one-line notice at the top (`Notices`): drops in, quickly. */
+.fb-notice {
+  animation: fb-notice-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes fb-notice-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
 /* The "want to do more with it?" card rises from the bottom (`IdeaPrompt`). */
 .fb-idea {
   animation: fb-idea-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -3994,5 +4023,5 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge, .fb-idea { animation-duration: 0.01s; animation-iteration-count: 1; }
+  .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge, .fb-idea, .fb-notice { animation-duration: 0.01s; animation-iteration-count: 1; }
 }

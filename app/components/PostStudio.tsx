@@ -80,6 +80,7 @@ import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 import BecomeBench, { BecomeNudge, IdeaPrompt, PeelOverlay, type PullTap, type StartBecome } from './BecomeBench';
 import { IDEAS, offerIf, saidNotNow, saidYes, type IdeaMoment } from '../lib/ideas';
+import { ambientOf } from '../lib/ambient';
 import type { BecomeId } from '../lib/becomes';
 import type { Cut } from '../lib/stickerize';
 import CanvasSizeModal from './CanvasSizeModal';
@@ -618,8 +619,12 @@ const POST_CHARTS: BenchSpec = {
 };
 /* Photo first, at the far left. The owner, 17 October 2026: *"Maak die photo tab
    heel links en heel eerste van al die tabs."* */
+/* Bring to life second, right after the photo, where a phone shows it
+   without a swipe. The owner, 27 October 2026, looking for the sticker:
+   *"Waar in watter funtion le dit"* — seventh in the bar, it was off the
+   right edge of the screen. */
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_UPPER[0], POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_ALIVE, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
+  POST_UPPER[0], POST_ALIVE, POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -1031,6 +1036,8 @@ export default function PostStudio({
      is below the photo, and a press that seemed to do nothing was a press
      whose answer was out of sight. */
   const [photoSay, setPhotoSay] = useState('');
+  /* The photo's colours, blurred, behind the room on a phone (`lib/ambient.ts`). */
+  const ambient = useMemo(() => ambientOf(picture), [picture]);
   const nudgedFor = useRef('');
   const [magicSize, setMagicSize] = useState(0.06);
   /* What her finger painted over, stroke by stroke, as shares of the photograph. */
@@ -11007,7 +11014,20 @@ export default function PostStudio({
       }}
     >
       {upright ? (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative isolate flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* The glow behind the glass: the photo itself, blurred to colour.
+              The owner, 27 October 2026, of the black under the panel. */}
+          {ambient && (
+            /* Clipped to the room: scaled up past its edges (so the blur
+               has no dark rim) it made the whole page scroll by a tenth. */
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+              <div
+                data-postambient
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${ambient})`, filter: 'blur(32px) saturate(1.7) brightness(0.85)', transform: 'scale(1.2)' }}
+              />
+            </div>
+          )}
           {header}
           {/* The controls pop out at the top, above the photograph and
               outside it, on glass she can see the photograph through the
@@ -11079,7 +11099,15 @@ export default function PostStudio({
               /* And a little higher since 27 October 2026, as high as the
                  Video Editor's panels reach: "bietjie hoer op gaan in die
                  editor". */
-              style={{ height: stripsUp ? STRIP_LEAST + 4 : '56dvh' }}
+              /* And over the photograph's foot since the same evening —
+                 "nogsteeds solid oor 'n groot gedeelte van die skerm met 'n
+                 swart agtergrond": the top of the glass rides 14% of the
+                 screen up over the photo, which shows through it, so the
+                 panel reads as glass over the picture rather than a black
+                 floor under it. The middle of the photo stays clear. */
+              style={stripsUp
+                ? { height: STRIP_LEAST + 4 }
+                : { height: '56dvh', marginTop: '-14dvh', position: 'relative', zIndex: 20 }}
             >
               {stripsUp
                 ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>

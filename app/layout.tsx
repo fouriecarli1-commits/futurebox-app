@@ -6,6 +6,7 @@ import { APP_LINE, APP_NAME, APP_SHORT, BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
 import { SiteFooter } from './components/SiteFooter';
 import WorkingBar from './components/WorkingBar';
+import Notices from './components/Notices';
 import Watchdog from './components/Watchdog';
 import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
@@ -192,6 +193,8 @@ export default function RootLayout({
           <BlankGuard />
           {/* The neon ruler across the top whenever the app is waiting. */}
           <WorkingBar />
+          {/* And in words: "Working on it…", or what went wrong. */}
+          <Notices />
           {/* The one thing the watchdog cannot do: be seen. */}
           <Blankscreen />
           {/* First in the markup so it is painted first, and the only thing
