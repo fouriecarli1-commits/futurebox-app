@@ -591,6 +591,26 @@ LTX v2 family: `ic-lora/a2a`, `/av2av`, `/av2av-masked`, `/v2v`,
 | `florence-2-large/ocr`, `/caption`, `/detailed-caption`, `/more-detailed-caption` | reads words in a picture; describes it. **Alt text for every picture a member posts**, so the app works for people who cannot see |
 | `openrouter/router/vision` | another gateway; not needed |
 
+Rest of vision: `scene-finder` (**finds the moment in a clip that matches
+words**: "the part where she laughs"), `marlin`, `marlin/find` (what happens
+in a clip, and when), `got-ocr/v2` (words, tables and charts read from a
+page), `sa2va/4b|8b/image|video`, `sam-3/image/embed`, `moondream/batched`,
+`moondream-next/batch`, `moondream2/point-object-detection`, `llava-next`,
+`perceptron/isaac-01` (+ its chat endpoint), `nemotron-diffusion-vlm`,
+`florence-2-large/region-to-category`, `/region-to-description`.
+
+### Plain tools (JSON, unknown), 8
+
+`ffmpeg-api/loudnorm` (EBU R128 loudness), `ffmpeg-api/waveform`,
+`ffmpeg-api/metadata`, `workflow-utilities/interleave-video`: the phone and
+the Music room already measure loudness and draw waveforms, without credits.
+`omnilottie`, `omnilottie/image-to-lottie`, `…/video-to-lottie`: **a picture
+or clip turned into a Lottie animation**, small enough to play as a moving
+sticker, a logo that animates on a website, or a loading animation for an
+artist's page. `openrouter/router/audio`: another gateway; not needed.
+
+**The catalogue is complete as of 27 October 2026.**
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -653,19 +673,97 @@ LTX v2 family: `ic-lora/a2a`, `/av2av`, `/av2av-masked`, `/v2v`,
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
 
-## The shape this is heading for
+## The design: one studio that chooses and guides
 
-- **A router per capability**: picture, picture edit, video, video edit,
-  sound, voice, music, 3D, upscale. The prompt and the member's choices pick
-  the model (for example: words in the picture, a real person's likeness
-  refused, photoreal or illustration, fast or best), each with its price
-  shown before the press, through the credit rules that already exist.
-- **Guided asking**: a few visual choices before the words (style cards
-  with examples, shape, mood, length), compiled into a structured prompt.
-  The `video-prompt-generator` and Bria's structured prompts are both built
-  for this step.
-- **New things the catalogue makes possible**, to be weighed one by one:
-  sound for a silent clip (video to audio), an album cover that moves
-  (image to video, the short loop the streaming apps show), a 3D version of
-  the cover or a logo (text or image to 3D), a voice changer (speech to
-  speech), an interactive world for a song (worlds).
+### 1. The member never chooses a model
+
+They choose **what they are making**, answer two or three questions with
+pictures, give the idea (typed, spoken, sketched or a reference photo), see
+a cheap draft, and pay for the final only once the draft is right. The
+model is the studio's business. That is the difference she asked for:
+*"ons moet wanneer iemand iets prompt weet watter model om te gebruik wat
+die beste vir ons klient gaan lewer volgens die prompt."*
+
+### 2. The router is a table in code, not a guess
+
+One file (`app/lib/server/router.ts`, to be written) maps each job to a
+draft model and a final model, and a few plain rules switch between
+candidates. It is deterministic, so a check (`check:router`) can hold every
+rule below, and a model that turns out weak is a one-line change.
+
+The copilot already reads what a member types. Its part is to turn the
+words into fields the table reads (`hasWords`, `person`, `look`, `shape`,
+`length`, `toSell`), never to pick a model itself.
+
+| Job | Draft | Final | Switches |
+|---|---|---|---|
+| Picture | `z-image/turbo`, `flux-2/klein/realtime` (live while typing) | `flux-2-pro`, `flux-pro/v1.1-ultra` | words in the picture → `ideogram/v3` or `openai/gpt-image-2`; for sale → `bria/…` (licensed data) |
+| Picture edit | `flux-2/flash/edit` | Nano Banana on her own Google project (already live), `flux-2-max/edit` | words to fix → `bria/fibo-edit/rewrite_text` or `ideogram/v3/layerize-text` |
+| Clean-up | — | `birefnet/v2`, `object-removal`, `codeformer`, `image-editing/photo-restoration`, `ddcolor`, `seedvr/upscale/image` | one press each; the phone's own filters stay on the phone |
+| Video from a picture or words | `ltx-2.3/image-to-video/fast`, `blackforestlabs/flux-3/image-to-video/draft` | `kling-video/v3/pro`, `alibaba/wan-3.0` | a person's face → member's own only; a loop → `luma/agent/ray/v3.2` |
+| Video edit | — | `ben/v2/video`, `void-video-inpainting` (both live), `id-v2v`, `ltx-2.3/retake-video`, `ltx-2.3/reframe`, `rife/video`, `seedvr/upscale/video` | |
+| Sound for a clip | `mmaudio-v2` | `sonilo/v1.1/video-to-music`, `…/video-to-sound-effects` | for sale → Sonilo only, once its licence is read |
+| Music | `cassetteai/music-generator`, `diffrhythm` | the engines already live (ElevenLabs, Lyria), `sonilo/v1.1/text-to-music` | for sale → only engines whose licence lets a member sell |
+| Voice | — | the voices already live; `minimax/voice-design` for a new narrator; `google/gemini-3.8-flash-tts` for two hosts | a clone → member's own voice, consent step |
+| Hearing | — | `wizper` (Afrikaans), `elevenlabs/forced-alignment` (words on the beat) | |
+| 3D | `trellis-2` | `hunyuan-3d/v3.1/pro`, `meshy/rigging` (dance), `hitem3d/hi3d/multicolor` (print) | |
+| My style | — | `flux-lora-fast-training`, `recraft/v4/create-style` | own material only |
+| Safety and access | — | `imageutils/nsfw` before a Live room picture is shown; `florence-2-large/caption` for alt text | |
+
+### 3. Guided asking, in four steps
+
+1. **What are you making?** A wall of cards, each with a picture of a
+   finished example: cover, poster, moving cover, lyric video, music video,
+   podcast episode, song, sound for my clip, merch, 3D figure, fix an old
+   photo, my own style.
+2. **Pick, don't type.** Three or four choices with pictures: the look
+   (style cards we make once and keep), the shape (square, tall, wide, drawn
+   as shapes), the mood, the length. Style cards name a style, never a
+   studio or a living artist.
+3. **The idea, any way.** Type it, say it (`wizper` hears Afrikaans), sketch
+   it (`sketch_to_colored_image`), scribble on a picture (`paintbrush`), or
+   point at a reference photo.
+4. **Read back, then draft.** The copilot says in plain words what it will
+   make ("A square cover, hand-drawn, a girl on a bicycle at sunset, your
+   title across the top in white"), and the member changes any part before
+   a credit is spent. Then the draft, its price on the button; then the
+   final, its price on the button; then one-press follow-ups (sharper, fix
+   the words, another angle, make it move).
+
+### 4. What to build, in order
+
+0. **Before launch:** the picture screen on Live room posts
+   (`imageutils/nsfw`), and alt text. Safety first, cheap, fal.ai's own.
+1. **Moving cover** (a still cover as a short loop). Small, and every
+   release in the Music room wants one.
+2. **Sound for my clip** in the Video Editor (`mmaudio-v2`, then Sonilo).
+3. **Make my photo good / fix an old photo** in the Photo Editor.
+4. **Lyric video**: words timed to the song (`forced-alignment`), drawn by
+   our own editor, Afrikaans heard by `wizper`.
+5. **Podcast with two hosts** from a script, and filler words cut out.
+6. **Music video from a song**, the same artist in every shot.
+7. **Merch line** from one drawing: vector, shirt, try-on, product shot.
+8. **My style**: training, kept in the member's account.
+9. **3D figure**: from a drawing, rigged to dance, ready to print.
+
+### 5. The gate every model passes before members see it
+
+- Its fal.ai page does not say "Pending Enterprise Ready".
+- A partner model (not under `fal-ai/`) gets its line on the privacy page
+  and its row in `check:verwerkers` first.
+- Anything a member may sell (music, video, pictures for merch) has its
+  licence answer written down first.
+- Its price is read off its fal.ai page and the owner sets the credits by
+  her rule: *"altyd kyk vir 'n 85% wins margin, maar waar dit ridiculous is
+  dan eerder tussen 50-70%."*
+- The face rule, the voice rule and the two yeses (outside South Africa;
+  18 or older) are wired as they are for `/api/footage`.
+- Its input fields are confirmed on the first live job (`inputFor`).
+
+### 6. What only the owner can do
+
+- Open each chosen model's page and send its price and whether it says
+  "Pending Enterprise Ready" (fal.ai cannot be reached from the build
+  machine).
+- Ask Sonilo and Moonvalley for their commercial licence terms.
+- Choose the order above, or change it.
