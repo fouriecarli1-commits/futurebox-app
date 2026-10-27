@@ -280,6 +280,40 @@ Last page:
 | `kling-video/video-to-audio` | partner; sound for a Kling clip |
 | `sam-audio/visual-separate` | **a sound picked out by what makes it on screen**: point at the guitar, keep the guitar |
 
+### Watching (video to text), 4
+
+| Model | Note |
+|---|---|
+| `nvidia/nemotron-3-5-super/video`, `nvidia/nemotron-3-nano-omni/video` | partner; says what happens in a clip and finds moments: **the copilot watches a member's cut and suggests where to trim**, or finds the best five seconds for a teaser |
+| `openrouter/router/video`, `…/enterprise` | another gateway; not needed |
+
+### Writing down speech (speech to text), 13
+
+| Model | Note |
+|---|---|
+| `wizper` | fal.ai's own Whisper v3 Large, twice as fast. **Whisper understands Afrikaans**: transcripts and captions for Afrikaans podcasts and songs, where the phone's own hearing is weakest |
+| `elevenlabs/forced-alignment` | **words placed on the exact moment they are sung**: karaoke lyrics and lyric videos timed to the song. Licence note above |
+| `elevenlabs/speech-to-text`, `…/scribe-v2` | licence note above |
+| `nvidia/nemotron-asr-multilingual/asr`, `cohere-transcribe`, `speech-to-text`, `…/turbo`, `…/stream`, `…/turbo/stream` | alternatives; the streaming ones write as somebody talks: live captions in the Live room |
+| `kotoba-technologies/kotoba-stt/v1/…`, `kotoba-streaming-stt/v1/realtime` | Japanese |
+| `smart-turn` | hears when somebody has finished speaking: needed for a spoken conversation with the copilot |
+
+### Voice to voice (speech to speech), 5
+
+| Model | Note |
+|---|---|
+| `resemble-ai/chatterboxhd/speech-to-speech`, `chatterbox/speech-to-speech` | **a member's own recording in a different voice**, keeping the delivery: a character voice, a demo sung in another timbre. Never a real person's voice |
+| `xai/grok-voice`, `xai/grok-voice/realtime` | partner; a spoken assistant. The copilot already has its own model; noted only |
+| `kotoba-technologies/kotoba-sts/v1/realtime_voice` | speak in one language, heard in another, live; Japanese |
+
+### Pictures in, pictures out (image to image), 411: first page
+
+| Model | Note |
+|---|---|
+| `nano-banana-pro/edit`, `nano-banana-2/edit`, `nano-banana/edit`, `google/nano-banana-2.1/edit` (to 4K) | change a photo in words; the Photo Editor's AI edits already use Nano Banana on her own Google project |
+| `openai/gpt-image-2/edit`, `openai/gpt-image-2.5/sunburst/edit`, `…/flare/edit` | the tightest control: changes only what was asked, round after round. Best for words on a picture (posters, covers) |
+| `birefnet/v2` | background out of a photo, high resolution |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -309,6 +343,10 @@ Last page:
   redoing the rest.
 - **One video, every shape**: reframe fills in the sides, so a member's
   wide clip becomes a tall one for stories without cutting anybody out.
+- **Afrikaans hearing exists** (`wizper`) even where Afrikaans speaking
+  does not yet: captions and transcripts in Afrikaans are possible now.
+- **Lyrics on the beat**: forced alignment times every word to the song,
+  for karaoke and lyric videos.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
