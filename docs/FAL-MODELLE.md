@@ -549,6 +549,28 @@ to look around in), `trellis-2/retexture`, `trellis-2-lora`, `triposr`,
 | `tripo3d/tripo/segment`, `hunyuan-3d/v3.1/part`, `hitem3d/hi3d/split` | a model split into parts to edit or print separately |
 | `sam-3/3d-align` | objects and people placed together in one 3D scene |
 
+### Teaching a model (training), 61: first pages
+
+A LoRA is a small add-on a model learns from 10 to 50 of a member's own
+pictures, clips or sounds. Afterwards every picture, video or sound can be
+made **in that member's own style, with their own character, product or
+logo**. This is the strongest lock-in the catalogue offers: a member's
+trained style lives in FutureBox.
+
+| Model | Note |
+|---|---|
+| `recraft/v4/create-style`, `recraft/v4/pro/create-style`, `recraft/v3/create-style` | partner; **a reusable style from a few reference pictures**, also for vectors: an artist's visual identity across every cover, poster and sticker |
+| `flux-lora-fast-training`, `turbo-flux-trainer`, `flux-2-trainer`, `flux-2-trainer-v2`, `…/edit`, `flux-2-klein-9b-base-trainer` (+ `/edit`), `flux-kontext-trainer`, `z-image-trainer`, `z-image-turbo-trainer-v2`, `qwen-image-2512-trainer`, `qwen-image-edit-2509-trainer`, `wan-22-image-trainer`, `ernie-image-trainer`, `krea-2-trainer` (partner), `ideogram/v4/trainer` (partner) | pictures: a style, a character, a product |
+| `flux-lora-portrait-trainer`, `phota/create-profile` (partner, 30–50 photos) | **a person's face learned.** Only the member's own face, with the same consent step as voice cloning, and never anybody else's photos |
+| `ltx23-trainer-v2/t2v`, `/i2v`, `ltx23-video-trainer`, `ltx23-v2v-trainer`, `ltx23-trainer-v2/interpolate`, `wan-22-trainer/t2v-a14b`, `/i2v-a14b`, `wan-trainer/t2v`, `/t2v-14b`, `minimax/h3/t2v/trainer`, `…/i2v/trainer`, `…/ref2va/trainer`, `…/flf2v/trainer` | video: a member's own look, effect or character in every clip |
+| `ltx23-trainer-v2/t2a`, `…/audio-extend-prefix`, `…/audio-extend-suffix`, `stable-audio-3-trainer` | **sound: a member's own sound learned from their clips**, a song continued forward or given an intro. The member's own recordings only |
+| `trellis-2-lora-trainer` | 3D in a member's own style |
+
+**Rules for training:** only material the member owns (their own art, their
+own photos, their own recordings); a face or a voice only their own; the
+trained add-on is theirs, kept in their account, deleted with it; and the
+price for training is shown before the press like every other.
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -601,6 +623,9 @@ to look around in), `trellis-2/retexture`, `trellis-2-lora`, `triposr`,
   drawing to a textured 3D model (Trellis first), rigged so it can dance,
   made ready for full-colour printing: a figure on the merch table, a
   character in a game, a cover that turns.
+- **A member's own style, everywhere**: one training, then every
+  picture, clip, sound and 3D model can come out in it. Kept in their
+  account, which is a reason to stay.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
