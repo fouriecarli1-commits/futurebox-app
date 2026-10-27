@@ -1,6 +1,8 @@
 /**
- * fal.ai, for the two things the Video Editor cannot do on the device:
- * taking a clip's background out, and taking an item out of it.
+ * fal.ai, for what the phone cannot do on its own: the Video Editor's two
+ * engine presses (a clip's background out, an item out of it), and the
+ * makes in `lib/makes.ts` (a sticker pulled out of a photo, a photo woken
+ * up, a picture made into a 3D model).
  *
  * Switched on 27 October 2026, after the owner's account and billing were in
  * place. Everything this file does is decided in `docs/FAL-TERME.md`; the
@@ -40,6 +42,10 @@ export const FAL_MODELS: Readonly<Record<FalJob, string>> = {
 export const FAL_KEEP_SECONDS = 3600;
 
 const QUEUE = 'https://queue.fal.run';
+/** The same models answered in the one call, for the quick ones. */
+const NOW = 'https://fal.run';
+/** How long a quick model may take before it is given up on. */
+const NOW_WAIT_MS = 50_000;
 
 export function falReady(): boolean {
   return Boolean(process.env.FAL_KEY);
@@ -57,13 +63,21 @@ function headers(): Record<string, string> {
 
 /** What each model is sent. `words` is what the member typed to take out. */
 export function inputFor(job: FalJob, videoUrl: string, words: string): Record<string, unknown> {
-  if (job === 'cutout') return { video_url: videoUrl };
+  /* webm, because an mp4 has no see-through and the background comes back
+     black (docs/FAL-SKEMAS.md). */
+  if (job === 'cutout') return { video_url: videoUrl, output_format: 'webm' };
   return {
     video_url: videoUrl,
     mask_prompt: words,
     prompt: `the same scene, with no ${words} in it`,
+    /* The most frames it works on: about eight seconds. Left at its default
+       of 85 it gives back three seconds of a longer clip. */
+    num_frames: ERASE_FRAMES,
   };
 }
+
+/** The window VOID works on, at most; see `ERASE_MOST_SECONDS`. */
+export const ERASE_FRAMES = 197;
 
 export interface Submitted {
   readonly id: string;
@@ -78,8 +92,13 @@ function isQueueLink(link: unknown): link is string {
 
 /** Put a job in fal.ai's queue. Null when it would not take it. */
 export async function falSubmit(job: FalJob, input: Record<string, unknown>): Promise<Submitted | { error: string }> {
+  return falQueue(FAL_MODELS[job], input);
+}
+
+/** Any model into the queue: the slow ones (video, 3D). */
+export async function falQueue(model: string, input: Record<string, unknown>): Promise<Submitted | { error: string }> {
   try {
-    const answer = await fetch(`${QUEUE}/${FAL_MODELS[job]}`, {
+    const answer = await fetch(`${QUEUE}/${model}`, {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify(input),
@@ -124,6 +143,61 @@ function isRefusal(status: number, text: string): boolean {
   return status >= 400 && status < 500 && /content[_\s-]?(policy|moderation|safety)|nsfw|not allowed|flagged/i.test(text);
 }
 
+export type Ran =
+  | { readonly ok: true; readonly data: unknown }
+  | { readonly ok: false; readonly refused: boolean; readonly why: string };
+
+/**
+ * A quick model answered in the one call: a cut-out, a depth map, a fill.
+ * Asked with `sync_mode` where the model has it, so the answer comes back
+ * as a data URI and nothing is left on fal.ai's CDN at all.
+ */
+export async function falNow(model: string, input: Record<string, unknown>): Promise<Ran> {
+  try {
+    const answer = await fetch(`${NOW}/${model}`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(NOW_WAIT_MS),
+    });
+    const text = await answer.text();
+    if (!answer.ok) {
+      return { ok: false, refused: isRefusal(answer.status, text), why: `fal.ai answered ${answer.status}: ${text.slice(0, 200)}` };
+    }
+    let data: unknown = null;
+    try { data = JSON.parse(text); } catch { return { ok: false, refused: false, why: 'fal.ai answered with something that is not JSON' }; }
+    /* A picture model that flags its own result has refused it, whatever
+       the status said. */
+    const flags = (data as { has_nsfw_concepts?: unknown }).has_nsfw_concepts;
+    if (Array.isArray(flags) && flags.some(Boolean)) return { ok: false, refused: true, why: 'fal.ai flagged its own result' };
+    return { ok: true, data };
+  } catch (problem) {
+    return { ok: false, refused: false, why: String(problem).slice(0, 200) };
+  }
+}
+
+/** The first file address in an answer, whatever the model calls it. */
+export function fileUrlOf(result: unknown): string | null {
+  const row = result && typeof result === 'object' ? result as Record<string, unknown> : {};
+  const pick = (value: unknown): string | null => {
+    if (typeof value === 'string' && /^(https:\/\/|data:)/.test(value)) return value;
+    if (value && typeof value === 'object' && typeof (value as { url?: unknown }).url === 'string') return pick((value as { url: string }).url);
+    return null;
+  };
+  for (const key of ['model_glb', 'video', 'image', 'mask_image']) {
+    const found = pick(row[key]);
+    if (found) return found;
+  }
+  for (const key of ['masks', 'images', 'videos']) {
+    const list = row[key];
+    if (Array.isArray(list) && list.length) {
+      const found = pick(list[0]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 /** Where a job is. Only ever called with links `falSubmit` handed back. */
 export async function falProgress(status: string, result: string): Promise<Progress> {
   if (!isQueueLink(status) || !isQueueLink(result)) return { state: 'failed', refused: false, why: 'not a fal.ai job' };
@@ -138,8 +212,8 @@ export async function falProgress(status: string, result: string): Promise<Progr
     }
     let parsed: unknown = null;
     try { parsed = JSON.parse(text); } catch { /* falls through to "no clip" */ }
-    const url = videoUrlOf(parsed);
-    return url ? { state: 'done', url } : { state: 'failed', refused: false, why: 'fal.ai finished without a clip' };
+    const url = videoUrlOf(parsed) ?? fileUrlOf(parsed);
+    return url ? { state: 'done', url } : { state: 'failed', refused: false, why: 'fal.ai finished without a file' };
   } catch (problem) {
     return { state: 'failed', refused: false, why: String(problem).slice(0, 200) };
   }

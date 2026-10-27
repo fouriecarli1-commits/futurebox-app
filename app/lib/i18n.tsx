@@ -1918,6 +1918,7 @@ export const STRINGS: Dict = {
   "foot.erase": { en: "An item", af: "’n Item" },
   "foot.whatOut": { en: "What to take out — e.g. the red car", af: "Wat om uit te haal — bv. die rooi kar" },
   "foot.tooLong": { en: "Clips of up to 20 seconds can go. Trim it on your phone first, or split it into pieces.", af: "Skote van tot 20 sekondes kan gaan. Sny dit eers op jou foon korter, of verdeel dit in stukke." },
+  "foot.tooLongErase": { en: "An item can be taken out of clips of up to 8 seconds. Trim it on your phone first, or split it into pieces.", af: "'n Ding kan uit skote van tot 8 sekondes gehaal word. Sny dit eers op jou foon korter, of verdeel dit in stukke." },
   "foot.abroad": { en: "My clip may go to fal.ai, outside South Africa, to be worked on. It is deleted there within the hour, and here when the job is done.", af: "My skoot mag na fal.ai, buite Suid-Afrika, gaan om aan gewerk te word. Dit word daar binne die uur uitgevee, en hier sodra die werk klaar is." },
   "foot.adult": { en: "I am 18 or older.", af: "Ek is 18 of ouer." },
   "foot.sending": { en: "Sending the clip…", af: "Stuur die skoot…" },

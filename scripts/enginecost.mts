@@ -59,6 +59,14 @@ export const ADS_CALL = paid({ input: 500, output: 8_000, cacheRead: 0, cacheWri
    it is. */
 export const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
 
+/* What the two live engines really bill, from their own pages
+   (`docs/FAL-SKEMAS.md`, 27 October 2026). The background remover is
+   $0.001 a megapixel over every frame and is sent 720p: 0.92 MP x 150
+   frames for five seconds. The item remover is $0.10 a clip, whatever its
+   length, so one five-second unit carries all of it. */
+export const BEN_PER_5S = 0.001 * (1280 * 720 / 1e6) * 150 * RAND_PER_USD;
+export const VOID_PER_CLIP = 0.10 * RAND_PER_USD;
+
 /**
  * Music.ai reading a song — chords, key, tempo — per minute of audio.
  *
@@ -179,13 +187,13 @@ export const priced: {
   { what: 'a 30-second hook (cut in the browser)', credits: CREDITS.hookReel, cost: 0 },
 
   { product: true,
-    decided: 'the owner, 11 Oct, with the engine cost and the profit in rand in front of her: "a background out of video R6.50"',
-    what: 'a background taken out, per five seconds', credits: CREDITS.cutout, cost: CUTOUT_PER_5S },
+    decided: 'the owner, 27 Oct: "ek wil 80% wins op alles maak" — nine credits once fal.ai\'s own page gave the real cost (it was "R6.50" on 11 Oct, on an estimate)',
+    what: 'a background taken out, per five seconds', credits: CREDITS.cutout, cost: Math.max(CUTOUT_PER_5S, BEN_PER_5S) },
   /* Estimated at the dearest thing in the same family — see `CREDITS.erase`.
      Held against that same rate so it can never quietly fall under it. */
   { product: true,
-    decided: 'the owner, 11 Oct, same table, same minute: "An item taken out of a video moet ook verander word. R7.00"',
-    what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: CUTOUT_PER_5S },
+    decided: 'the owner, 27 Oct: "ek wil 80% wins op alles maak" — seven credits once fal.ai\'s own page gave the real cost (it was "R7.00" on 11 Oct)',
+    what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: Math.max(CUTOUT_PER_5S, VOID_PER_CLIP) },
   /* A still picture changed by saying what to change — Nano Banana on her
      own Google project. `PER_PICTURE` is micro-dollars and is itself the
      expensive end of an unread price, so this asserts the margin against a

@@ -22,9 +22,11 @@ import { Eraser, Loader2, UserRoundX } from 'lucide-react';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { CREDITS, creditsSaid, filterCost } from '../lib/credits';
 import { measure } from '../lib/stitch';
+import { shrinkClip } from '../lib/shrinkclip';
 
 type Job = 'cutout' | 'erase';
-const MOST_SECONDS = 20;
+/** The same limits as the route: the item remover works on about eight seconds. */
+const MOST_SECONDS: Readonly<Record<Job, number>> = { cutout: 20, erase: 8 };
 const TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 export default function FootageEngine({
@@ -57,7 +59,7 @@ export default function FootageEngine({
   }, [clip]);
 
   const price = seconds ? filterCost(seconds, CREDITS[job]) : null;
-  const tooLong = seconds !== null && seconds > MOST_SECONDS;
+  const tooLong = seconds !== null && seconds > MOST_SECONDS[job];
   const ready = Boolean(clip) && seconds !== null && !tooLong && abroad && adult
     && (job === 'cutout' || words.trim().length > 0) && state === 'idle';
 
@@ -68,19 +70,24 @@ export default function FootageEngine({
     try {
       const token = await accessToken();
       if (!token) { setSaid(t('foot.signIn', 'Sign in first — this uses credits.')); setState('idle'); return; }
-      const type = TYPES.includes(clip.type) ? clip.type : 'video/mp4';
+      /* The background remover bills by the megapixel: 720p goes, made so
+         here (`lib/shrinkclip.ts`). The item remover is one price a clip. */
+      const sent = job === 'cutout' ? await shrinkClip(clip) : clip;
+      const size = await measure(sent).catch(() => ({ width: 0, height: 0 }));
+      const plain = sent.type.split(';')[0];
+      const type = TYPES.includes(plain) ? plain : 'video/mp4';
       const auth = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
       const opened = await fetch('/api/footage', { method: 'POST', headers: auth, body: JSON.stringify({ step: 'upload', type }) });
       const slot = await opened.json().catch(() => ({})) as { path?: string; token?: string; message?: string };
       const storage = getStorageClient();
       if (!opened.ok || !slot.path || !slot.token || !storage) { setSaid(slot.message ?? t('foot.noSend', 'The clip could not be sent just now. Try again.')); setState('idle'); return; }
-      const put = await storage.from('videos').uploadToSignedUrl(slot.path, slot.token, clip, { contentType: type });
+      const put = await storage.from('videos').uploadToSignedUrl(slot.path, slot.token, sent, { contentType: type });
       if (put.error) { setSaid(t('foot.noSend', 'The clip could not be sent just now. Try again.')); setState('idle'); return; }
 
       const started = await fetch('/api/footage', {
         method: 'POST',
         headers: auth,
-        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, words: words.trim(), abroad, adult }),
+        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, pixels: size.width * size.height, words: words.trim(), abroad, adult }),
       });
       const job0 = await started.json().catch(() => ({})) as { ticket?: string; message?: string };
       if (!started.ok || !job0.ticket) { setSaid(job0.message ?? t('foot.noStart', 'That did not start. Nothing was charged.')); setState('idle'); return; }
@@ -152,7 +159,11 @@ export default function FootageEngine({
             />
           )}
           {tooLong && (
-            <p className="text-sm text-amber-300">{t('foot.tooLong', 'Clips of up to 20 seconds can go. Trim it on your phone first, or split it into pieces.')}</p>
+            <p className="text-sm text-amber-300" data-footagetoolong>
+              {job === 'erase'
+                ? t('foot.tooLongErase', 'An item can be taken out of clips of up to 8 seconds. Trim it on your phone first, or split it into pieces.')
+                : t('foot.tooLong', 'Clips of up to 20 seconds can go. Trim it on your phone first, or split it into pieces.')}
+            </p>
           )}
           <label className={tick}>
             <input type="checkbox" checked={abroad} onChange={(event) => setAbroad(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500" data-footageabroad />

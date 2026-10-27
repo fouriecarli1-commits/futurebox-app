@@ -157,3 +157,77 @@ Each is one button, does one thing, and shows a draft first.
 7. **Draw on the video** and **Say what to change**.
 8. The character's wardrobe, merch and printed figure.
 9. The album world.
+
+---
+
+## Every model in the plan, wave by wave
+
+The first thirteen are only the foundation: the engine, the safety screen
+and the first five presses. Together the waves use **about seventy models**,
+and the router (`docs/FAL-MODELLE.md`, part 2) picks between them per
+request. Each wave needs its models' pages (`llms.txt`) before it is built.
+
+**Wave 1: the engine and the first presses (pages copied 27 October)**
+`sam-3/image`, `birefnet/v2`, `trellis-2`, `ltx-2.3/image-to-video/fast`,
+`ltx-2.3/image-to-video`, `mmaudio-v2`, `image-preprocessors/depth-anything/v2`,
+`flux-pro/v1/fill`, `flux-2/klein/realtime`, `imageutils/nsfw`,
+`florence-2-large/caption`, `ben/v2/video`, `void-video-inpainting`.
+
+**Wave 2: the Photo Editor comes alive**
+Old photos: `image-editing/photo-restoration`, `codeformer`, `ddcolor`.
+Make it good: `topaz/adjust/image`, `nafnet/deblur`, `control-light`,
+`seedvr/upscale/image`. Change the time: `image-editing/time-of-day`,
+`image-editing/weather-effect`, `bria/fibo-edit/reseason`. Draw it real:
+`bria/fibo-edit/sketch_to_colored_image`, `chrono-edit-lora-gallery/paintbrush`.
+Words on a picture: `bria/fibo-edit/rewrite_text`, `ideogram/v3/layerize-text`,
+`image-editing/text-removal`. One design, every size: `smart-resize`,
+`ideogram/v3/reframe`. Layers: `qwen-image-layered`, `bria/ad-delayer`.
+Other angles: `qwen-image-edit-2511-multiple-angles`.
+
+**Wave 3: the Video Editor comes alive**
+Say what to change: `kling/v4/video-to-video/edit`. Draw on the video:
+`id-v2v`, `wan-vace-14b`. Retake a bit: `ltx-2.3/retake-video`. Every shape:
+`ltx-2.3/reframe`. Slow motion: `rife/video`. Sharper: `seedvr/upscale/video`,
+`flashvsr/upscale/video`. Old film in colour: `ltx-2.3-quality/colorization`.
+Find the moment: `scene-finder`. Sound: `sonilo/v1.1/video-to-music`,
+`sonilo/v1.1/video-to-sound-effects`, `mirelo-ai/sfx2.0/video-to-audio`.
+Filler words out: `heygen/v3/filler-word-removal` (partner).
+
+**Wave 4: your character**
+Character sheet: `ideogram/character`, `qwen-image-edit-2511-multiple-angles`.
+3D: `hunyuan3d-v3/sketch-to-3d`, `hunyuan-3d/v3.1/pro/image-to-3d`.
+Movement: `meshy/rigging`, `meshy/rigging/multi-animation`, `hunyuan-motion`.
+Wardrobe: `meshy/v7/retexture`, `trellis-2/retexture`. Print:
+`hitem3d/hi3d/multicolor`. In your footage: `kling/v4/reference-to-video`.
+Talking: `creatify/aurora`, `sync-lipsync/v3/image-to-video`. Its world:
+`hunyuan_world/image-to-world`.
+
+**Wave 5: sound and music**
+Licensed music and effects: `sonilo/v1.1/text-to-music`,
+`sonilo/v1.1/text-to-sound-effects`. Effects: `mirelo-ai/sfx2.0`. Song
+repair: `ace-step/audio-inpaint`, `ace-step/audio-outpaint`,
+`stable-audio-3/medium/audio-inpainting`. Take a sound out by name:
+`sam-audio/separate`, `sam-audio/visual-separate`. Stems: `demucs`.
+Afrikaans hearing: `wizper`. Words on the beat:
+`elevenlabs/forced-alignment` (licence answer first). A music video from a
+song: `pixverse/music-video/vibemv` (partner), lyric video:
+`mureka/api/generate/lyrics-video` (partner).
+
+**Wave 6: voices and podcasts**
+A new voice from words: `minimax/voice-design`, `qwen-3-tts/voice-design/1.7b`.
+Two hosts: `google/gemini-3.8-flash-tts`, `vibevoice`. Your recording in
+another voice: `chatterbox/speech-to-speech`. A podcast video from one
+picture: `ai-avatar/multi-text`.
+
+**Wave 7: merch and style**
+`recraft/vectorize`, `image2svg`, `qwen-image-edit-plus-lora-gallery/shirt-design`,
+`fashn/tryon/v1.6`, `bria/product-shot`, `seedvr/upscale/image/seamless`,
+`topaz/upscale/image/transparent`, `omnilottie/image-to-lottie` (moving
+stickers). My style: `flux-lora-fast-training`, `recraft/v4/create-style`.
+
+## The price rule for all of it
+
+The owner, 27 October 2026: *"ek wil 80% wins op alles maak."* Every press
+is priced so that the engine's cost is at most a fifth of what the cheapest
+credit sells for (R1.50 on Label), at R18.50 to the dollar, and never less
+than the engine's cost plus one credit. `check:kredietkoste` holds it.

@@ -918,7 +918,14 @@ export const CREDITS = {
      five would be R7.45, 95c over. Against R1.80 of Google that keeps
      R4.16 — down from R10.12, which is her decision to make and she made
      it with the engine's cost in front of her. */
-  cutout: 4,
+  /* ── Repriced 27 October 2026, off fal.ai's own page ─────────────────
+     The engine is `fal-ai/ben/v2/video`, not VEED's, and it bills $0.001 a
+     megapixel over every frame (`docs/FAL-SKEMAS.md`). The phone sends 720p
+     (`lib/shrinkclip.ts`): 0.92 MP x 150 frames is $0.138 for five seconds,
+     about R2.55 at R18.50 to the dollar. The owner, the same day: *"ek wil
+     80% wins op alles maak."* Four credits was R6.00, 57%. Nine is R13.51
+     at the cheapest tier, 81%. */
+  cutout: 9,
   /**
    * Taking an item out of a clip and filling in what was behind it. Per five
    * seconds, like `cutout`.
@@ -941,7 +948,12 @@ export const CREDITS = {
      matters: taking a named thing out is harder than taking the background
      out, and a price list where the harder job costs less reads as a
      mistake even when both numbers are deliberate. */
-  erase: 5,
+  /* ── Repriced 27 October 2026, off fal.ai's own page ─────────────────
+     `fal-ai/void-video-inpainting` is $0.05 a clip plus $0.05 for the mask
+     it makes from the words: $0.10, about R1.85, for a clip of up to eight
+     seconds (it works on no more). Five credits on a five-second clip was
+     R7.50, 75%; under the owner's 80% of 27 October. Seven is R10.51, 82%. */
+  erase: 7,
   /**
    * Changing what is IN a still picture by saying what to change.
    *

@@ -131,3 +131,58 @@ None of these pages carried "Pending Enterprise Ready".
   (1 to 8, default 3), `schedule_mu`, `output_feedback_strength`,
   `enable_interpolation`.
 - **Out:** `images` (raw JPEG bytes), `seed`.
+
+## `fal-ai/imageutils/nsfw`: the picture screen for the Live room
+
+- **Price:** $0.001 a picture: a thousand posts for one US dollar.
+- **Sync:** yes.
+- **In:** `image_url` (required). Nothing else.
+- **Out:** `nsfw_probability` (a number from 0 to 1).
+- **Model:** Falconsai's open `nsfw_image_detection`, run by fal.ai.
+- **Worth knowing:** it says *how likely*, not yes or no, so the line is
+  ours to draw. Above the line a post waits for the owner instead of
+  going up; that is a choice for her, not a number to guess.
+
+## `fal-ai/florence-2-large/caption`: what a picture shows (alt text)
+
+- **Price:** "$0 per compute seconds", billed by GPU time; a fraction of a
+  cent.
+- **Sync:** yes.
+- **In:** `image_url` (required). Nothing else.
+- **Out:** `results` (a string: one sentence, in English).
+- **Model:** Microsoft's open Florence-2, MIT licence, run by fal.ai.
+- **Worth knowing:** English only, so an Afrikaans member's alt text is
+  either left in English or put through the app's existing translation.
+
+## `fal-ai/ben/v2/video`: a clip's background out (live)
+
+- **Price:** $0.001 a megapixel, counted over every frame. Five seconds at
+  30 frames a second is 150 frames: about $0.14 at 720p, **$0.31 at
+  1080p and $1.24 at 4K**. The price set on 11 October assumed $0.11 for
+  five seconds, so a clip straight off a phone has to be made smaller
+  before it goes (see below).
+- **Queue:** yes.
+- **In:** `video_url` (required), `background_color` (RGB; absent is
+  see-through), `output_format` (**mp4 makes the see-through parts
+  black**; `webm` keeps them see-through), `seed`.
+- **Out:** `video` (`{ url, content_type }`), `seed`.
+- **Fixed on 27 October:** the app now asks for `webm`, so the person
+  stands over whatever is put behind them rather than over black.
+
+## `fal-ai/void-video-inpainting`: an item out of a clip (live)
+
+- **Price:** $0.05 a video, plus $0.05 when it makes its own mask from
+  words (which is how the app uses it): **$0.10 a clip**, whatever its
+  length. Pass 2 doubles the first part; not used.
+- **Queue:** yes.
+- **In:** `video_url` (required), `prompt` (required: the scene as it
+  should look afterwards), `mask_prompt` (what to take out, in words),
+  `quad_mask_video_url` (a drawn mask instead of words), `num_frames`
+  (**default 85; at most 197**), `enable_pass2_refinement`,
+  `negative_prompt`, `num_inference_steps` (default 30), `guidance_scale`,
+  `strength`, `seed`, `enable_safety_checker` (default true, left on).
+- **Out:** `video` (`{ url }`), `seed`, `timings`.
+- **Fixed on 27 October:** it works on a window of frames, 85 unless told
+  otherwise, which is about three seconds. The app now asks for the most
+  it takes (197, about eight seconds) and says so before the press:
+  clips for this one are eight seconds at most.
