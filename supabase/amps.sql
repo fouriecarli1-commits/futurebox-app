@@ -76,3 +76,20 @@ alter table public.amp_catalogue enable row level security;
 -- role sees: these lines only let the role ask. A table no member is given
 -- rows of is the server's alone, and only the server is named for it.
 grant select, insert, update, delete on public.amp_catalogue to service_role;
+
+-- ── Waar dit vandaan kom, 27 Oktober 2026 ────────────────────────────────
+-- TONE3000 se API-terme verbied dat hul tone op ons bedieners gehou en aan
+-- mense gegee word wat dit nie self deur hul API gevra het nie, en hul
+-- terme vra skriftelike toestemming van die maker EN TONE3000 vir
+-- kommersiële verspreiding (docs/TONE3000-API-TERME.md). Dus sê elke
+-- vasvang in die katalogus waar dit vandaan kom:
+--   own         die eienaar het dit self vasgevang
+--   permission  iemand anders s'n, met skriftelike toestemming (wie en wanneer
+--               staan in `permission`)
+--   unknown     van voor hierdie kolom: lede sien dit nie totdat sy dit merk
+alter table public.amp_catalogue
+  add column if not exists origin text not null default 'unknown'
+    check (origin in ('own', 'permission', 'unknown'));
+alter table public.amp_catalogue
+  add column if not exists permission text not null default ''
+    check (length(permission) <= 300);

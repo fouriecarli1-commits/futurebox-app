@@ -78,6 +78,9 @@ import CompareLine from './CompareLine';
 import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
+import BecomeBench, { BecomeNudge, PeelOverlay, type PullTap, type StartBecome } from './BecomeBench';
+import type { BecomeId } from '../lib/becomes';
+import type { Cut } from '../lib/stickerize';
 import CanvasSizeModal from './CanvasSizeModal';
 import Darkroom from './Darkroom';
 import VectorStudio from './VectorStudio';
@@ -562,6 +565,16 @@ const POST_MAGIC: BenchSpec = {
   what: ['post.benchMagicWhat', 'Tap a part of the photo and the AI improves it, changes it into something else, or takes it away. Only that part changes.'],
   paid: true,
 };
+/* The owner, 27 October 2026: *"daar moet dalk notifications op kom wat vra,
+   make it come alive, of pull the sticker and make a 3d model"*. What the
+   photo can become, beside the magic touch: `BecomeBench.tsx`. */
+const POST_ALIVE: BenchSpec = {
+  id: 'alive',
+  icon: <Sparkles className="h-5 w-5" />,
+  label: ['post.benchAlive', 'Bring to life'],
+  what: ['post.benchAliveWhat', 'Pull a thing out of the photo as a sticker, wake the whole photo up for six seconds with its own sound, or make what you pulled out into a 3D model. Each one shows its price.'],
+  paid: true,
+};
 /* The owner, 16 October 2026: *"Die photo editor sal moet layers kry."* Beside
    the shapes, because the layers are the words and shapes she has put on. */
 const POST_LAYERS: BenchSpec = {
@@ -605,7 +618,7 @@ const POST_CHARTS: BenchSpec = {
 /* Photo first, at the far left. The owner, 17 October 2026: *"Maak die photo tab
    heel links en heel eerste van al die tabs."* */
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_UPPER[0], POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
+  POST_UPPER[0], POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_ALIVE, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -614,6 +627,7 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   tone: ['post.toolTone', 'Adjust'],
   filters: ['post.toolFilters', 'Filters'],
   magic: ['post.toolMagic', 'Magic'],
+  alive: ['post.toolAlive', 'Alive'],
   read: ['post.toolRead', 'Grab'],
   text: ['post.toolText', 'Text'],
   shapes: ['post.toolShapes', 'Shapes'],
@@ -990,6 +1004,22 @@ export default function PostStudio({
   const [rightMenu, setRightMenu] = useState<{ x: number; y: number } | null>(null);
   /* The magic touch: where she tapped, how big a part, and what it becomes. */
   const [magicSpot, setMagicSpot] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  /* ── Bring to life — `BecomeBench.tsx` ──────────────────────────────
+     While `pulling` is on, a tap on the photo means "pull this out", and
+     the cut-out waits on the photo (`peel`) until it is tapped and peeled
+     off into a layer of its own. `nudge` is the suggestion over the photo. */
+  const [pulling, setPulling] = useState(false);
+  const [pullTap, setPullTap] = useState<PullTap | null>(null);
+  const [becomeStart, setBecomeStart] = useState<StartBecome | null>(null);
+  const [lastCut, setLastCut] = useState<Cut | null>(null);
+  const [peel, setPeel] = useState<{
+    readonly cut: Cut;
+    readonly src: string;
+    readonly rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number };
+  } | null>(null);
+  const [nudge, setNudge] = useState<readonly BecomeId[] | null>(null);
+  const [becomeBusy, setBecomeBusy] = useState(false);
+  const nudgedFor = useRef('');
   const [magicSize, setMagicSize] = useState(0.06);
   /* What her finger painted over, stroke by stroke, as shares of the photograph. */
   const [magicStrokes, setMagicStrokes] = useState<Brush['strokes']>([]);
@@ -2857,6 +2887,14 @@ export default function PostStudio({
       const put = shareAt(event);
       if (!put || !found) return;
       setPicked(pickAt(found, put.x, put.y));
+      return;
+    }
+    /* Pulling a thing out is a mode as well: one tap is one thing. */
+    if (bench === 'alive' && pulling && picture) {
+      const put = shareAt(event);
+      if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) {
+        setPullTap((was) => ({ x: put.x, y: put.y, n: (was?.n ?? 0) + 1 }));
+      }
       return;
     }
     /* The magic touch is a mode too: while its bench is out, a finger
@@ -8481,6 +8519,105 @@ export default function PostStudio({
   );
 
   /* ── Shapes, as a tool of their own ────────────────────────────────── */
+  /* ── Bring to life ─────────────────────────────────────────────────
+     A thing cut out (`lib/stickerize.ts`) is shown where it sat, over the
+     photograph, ready to peel. Where that is on the screen comes from the
+     same placement the drawing uses, so it lands exactly on the thing. */
+  const boxOnFrame = (cut: Cut): { left: number; top: number; width: number; height: number } => {
+    const at = place(picture ?? { width: 1, height: 1 }, size, crop);
+    return {
+      left: at.left + cut.box.x * at.width,
+      top: at.top + cut.box.y * at.height,
+      width: cut.box.w * at.width,
+      height: cut.box.h * at.height,
+    };
+  };
+  const showCut = (cut: Cut): void => {
+    const on = canvas.current;
+    const room = stage.current;
+    if (!picture || !on || !room) return;
+    const frame = boxOnFrame(cut);
+    const box = on.getBoundingClientRect();
+    const roomBox = room.getBoundingClientRect();
+    const per = box.width / size.width;
+    /* The sticker is bigger than the thing by its white edge. */
+    const w = (frame.width * per) / (1 - cut.edge.x * 2);
+    const h = (frame.height * per) / (1 - cut.edge.y * 2);
+    setLastCut(cut);
+    setPeel({
+      cut,
+      src: cut.sticker.toDataURL('image/png'),
+      rect: {
+        left: box.left - roomBox.left + frame.left * per - w * cut.edge.x,
+        top: box.top - roomBox.top + frame.top * per - h * cut.edge.y,
+        width: w,
+        height: h,
+      },
+    });
+  };
+
+  /* Peeled: the sticker becomes a layer of its own, a little up and to the
+     side of where it was, and the suggestion offers what it can become. */
+  const peeled = (): void => {
+    const now = peel;
+    if (!now || !picture) { setPeel(null); return; }
+    asPicture(now.cut.sticker, (img) => {
+      const frame = boxOnFrame(now.cut);
+      const w = frame.width / (1 - now.cut.edge.x * 2);
+      const h = frame.height / (1 - now.cut.edge.y * 2);
+      const id = freshId();
+      setCells((was) => [...was, {
+        id,
+        x: Math.max(0, (frame.left - w * now.cut.edge.x) / size.width - 0.03),
+        y: Math.max(0, (frame.top - h * now.cut.edge.y) / size.height - 0.03),
+        w: w / size.width,
+        h: h / size.height,
+        image: img,
+        crop: MIDDLE,
+        z: frontZ(marks, words, was),
+      }]);
+      setCellOn(id);
+      setPeel(null);
+      setNudge(['model3d', 'alive']);
+    }, () => setPeel(null));
+  };
+
+  const pickNudge = (id: BecomeId): void => {
+    setNudge(null);
+    if (bench !== 'alive') openBench('alive');
+    setBecomeStart((was) => ({ id, n: (was?.n ?? 0) + 1 }));
+  };
+
+  /* A new photo is offered what it can become, once, a moment after it
+     opens; nothing is offered while another tool is out. */
+  useEffect(() => {
+    if (!picture || bench !== null) return undefined;
+    const key = picture.src.slice(0, 120) + picture.naturalWidth;
+    if (nudgedFor.current === key) return undefined;
+    const soon = window.setTimeout(() => {
+      nudgedFor.current = key;
+      setNudge(['alive', 'sticker']);
+    }, 1600);
+    return () => window.clearTimeout(soon);
+  }, [picture, bench]);
+  useEffect(() => {
+    if (bench !== 'alive') setPulling(false);
+  }, [bench]);
+
+  const aliveBench = (
+    <BecomeBench
+      picture={picture}
+      t={t}
+      pulling={pulling}
+      onPulling={setPulling}
+      tap={pullTap}
+      start={becomeStart}
+      lastCut={lastCut}
+      onCut={showCut}
+      onBusy={setBecomeBusy}
+    />
+  );
+
   const magicBench = (
     <div className="space-y-3" data-postmagic>
       {!picture ? (
@@ -9808,6 +9945,7 @@ export default function PostStudio({
     charts: chartsBench,
     layers: layersBench,
     magic: magicBench,
+    alive: aliveBench,
     pic: picBench,
     frame: frameBench,
     tone: toneBench,
@@ -10108,6 +10246,21 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* ── Bring to life, over the photograph ──────────────────────────
+          The sticker waiting to be peeled, and the suggestion of what the
+          photo or the sticker can become next (`BecomeBench.tsx`). */}
+      {peel && (
+        <PeelOverlay
+          src={peel.src}
+          rect={peel.rect}
+          t={t}
+          onPeeled={peeled}
+          onDismiss={() => setPeel(null)}
+        />
+      )}
+      {nudge && !peel && !becomeBusy && (
+        <BecomeNudge ids={nudge} t={t} onPick={pickNudge} onClose={() => setNudge(null)} />
+      )}
       {/* ── In and out ──────────────────────────────────────────────────
           The owner: *"in en uit kan zoom, met 'n easy scroll button."* A
           slider and a step either side, and "Fit" for the whole picture.
@@ -10568,7 +10721,7 @@ export default function PostStudio({
         paidSays={t('dock.paidSays', 'Some of this costs credits.')}
         /* Not on the magic touch: it is an AI press with its price under its
            own buttons, and this sentence would say it was free. */
-        paidLine={here.id === 'magic' ? undefined : t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
+        paidLine={here.id === 'magic' || here.id === 'alive' ? undefined : t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
         closeSays={t('cut.shut', 'Close this bench')}
         look={CUT_LOOK}
         single

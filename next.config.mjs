@@ -58,10 +58,15 @@ const CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.mzstatic.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
+  "img-src 'self' blob: data: https://*.fal.media https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.mzstatic.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
   "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  // fal.ai's CDN: a finished clip, living photo or 3D model is fetched from
+  // there onto the phone (it deletes itself within the hour), and `blob:`
+  // because the 3D viewer reads the model from the copy kept on the phone.
+  // Without these the Video Editor's background-out and item-out presses
+  // were charged and then refused their own result (27 October 2026).
+  "connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://*.fal.media https://fal.media",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   // Nobody may put this app in a frame. The modern spelling of X-Frame-Options,
   // kept alongside it below for browsers that only read the old one.

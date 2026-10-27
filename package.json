@@ -83,6 +83,7 @@
     "check:alltools": "node audit/alltools.mjs 3343",
     "check:kidsloop": "node audit/kidsloop.mjs 3322",
     "check:magicbrush": "node audit/magicbrush.mjs 3345",
+    "check:becomebench": "node audit/becomebench.mjs 3351",
     "check:darkroom": "node audit/darkroom.mjs 3353",
     "check:pdfroom": "node audit/pdfroom.mjs 3354",
     "check:postcharts": "node audit/postcharts.mjs 3355",
@@ -184,6 +185,7 @@
     "check:seam": "tsx scripts/check-seam.mts",
     "check:roomwalk": "tsx scripts/check-roomwalk.mts",
     "check:tone3000": "tsx scripts/check-tone3000.mts",
+    "check:ampsource": "tsx scripts/check-ampsource.mts",
     "check:tone3000route": "tsx scripts/check-tone3000route.mts",
     "check:gratis": "tsx scripts/check-gratis.mts",
     "check:werkvloeie": "tsx scripts/check-werkvloeie.mts",
@@ -549,6 +551,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tesseract.js": "^7.0.0",
+    "three": "^0.186.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -557,6 +560,7 @@
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.186.0",
     "playwright": "^1.63.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^4.3.3",

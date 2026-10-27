@@ -954,6 +954,23 @@ export const CREDITS = {
      seconds (it works on no more). Five credits on a five-second clip was
      R7.50, 75%; under the owner's 80% of 27 October. Seven is R10.51, 82%. */
   erase: 7,
+  /* ── The makes (`lib/makes.ts`), 27 October 2026 ─────────────────────
+     Priced off each model's own fal.ai page (`docs/FAL-SKEMAS.md`) at
+     R18.50 to the dollar, against the cheapest credit (R1.50 on Label),
+     by the owner's rule of the same day: *"ek wil 80% wins op alles
+     maak"*, and for the living photo, *"kom ons verlaag wake it up na 60%
+     wins."* */
+  /* A thing tapped in a photo, cut out to peel off as a sticker:
+     `fal-ai/sam-3/image`, $0.005 (R0.09). Two credits is R3.00, 97%: the
+     least the supplier-plus-one-credit rule allows. */
+  sticker: 2,
+  /* A photo woken up: six seconds of `fal-ai/ltx-2.3/image-to-video/fast`
+     at 1080p with its own sound, $0.36 (R6.66). Twelve credits is R18.01,
+     63%: her 60% for this one. */
+  alive: 12,
+  /* A picture made into a 3D model: `fal-ai/trellis-2` at 512, $0.25
+     (R4.63). Sixteen credits is R24.02, 81%. */
+  model3d: 16,
   /**
    * Changing what is IN a still picture by saying what to change.
    *

@@ -69,7 +69,7 @@ be. In this order:
 | `supabase/charts.sql` | The Top 10 bars on Spotlight stay empty for ever |
 | `supabase/listens.sql` | A maker cannot see how many times their song was played |
 | `supabase/coverkeep.sql` | An album cover the engine drew is lost the moment the screen is left, and a cover that failed is never refunded |
-| `supabase/amps.sql` | The amp catalogue in the booth says "not set up", and nothing you upload has anywhere to go |
+| `supabase/amps.sql` | The amp catalogue in the booth says "not set up", and nothing you upload has anywhere to go. **Run it again after 27 October 2026:** it gained `origin` and `permission` (where each capture came from), and until it runs the catalogue says "not set up". Then open the catalogue: every older capture is hidden from members and flagged **Where from?** until you mark it as your own or note who gave written permission, or take it out |
 
 **Or paste one file instead of five.** `supabase/ALMAL.sql` is those five in
 that order, generated from them by `npm run sql:bundle`, with a guard at the

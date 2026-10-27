@@ -39,6 +39,7 @@ import { accessToken } from '../lib/cloud';
 import { LICENCES, mayBeShared, SHAREABLE, type LicenceId } from '../lib/amplicence';
 import { AMP_MAX_BYTES, ampId, rememberAmp, STOCK_AMPS } from '../lib/amps';
 import { ampMaker, ampName, loads } from '../lib/nam';
+import { fromTone3000, mayList, originRefusal, type AmpOrigin } from '../lib/ampsource';
 import AmpFace from './AmpFace';
 
 interface Row {
@@ -49,6 +50,9 @@ interface Row {
   readonly source: string;
   readonly gear: string;
   readonly tone: string;
+  /** Where it came from (`lib/ampsource.ts`). Members only get the listed ones. */
+  readonly origin?: AmpOrigin;
+  readonly permission?: string;
 }
 
 type Answer = {
@@ -136,6 +140,8 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
   const [maker, setMaker] = useState('');
   const [licence, setLicence] = useState<LicenceId>('cc-by');
   const [source, setSource] = useState('');
+  const [origin, setOrigin] = useState<AmpOrigin>('unknown');
+  const [permission, setPermission] = useState('');
   const [busy, setBusy] = useState(false);
   const [addSaid, setAddSaid] = useState('');
 
@@ -153,6 +159,14 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
     setAddSaid('');
     if (!json || !name.trim() || !maker.trim()) { setAddSaid(t('pro.ampAddNeeds', 'A file, a name and the maker are all needed.')); return; }
     if (!mayBeShared(licence)) { setAddSaid(t('pro.ampAddRefused', 'That licence does not allow us to pass the capture on.')); return; }
+    /* Where it came from, before anything else: a TONE3000 tone may not go to
+       members without written permission (`lib/ampsource.ts`). */
+    if (originRefusal(origin, source, permission)) {
+      setAddSaid(origin === 'permission' && fromTone3000(source)
+        ? t('pro.ampOriginT3k', 'This one is from TONE3000. Their terms need written permission from the maker and from TONE3000 before it goes to members: say who gave it and when.')
+        : t('pro.ampOriginNeeded', 'Say where it came from: one you captured yourself, or somebody else’s with their written permission (who, and when).'));
+      return;
+    }
     setBusy(true);
     try {
       /* Run it FIRST. What goes to every member has been read by the
@@ -162,7 +176,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
       const answer = await fetch('/api/amps', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ name: name.trim(), maker: maker.trim(), licence, source: source.trim(), nam: json }),
+        body: JSON.stringify({ name: name.trim(), maker: maker.trim(), licence, source: source.trim(), origin, permission: permission.trim(), nam: json }),
       });
       const got = (await answer.json().catch(() => null)) as { error?: string; message?: string } | null;
       if (!answer.ok) {
@@ -172,13 +186,36 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
         return;
       }
       setAddSaid(t('pro.ampAdded', 'It is in the catalogue.'));
-      setJson(''); setFileName(''); setName(''); setMaker(''); setSource('');
+      setJson(''); setFileName(''); setName(''); setMaker(''); setSource(''); setOrigin('unknown'); setPermission('');
       void look(q);
     } catch {
       setAddSaid(t('pro.ampAddFail', 'That could not be added just now.'));
     } finally {
       setBusy(false);
     }
+  };
+
+  /* An older one, added before it was asked: she says where it came from. */
+  const [marking, setMarking] = useState<string | null>(null);
+  const [markNote, setMarkNote] = useState('');
+  const mark = async (row: Row, how: AmpOrigin) => {
+    setSaid('');
+    if (originRefusal(how, row.source, markNote)) {
+      setSaid(how === 'permission' && fromTone3000(row.source)
+        ? t('pro.ampOriginT3k', 'This one is from TONE3000. Their terms need written permission from the maker and from TONE3000 before it goes to members: say who gave it and when.')
+        : t('pro.ampOriginNeeded', 'Say where it came from: one you captured yourself, or somebody else’s with their written permission (who, and when).'));
+      return;
+    }
+    const token = await accessToken();
+    const answer = await fetch('/api/amps', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ id: row.id, origin: how, permission: markNote.trim() }),
+    }).catch(() => null);
+    if (!answer?.ok) { setSaid(t('pro.ampAddFail', 'That could not be added just now.')); return; }
+    setMarking(null);
+    setMarkNote('');
+    void look(q);
   };
 
   const remove = async (row: Row) => {
@@ -282,6 +319,13 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                   >
                     <span className="block text-xs font-bold text-zinc-100 truncate">{row.name}</span>
                     {/* The maker, every time. The credit names a person. */}
+                    {owner && !mayList(row.origin) && (
+                      <span className="block text-[11px] font-bold text-amber-300" data-ampunmarked>
+                        {fromTone3000(row.source)
+                          ? t('pro.ampHiddenT3k', 'Hidden from members: from TONE3000, with no written permission noted')
+                          : t('pro.ampHidden', 'Hidden from members until you say where it came from')}
+                      </span>
+                    )}
                     <span className="block text-[11px] text-zinc-500 truncate">
                       {row.maker}
                       {' · '}
@@ -302,10 +346,47 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
+                  {owner && !mayList(row.origin) && (
+                    <button
+                      type="button"
+                      data-ampmark={row.id}
+                      aria-expanded={marking === row.id}
+                      onClick={() => { setMarking(marking === row.id ? null : row.id); setMarkNote(''); }}
+                      className="min-h-[44px] shrink-0 rounded-xl border border-amber-400/50 px-2.5 text-[11px] font-bold text-amber-200"
+                    >
+                      {t('pro.ampMark', 'Where from?')}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
+          {owner && marking && (() => {
+            const row = rows.find((one) => one.id === marking);
+            if (!row) return null;
+            return (
+              <div className="space-y-2 rounded-lg border border-amber-400/40 bg-amber-500/[0.05] p-2.5" data-ampmarking>
+                <p className="text-[11px] text-zinc-300">{t('pro.ampMarkWhat', 'Where did this one come from? Members only get it once you say.')}</p>
+                <input
+                  type="text"
+                  value={markNote}
+                  maxLength={300}
+                  onChange={(event) => setMarkNote(event.target.value)}
+                  placeholder={t('pro.ampPermissionWho', 'Who gave written permission, and when')}
+                  aria-label={t('pro.ampPermissionWho', 'Who gave written permission, and when')}
+                  className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => void mark(row, 'own')} className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-xs font-bold text-zinc-200">
+                    {t('pro.ampOriginOwn', 'I captured it myself')}
+                  </button>
+                  <button type="button" onClick={() => void mark(row, 'permission')} className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-xs font-bold text-zinc-200">
+                    {t('pro.ampOriginPermission', 'Written permission')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
           {said && <p className="text-[11px] text-zinc-300" data-ampsaid>{said}</p>}
 
           {owner && (
@@ -373,6 +454,35 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                     <input type="url" data-ampaddsource value={source} maxLength={300} onChange={(event) => setSource(event.target.value)}
                       className="mt-1 min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100" />
                   </label>
+                  <fieldset className="space-y-1.5" data-ampaddorigin>
+                    <legend className="text-[11px] text-zinc-400">{t('pro.ampOriginAsk', 'Where did it come from? A tone from TONE3000 may only go to members with written permission from its maker and from TONE3000.')}</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['own', 'permission'] as const).map((one) => (
+                        <button
+                          key={one}
+                          type="button"
+                          data-ampaddoriginis={one}
+                          aria-pressed={origin === one}
+                          onClick={() => setOrigin(one)}
+                          className={`min-h-[44px] rounded-xl border px-2 text-xs font-bold ${origin === one ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.35)]' : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+                        >
+                          {one === 'own' ? t('pro.ampOriginOwn', 'I captured it myself') : t('pro.ampOriginPermission', 'Written permission')}
+                        </button>
+                      ))}
+                    </div>
+                    {origin === 'permission' && (
+                      <input
+                        type="text"
+                        data-ampaddpermission
+                        value={permission}
+                        maxLength={300}
+                        onChange={(event) => setPermission(event.target.value)}
+                        placeholder={t('pro.ampPermissionWho', 'Who gave written permission, and when')}
+                        aria-label={t('pro.ampPermissionWho', 'Who gave written permission, and when')}
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+                      />
+                    )}
+                  </fieldset>
                   <button
                     type="button"
                     data-ampaddgo

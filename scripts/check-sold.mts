@@ -167,6 +167,11 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      before the press, refunded when the page cannot be read. */
   adLink: 'on its own button on the advert desk, before the press',
   cutout: 'on every card, priced beside the cutting room',
+  /* Bring to life, 27 October 2026: each on its own button in the Photo
+     Editor's bench, with its price, before the press. */
+  sticker: 'on its own button in the Photo Editor, before the press',
+  alive: 'on its own button in the Photo Editor, before the press',
+  model3d: 'on its own button in the Photo Editor, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a

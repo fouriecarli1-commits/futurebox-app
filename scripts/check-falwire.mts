@@ -9,6 +9,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { FAL_MODELS, FAL_KEEP_SECONDS } from '../app/lib/server/fal.ts';
+import { BECOMES } from '../app/lib/becomes.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -40,6 +41,21 @@ ok('and the screen asks both before the button is live',
 ok('what to take out is screened as footage', /guard\(request, words, 'footage', caller\)/.test(route));
 ok('our copy of the clip is deleted when the job ends', /storage\.from\(BUCKET\)\.remove\(\[path\]\)/.test(route));
 ok('a failed job gives the credits back once', /reason', 'refund'\)/.test(route) && /await refund\(/.test(route));
+
+/* ── Bring to life (`lib/becomes.ts`, `app/api/become`), 27 October 2026 ── */
+const become = readFileSync('app/api/become/route.ts', 'utf8');
+const bench = readFileSync('app/components/BecomeBench.tsx', 'utf8');
+ok('every make is a model fal.ai runs itself',
+  Object.values(BECOMES).every((one) => one.model.startsWith('fal-ai/')),
+  Object.values(BECOMES).map((one) => one.model).join(', '));
+ok('a make refuses without both yeses', /body\.abroad !== true \|\| body\.adult !== true/.test(become));
+ok('  and the screen asks both, once, before the first press', /data-becomeabroad/.test(bench) && /data-becomeadult/.test(bench) && /abroad && adult/.test(bench));
+ok('neither engine route takes a job from an open kids room',
+  /await kidsRoom\(caller\.id\)/.test(become) && /await kidsRoom\(caller\.id\)/.test(route),
+  'fal.ai needs every user to be 18; an open kids room is a child at the screen');
+ok('a make\'s words are screened as footage is', /guard\(request, words, 'footage', caller\)/.test(become));
+ok('a make that fails gives the credits back once', /await paid\.refund\(\)/.test(become) && /reason', 'refund'\)/.test(become));
+ok('the key stays off the screen here too', !/FAL_KEY/.test(bench));
 
 console.log(bad === 0
   ? '\ncheck:falwire — fal.ai keeps nothing past the hour, sees only fal.ai\'s own models, never the key, and nothing goes without both yeses.'

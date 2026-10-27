@@ -332,6 +332,8 @@ jobs:
         run: npm run check:tone3000
       - name: "The callback answers at the address she registered, and every way back lands her in the app"
         run: npm run check:tone3000route
+      - name: "Every catalogue capture says where it came from, and nothing from TONE3000 goes out without permission"
+        run: npm run check:ampsource
       - name: "Nothing reaches a supplier for free by accident"
         run: npm run check:gratis
       - name: "Every Music.ai workflow this app names is one she can actually set"
@@ -2230,7 +2232,7 @@ jobs:
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
-            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover
+            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover check:becomebench
           - group: rooms
             probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:kidsplaylistwalk check:kidstorywalk check:reportwalk check:kidsdrumwalk check:kidseditwalk check:kidsgallerywalk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang
           - group: rooms two

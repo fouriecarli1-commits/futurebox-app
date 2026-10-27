@@ -43,6 +43,7 @@
 import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
 import { opened } from '@/app/lib/server/ownerdoor';
 import { mayBeShared, SHAREABLE } from '@/app/lib/amplicence';
+import { LISTABLE, mayList, originRefusal } from '@/app/lib/ampsource';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -57,7 +58,7 @@ const MOST = 60;
    query string, which is the rule check:security holds on interpolated filters. */
 const READ = 400;
 
-const LISTED = 'id, name, maker, licence, source, gear, tone, bytes, created_at' as const;
+const LISTED = 'id, name, maker, licence, source, gear, tone, bytes, created_at, origin, permission' as const;
 
 function clean(value: unknown, limit: number): string {
   return typeof value === 'string' ? value.trim().slice(0, limit) : '';
@@ -76,11 +77,14 @@ export async function GET(request: Request): Promise<Response> {
     if (!/^[0-9a-f-]{36}$/.test(id)) return Response.json({ error: 'bad_request' }, { status: 400 });
     const { data, error } = await client
       .from('amp_catalogue')
-      .select('id, name, maker, licence, source, nam')
+      .select('id, name, maker, licence, source, nam, origin')
       .eq('id', id)
       .maybeSingle();
     if (error) return Response.json({ error: 'failed' }, { status: 500 });
-    if (!data) return Response.json({ error: 'gone', message: 'That capture is not in the catalogue any more.' }, { status: 404 });
+    /* Not said where it came from: not for members (`lib/ampsource.ts`). */
+    if (!data || (!mayList(data.origin) && !callerIsOwner(caller))) {
+      return Response.json({ error: 'gone', message: 'That capture is not in the catalogue any more.' }, { status: 404 });
+    }
     return Response.json({ amp: data });
   }
 
@@ -94,13 +98,19 @@ export async function GET(request: Request): Promise<Response> {
     /* The table not being there is the one failure worth naming: the
        migration not run reads otherwise as an empty catalogue, which is
        the cast fault again. */
-    const notThere = error.code === '42P01';
+    /* 42703 is a column that is not there: `supabase/amps.sql` gained
+       `origin` on 27 October and has not been run again yet. */
+    const notThere = error.code === '42P01' || error.code === '42703';
     return Response.json({ ready: !notThere, amps: [], owner: callerIsOwner(caller) }, { status: notThere ? 503 : 500 });
   }
+  const isOwner = callerIsOwner(caller);
   const amps = (data ?? [])
+    /* Members see only captures that say where they came from; the owner
+       sees all of them, the unmarked ones flagged, so she can mark them. */
+    .filter((row) => isOwner || mayList(row.origin))
     .filter((row) => !q || [row.name, row.maker, row.gear, row.tone].some((field) => (field ?? '').toLowerCase().includes(q)))
     .slice(0, MOST);
-  return Response.json({ ready: true, amps, owner: callerIsOwner(caller) });
+  return Response.json({ ready: true, amps: isOwner ? amps : amps.map(({ permission: _note, ...row }) => row), owner: isOwner });
 }
 
 /** The shape every capture has, whatever its architecture. */
@@ -141,6 +151,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!nam || bytes > NAM_MAX_BYTES || !looksLikeCapture(nam)) {
     return Response.json({ error: 'capture', message: 'That is not a capture this engine can read, or it is over 4 MB.' }, { status: 422 });
   }
+  const origin = clean(body.origin, 20);
+  const permission = clean(body.permission, 300);
+  const source = clean(body.source, 300);
+  const refused = originRefusal(origin, source, permission);
+  if (refused) return Response.json({ error: 'origin', message: refused }, { status: 422 });
   const name = clean(body.name, 80);
   const maker = clean(body.maker, 80);
   if (!name || !maker) {
@@ -154,7 +169,9 @@ export async function POST(request: Request): Promise<Response> {
       name,
       maker,
       licence,
-      source: clean(body.source, 300),
+      source,
+      origin,
+      permission: origin === 'permission' ? permission : '',
       gear: clean(body.gear, 30),
       tone: clean(body.tone, 30),
       bytes,
@@ -172,6 +189,34 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   return Response.json({ amp: data });
+}
+
+/** The owner marks where one already in the catalogue came from. */
+export async function PATCH(request: Request): Promise<Response> {
+  const door = await opened(request);
+  if (!door.open) return door.answer;
+  const client = admin();
+  if (!client) return Response.json({ error: 'not_configured' }, { status: 503 });
+  let body: Record<string, unknown>;
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return Response.json({ error: 'bad_request' }, { status: 400 });
+  }
+  const id = clean(body.id, 40);
+  if (!/^[0-9a-f-]{36}$/.test(id)) return Response.json({ error: 'bad_request' }, { status: 400 });
+  const { data: row } = await client.from('amp_catalogue').select('source').eq('id', id).maybeSingle();
+  if (!row) return Response.json({ error: 'gone' }, { status: 404 });
+  const origin = clean(body.origin, 20);
+  const permission = clean(body.permission, 300);
+  const refused = originRefusal(origin, row.source ?? '', permission);
+  if (refused) return Response.json({ error: 'origin', message: refused }, { status: 422 });
+  const { error } = await client
+    .from('amp_catalogue')
+    .update({ origin, permission: origin === 'permission' ? permission : '' })
+    .eq('id', id);
+  if (error) return Response.json({ error: 'failed' }, { status: 500 });
+  return Response.json({ marked: true, listed: (LISTABLE as readonly string[]).includes(origin) });
 }
 
 export async function DELETE(request: Request): Promise<Response> {

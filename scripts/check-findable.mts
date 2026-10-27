@@ -196,6 +196,10 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   adLink: ['product link'],
   cutout: ['background out'],
   erase: ['item out'],
+  /* Bring to life, 27 October 2026: the Photo Editor's line names all three. */
+  sticker: ['sticker'],
+  alive: ['come alive'],
+  model3d: ['3D model'],
 };
 
 const priced = Object.keys(CREDITS);

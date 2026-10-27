@@ -38,6 +38,8 @@ import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
 import { FAL_MODELS, falProgress, falReady, falSubmit, inputFor, type FalJob } from '@/app/lib/server/fal';
+import { seal, unseal } from '@/app/lib/server/falticket';
+import { kidsRoom } from '@/app/lib/server/kidsmode';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,30 +65,6 @@ interface Ticket {
   readonly charged: boolean;
   readonly status: string;
   readonly result: string;
-}
-
-function secret(): string {
-  return process.env.FAL_TICKET_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.FAL_KEY || '';
-}
-
-function seal(ticket: Ticket): string {
-  const body = Buffer.from(JSON.stringify(ticket)).toString('base64url');
-  const mark = crypto.createHmac('sha256', secret()).update(body).digest('base64url');
-  return `${body}.${mark}`;
-}
-
-function unseal(sealed: string): Ticket | null {
-  const [body, mark] = sealed.split('.');
-  if (!body || !mark || !secret()) return null;
-  const want = crypto.createHmac('sha256', secret()).update(body).digest('base64url');
-  const a = Buffer.from(mark);
-  const b = Buffer.from(want);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  try {
-    return JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as Ticket;
-  } catch {
-    return null;
-  }
 }
 
 const off = (): Response => Response.json(
@@ -132,6 +110,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!job) return Response.json({ message: 'Say which job.' }, { status: 400 });
   if (!path.startsWith(`${caller.id}/footage/`) || path.includes('..')) {
     return Response.json({ message: 'That clip is not yours to send.' }, { status: 403 });
+  }
+  /* fal.ai's terms need every user to be 18, and an account with its kids
+     room open is a child at the screen, whatever box was ticked. */
+  if (await kidsRoom(caller.id)) {
+    return Response.json({ message: 'This is not in the kids room.' }, { status: 403 });
   }
   if (body.abroad !== true || body.adult !== true) {
     return Response.json({ message: 'Both boxes have to be ticked: the clip goes to fal.ai outside South Africa, and this is for people of 18 and older.' }, { status: 400 });
@@ -205,7 +188,7 @@ async function dropClip(path: string): Promise<void> {
 export async function GET(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
   if (!caller) return Response.json({ message: 'Sign in first.' }, { status: 401 });
-  const ticket = unseal(new URL(request.url).searchParams.get('ticket') ?? '');
+  const ticket = unseal<Ticket>(new URL(request.url).searchParams.get('ticket') ?? '');
   if (!ticket || ticket.owner !== caller.id) return Response.json({ message: 'That is not a job of yours.' }, { status: 403 });
 
   const now = await falProgress(ticket.status, ticket.result);

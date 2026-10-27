@@ -3921,3 +3921,63 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
     grid-column: 1 / -1;
   }
 }
+
+/* ── Bring to life: the sticker and the suggestion ───────────────────────
+   The owner, 27 October 2026: *"as dit soos 'n sticker afhaal, moet die
+   sticker effect in gebou word en afgetrek word wanneer hulle op dit
+   click"*. `BecomeBench.tsx`. Waiting, the sticker breathes and its edge
+   glows, so it reads as a thing that can be picked up. Tapped, it peels:
+   it lifts from the bottom edge, tilts towards the finger, its shadow
+   grows, a light runs across it, and it settles up and to the side. */
+/* The sticker is only the sticker: none of the room's button glass, ring or
+   press glow, which drew a box round it while it peeled. */
+[data-peel][data-peeling][role="button"],
+[data-peel][data-peeling][role="button"]:active,
+[data-peel][data-peeling][role="button"]:focus {
+  box-shadow: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  scale: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+.fb-sticker-ready {
+  animation: fb-sticker-wait 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.85)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
+@keyframes fb-sticker-wait {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.6)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4)); }
+  50% { transform: translateY(-2px) scale(1.015); filter: drop-shadow(0 0 12px rgba(52, 211, 153, 1)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)); }
+}
+.fb-peel {
+  transform-origin: 50% 100%;
+  animation: fb-peel 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes fb-peel {
+  0% { transform: perspective(700px) rotateX(0deg) translate(0, 0) scale(1); filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)); }
+  30% { transform: perspective(700px) rotateX(28deg) rotateZ(-5deg) translate(0, -6%) scale(1.04); filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)); }
+  65% { transform: perspective(700px) rotateX(10deg) rotateZ(-8deg) translate(-4%, -12%) scale(1.1); filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.55)); }
+  100% { transform: perspective(700px) rotateX(0deg) rotateZ(-3deg) translate(-3%, -3%) scale(1); filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45)); }
+}
+.fb-peel-sheen {
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  background-size: 250% 100%;
+  mix-blend-mode: screen;
+  /* It moves with the sticker (fb-peel) and its light runs across it. */
+  animation: fb-peel 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, fb-peel-sheen 0.95s ease-out forwards;
+}
+@keyframes fb-peel-sheen {
+  0% { background-position: 120% 0; opacity: 0; }
+  30% { opacity: 1; }
+  100% { background-position: -40% 0; opacity: 0; }
+}
+.fb-nudge {
+  animation: fb-nudge-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes fb-nudge-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge { animation-duration: 0.01s; animation-iteration-count: 1; }
+}

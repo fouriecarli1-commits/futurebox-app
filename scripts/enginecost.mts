@@ -67,6 +67,11 @@ export const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
 export const BEN_PER_5S = 0.001 * (1280 * 720 / 1e6) * 150 * RAND_PER_USD;
 export const VOID_PER_CLIP = 0.10 * RAND_PER_USD;
 
+/* The makes (`lib/makes.ts`), from each model's own page. */
+export const STICKER_CALL = 0.005 * RAND_PER_USD;
+export const ALIVE_SIX_SECONDS = 0.06 * 6 * RAND_PER_USD;
+export const MODEL3D_512 = 0.25 * RAND_PER_USD;
+
 /**
  * Music.ai reading a song — chords, key, tempo — per minute of audio.
  *
@@ -194,6 +199,14 @@ export const priced: {
   { product: true,
     decided: 'the owner, 27 Oct: "ek wil 80% wins op alles maak" — seven credits once fal.ai\'s own page gave the real cost (it was "R7.00" on 11 Oct)',
     what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: Math.max(CUTOUT_PER_5S, VOID_PER_CLIP) },
+  /* The three makes of `lib/becomes.ts`, from each model's own page. */
+  { what: 'a thing pulled out of a photo as a sticker', credits: CREDITS.sticker, cost: STICKER_CALL },
+  { product: true,
+    decided: 'the owner, 27 Oct: "kom ons verlaag wake it up na 60% wins"',
+    what: 'a photo woken up, six seconds with sound', credits: CREDITS.alive, cost: ALIVE_SIX_SECONDS },
+  { product: true,
+    decided: 'the owner, 27 Oct: "ek wil 80% wins op alles maak"',
+    what: 'a picture made into a 3D model', credits: CREDITS.model3d, cost: MODEL3D_512 },
   /* A still picture changed by saying what to change — Nano Banana on her
      own Google project. `PER_PICTURE` is micro-dollars and is itself the
      expensive end of an unread price, so this asserts the margin against a
