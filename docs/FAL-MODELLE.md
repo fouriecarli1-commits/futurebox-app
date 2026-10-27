@@ -331,6 +331,21 @@ Second and third pages:
 | `image-preprocessors/depth-anything/v2` | depth from a photo: background blur, a 3D tilt for a moving cover |
 | `ffmpeg-api/extract-frame` | a still from a clip; the phone does this |
 
+Fourth to sixth pages:
+
+| Model | Note |
+|---|---|
+| `bytedance/seedream/v5/pro/layerize`, `qwen-image-layered` | **a finished picture split into separate layers** (background, people, words) that can each be moved or changed: a flat poster becomes editable again in the Photo Editor |
+| `fashn/tryon/v1.6` | partner; **clothes put on a person in a photo**, keeping prints and lettering: merch shown on a model, or on the member, before it is printed |
+| `codeformer` | **blurred or damaged faces in old photos restored**: with colourising video, a family-history product. Only for the member's own photos |
+| `ideogram/vector/image-to-vector` | partner; a second vectoriser beside Recraft's |
+| `bria/increase-resolution`, `bria/fibo-edit-1.5/expand`, `bria/fibo-2/edit` | partner, licensed data; enlarging to 8192 px **without inventing new detail**, which matters for a member's own artwork |
+| `flux-pulid` | a picture of a given person from their photo. Face rule: the member's own face only |
+| `florence-2-large/ocr-with-region` | reads the words in a picture and where they are: the copilot can check a cover's spelling |
+| `flux-pro/v1/erase`, `flux-2-pro/outpaint`, `evf-sam`, `sam2/image`, `sam-3-1/image` | erase, extend the edges, cut out by words |
+| `topaz/upscale/image/generative`, `…/creative`, `clarityai/crystal-upscaler` (faces) | upscaling that adds detail |
+| `flux-2/flash/edit`, `flux-2/turbo/edit`, `flux-2/klein/4b/edit`, `flux-2-flex/edit`, `flux-2-max/edit`, `flux-2/lora/edit`, `flux-kontext/dev`, `flux-kontext-lora`, `flux-pro/kontext/max/multi`, `flux-pro/kontext/multi`, `flux/dev/image-to-image`, `flux-lora/image-to-image`, `alibaba/qwen-image-3/edit`, `qwen-image-edit`, `qwen-image-edit-plus`, `bytedance/seedream/v5/lite/edit`, `gemini-3.1-flash-image-preview/edit`, `xai/grok-imagine-image/quality/edit`, `kling-image/o3/image-to-image`, `wan/v2.7/edit`, `wan/v2.7/pro/edit`, `z-image/turbo/image-to-image` | more ways to edit in words; the fast ones (flash, turbo, z-image) for drafts, the max and pro ones for finals |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
