@@ -82,14 +82,23 @@ try {
   check('  and it fits the screen', fits);
 
   /* ── The bench: three presses, each with its price ── */
-  await page.locator('[data-becomenudgego="sticker"]').first().click();
+  await page.locator('[data-cutbench="alive"]').first().click();
   await page.waitForTimeout(500);
   for (const id of ['sticker', 'alive', 'model3d']) {
     const button = page.locator(`[data-become="${id}"]`);
     check(`${id}: on the bench, with its price`, (await button.count()) === 1 && /credit|krediet/i.test(await button.innerText()));
   }
-  check('the sticker suggestion turned Pull it out on', (await page.locator('[data-become="sticker"][aria-pressed="true"]').count()) === 1);
   await snap('bench');
+
+  /* ── Pull it out is a tool: picked, the bench shuts and the photo is whole ──
+     The owner, 27 October 2026: "mens moet die window kan toe maak en die
+     volle foto sien en dan kan click." */
+  await page.locator('[data-become="sticker"]').click();
+  await page.waitForTimeout(500);
+  check('picking Pull it out shuts the bench, so the whole photo shows', !(await page.locator('[data-become="model3d"]').first().isVisible()));
+  check('  and a line over the photo says to tap the thing, with a way out', (await page.locator('[data-becomephotosay]').count()) === 1
+    && (await page.locator('[data-becomepullstop]').count()) === 1);
+  await snap('pulling');
 
   /* ── A tap on the thing: it waits, ready to peel ── */
   const glass = await page.locator('[data-postcanvas]').boundingBox();
@@ -112,10 +121,14 @@ try {
   await snap('peeling');
   await page.waitForTimeout(1300);
   check('  and it lands as a layer of its own', (await page.locator('[data-peel]').count()) === 0);
-  check('  and the sticker offers to become a 3D model', (await page.locator('[data-becomenudgego="model3d"]').count()) === 1);
+  check('  and the sticker offers to become a 3D model', (await page.locator('[data-becomenudgego="model3d"]').count()) === 1,
+    await page.evaluate(() => localStorage.getItem('fb.ideas.v1') ?? 'nothing stored'));
   await snap('peeled');
 
   /* ── Each press on the bench is a card: what it does, and its price ── */
+  await page.locator('[data-becomenudge] button[aria-label]').first().click().catch(() => {});
+  await page.locator('[data-cutbench="alive"]').first().click();
+  await page.waitForTimeout(500);
   const cards = await page.evaluate(() => [...document.querySelectorAll('[data-become]')].map((el) => {
     const r = el.getBoundingClientRect();
     return { h: Math.round(r.height), right: Math.round(r.right), words: el.textContent ?? '' };

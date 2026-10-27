@@ -224,6 +224,7 @@ export default function BecomeBench({
   onCut,
   onBusy,
   onSay,
+  onStarted,
 }: {
   readonly picture: HTMLImageElement | null;
   readonly t: Say;
@@ -242,6 +243,9 @@ export default function BecomeBench({
   /** What the bench just said, so the room can show it over the photo too:
       on a phone the bench is often below the fold. */
   readonly onSay?: (words: string) => void;
+  /** A press asked for from outside has been taken: the room forgets it, so
+      the bench opening again later does not press it a second time. */
+  readonly onStarted?: () => void;
 }): React.ReactElement {
   const [yes, giveYes] = useEngineYes();
   const [asking, setAsking] = useState<BecomeId | null>(null);
@@ -250,10 +254,17 @@ export default function BecomeBench({
   const [words, setWords] = useState('');
   const [video, setVideo] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
-  const seenTap = useRef(0);
+  /* A tap made before this bench was drawn is not a tap for it: the bench
+     is drawn twice (shut and open), and a remembered tap would be pulled
+     out, and paid for, again. */
+  const seenTap = useRef(tap?.n ?? 0);
   const seenStart = useRef(0);
 
   useEffect(() => { onBusy(busy !== null); }, [busy, onBusy]);
+  /* Not busy once gone: the shut bench is taken away the moment its pull
+     is done, before its own last "not busy" could be said, and the room
+     then waited on a bench that no longer existed. */
+  useEffect(() => () => onBusy(false), [onBusy]);
   useEffect(() => { if (said) onSay?.(said); }, [said, onSay]);
   useEffect(() => () => {
     if (video) URL.revokeObjectURL(video);
@@ -348,7 +359,8 @@ export default function BecomeBench({
     if (!start || start.n === seenStart.current) return;
     seenStart.current = start.n;
     go(start.id);
-  }, [start, go]);
+    onStarted?.();
+  }, [start, go, onStarted]);
 
   if (!picture) {
     return <p className="text-[13px] text-zinc-400" data-becomenone>{t('become.none', 'Bring a photo in first.')}</p>;

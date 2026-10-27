@@ -50,9 +50,16 @@ ok('every make is a model fal.ai runs itself',
   Object.values(BECOMES).map((one) => one.model).join(', '));
 ok('a make refuses without both yeses', /body\.abroad !== true \|\| body\.adult !== true/.test(become));
 ok('  and the screen asks both, once, before the first press', /data-becomeabroad/.test(bench) && /data-becomeadult/.test(bench) && /abroad && adult/.test(bench));
-ok('neither engine route takes a job from an open kids room',
-  /await kidsRoom\(caller\.id\)/.test(become) && /await kidsRoom\(caller\.id\)/.test(route),
-  'fal.ai needs every user to be 18; an open kids room is a child at the screen');
+/* No kids screen draws the engine presses: fal.ai needs every user to be
+   18. (Refusing every account that HAS a kids room refused the parent in
+   the Photo Editor, 27 October 2026, so the line is drawn at the screens.) */
+const kidsScreens = readdirSync('app/components').filter((name) => /^Kids/i.test(name))
+  .map((name) => readFileSync(`app/components/${name}`, 'utf8'));
+const kidsPages = readdirSync('app/kids', { recursive: true }).filter((name) => /\.tsx$/.test(String(name)))
+  .map((name) => readFileSync(`app/kids/${name}`, 'utf8'));
+ok('no kids screen reaches the engine presses (Bring to life, the Video Editor\u2019s two)',
+  [...kidsScreens, ...kidsPages].every((code) => !/BecomeBench|FootageEngine|\/api\/become|\/api\/footage|PostStudio|VideoEditor/.test(code)),
+  'fal.ai needs every user to be 18');
 /* Pending Enterprise Ready (fal.ai, 27 October 2026): fal.ai may train on
    what is sent to these, so the app may not call them anywhere. */
 const PENDING = ['florence-2-large/caption', 'image-preprocessors/depth-anything/v2', 'fal-ai/birefnet/v2'];

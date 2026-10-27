@@ -1981,6 +1981,7 @@ export const STRINGS: Dict = {
   "notice.stillBusy": { en: "Still busy. Wait a moment for it to finish.", af: "Nog besig. Wag ’n oomblik dat dit klaarmaak." },
   "notice.notYet": { en: "Not yet: finish the step before this one first.", af: "Nog nie: maak eers die stap hiervoor klaar." },
   "notice.shut": { en: "Close", af: "Maak toe" },
+  "become.pullStop": { en: "Done", af: "Klaar" },
   "become.stickerWhat": { en: "Tap a thing in the photo. It peels off as a sticker.", af: "Tik op iets in die foto. Dit trek af soos ’n plakker." },
   "become.aliveWhat": { en: "Six seconds of movement, with its own sound.", af: "Ses sekondes beweging, met sy eie klank." },
   "become.model3dWhat": { en: "The thing you pulled out, as a model you can spin.", af: "Wat jy uitgetrek het, as ’n model wat jy kan draai." },

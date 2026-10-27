@@ -29,7 +29,6 @@ import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
 import { falNow, falProgress, falQueue, falReady, fileUrlOf, maskUrlOf } from '@/app/lib/server/fal';
 import { seal, unseal } from '@/app/lib/server/falticket';
-import { kidsRoom } from '@/app/lib/server/kidsmode';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -91,9 +90,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!id) return Response.json({ message: 'Say what it should become.' }, { status: 400 });
   const spec = BECOMES[id];
 
-  if (await kidsRoom(caller.id)) {
-    return Response.json({ message: 'This is not in the kids room.' }, { status: 403 });
-  }
+  /* No refusal for an account that has a kids room. It refused the
+     owner herself on 27 October 2026 ("This is not in the kids room"),
+     because a parent who has set up a kids room is still an adult in the
+     Photo Editor. The kids room never reaches these tools (no kids screen
+     draws them; `check:falwire` holds that), and the 18-or-older tick is
+     asked of whoever is at the screen. */
   if (body.abroad !== true || body.adult !== true) {
     return Response.json({ message: 'Both boxes have to be ticked: the picture goes to fal.ai outside South Africa, and this is for people of 18 and older.' }, { status: 400 });
   }

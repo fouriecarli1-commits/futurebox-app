@@ -2909,7 +2909,7 @@ export default function PostStudio({
       return;
     }
     /* Pulling a thing out is a mode as well: one tap is one thing. */
-    if (bench === 'alive' && pulling && picture) {
+    if (pulling && picture) {
       const put = shareAt(event);
       if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) {
         setPullTap((was) => ({ x: put.x, y: put.y, n: (was?.n ?? 0) + 1 }));
@@ -8627,7 +8627,9 @@ export default function PostStudio({
     return () => window.clearTimeout(soon);
   }, [picture, bench]);
   useEffect(() => {
-    if (bench !== 'alive') setPulling(false);
+    /* Pulling stays on with the bench shut: that is the point of it (see
+       `aliveBench`). Another tool opened turns it off. */
+    if (bench !== null && bench !== 'alive') setPulling(false);
   }, [bench]);
   useEffect(() => {
     if (!photoSay) return undefined;
@@ -8640,9 +8642,15 @@ export default function PostStudio({
       picture={picture}
       t={t}
       pulling={pulling}
-      onPulling={setPulling}
+      /* Pull it out is a tool you pick, and then the photo is yours: the
+         bench shuts so the whole photograph shows, a line over it says
+         what to do, and a tap on the thing pulls it out. The owner, 27
+         October 2026: *"mens moet die window kan toe maak en die volle
+         foto sien en dan kan click."* */
+      onPulling={(on) => { setPulling(on); if (on) { setBench(null); setNudge(null); setIdea(null); } else setPhotoSay(''); }}
       tap={pullTap}
       start={becomeStart}
+      onStarted={() => setBecomeStart(null)}
       lastCut={lastCut}
       onCut={showCut}
       onBusy={setBecomeBusy}
@@ -10301,12 +10309,26 @@ export default function PostStudio({
       )}
       {(photoSay || pulling) && !peel && !nudge && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-becomephotosay>
-          <p role="status" className="fb-nudge inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 px-4 py-2 text-center text-xs font-bold text-emerald-100 shadow-lg">
+          <p role="status" className="fb-nudge pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 py-1.5 pl-4 pr-1.5 text-center text-xs font-bold text-emerald-100 shadow-lg">
             {becomeBusy && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />}
-            {photoSay || t('become.tapThing', 'Tap the thing you want to pull out.')}
+            <span>{photoSay || t('become.tapThing', 'Tap the thing you want to pull out.')}</span>
+            {pulling && !becomeBusy && (
+              <button
+                type="button"
+                data-becomepullstop
+                onClick={() => { setPulling(false); setPhotoSay(''); }}
+                className="ml-1 inline-flex min-h-[36px] items-center rounded-full bg-zinc-800 px-3 text-xs font-bold text-zinc-200"
+              >
+                {t('become.pullStop', 'Done')}
+              </button>
+            )}
           </p>
         </div>
       )}
+      {/* With the bench shut, the bench's work goes on unseen: the tap on
+          the photo still reaches it, and what it says comes up in the line
+          above. */}
+      {pulling && bench !== 'alive' && <div hidden data-becomehidden>{aliveBench}</div>}
       {idea && !becomeBusy && (
         <IdeaPrompt
           floating
@@ -11107,7 +11129,7 @@ export default function PostStudio({
                  floor under it. The middle of the photo stays clear. */
               style={stripsUp
                 ? { height: STRIP_LEAST + 4 }
-                : { height: '56dvh', marginTop: '-14dvh', position: 'relative', zIndex: 20 }}
+                : { height: '42dvh' }}
             >
               {stripsUp
                 ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
