@@ -425,6 +425,23 @@ Nineteenth to twenty-first pages:
 | `image-editing/style-transfer` | famous painters' styles; painters long out of copyright only, named by the style (impressionism, cubism) rather than by a living artist |
 | `bria/fibo-edit/erase_by_text`, `object-removal/bbox`, `finegrain-eraser/bbox`, `flux-2-lora-gallery/add-background`, `qwen-image-layered/lora`, `bagel/edit`, `stepx-edit2`, `uno`, `omni-zero`, `kolors/image-to-image`, `flux-1/krea/image-to-image`, `flux-1/dev/image-to-image`, `flux-1/schnell/redux`, `flux/dev/redux`, `rundiffusion-fal/juggernaut-flux/…`, `flux-krea-lora/inpainting`, `lora/inpaint`, `lcm-sd15-i2i`, `fast-lcm-diffusion/…`, `wan/v2.2-a14b/image-to-image`, `ideogram/v2/remix`, `image-preprocessors/hed` | more of the same jobs |
 
+Twenty-second to twenty-sixth pages:
+
+| Model | Note |
+|---|---|
+| `qwen-image-edit-plus-lora-gallery/shirt-design` | **a member's design put onto a shirt on a person**: merch mock-ups, beside try-on |
+| `bria/fibo-edit/rewrite_text` | partner, licensed data; **the words inside a picture rewritten, same font and layout**: a poster for a new date, a cover in another language |
+| `bria/fibo-edit/sketch_to_colored_image` | partner, licensed data; **a pencil sketch turned into a finished, coloured picture**: a member's own drawing as the start of a cover |
+| `chrono-edit-lora-gallery/paintbrush` | edits by scribbling on the picture: for people who would rather point than type |
+| `bria/fibo-edit/reseason` | partner, licensed data; summer to winter, sun to rain |
+| `bria/product-dimensions` | partner; a product photo with its measurements drawn on, for a shop listing |
+| `image-apps-v2/texture-transform` | an object made of marble, wood or fabric |
+| `ideogram/v4/tiling/lora`, `ideogram/v4/image-to-image/lora` | partner; patterns and pictures in a member's own trained style |
+| `bria/fibo-edit/add_object_by_text`, `…/replace_object_by_text`, `…/restyle`, `…/blend`, `bernini-r/edit-image` | partner; add, swap, restyle, combine |
+| `image-apps-v2/city-teleport`, `qwen-image-edit-plus-lora-gallery/group-photo`, `…/face-to-full-portrait`, `image-apps-v2/expression-change`, `leffa/pose-transfer`, `image-editing/broccoli-haircut` | a person put in a famous city, a group photo, a pose or expression changed. **Face rule**; mostly novelty |
+| `image-apps-v2/product-holding` | a product in a person's hands, beside Bria's |
+| `post-processing/blur`, `image-apps-v2/object-removal`, `…/remove-element`, `…/remove-lighting`, `…/lighting-restoration`, `vidu/reference-to-image`, `emu-3.5-image/edit-image`, `hidream-i1-full/image-to-image`, `flux-general/differential-diffusion`, `flux-1/srpo/…`, `flux-1/krea/redux`, `flux-1/dev/redux`, `sdxl-controlnet-union/inpainting`, `fast-sdxl-controlnet-canny/…`, `fast-lcm-diffusion/inpainting`, `chrono-edit-lora`, `image-preprocessors/sam`, `florence-2-large/dense-region-caption` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -436,6 +453,9 @@ Nineteenth to twenty-first pages:
   `z-image/turbo` are fast enough to redraw the picture as somebody types,
   so guided asking can *show* where the words are heading before a credit
   is spent on the final.
+- **Asking without typing**: a scribble on the picture (`paintbrush`), a
+  pencil sketch (`sketch_to_colored_image`), or a reference photo can each
+  stand in for words. Guided asking offers all three.
 - **Style cards come free with the catalogue**: MiniMax's styles, LoRAs,
   the 3D low-poly options. Guided asking can start from pictures of looks.
 - **Voices without likeness questions**: voice design makes a new narrator
