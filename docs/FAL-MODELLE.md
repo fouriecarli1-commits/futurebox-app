@@ -158,6 +158,24 @@ fully licensed material**, the safest video to sell), `bytedance/bernini-r`
 | `tada/3b/text-to-speech`, `tada/1b/…` | speech kept in step with its words |
 | `ffmpeg-api/merge-audios`, `workflow-utilities/audio-compressor`, `workflow-utilities/impulse-response` | plain tools: the app already does these on the phone, without credits |
 
+### Hearing (audio to text), 2
+
+| Model | Note |
+|---|---|
+| `nvidia/nemotron-3-nano-omni/audio` | partner; answers a question about a recording, like `audio-understanding` |
+| `silero-vad` | finds where speech is, with times: cuts silences out of a podcast, places captions |
+
+### Sound to picture (audio to video), 19
+
+| Model | Note |
+|---|---|
+| `pixverse/music-video/vibemv` | partner; **a music video from the song itself**, with a character reference, lyric subtitles and style presets. The most direct fit in the catalogue |
+| `mureka/api/generate/lyrics-video` | partner; a lyric video from a song, with layouts, shapes and backgrounds |
+| `lightricks/ltx-2.5/audio-to-video/pro`, `…/fast`, `ltx-2.3/audio-to-video`, `ltx-2.3-quality/…`, `ltx-2.3-22b/…`, `…/distilled`, and their `/lora` versions | video timed to a given song or voice: visuals that move on the beat |
+| `elevenlabs/dubbing` | **a video or a podcast in another language**, in the same voice; licence note above |
+| `wan/v2.2-14b/speech-to-video`, `flashtalk`, `echomimic-v3`, `longcat-single-avatar/audio-to-video`, `…/image-audio-to-video` | a still picture that speaks or sings to the audio. Face rule applies |
+| `veed/avatars/audio-to-video`, `argil/avatars/audio-to-video` | stock avatars; VEED stays out, Argil is a partner |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -179,6 +197,9 @@ fully licensed material**, the safest video to sell), `bytedance/bernini-r`
 - **The copilot can listen** (`audio-understanding`) and **talk back out
   loud** (`personaplex`): guidance by voice, for people who do not know
   what to type.
+- **A song in, a video out**: VibeMV, lyric videos and beat-timed LTX
+  turn a finished song into something to post, without the member writing
+  a word. That is the shortest road from the Music room to the Live room.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
