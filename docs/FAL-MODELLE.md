@@ -411,6 +411,20 @@ Sixteenth to eighteenth pages:
 | `image-editing/expression-change`, `flux-2-lora-gallery/face-to-full-portrait`, `photomaker` | a face's expression changed; a face grown into a full figure; new photos of a person. **Face rule**: the member's own face only |
 | `chrono-edit`, `luma-photon/modify`, `joyai-image-edit`, `dreamomni2/edit`, `qwen-image-max/edit`, `firered-image-edit`, `z-image/turbo/inpaint/lora`, `z-image/turbo/controlnet/lora`, `sdxl-controlnet-union/image-to-image`, `flux-lora-canny`, `flux/srpo/image-to-image`, `stable-diffusion-v3-medium/image-to-image`, `fast-lightning-sdxl/image-to-image`, `inpaint`, `finegrain-eraser`, `qwen-image-edit-lora`, `qwen-image-edit-2509-lora`, `…/multiple-angles`, `image-preprocessors/zoe`, `/teed`, `/midas` | more of the same jobs |
 
+Nineteenth to twenty-first pages:
+
+| Model | Note |
+|---|---|
+| `vecglypher/image-to-svg` | **a whole font made from a description or a sample**: a member's own lettering for a logo or a cover, as clean vector shapes |
+| `qwen-image-edit-plus-lora-gallery/next-scene` | the next shot of a picture: camera moves and scene changes. **A storyboard or a comic, panel after panel** |
+| `image-editing/plushie-style`, `cartoonify`, `image-editing/cartoonify`, `image-editing/wojak-style` | a photo turned into a plush toy, a cartoon or a meme: playful merch and stickers. On a person's photo, the member's own |
+| `image-editing/professional-photo` | a casual photo made into a studio portrait: **a press photo for an artist**. The member's own face |
+| `image-editing/age-progression`, `image-editing/baby-version` | a face older or as a baby. **Face rule**; novelty only |
+| `image-apps-v2/perspective`, `qwen-image-edit-2509-lora-gallery/lighting-restoration`, `…/remove-lighting`, `post-processing/color-correction`, `chrono-edit-lora-gallery/upscaler`, `pasd` | angle, harsh light and colour fixed; upscaled |
+| `ghiblify` | **not offered**: it copies one named studio's look, and a style card must never carry another company's name |
+| `image-editing/style-transfer` | famous painters' styles; painters long out of copyright only, named by the style (impressionism, cubism) rather than by a living artist |
+| `bria/fibo-edit/erase_by_text`, `object-removal/bbox`, `finegrain-eraser/bbox`, `flux-2-lora-gallery/add-background`, `qwen-image-layered/lora`, `bagel/edit`, `stepx-edit2`, `uno`, `omni-zero`, `kolors/image-to-image`, `flux-1/krea/image-to-image`, `flux-1/dev/image-to-image`, `flux-1/schnell/redux`, `flux/dev/redux`, `rundiffusion-fal/juggernaut-flux/…`, `flux-krea-lora/inpainting`, `lora/inpaint`, `lcm-sd15-i2i`, `fast-lcm-diffusion/…`, `wan/v2.2-a14b/image-to-image`, `ideogram/v2/remix`, `image-preprocessors/hed` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
