@@ -225,6 +225,24 @@ Third and fourth pages:
 | `wan-vace-14b/inpainting`, `wan-vace-14b/depth`, `ltx-2.3-quality/inpaint`, `ltx-2.3-quality/reference-video-to-video`, `wan-motion`, `kling-video/o1/…/reference`, `kling-video/o3/4k/video-to-video/edit`, `kling-video/o1/standard/video-to-video/edit`, `google/gemini-omni-flash/edit`, `minimax/h3/reference-to-video/lora`, `sync-lipsync/react-1` | more of the same jobs, to compare |
 | `bria/video/background-removal`, `bria/video/erase/mask`, `pixelcut/video-background-removal` | partners doing what `ben` and `void` already do; not needed |
 
+Fifth and sixth pages:
+
+| Model | Note |
+|---|---|
+| `id-v2v` | **edit one frame as a photo, and the whole clip follows**: the Photo Editor and the Video Editor joined. Keeps faces, gaze and movement |
+| `ltx-2.3/retake-video` | redo one stretch of a clip and keep the rest |
+| `blackforestlabs/flux-3/draft-enhance` | the kept draft re-made at full quality with the same seed and the same movement: the draft-then-final pattern again |
+| `minimax/h3-max/insert-video` | a new scene put into the middle of a clip, guided by words or pictures |
+| `bytedance/bernini-r/reference-edit-video` | partner; an object, a material, a background or the weather taken from a picture into a clip |
+| `sonilo/v1.1/video-to-video-sound-effects` | **royalty-free, commercial-use-safe sound effects** laid on a clip. Sonilo now covers music, effects, and both fitted to video |
+| `thinksound` | sound for a clip, with an optional word prompt |
+| `decart/lucy2-vton/realtime` | partner; **clothes tried on live**: a member's own merch on camera before it is printed |
+| `topaz/deblur/video`, `topaz/sdr-to-hdr/video`, `kandinsky6-vsr`, `clarityai/crystal-video-upscaler` | partners except Kandinsky; motion blur out, HDR, sharper and flicker-free |
+| `wan-vace-apps/video-edit`, `wan-vace-14b` with `/outpainting`, `/pose`, `/reframe`, `/inpainting`, `/depth`, `wan-22-vace-fun-a14b/…`, `wan/v2.2-a14b/video-to-video`, `wan/v2.6/reference-to-video`, `ltx-2.3-quality/outpaint`, `ltx-2.3-quality/extend-video`, `ltx-2.3-22b/reference-video-to-video`, `kling-video/o3/4k/video-to-video/reference`, `kling-video/o1/standard/…/reference`, `pixverse/extend`, `pixverse/v6/extend`, `scail-2`, `infinitalk/video-to-video`, `heygen/v2/translate/speed`, `heygen/v3/lipsync/speed` | more of the jobs above, to compare; the Wan VACE family is open and does almost every edit in one model |
+| `dwpose/video` | a person's pose read from a clip: the input for motion copying |
+| `workflow-utilities/reverse-video`, `workflow-utilities/blend-video` | plain tools; the phone can do these |
+| `bria/video/erase/prompt`, `…/erase/keypoints`, `bria/bria_video_eraser/…` | partner; **says it is trained on licensed data**, the one to reach for if VOID's results are not safe enough to sell |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -249,6 +267,9 @@ Third and fourth pages:
 - **A song in, a video out**: VibeMV, lyric videos and beat-timed LTX
   turn a finished song into something to post, without the member writing
   a word. That is the shortest road from the Music room to the Live room.
+- **The editors join up**: one frame fixed in the Photo Editor carries
+  through the whole clip (`id-v2v`); a bad stretch is retaken without
+  redoing the rest.
 - **One video, every shape**: reframe fills in the sides, so a member's
   wide clip becomes a tall one for stories without cutting anybody out.
 - **What is safest to sell** decides the default: Sonilo for music and
