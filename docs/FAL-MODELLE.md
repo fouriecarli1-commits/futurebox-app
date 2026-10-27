@@ -382,6 +382,22 @@ Tenth to twelfth pages:
 | `bria/genfill`, `bria/fibo-edit-1.5/edit` | partner, licensed data; adding things to a picture safely for commercial use |
 | `luma/agent/uni-1/v1/edit`, `…/max/edit`, `phota/edit`, `phota/enhance`, `ideogram/v4/image-to-image`, `microsoft/mai-image-2.5-pro/edit`, `gpt-image-1-mini/edit`, `qwen-image-edit-plus-lora-gallery/multiple-angles`, `z-image/turbo/image-to-image/lora`, `z-image/turbo/inpaint`, `flux-general/inpainting`, `flux-kontext-lora/inpaint`, `flux-2/klein/9b/edit/lora`, `flux-2/klein/4b/base/edit`, `fast-sdxl/image-to-image`, `sam-3-1/image-rle`, `marigold-v2`, `dwpose`, `film`, `creative-upscaler` | more of the same jobs |
 
+Thirteenth to fifteenth pages:
+
+| Model | Note |
+|---|---|
+| `hunyuan_world` | **one picture turned into a panorama or a 3D world to look around in**: a cover a fan can step into |
+| `image-preprocessors/lineart` | a photo turned into line art: **colouring pages** from a member's own pictures, or a sketch to paint over |
+| `ideogram/v4/tiling` | partner; patterns that repeat in every direction, beside `seedvr/…/seamless` |
+| `ideogram/character/edit`, `minimax/image-01/subject-reference` | the same character in a new pose, expression or outfit |
+| `topaz/adjust/image`, `topaz/sharpen/image`, `topaz/denoise/image`, `nafnet/deblur` | exposure, colour cast, sharpness and noise fixed: **a "make my photo good" press** |
+| `retoucher`, `image-apps-v2/age-modify` | skin smoothed; a face made younger or older. **Face rule**, and no smoothing by default: the app does not tell people their skin needs fixing |
+| `bria/fibo-edit/relight`, `bria/fibo-edit/edit`, `bria/upscale/creative` | partner, licensed data |
+| `flux-2-lora-gallery/apartment-staging` | furnishes an empty room; not a fit for us |
+| `krea/v3/realtime` | partner; another live editor beside `flux-2/klein/realtime` |
+| `cat-vton`, `fashn/tryon/v1.5` | more try-on |
+| `image-editing/object-removal`, `object-removal`, `image-editing/background-change`, `ideogram/v3/replace-background`, `ideogram/v3/remix`, `ideogram/upscale`, `recraft/upscale/creative`, `drct-super-resolution`, `smoretalk-ai/rembg-enhance`, `hidream-o1-image/edit`, `firered-image-edit-v1.1`, `flux-2-lora-gallery/multiple-angles`, `flux-pro/v1.1-ultra/redux`, `z-image/turbo/controlnet`, `flux-control-lora-depth/…`, `flux-lora-depth`, `qwen-image/image-to-image`, `qwen-image-edit/image-to-image`, `qwen-image-edit-2509`, `qwen-image-edit-plus-lora`, `wan-25-preview/image-to-image`, `lora/image-to-image` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
