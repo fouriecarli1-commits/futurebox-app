@@ -256,16 +256,22 @@ ok('one room cannot spend a credit at all',
    *"SVG PNG ook 5 krediete."* A vector drawing leaving the device as a file
    is charged like a post leaving it, once per drawing. An EIGHTH paid door
    reddens this. */
-ok('  and the photo editor spends on exactly the seven things it is meant to',
+/* ── The eighth, the owner's own words, 27 October 2026 ──────────────────
+   *"pull the sticker and make a 3d model"*, and *"make it come alive"*: Bring
+   to life, one route for its three presses (`app/api/become`), each priced
+   on its button. It refuses an open kids room outright, so a child at the
+   screen cannot spend on it. A NINTH paid door reddens this. */
+ok('  and the photo editor spends on exactly the eight things it is meant to',
   JSON.stringify(spend.get('photo'))
     === JSON.stringify([
-      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/vector/draw', '/api/vector/export', '/api/video',
+      '/api/become', '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/vector/draw', '/api/vector/export', '/api/video',
     ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
   + ' changing what is in it by saying what to change, finding the things in'
-  + ' it, setting a chart from words, drawing vector art, saving vector art, and giving it a little motion. Every'
+  + ' it, setting a chart from words, drawing vector art, saving vector art, giving it a little motion, and'
+  + ' bringing it to life (a sticker, a living photo, a 3D model). Every'
   + ' other tool in that room runs on the device and takes no credits. A'
-  + ' EIGHTH paid door is a decision somebody has to make out loud, which is'
+  + ' NINTH paid door is a decision somebody has to make out loud, which is'
   + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',

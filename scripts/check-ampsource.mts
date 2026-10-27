@@ -15,6 +15,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { fromTone3000, mayList, originRefusal } from '../app/lib/ampsource.ts';
+import { before } from './order.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -38,7 +39,7 @@ ok('her own capture needs no note', originRefusal('own', '', '') === null);
 const route = readFileSync('app/api/amps/route.ts', 'utf8');
 ok('the route asks where it came from before anything is added',
   /originRefusal\(origin, source, permission\)/.test(route)
-  && route.indexOf('originRefusal(origin, source, permission)') < route.indexOf(".from('amp_catalogue')\n    .insert"),
+  && before(route, 'originRefusal(origin, source, permission)', ".from('amp_catalogue')\n    .insert"),
   'an add that skips the question puts a capture in front of every member with nothing said about its origin');
 ok('members are listed only what says where it came from',
   /isOwner \|\| mayList\(row\.origin\)/.test(route));

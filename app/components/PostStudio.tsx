@@ -8544,9 +8544,12 @@ export default function PostStudio({
     const w = (frame.width * per) / (1 - cut.edge.x * 2);
     const h = (frame.height * per) / (1 - cut.edge.y * 2);
     setLastCut(cut);
+    /* Shown on the photo while it waits to be peeled, and nothing else: it
+       leaves the device only as a layer, through the paid export. */
+    const peelFace = cut.sticker;
     setPeel({
       cut,
-      src: cut.sticker.toDataURL('image/png'),
+      src: peelFace.toDataURL('image/png'),
       rect: {
         left: box.left - roomBox.left + frame.left * per - w * cut.edge.x,
         top: box.top - roomBox.top + frame.top * per - h * cut.edge.y,

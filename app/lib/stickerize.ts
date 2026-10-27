@@ -172,10 +172,3 @@ export function cutOut(picture: HTMLImageElement, mask: HTMLImageElement): Cut |
     edge: { x: room / sticker.width, y: room / sticker.height },
   };
 }
-
-/** A canvas as a file, for saving or sending on. */
-export function fileOf(canvas: HTMLCanvasElement, name: string): Promise<File | null> {
-  return new Promise((done) => {
-    canvas.toBlob((blob) => done(blob ? new File([blob], name, { type: 'image/png' }) : null), 'image/png');
-  });
-}

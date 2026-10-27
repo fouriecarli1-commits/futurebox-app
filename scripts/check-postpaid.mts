@@ -119,6 +119,14 @@ const INSIDE: Readonly<Record<string, string>> = {
      Nothing a person can save comes of it: the string is a request body,
      the answer is boxes and masks, and no anchor or object URL is made
      from it anywhere in this file. */
+  /* ── The sticker waiting to be peeled, 27 October 2026 ──
+     Bring to life cuts a thing out as a sticker and shows it on the photo
+     until it is tapped. The data URL becomes a CSS background on the screen
+     and then a layer of the post; it leaves the device only through the
+     paid export, like every other layer. */
+  'peelFace.toDataURL': 'the sticker shown on the photo while it waits to be peeled.'
+    + ' It becomes a background on the screen and then a layer, and leaves the device'
+    + ' only through the paid export, like every layer',
   'looked.toDataURL': 'the picture on its way to the engine that says what is in'
     + ' it. It becomes a request body and nothing else — the answer is boxes and'
     + ' masks, and nothing a person could save',

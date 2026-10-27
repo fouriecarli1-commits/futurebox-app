@@ -81,7 +81,7 @@ ok('the search never returns the capture itself',
   `the list selects "${listed}"`);
 ok('  and the maker is in every row of it', /\bmaker\b/.test(listed));
 ok('one capture needs a signed-in member',
-  before(route, 'await callerFrom(request)', ".select('id, name, maker, licence, source, nam')"));
+  before(route, 'await callerFrom(request)', ".select('id, name, maker, licence, source, nam, origin')"));
 ok('  and a member\'s search text never becomes a query filter',
   !/\.or\(|\.ilike\(/.test(route) && /\.toLowerCase\(\)\.includes\(q\)/.test(route),
   'an interpolated PostgREST filter is a query string a member writes');
