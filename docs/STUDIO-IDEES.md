@@ -173,6 +173,11 @@ request. Each wave needs its models' pages (`llms.txt`) before it is built.
 `flux-pro/v1/fill`, `flux-2/klein/realtime`, `imageutils/nsfw`,
 `florence-2-large/caption`, `ben/v2/video`, `void-video-inpainting`.
 
+fal.ai, 27 October 2026: `birefnet/v2`, `image-preprocessors/depth-anything/v2`
+and `florence-2-large/caption` are **Pending Enterprise Ready**, so they may
+not be called until fal.ai says otherwise (`docs/FAL-TERME.md`). The rest of
+wave 1 is ready.
+
 **Wave 2: the Photo Editor comes alive**
 Old photos: `image-editing/photo-restoration`, `codeformer`, `ddcolor`.
 Make it good: `topaz/adjust/image`, `nafnet/deblur`, `control-light`,

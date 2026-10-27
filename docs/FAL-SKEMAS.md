@@ -19,11 +19,17 @@ None of these pages carried "Pending Enterprise Ready".
   `include_scores`, `include_boxes`.
 - **Out:** `masks` (list of Image, required), `image` (preview),
   `metadata`, `scores`, `boxes` (normalised `[cx, cy, w, h]`).
-- **Unconfirmed:** the PointPrompt's own fields. Sent as
-  `{ x, y, label: 1 }` in pixels, the shape fal.ai's SAM 2 uses. The first
-  live tap confirms it.
+- **Confirmed by fal.ai (27 October 2026):** each point is `x` and `y`
+  (whole numbers, pixels), `label` (1 thing, 0 background), and an optional
+  `object_id` and `frame_index`. Only `image_url` is required. Sent as
+  `{ x, y, label: 1 }`, rounded. Still to ask their support: whether an
+  empty `prompt` with a point is the right way to send a tap with no words
+  (the prompt otherwise defaults to "wheel").
 
 ## `fal-ai/birefnet/v2`: clean edges on a cut-out
+
+> **Pending Enterprise Ready (fal.ai, 27 October 2026): may not be called.** fal.ai may train on what is sent to a model marked this way. `check:falwire` refuses it anywhere in the app until fal.ai says it is ready.
+
 
 - **Price:** "$0 per compute seconds", so billed by GPU time; a fraction
   of a cent per picture.
@@ -92,6 +98,9 @@ None of these pages carried "Pending Enterprise Ready".
 
 ## `fal-ai/image-preprocessors/depth-anything/v2`: depth (Step inside)
 
+> **Pending Enterprise Ready (fal.ai, 27 October 2026): may not be called.** fal.ai may train on what is sent to a model marked this way. `check:falwire` refuses it anywhere in the app until fal.ai says it is ready.
+
+
 - **Price:** "$0 per compute seconds", billed by GPU time; a fraction of a
   cent.
 - **Sync:** yes.
@@ -144,6 +153,9 @@ None of these pages carried "Pending Enterprise Ready".
   going up; that is a choice for her, not a number to guess.
 
 ## `fal-ai/florence-2-large/caption`: what a picture shows (alt text)
+
+> **Pending Enterprise Ready (fal.ai, 27 October 2026): may not be called.** fal.ai may train on what is sent to a model marked this way. `check:falwire` refuses it anywhere in the app until fal.ai says it is ready.
+
 
 - **Price:** "$0 per compute seconds", billed by GPU time; a fraction of a
   cent.

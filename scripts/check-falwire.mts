@@ -7,7 +7,7 @@
  * partner sends the clip on to another company), the key only on the
  * server, and the two yeses the route will not go without.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
 import { BECOMES } from '../app/lib/becomes.ts';
 
@@ -53,6 +53,14 @@ ok('  and the screen asks both, once, before the first press', /data-becomeabroa
 ok('neither engine route takes a job from an open kids room',
   /await kidsRoom\(caller\.id\)/.test(become) && /await kidsRoom\(caller\.id\)/.test(route),
   'fal.ai needs every user to be 18; an open kids room is a child at the screen');
+/* Pending Enterprise Ready (fal.ai, 27 October 2026): fal.ai may train on
+   what is sent to these, so the app may not call them anywhere. */
+const PENDING = ['florence-2-large/caption', 'image-preprocessors/depth-anything/v2', 'fal-ai/birefnet/v2'];
+const appFiles = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((one) => (
+  one.isDirectory() ? appFiles(`${dir}/${one.name}`) : /\.(ts|tsx)$/.test(one.name) ? [`${dir}/${one.name}`] : []
+));
+const callsPending = appFiles('app').filter((file) => PENDING.some((model) => readFileSync(file, 'utf8').includes(model)));
+ok('no model fal.ai marks Pending Enterprise Ready is called anywhere in the app', callsPending.length === 0, callsPending.join(', '));
 ok('a sticker is cut from the MASK, never the preview (which is the whole photo again)',
   /spec\.gives === 'mask' \? maskUrlOf\(ran\.data\)/.test(become)
   && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [{ url: 'https://v3.fal.media/mask.png' }] }) === 'https://v3.fal.media/mask.png'

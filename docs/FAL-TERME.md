@@ -295,3 +295,24 @@ live (`app/lib/server/fal.ts`, `app/api/footage/route.ts`,
 8. A line for fal.ai on the privacy page, including that what is sent is
    screened for illegal material. `check:verwerkers` keeps the build
    red until it is there.
+
+---
+
+## Second reply, 27 October 2026
+
+Steve answered the owner's second letter. What it settles:
+
+| Question | Their answer | What it means here |
+|---|---|---|
+| Which of our models are **Enterprise Ready** | **Ready:** `sam-3/image`, `trellis-2`, `ltx-2.3/image-to-video/fast`, `ben/v2/video`, `void-video-inpainting`, `flux-pro/v1/fill`, `flux-2/klein/realtime`, `imageutils/nsfw`, `mmaudio-v2`, `demucs`. **Pending:** `florence-2-large/caption`, `image-preprocessors/depth-anything/v2`, `birefnet/v2`. | Everything the app calls today is ready. The three pending ones may not be called; `check:falwire` refuses them anywhere in the app. Plans that named them (alt text, Step inside, clean edges) wait, or use a ready model. |
+| Partner models and the DPA | Partners abide by the DPA. | A partner model still needs its line on the privacy page before it is wired. |
+| Commercial use | Yes, for all of these. | |
+| SAM 3 points | `x`, `y` (whole numbers), `label` (1 thing, 0 background), optional `object_id`, `frame_index`; only `image_url` required. | What the app sends. Ask support whether an empty `prompt` with a point is right (it otherwise defaults to "wheel"). |
+| Retention | `X-Fal-Store-IO: 0` turns off request history; the lifecycle header sets how long CDN files live. Written confirmation for our setup to follow. | Both headers are sent on every call (`lib/server/fal.ts`). Keep the written confirmation in `private/` when it comes. |
+| Concurrency | Per account. | |
+| Region | Not for small commercial accounts. | Section 72 is carried by the DPA and the consent tick, as above. |
+| Realtime from a browser | A short-lived token from our server; the phone never sees the key. | The way `flux-2/klein/realtime` must be wired when it is built. |
+| Pricing API | Called with the normal API key. | The owner's price sheet can be built on the server. |
+| Webhooks | Signed with ED25519, checked against their public keys. | The app polls today; a webhook, if added, must verify the signature. |
+| Billing and discounts | Invoicing only from a **$100k a year** commitment; a commitment brings higher concurrency and discounts. | Not before launch. Revisit after about three months of real usage, with the numbers. |
+
