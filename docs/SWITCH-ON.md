@@ -316,6 +316,22 @@ outbound call to Apple is blocked in that environment, so the reading of
 their feed was tested against a copy of its published shape, not a live
 answer. The first live answer is on the phone.
 
+### fal.ai — a background or an item out of a shot
+
+`FAL_KEY`, from fal.ai → your account → API keys → create a key. It goes in
+Vercel, Production and Preview, and nowhere else. **Never in the
+repository**, and if it has ever been pasted into a chat, an email or a
+screenshot, delete it on that page and make another. Without it the two
+presses in the Video Editor say they are not switched on yet and charge
+nothing.
+
+`FAL_TICKET_SECRET` is optional: a long random string that seals the ticket
+a member's phone holds while a job runs, so nobody can ask about somebody
+else's job. Unset, the service-role key does the sealing.
+
+What the key is used for, and the settings on every request that keep
+fal.ai from holding on to a member's clip, are in `docs/FAL-TERME.md`.
+
 ### 12. Kits.AI — the model that actually sings
 
 `KITS_API_KEY`, from kits.ai → the API Access page → generate a token. It goes

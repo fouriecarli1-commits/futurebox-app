@@ -133,6 +133,12 @@ export type Rule =
   /** Footage only: false claims built to mislead about an election or public health. */
   | 'misinformation'
   /**
+   * Refused by the engine's own moderation, not ours: fal.ai screens what
+   * reaches it and does not say which of its rules a clip broke. Written to
+   * the log by `app/api/footage` so the pattern is visible; never counted.
+   */
+  | 'engine'
+  /**
    * Somebody swearing AT the assistant, rather than about anything.
    *
    * The odd one out on this list, and deliberately so: it refuses nothing,

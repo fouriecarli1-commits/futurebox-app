@@ -15,7 +15,7 @@ Niks hier is kode nie. Alles hier is iets wat net jy kan doen.
 
 | # | Wat | Hoe lank | Wie |
 |---|---|---|---|
-| 1 | ~~Stuur die fal.ai-brief~~ — **beantwoord 26 Oktober 2026**, sien `docs/FAL-TERME.md`. Artikel 72 is gedek deur die DPA self. Oor: vra hulle hoe 'n greep ná elke werk uitgevee word | 5 min | jy |
+| 1 | ~~Stuur die fal.ai-brief~~ — **beantwoord 26 Oktober 2026**, sien `docs/FAL-TERME.md`. Artikel 72 is gedek deur die DPA self, en uitvee word met twee instellings op elke versoek gedoen. **Aangeskakel 27 Oktober 2026.** Oor: `FAL_KEY` in Vercel, en kyk op fal.ai of `fal-ai/ben/v2/video` en `fal-ai/void-video-inpainting` 'Pending Enterprise Ready' sê | 5 min | jy |
 | 2 | Stuur die Kits.AI-brief (`private/EPOS-KITS.md`) | 10 min | jy |
 | 3 | Registreer die Inligtingsbeampte | 30 min | jy |
 | 4 | Vra Music.ai, Resend en Kling (`private/EPOS-DPA-KORT.md`) | 15 min | jy |

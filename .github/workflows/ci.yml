@@ -1424,6 +1424,11 @@ jobs:
       - name: A prompt about somebody's own film is screened as footage
         run: npm run check:footage
 
+      # fal.ai keeps nothing past the hour, sees only its own models, never
+      # the key, and nothing goes without both yeses (docs/FAL-TERME.md).
+      - name: What fal.ai may see and keep is held in the code
+        run: npm run check:falwire
+
       # The owner's takedown: behind her door, the Live room row read before
       # it goes, the account stopped at sign-in, no evidence deleted.
       - name: One press takes a post down and keeps the evidence

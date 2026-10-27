@@ -360,6 +360,7 @@
     "check:graadbaan": "tsx scripts/check-graadbaan.mts",
     "check:prent": "tsx scripts/check-prent.mts",
     "check:footage": "tsx scripts/check-footage.mts",
+    "check:falwire": "tsx scripts/check-falwire.mts",
     "check:takedown": "tsx scripts/check-takedown.mts",
     "check:singit": "tsx scripts/check-singit.mts",
     "check:woorde": "tsx scripts/check-woorde.mts",

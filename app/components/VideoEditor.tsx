@@ -42,26 +42,13 @@
  * is the expensive way to get a look: every near-miss is charged. Five
  * credits a try to settle the picture, then pay once for the motion.
  *
- * ── The three things she asked for that are NOT here ─────────────────────
+ * ── Taking a background or an item out of a shot ─────────────────────────
  *
- * Taking a background out, taking an item out, and generating a missing
- * piece. All three need an engine — fal.ai for the first two — and all three
- * are priced in `credits.ts` and named on every plan card.
- *
- * *Make a shot* above is NOT one of them, and the difference is the reason it
- * could be built while these three still cannot: those three send HER
- * FOOTAGE to a supplier — video of a person — and that is what needs the
- * privacy-page line and the POPIA section 72 answer below. Nothing from the
- * clock is ever sent by *Make a shot*. What leaves is words, and a picture
- * this app drew from those words seconds earlier.
- *
- * They are doors that say so rather than buttons that lie. The reason they
- * are not wired tonight is not that the code is hard: it is that the legal
- * audit of the same day found that a supplier receiving video of a person
- * needs a line on the privacy page and an answer about POPIA section 72
- * before a single frame is sent. `check:verwerkers` fails the build the day
- * somebody writes that fetch without one, and fal.ai is already registered
- * in it waiting.
+ * Switched on 27 October 2026, through fal.ai: `FootageEngine.tsx` asks,
+ * `app/api/footage` checks, charges and sends, and `docs/FAL-TERME.md` holds
+ * the agreement, the two yeses on the button and the deletion settings.
+ * Generating a piece the film does not have is *Make a shot* above, which
+ * sends words and never footage.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -85,6 +72,7 @@ import {
 } from '../lib/videoblur';
 import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, shows, type Ease, type Key, type Motion, type MoveId } from '../lib/videomotion';
 import CutDock, { type Bench } from './CutDock';
+import FootageEngine from './FootageEngine';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
 import { CAST_LIMIT, loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
@@ -9117,20 +9105,15 @@ async function smallerFrame(url: string): Promise<string> {
             </p>
           )}
 
-          <div className="space-y-2" data-editorcoming>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              {t(
-                'edit.engineWhat',
-                'Taking a background out and taking an item out of a shot cannot happen on your device — they need an engine, and they cost credits.',
-              )}
-            </p>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              {t(
-                'edit.engineWhen',
-                'Those two are priced and on the plan cards, and are not switched on yet: sending video of a person to another company needs an answer about what that company may do with it first. Making a shot you do not have is switched on — it is the AI wand, on a shot\'s menu and under Looks.',
-              )}
-            </p>
-          </div>
+          {/* The two engine presses, switched on 27 October 2026 once fal.ai's
+              terms were read and its account was paid for. See
+              `FootageEngine.tsx` and `app/api/footage`. */}
+          <FootageEngine
+            clip={edit.pieces.find((one) => one.id === picked)?.clip ?? null}
+            name={edit.pieces.find((one) => one.id === picked)?.name ?? ''}
+            t={t}
+            onBack={(file) => { void bringIn([file], edit.pieces.find((one) => one.id === picked)?.came ?? 'device', picked || null); }}
+          />
           </div>
         )}
       </CutDock>

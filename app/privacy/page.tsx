@@ -37,7 +37,7 @@ export const metadata = {
    Music API terms 2(D) require a privacy policy that says how information is
    shared "including with ElevenLabs and third parties". Naming them in a
    list of suppliers was most of the way there; it was not all of it. */
-const UPDATED = '24 October 2026';
+const UPDATED = '27 October 2026';
 
 /* Same as the terms: contact is a page, not an address. See the note there. */
 const CONTACT_PAGE = '/help';
@@ -125,6 +125,10 @@ export default function Privacy(): React.ReactElement {
             <li><strong className="text-white">Resend</strong> — email. Your address and the letter itself, whenever anything is sent to you: an invitation, a password reset, a receipt.</li>
             <li><strong className="text-white">Kling</strong> — video. Their engine is no longer used to make clips, as of 9 October 2026. Where a clip was already being made when that changed, we still ask them whether it is finished, which sends them that job&rsquo;s number and nothing else. What you typed to describe a clip went to them before that date.</li>
             <li><strong className="text-white">Google</strong> — two separate things. If you choose to sign in with Google, they confirm it is you. And when you make a song, a video or a picture, what you typed to describe it is sent to Google&rsquo;s AI service, along with any picture you attached for it to start from.</li>
+            {/* Added 27 October 2026, the day the two presses were switched on.
+                See docs/FAL-TERME.md for the agreement, the transfer basis and
+                the deletion settings this sentence describes. */}
+            <li><strong className="text-white">fal.ai</strong> — taking the background or an item out of a shot in the Video Editor, and only when you press it. The clip you choose, and what you typed to take out, go to them, in the United States and elsewhere. You are asked first, and asked to confirm you are 18 or older. They do not train on it, they keep the finished clip for an hour at most, and we delete our copy of yours as soon as the job ends. What reaches them is checked automatically for illegal material, and child abuse material is reported to the authorities. Their own suppliers are listed at trust.fal.ai/subprocessors.</li>
             <li><strong className="text-white">TONE3000</strong> — amp and pedal models, and only if you connect your own TONE3000 account. What reaches them is your decision to connect it and which tones you ask for.</li>
           </ul>
           <p className="text-zinc-400">Google&rsquo;s AI service and TONE3000 were added to this list on 9 October 2026, and Google&rsquo;s entry rewritten: it had said &ldquo;only if you choose to sign in with it&rdquo;, which stopped being the whole truth the day songs started being made on Google&rsquo;s own service. Nothing about what is sent changed on the day this page was corrected — what changed is that this page now says so.</p>

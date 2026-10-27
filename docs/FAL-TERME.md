@@ -245,6 +245,37 @@ and the rest, as separate tracks. ProBooth's *Split stems* gives two today
 their playground under the result; it has to be read there before a credit
 price is set, the same rule as every other engine.
 
+## Switched on, 27 October 2026
+
+The owner's account and billing were in place, and fal.ai's own docs
+answered the deletion question the DPA left open, so the two presses are
+live (`app/lib/server/fal.ts`, `app/api/footage/route.ts`,
+`app/components/FootageEngine.tsx`):
+
+- **Deletion.** Every request carries `X-Fal-Store-IO: 0` (no copy of the
+  request and its answer kept for their dashboard, which is 30 days
+  otherwise) and `X-Fal-Object-Lifecycle-Preference` of one hour (the
+  finished clip deletes itself from their CDN). The member's clip is never
+  uploaded to fal.ai at all: they read it from a fifteen-minute link to our
+  own private `videos` bucket, and the route deletes our copy when the job
+  ends. Sources: fal.ai docs, "Data retention" and "Media expiration".
+- **Models fal.ai runs itself.** `veed/video-background-removal` is a
+  partner model (the clip would go on to VEED), so the background comes out
+  through `fal-ai/ben/v2/video`, and an item through
+  `fal-ai/void-video-inpainting`. Neither page could be opened from the
+  build machine: **look at both once on fal.ai** for the "Pending Enterprise
+  Ready" label, and read their price, which `credits.ts` still estimates
+  from VEED's.
+- **The input fields** are written from the models' published examples
+  (`video_url`; for VOID also `prompt` and `mask_prompt`). If the first real
+  job comes back refused for a field, `inputFor` in `fal.ts` is the one
+  place to change.
+- **The boxes**, the `footage` prompt check, refunds once per failed job,
+  fal.ai's own refusals logged as `engine` and never counted, twenty
+  seconds a clip at most, and fal.ai on the privacy page: all in.
+- **Still the owner's:** `FAL_KEY` in Vercel (Production and Preview), and
+  the Terms, DPA and API terms saved as dated PDFs in `private/`.
+
 ## Before the first `fetch`
 
 1. The business account on fal.ai, pay-as-you-go, and its key in Vercel as
