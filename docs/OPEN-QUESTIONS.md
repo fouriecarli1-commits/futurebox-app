@@ -264,6 +264,28 @@ has only ever called `GET /tones/{id}/download`, the per-model route, through
 asks the two questions the enquiry raised that this answer does not touch:
 the attribution wording they want, and whether commercial terms attach.
 
+**27 October 2026, their answer on terms.** A free product is clear to use
+the API. FutureBox is not free (plans and credits), so it falls under their
+commercial question, and for now they **waive fees in exchange for
+promotional support**. They want, once the integration is complete:
+
+1. confirmation that it complies with their **API Terms of Service** and
+   **Design Requirements** (neither read yet: tone3000.com is blocked from
+   the build machine, so the owner has to paste both);
+2. the **promotional commitments** we can make, from: their logo, a line on
+   what the integration gives, and a link to https://www.tone3000.com on a
+   product page; a launch post or video; influencers; a blog post (the site
+   has `/blog`) linking https://www.tone3000.com and https://www.tone3000.com/api;
+3. a **screen recording** of the integration. It needs the owner's own
+   TONE3000 sign-in, so it is recorded on her phone, not from here.
+
+What helps the case: loading a TONE3000 capture costs a member **no credits**
+(`credits.ts`, the amps note). The capture runs in the member's own browser
+through `lib/nam.ts`, the member signs in to their own TONE3000 account, and
+the app only ever calls the per-model download, never the bulk one. So
+FutureBox charges nothing for TONE3000 content; it is an included part of a
+paid studio.
+
 ### A3. Voice cloning and consent
 
 Built and gated: a clone may only be used by the person who cloned it, checked
