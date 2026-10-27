@@ -37,6 +37,37 @@ speech 41, audio to audio 42, audio to video 19, speech to text 13, text to
 | `mureka/api/generate/lyrics` | text | song words and a title from a topic |
 | `bria/fibo/generate/structured_prompt`, `bria/fibo-lite/…`, `bria/fibo-edit/edit/structured_instruction` | text to JSON | turns a plain request into a structured, controllable prompt |
 
+
+### Pictures (text to image), second batch
+
+| Model | Note |
+|---|---|
+| `flux/schnell`, `flux/dev`, `flux-lora`, `flux-2`, `flux-2/klein/9b`, `flux-2-pro`, `flux-pro/v1.1`, `flux-pro/v1.1-ultra`, `blackforestlabs/flux-3/text-to-image` | Black Forest Labs family: schnell is the fast draft, ultra and FLUX 3 are 2K/4K finals; `flux-lora` takes a trained style |
+| `nano-banana`, `nano-banana-2`, `nano-banana-pro`, `google/nano-banana-2.1`, `google/nano-banana-2-lite` | Google; the app already calls Nano Banana on her own Google project, so fal is a second road to the same model |
+| `openai/gpt-image-2`, `openai/gpt-image-2.5/flare`, `…/sunburst` | strongest at words inside the picture and complex layouts |
+| `ideogram/v3` | posters, logos and typography |
+| `bytedance/seedream/v4`, `v4.5`, `v5/pro` | words in 14 languages, editing in the same model |
+| `z-image/turbo` | very fast and cheap: live previews while somebody types |
+| `meta/muse-image/text-to-image` | text, plots and QR codes rendered faithfully |
+| `xai/grok-imagine-image` | aesthetic stills |
+
+### Sound and music (text to audio), first 16 of 53
+
+| Model | Note |
+|---|---|
+| `elevenlabs/music`, `elevenlabs/music/v2.5`, `elevenlabs/sound-effects/v2`, `elevenlabs/tts/eleven-v3`, `elevenlabs/tts/multilingual-v2` | the same engines the app already reaches directly. **Licence check first:** the commercial licence the app relies on comes from her own ElevenLabs plan, and does not travel to calls billed through fal.ai |
+| `google/lyria-3.5`, `lyria2`, `lyria3/pro` | Google music; Lyria is already used on her own Google project |
+| `minimax-music/v2`, `minimax-music/v2.6`, `minimax/music-3` | full songs with singing from lyrics and a style, up to five minutes |
+| `stable-audio-25/text-to-audio`, `stable-audio-3/medium/text-to-audio` | music and sound effects, up to six minutes, stereo |
+| `cassetteai/music-generator` | a 30-second sample in under two seconds: fast sketches |
+| `ace-step` | songs with lyrics; open weights |
+| `bytedance/seed-audio-1.0` | sound from text, a reference audio or a picture |
+
+**For every music model:** who owns what it makes, and whether a member
+may sell it, is the question that decided ElevenLabs. Each one needs that
+answer from its own licence before it is offered for a song a member
+releases.
+
 ## The shape this is heading for
 
 - **A router per capability**: picture, picture edit, video, video edit,
