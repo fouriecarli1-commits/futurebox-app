@@ -243,6 +243,21 @@ Fifth and sixth pages:
 | `workflow-utilities/reverse-video`, `workflow-utilities/blend-video` | plain tools; the phone can do these |
 | `bria/video/erase/prompt`, `…/erase/keypoints`, `bria/bria_video_eraser/…` | partner; **says it is trained on licensed data**, the one to reach for if VOID's results are not safe enough to sell |
 
+Seventh and eighth pages:
+
+| Model | Note |
+|---|---|
+| `lightx/recamera`, `lightx/relight`, `id-v2v/relight` | **the camera angle or the light changed after filming** |
+| `ltx-2.3-quality/colorization` | **old black-and-white footage in colour**: family films for a tribute song or a memorial video |
+| `ltx-2.3-quality/clean-plate` | a person taken out of a clip, leaving the empty scene |
+| `auto-caption` | captions in a chosen colour and font, from the clip's own sound |
+| `pixverse/sound-effects`, `cassetteai/video-sound-effects-generator`, `controlfoley`, `thinksound/audio` | effects and background music laid on a clip; Sonilo stays first for anything sold |
+| `moonvalley/marey/motion-transfer`, `…/pose-transfer` | partner; movement copied with the licensed-data model: **the safest motion copying to sell**. Face rule applies |
+| `vast/eden-live-14b-video`, `…-5b-video` | partner; a live stream re-drawn in real time from a reference: the Live room again |
+| `one-to-all-animation/14b`, `/1.3b` | a character picture moved by a pose |
+| `editto`, `vidu/q2/video-extension/pro`, `magi-distilled/extend-video`, `blackforestlabs/flux-3/extend-video/draft`, `wan/v2.6/reference-to-video/flash`, `wan-vace-apps/long-reframe`, `bytedance/bernini-r/edit-video`, LTX multiconditioning, `ltx-2.3-22b/video-to-video`, `hunyuan-video/video-to-video`, `cogvideox-5b/video-to-video`, `fast-animatediff/turbo/video-to-video`, `amt-interpolation` | more of the jobs above |
+| `topaz/denoise/video`, `ltx-2.3-quality/hdr`, `kandinsky6-vsr/lite`, `bria/video/increase-resolution` (to 8K, licensed data), `bria/video/background-removal/green-screen-despill` | clean-up and finishing |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
