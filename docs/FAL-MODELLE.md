@@ -503,6 +503,33 @@ Eighth to twelfth pages of image to video:
 | `pixverse/c1/image-to-video`, `v5.5`, `v5` | partner |
 | `google/gemini-omni-flash/reference-to-video`, `minimax/hailuo-2.3/pro/…`, `hailuo-2.3-fast/pro/…`, `hailuo-02/pro/…`, `hailuo-02-fast/…`, `bytedance/seedance-2.0/us/…` (+ reference), `kling-video/o3/4k/…` (+ reference), `kling-video/o1/reference-to-video`, `wan/v2.7/reference-to-video`, `wan/v2.6/image-to-video/flash`, `wan/v2.2-5b/…`, `wan-i2v`, `ltx-2.3/image-to-video`, `lightricks/ltx-2.5/image-to-video/fast`, `ltx-video/image-to-video`, `blackforestlabs/flux-3/keyframes-to-video` | more of the same jobs |
 
+Last page of image to video: `ai-avatar/multi-text` (**a conversation
+between several people from one picture and a script**, each with a voice:
+a two-host podcast video), `sadtalker/reference`, `bytedance/lynx`
+(partner; a subject kept the same), `decart/lucy-5b/image-to-video` (partner;
+five seconds made in under five), `pixverse/v3.5/image-to-video/fast`,
+`hunyuan-video-img2vid-lora`. Face rule throughout.
+
+### Picture to structure (image to JSON), 3
+
+| Model | Note |
+|---|---|
+| `bria/ad-delayer` | partner, licensed data; **a flat advert or poster split into editable layers**: background, product and logo cut out, the words as live text, shapes as vectors. A finished cover the member can open and change in the Photo Editor |
+| `vggt-1b` | a picture or clip turned into a 3D scene with depth and camera positions |
+| `bagel/understand` | reads a picture and answers questions; the copilot may already do this |
+
+### Pictures to 3D (image to 3D), 42: first two pages
+
+| Model | Note |
+|---|---|
+| `hunyuan-3d/v3.1/pro/image-to-3d`, `…/rapid/image-to-3d`, `hunyuan3d-v3/image-to-3d`, `hunyuan3d/v2` | **a 3D model from one photo**, textured, ready for games, shops and 3D printing |
+| `tripo3d/h3.1/image-to-3d`, `…/multiview-to-3d`, `tripo3d/p2/image-to-3d` (low-poly, face counts), `tripo3d/tripo/v2.5/image-to-3d`, `tripo3d/triposplat` | partner |
+| `meshy/v7.1/image-to-3d`, `…/multi-image-to-3d`, `meshy/v7/image-to-3d`, `meshy/v6/image-to-3d` | partner; one to four photos, low-poly modes, textures |
+| `hyper3d/rodin/v2.5`, `/fast`, `hyper3d/rodin/v2`, `hyper3d/rodin` | partner |
+| `trellis-2`, `trellis`, `trellis/multi` | fal.ai's own: **try first**, before the partners |
+| `sam-3/3d-objects`, `sam-3/3d-body` | an object, or **a person's body shape and pose**, rebuilt in 3D from a photo. A body is the member's own |
+| `hitem3d/hi3d/v3.0/image-to-3d`, `…/multi-view-to-3d` | partner |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -551,6 +578,9 @@ Eighth to twelfth pages of image to video:
 - **What the phone already does stays on the phone**: filters, grain,
   tints, trims and merges cost nothing and never leave the device. fal.ai
   is for what only a model can do.
+- **A 3D product line**: a member's character, logo or mascot from one
+  drawing to a textured 3D model (Trellis first), ready for a 3D-printed
+  figure, a game, or a cover that turns.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
