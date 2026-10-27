@@ -314,6 +314,23 @@ Last page:
 | `openai/gpt-image-2/edit`, `openai/gpt-image-2.5/sunburst/edit`, `…/flare/edit` | the tightest control: changes only what was asked, round after round. Best for words on a picture (posters, covers) |
 | `birefnet/v2` | background out of a photo, high resolution |
 
+Second and third pages:
+
+| Model | Note |
+|---|---|
+| `recraft/vectorize` | partner; **a picture or logo turned into a clean vector (SVG)**: sharp at any size, ready for printing merch, stickers and banners |
+| `qwen-image-edit-2511-multiple-angles` | the same thing seen from other angles: **a whole product or character sheet from one photo** |
+| `blackforestlabs/flux-3/edit-image`, `…/flux-3/klein/edit-image` | edits combining up to ten reference pictures, with boxes to place things exactly |
+| `bytedance/seedream/v5/pro/edit`, `…/v5/flash/edit`, `…/v4.5/edit`, `…/v4/edit` | partner; changes one element and leaves the rest untouched; flash is the cheap draft |
+| `ideogram/v4.5/edit` | partner; edits that keep words and lettering crisp, with a mode that leaves unchanged pixels alone |
+| `meta/muse-image/edit`, `krea/v3/edit`, `xai/grok-imagine-image/edit`, `…/v2.0/edit`, `gemini-3-pro-image-preview/edit`, `gemini-25-flash-image/edit`, `google/nano-banana-lite/edit`, `gpt-image-1.5/edit`, `qwen-image-edit-2511`, `flux-pro/kontext`, `…/kontext/max`, `flux-2-pro/edit`, `flux-2/edit`, `flux-2/klein/9b/edit`, `flux-pro/v1/fill` | more ways to edit in words, to compare on the same photo |
+| `bria/expand`, `bria/background/remove`, `bria/eraser` | partner; **trained only on licensed data, for safe commercial use**: the fallback when a result must be safe to sell |
+| `birefnet`, `imageutils/rembg`, `ideogram/remove-background`, `pixelcut/background-removal` | background out; the phone already does a first pass |
+| `sam-3/image` | finds and cuts out a named thing in a photo |
+| `esrgan`, `clarity-upscaler`, `aura-sr`, `seedvr/upscale/image`, `topaz/upscale/image/precision`, `recraft/upscale/crisp` | sharper and bigger: an old phone photo good enough for a cover or a print |
+| `image-preprocessors/depth-anything/v2` | depth from a photo: background blur, a 3D tilt for a moving cover |
+| `ffmpeg-api/extract-frame` | a still from a clip; the phone does this |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -347,6 +364,9 @@ Last page:
   does not yet: captions and transcripts in Afrikaans are possible now.
 - **Lyrics on the beat**: forced alignment times every word to the song,
   for karaoke and lyric videos.
+- **Ready to print**: vectorize turns a member's logo or art into a file a
+  printer can use at any size. With the merch try-on, that is a merch line
+  from one drawing.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
