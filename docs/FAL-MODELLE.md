@@ -571,6 +571,26 @@ own photos, their own recordings); a face or a voice only their own; the
 trained add-on is theirs, kept in their account, deleted with it; and the
 price for training is shown before the press like every other.
 
+Last pages of training: `ideogram/custom-models` (partner; "images that
+feel consistently yours" from a few photos), `blackforestlabs/flux-3/klein/base/trainer`
+(+ `/edit`, taught from before-and-after pairs: **a member's own edit,
+learned once and repeated in one press**), `wan-trainer/i2v-720p`, and the
+LTX v2 family: `ic-lora/a2a`, `/av2av`, `/av2av-masked`, `/v2v`,
+`/v2v-masked`, `a2a`, `a2v` (motion that follows a sound), `audio-inpaint`,
+`av2av`, `av2av-masked`, `outpaint`, `extend-prefix`, `extend-suffix`,
+`inpaint`, `v2a` (**a member's own sound design for silent clips, learned**),
+`v2v`, `v2v-masked`. The same training rules apply.
+
+### Seeing (vision), 34: first pages
+
+| Model | Note |
+|---|---|
+| `imageutils/nsfw`, `x-ailab/nsfw` | **the likelihood that a picture is sexual**: a second screen on every picture and frame **posted to the Live room**, before anybody else sees it. Our own words are screened already; pictures are not yet. The child-safety procedure (`docs/CHILD-SAFETY-REPORTING.md`) gains a check that runs before a report is needed |
+| `video-understanding` | answers questions about a clip: the copilot watches a member's cut |
+| `moondream3-preview/detect`, `/query`, `/point`, `/caption`, `moondream2`, `moondream2/visual-query`, `moondream2/object-detection`, `moondream-next` | finds things in a picture, points at them, answers questions about them: **"which of my covers reads best small?"** |
+| `florence-2-large/ocr`, `/caption`, `/detailed-caption`, `/more-detailed-caption` | reads words in a picture; describes it. **Alt text for every picture a member posts**, so the app works for people who cannot see |
+| `openrouter/router/vision` | another gateway; not needed |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -616,6 +636,9 @@ price for training is shown before the press like every other.
 - **Ready to print**: vectorize turns a member's logo or art into a file a
   printer can use at any size. With the merch try-on, that is a merch line
   from one drawing.
+- **Safety and access, not only making**: a picture screen before a Live
+  room post (`imageutils/nsfw`), and alt text for every posted picture
+  (`florence-2-large/caption`). Both are cheap and fal.ai's own.
 - **What the phone already does stays on the phone**: filters, grain,
   tints, trims and merges cost nothing and never leave the device. fal.ai
   is for what only a model can do.
