@@ -2068,26 +2068,33 @@ html[data-singing] [data-tabbar] { display: none !important; }
    button the photograph shows through. So the panel is frosted dark glass —
    the photograph still shows through it, blurred, so nothing jumps — and
    every button is solid, with the neon kept as its edge. */
-/* Solid since 23 October 2026 — the owner: "die buttons ... is deurskynend.
-   Dis tans baie onprakties." The panel is docked under the photograph now,
-   nothing shows through it, and the glass went with the overlap. */
+/* Docked under the photograph since 23 October 2026 — the owner: "die
+   buttons gaan halfpad oor die skerm en is deurskynend. Dis tans baie
+   onprakties." It stays docked, so the photograph is never covered and can
+   still be tapped. And since 27 October 2026 — the owner: *"Kan die buttons
+   en menu ook nie maar so deurskynend wees soos video editor"* — it wears
+   the Video Editor's glass (`[data-cutfloat]`): a dark see-through panel,
+   blurred, with see-through tiles and a thin light edge rather than neon. */
 [data-postpop][data-neon] {
-  background: #0b0f14 !important;
-  border-top: 1px solid rgba(57, 255, 20, 0.35);
+  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.5) 0%, rgba(10, 12, 16, 0.84) 30%, rgba(10, 12, 16, 0.94) 100%) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(226, 232, 240, 0.12);
   padding: 6px 8px;
 }
 [data-postpop][data-neon] :is(div, section, aside, header, fieldset) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
 [data-postpop][data-neon] :is(p, span, label, h3, h4) { color: #eafff4 !important; }
 [data-postpop][data-neon] :is(button, select, textarea, input[type="text"], input[type="number"]) {
-  background: #131a22 !important;
-  border: 1.5px solid rgba(57, 255, 20, 0.6) !important;
+  background: rgba(19, 26, 34, 0.74) !important;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 0 !important;
   color: #eafff4 !important;
-  box-shadow: 0 0 8px rgba(57, 255, 20, 0.28) !important;
+  box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.16) inset !important;
 }
 [data-postpop][data-neon] :is(button[aria-pressed="true"], button[data-picked="true"]) {
-  background: #1d4a22 !important;
-  border-color: #b9ff9e !important;
-  box-shadow: 0 0 14px rgba(57, 255, 20, 0.7) !important;
+  background: rgba(52, 211, 153, 0.34) !important;
+  box-shadow: 0 0 0 1.5px rgba(52, 211, 153, 0.8) inset !important;
 }
 /* The magic touch and the strips are aimed by tapping the photograph
    through the panel, so there the panel stays clear and the letters keep

@@ -176,6 +176,27 @@ export async function falNow(model: string, input: Record<string, unknown>): Pro
   }
 }
 
+/**
+ * The mask in an answer that finds a thing. `fal-ai/sam-3/image` answers
+ * with `masks` (what was found) AND `image` (a preview: the photo with the
+ * find painted over it). `fileUrlOf` takes `image` first, which for a
+ * sticker is the whole photo again: the sticker then covered the photo
+ * with a copy of itself, and it looked as though nothing had happened
+ * (the owner, 27 October 2026: *"Niks gebeur met peel it off nie"*).
+ */
+export function maskUrlOf(result: unknown): string | null {
+  const row = result && typeof result === 'object' ? result as Record<string, unknown> : {};
+  const masks = row.masks;
+  if (Array.isArray(masks)) {
+    for (const one of masks) {
+      const url = typeof one === 'string' ? one : one && typeof one === 'object' ? (one as { url?: unknown }).url : null;
+      if (typeof url === 'string' && /^(https:\/\/|data:)/.test(url)) return url;
+    }
+    return null;
+  }
+  return fileUrlOf({ mask_image: row.mask_image });
+}
+
 /** The first file address in an answer, whatever the model calls it. */
 export function fileUrlOf(result: unknown): string | null {
   const row = result && typeof result === 'object' ? result as Record<string, unknown> : {};

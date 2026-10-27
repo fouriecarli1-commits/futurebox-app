@@ -639,7 +639,11 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
-const TOOL_FOOT = 'flex min-h-[56px] w-[58px] shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
+/* No border class: any button with one wears the room's glass ring
+   (globals.css), and a row of eight rings is not the Video Editor's quiet
+   glass bar the owner asked for on 27 October 2026. The open tool keeps its
+   ring (\`GEKIES\`). */
+const TOOL_FOOT = 'flex min-h-[56px] w-[58px] shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg px-0 text-[9px] font-bold leading-tight';
 /** A tool down the rail at a desk. */
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
 
@@ -1023,6 +1027,10 @@ export default function PostStudio({
   const [nudge, setNudge] = useState<IdeaMoment | null>(null);
   const [idea, setIdea] = useState<{ readonly moment: IdeaMoment; readonly thumb: string } | null>(null);
   const [becomeBusy, setBecomeBusy] = useState(false);
+  /* What the bench said, shown over the photo too: on a phone the bench
+     is below the photo, and a press that seemed to do nothing was a press
+     whose answer was out of sight. */
+  const [photoSay, setPhotoSay] = useState('');
   const nudgedFor = useRef('');
   const [magicSize, setMagicSize] = useState(0.06);
   /* What her finger painted over, stroke by stroke, as shares of the photograph. */
@@ -8614,6 +8622,11 @@ export default function PostStudio({
   useEffect(() => {
     if (bench !== 'alive') setPulling(false);
   }, [bench]);
+  useEffect(() => {
+    if (!photoSay) return undefined;
+    const gone = window.setTimeout(() => setPhotoSay(''), becomeBusy ? 60_000 : 6000);
+    return () => window.clearTimeout(gone);
+  }, [photoSay, becomeBusy]);
 
   const aliveBench = (
     <BecomeBench
@@ -8626,6 +8639,7 @@ export default function PostStudio({
       lastCut={lastCut}
       onCut={showCut}
       onBusy={setBecomeBusy}
+      onSay={setPhotoSay}
     />
   );
 
@@ -10278,6 +10292,14 @@ export default function PostStudio({
           onNotNow={() => { saidNotNow(nudge); setNudge(null); }}
         />
       )}
+      {(photoSay || pulling) && !peel && !nudge && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-becomephotosay>
+          <p role="status" className="fb-nudge inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 px-4 py-2 text-center text-xs font-bold text-emerald-100 shadow-lg">
+            {becomeBusy && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />}
+            {photoSay || t('become.tapThing', 'Tap the thing you want to pull out.')}
+          </p>
+        </div>
+      )}
       {idea && !becomeBusy && (
         <IdeaPrompt
           floating
@@ -11054,7 +11076,10 @@ export default function PostStudio({
                  looking at the docked panel: "die pop out van die funksies
                  moet bietjie groter wees, dalk tot die middel van die
                  bladsy." Half the screen for the tool, half for the picture. */
-              style={{ height: stripsUp ? STRIP_LEAST + 4 : '50dvh' }}
+              /* And a little higher since 27 October 2026, as high as the
+                 Video Editor's panels reach: "bietjie hoer op gaan in die
+                 editor". */
+              style={{ height: stripsUp ? STRIP_LEAST + 4 : '56dvh' }}
             >
               {stripsUp
                 ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
@@ -11069,8 +11094,8 @@ export default function PostStudio({
             /* Sideways on purpose: the owner, 14 October 2026 — the tools stay
                small along the foot and scroll left and right, so the photo
                keeps the whole screen above them. */
-            className="flex shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"
-            style={{ background: PHOTO.floorGlass, borderTop: `1px solid ${PHOTO.edge}` }}
+            className="flex shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1 backdrop-blur-md"
+            style={{ background: 'rgba(10,12,16,0.72)', borderTop: `1px solid ${PHOTO.edge}` }}
           >
             {ALL_BENCHES.map((spec) => toolButton(spec, false))}
           </nav>

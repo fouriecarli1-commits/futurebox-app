@@ -8,7 +8,7 @@
  * server, and the two yeses the route will not go without.
  */
 import { readFileSync } from 'node:fs';
-import { FAL_MODELS, FAL_KEEP_SECONDS } from '../app/lib/server/fal.ts';
+import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
 import { BECOMES } from '../app/lib/becomes.ts';
 
 let bad = 0;
@@ -53,6 +53,10 @@ ok('  and the screen asks both, once, before the first press', /data-becomeabroa
 ok('neither engine route takes a job from an open kids room',
   /await kidsRoom\(caller\.id\)/.test(become) && /await kidsRoom\(caller\.id\)/.test(route),
   'fal.ai needs every user to be 18; an open kids room is a child at the screen');
+ok('a sticker is cut from the MASK, never the preview (which is the whole photo again)',
+  /spec\.gives === 'mask' \? maskUrlOf\(ran\.data\)/.test(become)
+  && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [{ url: 'https://v3.fal.media/mask.png' }] }) === 'https://v3.fal.media/mask.png'
+  && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [] }) === null);
 ok('a make\'s words are screened as footage is', /guard\(request, words, 'footage', caller\)/.test(become));
 ok('a make that fails gives the credits back once', /await paid\.refund\(\)/.test(become) && /reason', 'refund'\)/.test(become));
 ok('the key stays off the screen here too', !/FAL_KEY/.test(bench));

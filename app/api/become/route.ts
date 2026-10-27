@@ -27,7 +27,7 @@ import { BECOME_IDS, BECOMES, becomeInput, type BecomeId, type Tap } from '@/app
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
-import { falNow, falProgress, falQueue, falReady, fileUrlOf } from '@/app/lib/server/fal';
+import { falNow, falProgress, falQueue, falReady, fileUrlOf, maskUrlOf } from '@/app/lib/server/fal';
 import { seal, unseal } from '@/app/lib/server/falticket';
 import { kidsRoom } from '@/app/lib/server/kidsmode';
 
@@ -130,7 +130,7 @@ export async function POST(request: Request): Promise<Response> {
       }
       return Response.json({ state: 'failed', message: FAILED }, { status: 502 });
     }
-    const url = fileUrlOf(ran.data);
+    const url = spec.gives === 'mask' ? maskUrlOf(ran.data) : fileUrlOf(ran.data);
     if (!url) {
       await paid.refund();
       return Response.json({ state: 'failed', message: 'Nothing was found there. Tap the middle of the thing. Your credits are back.' }, { status: 404 });

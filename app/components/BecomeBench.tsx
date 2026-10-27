@@ -64,9 +64,13 @@ export function useEngineYes(): readonly [boolean, () => void] {
 function YesSheet({ t, onYes, onNo }: { readonly t: Say; readonly onYes: () => void; readonly onNo: () => void }): React.ReactElement {
   const [abroad, setAbroad] = useState(false);
   const [adult, setAdult] = useState(false);
+  /* Brought into view: the bench can be below the fold on a phone, and two
+     questions out of sight are a press that seems to do nothing. */
+  const here = useRef<HTMLDivElement>(null);
+  useEffect(() => { here.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, []);
   const tick = 'flex min-h-[44px] items-start gap-3 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm text-zinc-200 cursor-pointer';
   return (
-    <div className="space-y-2.5 rounded-2xl border border-emerald-500/40 bg-zinc-950/95 p-3" data-becomeyes>
+    <div ref={here} className="space-y-2.5 rounded-2xl border border-emerald-500/40 bg-zinc-950/95 p-3" data-becomeyes>
       <p className="text-sm font-bold text-zinc-100">{t('become.yesTitle', 'Before the first one')}</p>
       <label className={tick}>
         <input type="checkbox" checked={abroad} onChange={(event) => setAbroad(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500" data-becomeabroad />
@@ -219,6 +223,7 @@ export default function BecomeBench({
   lastCut,
   onCut,
   onBusy,
+  onSay,
 }: {
   readonly picture: HTMLImageElement | null;
   readonly t: Say;
@@ -234,6 +239,9 @@ export default function BecomeBench({
   /** A thing has been cut out: the room shows it ready to peel. */
   readonly onCut: (cut: Cut) => void;
   readonly onBusy: (busy: boolean) => void;
+  /** What the bench just said, so the room can show it over the photo too:
+      on a phone the bench is often below the fold. */
+  readonly onSay?: (words: string) => void;
 }): React.ReactElement {
   const [yes, giveYes] = useEngineYes();
   const [asking, setAsking] = useState<BecomeId | null>(null);
@@ -246,6 +254,7 @@ export default function BecomeBench({
   const seenStart = useRef(0);
 
   useEffect(() => { onBusy(busy !== null); }, [busy, onBusy]);
+  useEffect(() => { if (said) onSay?.(said); }, [said, onSay]);
   useEffect(() => () => {
     if (video) URL.revokeObjectURL(video);
     if (model) URL.revokeObjectURL(model);
@@ -253,21 +262,32 @@ export default function BecomeBench({
 
   const pull = useCallback(async (at: PullTap): Promise<void> => {
     if (!picture) return;
-    const sent = sendable(picture, BECOME_SIDE);
-    if (!sent) return;
+    /* Every way this can end says so, in words, over the photo as well as
+       here (`onSay`): the owner, 27 October 2026, *"As niks werk nie en
+       daar is 'n rede moet dit vir die klient sê."* */
+    let sent: ReturnType<typeof sendable> = null;
+    try { sent = sendable(picture, BECOME_SIDE); } catch { sent = null; }
+    if (!sent) { setSaid(t('become.noPicture', 'This picture could not be read. Nothing was charged.')); return; }
     setBusy('sticker');
     setSaid(t('become.finding', 'Finding it…'));
+    let paid = false;
     try {
       const got = await ask({ become: 'sticker', picture: sent.data, tap: { x: at.x * sent.width, y: at.y * sent.height } });
       if (!got.ok || !got.url) { setSaid(got.message ?? t('become.failed', 'That did not work this time. Your credits are back.')); return; }
+      paid = true;
       const mask = await loadPicture(got.url);
       const cut = cutOut(picture, mask);
       if (!cut) { setSaid(t('become.nothing', 'Nothing was found there. Tap the middle of the thing.')); return; }
+      /* A "thing" as big as the whole photo is not a thing: it would sit
+         over the photo as a copy of it and look as though nothing happened. */
+      if (cut.box.w * cut.box.h > 0.9) { setSaid(t('become.allOfIt', 'That took the whole photo, not one thing. Tap the middle of one thing, close up.')); return; }
       onCut(cut);
       onPulling(false);
       setSaid(t('become.peelNow', 'There it is. Tap it to peel it off.'));
     } catch {
-      setSaid(t('become.failed', 'That did not work this time. Your credits are back.'));
+      setSaid(paid
+        ? t('become.noFetchSticker', 'It was found, but could not be brought onto this phone. Check your connection and tap it again.')
+        : t('become.failed', 'That did not work this time. Your credits are back.'));
     } finally {
       setBusy(null);
     }
@@ -275,8 +295,9 @@ export default function BecomeBench({
 
   const wake = useCallback(async (): Promise<void> => {
     if (!picture) return;
-    const sent = sendable(picture, BECOME_SIDE);
-    if (!sent) return;
+    let sent: ReturnType<typeof sendable> = null;
+    try { sent = sendable(picture, BECOME_SIDE); } catch { sent = null; }
+    if (!sent) { setSaid(t('become.noPicture', 'This picture could not be read. Nothing was charged.')); return; }
     setBusy('alive');
     setSaid(t('become.waking', 'Waking it up. This takes about a minute.'));
     try {

@@ -1967,6 +1967,8 @@ export const STRINGS: Dict = {
   "become.yesTitle": { en: "Before the first one", af: "Voor die eerste een" },
   "foot.cutoutWhat": { en: "Keeps the people and takes away everything behind them, so you can put them anywhere. Up to 20 seconds.", af: "Hou die mense en haal alles agter hulle weg, sodat jy hulle enige plek kan sit. Tot 20 sekondes." },
   "foot.eraseWhat": { en: "Say one thing in the shot and it disappears from every frame. Up to 8 seconds.", af: "Sê een ding in die skoot en dit verdwyn uit elke raam. Tot 8 sekondes." },
+  "become.allOfIt": { en: "That took the whole photo, not one thing. Tap the middle of one thing, close up.", af: "Dit het die hele foto gevat, nie een ding nie. Tik in die middel van een ding wat naby is." },
+  "become.noFetchSticker": { en: "It was found, but could not be brought onto this phone. Check your connection and tap it again.", af: "Dit is gevind, maar kon nie op hierdie foon kom nie. Kyk na jou verbinding en tik weer." },
   "become.stickerWhat": { en: "Tap a thing in the photo. It peels off as a sticker.", af: "Tik op iets in die foto. Dit trek af soos ’n plakker." },
   "become.aliveWhat": { en: "Six seconds of movement, with its own sound.", af: "Ses sekondes beweging, met sy eie klank." },
   "become.model3dWhat": { en: "The thing you pulled out, as a model you can spin.", af: "Wat jy uitgetrek het, as ’n model wat jy kan draai." },
