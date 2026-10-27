@@ -176,6 +176,18 @@ fully licensed material**, the safest video to sell), `bytedance/bernini-r`
 | `wan/v2.2-14b/speech-to-video`, `flashtalk`, `echomimic-v3`, `longcat-single-avatar/audio-to-video`, `…/image-audio-to-video` | a still picture that speaks or sings to the audio. Face rule applies |
 | `veed/avatars/audio-to-video`, `argil/avatars/audio-to-video` | stock avatars; VEED stays out, Argil is a partner |
 
+### Video in, video out (video to video), 204: first page
+
+| Model | Note |
+|---|---|
+| `kling/v4/video-to-video/edit`, `kling-video/o3/pro/video-to-video/edit`, `…/o3/standard/…`, `google/gemini-omni-flash/v1.1/edit` | **change a member's own clip in words** ("make it night", "add rain"). The next step for the Video Editor after the two engine presses it already has |
+| `kling/v4/reference-to-video`, `alibaba/wan-3.0/reference-to-video`, `…/wan-3.0-prime/reference-to-video` | a new clip that keeps a character, product or place from reference pictures and clips: **the same face across every shot of a music video** |
+| `kling-video/v3/pro/motion-control`, `…/v3/standard/…`, `…/v2.6/standard/…`, `wan/v2.2-14b/animate/replace`, `minimax/h3-max/recast` | a dance or a movement copied onto another character, or the people in a clip swapped. **Face rule applies twice**: the person in the clip and the person put in must both be the member, or have said yes |
+| `sync-lipsync/v3`, `sync-lipsync/v2`, `…/v2/pro`, `latentsync` | mouth moved to new audio: a dubbed clip, a corrected line. Face rule applies |
+| `topaz/upscale/video/precision`, `bytedance-upscaler/upscale/video`, `seedvr/upscale/video` | up to four times sharper: **phone footage to a clean final**. Topaz is a partner |
+| `mmaudio-v2` | **sound for a silent clip**, timed to the picture |
+| `ffmpeg-api/merge-videos`, `ffmpeg-api/merge-audio-video`, `ffmpeg-api/compose`, `workflow-utilities/trim-video` | plain tools the Video Editor already does on the phone, without credits |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
