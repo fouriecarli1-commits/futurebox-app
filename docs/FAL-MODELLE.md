@@ -442,6 +442,17 @@ Twenty-second to twenty-sixth pages:
 | `image-apps-v2/product-holding` | a product in a person's hands, beside Bria's |
 | `post-processing/blur`, `image-apps-v2/object-removal`, `…/remove-element`, `…/remove-lighting`, `…/lighting-restoration`, `vidu/reference-to-image`, `emu-3.5-image/edit-image`, `hidream-i1-full/image-to-image`, `flux-general/differential-diffusion`, `flux-1/srpo/…`, `flux-1/krea/redux`, `flux-1/dev/redux`, `sdxl-controlnet-union/inpainting`, `fast-sdxl-controlnet-canny/…`, `fast-lcm-diffusion/inpainting`, `chrono-edit-lora`, `image-preprocessors/sam`, `florence-2-large/dense-region-caption` | more of the same jobs |
 
+Twenty-seventh to thirty-first pages:
+
+| Model | Note |
+|---|---|
+| `invisible-watermark` | **an invisible mark in every picture the app makes**: proof a cover is the member's, and an honest label that AI helped. Worth weighing for everything the studio exports |
+| `image-editing/time-of-day`, `image-editing/weather-effect`, `image-editing/scene-composition` | golden hour to midnight; snow, rain, fog; a subject put into any scene |
+| `docres`, `docres/dewarp` | a photographed page made flat and readable: **handwritten lyrics from a notebook**, cleaned up |
+| `post-processing/grain`, `…/color-tint`, `…/vignette`, `…/desaturate`, `…/blur`, `…/chromatic-aberration`, `…/solarize`, `…/dodge-burn`, `…/parabolize`, `…/dissolve`, `image-apps-v2/photography-effects` | **plain filters: the Photo Editor does these on the phone, without credits.** Never sent to fal.ai |
+| `bria/reimagine` | partner, licensed data; a new picture keeping the shape of the old one |
+| `playground-v25/…`, `flowedit`, `luma-photon/flash/modify`, `flux-pro/v1/fill-finetuned`, `flux/krea/redux`, `flux-general/rf-inversion`, `ideogram/v2/edit`, `…/v2/turbo/edit`, `…/v2/turbo/remix`, `…/v2a/remix`, `…/v2a/turbo/remix`, `rundiffusion-fal/juggernaut-flux/base/…`, `fast-lightning-sdxl/inpainting`, `qwen-image-edit-2509-lora-gallery/…` (integrate-product, next-scene, add-background, face-to-full-portrait, shirt-design), `florence-2-large/region-proposal`, `…/region-to-segmentation`, `image-preprocessors/pidi`, `/scribble` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -487,6 +498,9 @@ Twenty-second to twenty-sixth pages:
 - **Ready to print**: vectorize turns a member's logo or art into a file a
   printer can use at any size. With the merch try-on, that is a merch line
   from one drawing.
+- **What the phone already does stays on the phone**: filters, grain,
+  tints, trims and merges cost nothing and never leave the device. fal.ai
+  is for what only a model can do.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
