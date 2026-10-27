@@ -7016,10 +7016,10 @@ function LaneRow({
             }}
             aria-expanded={saving}
             title={t('pro.save', 'Take this lane away')}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 hover:border-sky-500/50 hover:text-sky-300"
+            className="flex min-h-[44px] w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 hover:border-sky-500/50 hover:text-sky-300"
           >
             <ArrowDownToLine className="h-4 w-4 shrink-0" />
-            {t('pro.save', 'Take this lane away')}
+            <span className="min-w-0 truncate">{t('pro.save', 'Take this lane away')}</span>
           </button>
           {saving && (
             <div
