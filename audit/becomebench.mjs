@@ -38,6 +38,7 @@ try {
     });
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url: mask, credits: 2 }) });
   });
+  await page.route('**/api/post/export', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, left: 42 }) }));
 
   await studio(page);
   await toRoom(page, 'Photo Editor');
@@ -113,6 +114,37 @@ try {
   check('  and it lands as a layer of its own', (await page.locator('[data-peel]').count()) === 0);
   check('  and the sticker offers to become a 3D model', (await page.locator('[data-becomenudgego="model3d"]').count()) === 1);
   await snap('peeled');
+
+  /* ── Each press on the bench is a card: what it does, and its price ── */
+  const cards = await page.evaluate(() => [...document.querySelectorAll('[data-become]')].map((el) => {
+    const r = el.getBoundingClientRect();
+    return { h: Math.round(r.height), right: Math.round(r.right), words: el.textContent ?? '' };
+  }));
+  check('the bench cards say what each does and fit the screen',
+    cards.length === 3 && cards.every((c) => c.h >= 60 && c.right <= 391 && c.words.length > 40), JSON.stringify(cards));
+  await page.locator('[data-becomebench]').scrollIntoViewIfNeeded();
+  await snap('cards');
+
+  /* ── Saved: a card asks whether they want to do more with it ── */
+  await page.locator('[data-becomenudge] button[aria-label]').first().click().catch(() => {});
+  await page.locator('[data-postexportopen]').click();
+  await page.waitForTimeout(600);
+  await page.locator('[data-postexport]').first().click();
+  await page.waitForTimeout(2200);
+  const card = page.locator('[data-idea="postSaved"]');
+  check('after a save, a card asks to do more with it', (await card.count()) === 1);
+  check('  with every offer priced', (await page.locator('[data-ideago]').count()) === 2
+    && (await page.locator('[data-ideago]').allInnerTexts()).every((words) => /credit|krediet/i.test(words)));
+  const inView = await page.evaluate(() => {
+    const r = document.querySelector('[data-idea]')?.getBoundingClientRect();
+    return r ? r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth : false;
+  });
+  check('  in full view on a phone', inView);
+  await snap('saved');
+  await page.locator('[data-ideanot]').click();
+  await page.waitForTimeout(300);
+  check('saying no for now puts it away, and is remembered', (await card.count()) === 0
+    && await page.evaluate(() => /postSaved":1/.test(localStorage.getItem('fb.ideas.v1') ?? '')));
 } finally {
   await browser.close();
   await server.stop();

@@ -186,6 +186,7 @@
     "check:roomwalk": "tsx scripts/check-roomwalk.mts",
     "check:tone3000": "tsx scripts/check-tone3000.mts",
     "check:ampsource": "tsx scripts/check-ampsource.mts",
+    "check:ideas": "tsx scripts/check-ideas.mts",
     "check:tone3000route": "tsx scripts/check-tone3000route.mts",
     "check:gratis": "tsx scripts/check-gratis.mts",
     "check:werkvloeie": "tsx scripts/check-werkvloeie.mts",

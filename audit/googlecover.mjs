@@ -96,6 +96,23 @@ try {
   check('  and nothing waits on a job that does not exist', polled === 0, `${polled} poll(s)`);
   check('  and the picture is on the panel', (await page.locator(`img[src="${PIXEL}"]`).count()) > 0);
 
+  /* ── Kept: the cover is offered movement, with its price ────────────
+     The owner, 27 October 2026: *"bou notifications in wat vra of hulle
+     nie iets met die image wil doen nie"* (`lib/ideas.ts`). */
+  await page.waitForTimeout(1600);
+  const idea = page.locator('[data-idea="coverKept"]');
+  check('a kept cover asks whether it should move', (await idea.count()) === 1);
+  check('  with the price on the offer', /credit|krediet/i.test(await page.locator('[data-ideago="alive"]').innerText().catch(() => '')));
+  if (process.argv[3]) {
+    await idea.scrollIntoViewIfNeeded().catch(() => undefined);
+    await page.screenshot({ path: `${process.argv[3]}/cover-idea.png` });
+  }
+  await page.locator('[data-ideago="alive"]').click();
+  await page.waitForTimeout(400);
+  check('  and a yes opens Wake it up there, asking the two questions first',
+    (await page.locator('[data-wakesheet] [data-becomeyes]').count()) === 1);
+  if (process.argv[3]) await page.screenshot({ path: `${process.argv[3]}/cover-wake.png` });
+
   /* ── A piece bought from an artist ──────────────────────────────────
      The owner, 22 October 2026: the artist's name and the piece's name were
      still missing on a bought cover. The panel on the song is where she
@@ -116,6 +133,7 @@ try {
   check('  and offers no "Another" that would draw a cover the bought one hides',
     (await card2.locator('button').filter({ hasText: /^(Another|Nog een) \u2014/ }).count()) === 0,
     (await card2.locator('button').filter({ hasText: /^(Another|Nog een) \u2014/ }).allTextContents()).join(' | ') + ' // tags: ' + (await card2.locator('[data-arttag]').count()));
+  check('  and is never offered movement: the piece is the artist\u2019s', (await page.locator('[data-idea]').count()) === 0);
 } catch (error) {
   problems.push(String(error));
   console.log(`  FAIL ${error}`);

@@ -3978,6 +3978,14 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   from { opacity: 0; transform: translateY(-10px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
+/* The "want to do more with it?" card rises from the bottom (`IdeaPrompt`). */
+.fb-idea {
+  animation: fb-idea-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes fb-idea-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge { animation-duration: 0.01s; animation-iteration-count: 1; }
+  .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge, .fb-idea { animation-duration: 0.01s; animation-iteration-count: 1; }
 }

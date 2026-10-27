@@ -78,7 +78,8 @@ import CompareLine from './CompareLine';
 import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
-import BecomeBench, { BecomeNudge, PeelOverlay, type PullTap, type StartBecome } from './BecomeBench';
+import BecomeBench, { BecomeNudge, IdeaPrompt, PeelOverlay, type PullTap, type StartBecome } from './BecomeBench';
+import { IDEAS, offerIf, saidNotNow, saidYes, type IdeaMoment } from '../lib/ideas';
 import type { BecomeId } from '../lib/becomes';
 import type { Cut } from '../lib/stickerize';
 import CanvasSizeModal from './CanvasSizeModal';
@@ -1007,7 +1008,9 @@ export default function PostStudio({
   /* ── Bring to life — `BecomeBench.tsx` ──────────────────────────────
      While `pulling` is on, a tap on the photo means "pull this out", and
      the cut-out waits on the photo (`peel`) until it is tapped and peeled
-     off into a layer of its own. `nudge` is the suggestion over the photo. */
+     off into a layer of its own. `nudge` is the suggestion over the photo;
+     `idea` the bigger card after a save. How often either may come is
+     `lib/ideas.ts`. */
   const [pulling, setPulling] = useState(false);
   const [pullTap, setPullTap] = useState<PullTap | null>(null);
   const [becomeStart, setBecomeStart] = useState<StartBecome | null>(null);
@@ -1017,7 +1020,8 @@ export default function PostStudio({
     readonly src: string;
     readonly rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number };
   } | null>(null);
-  const [nudge, setNudge] = useState<readonly BecomeId[] | null>(null);
+  const [nudge, setNudge] = useState<IdeaMoment | null>(null);
+  const [idea, setIdea] = useState<{ readonly moment: IdeaMoment; readonly thumb: string } | null>(null);
   const [becomeBusy, setBecomeBusy] = useState(false);
   const nudgedFor = useRef('');
   const [magicSize, setMagicSize] = useState(0.06);
@@ -3806,6 +3810,8 @@ export default function PostStudio({
          a paid picture that never arrives. */
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
       setSaid(t('post.saved', 'Saved to your device.'));
+      /* Saved is when they are most open to more: what it can become. */
+      if (picture && offerIf('postSaved')) window.setTimeout(() => setIdea({ moment: 'postSaved', thumb: url }), 900);
     } catch {
       setSaid(t('post.noExport', 'That could not be exported.'));
     } finally {
@@ -8581,12 +8587,14 @@ export default function PostStudio({
       }]);
       setCellOn(id);
       setPeel(null);
-      setNudge(['model3d', 'alive']);
+      if (offerIf('stickerPeeled')) setNudge('stickerPeeled');
     }, () => setPeel(null));
   };
 
-  const pickNudge = (id: BecomeId): void => {
+  const pickNudge = (id: BecomeId, moment: IdeaMoment): void => {
+    saidYes(moment);
     setNudge(null);
+    setIdea(null);
     if (bench !== 'alive') openBench('alive');
     setBecomeStart((was) => ({ id, n: (was?.n ?? 0) + 1 }));
   };
@@ -8599,7 +8607,7 @@ export default function PostStudio({
     if (nudgedFor.current === key) return undefined;
     const soon = window.setTimeout(() => {
       nudgedFor.current = key;
-      setNudge(['alive', 'sticker']);
+      if (offerIf('photoOpened')) setNudge('photoOpened');
     }, 1600);
     return () => window.clearTimeout(soon);
   }, [picture, bench]);
@@ -10262,7 +10270,24 @@ export default function PostStudio({
         />
       )}
       {nudge && !peel && !becomeBusy && (
-        <BecomeNudge ids={nudge} t={t} onPick={pickNudge} onClose={() => setNudge(null)} />
+        <BecomeNudge
+          ids={IDEAS[nudge].offers}
+          t={t}
+          onPick={(id) => pickNudge(id, nudge)}
+          onClose={() => setNudge(null)}
+          onNotNow={() => { saidNotNow(nudge); setNudge(null); }}
+        />
+      )}
+      {idea && !becomeBusy && (
+        <IdeaPrompt
+          floating
+          moment={idea.moment}
+          thumb={idea.thumb}
+          t={t}
+          onPick={(id) => pickNudge(id, idea.moment)}
+          onClose={() => setIdea(null)}
+          onNotNow={() => { saidNotNow(idea.moment); setIdea(null); }}
+        />
       )}
       {/* ── In and out ──────────────────────────────────────────────────
           The owner: *"in en uit kan zoom, met 'n easy scroll button."* A

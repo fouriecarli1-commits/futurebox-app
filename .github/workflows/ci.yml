@@ -334,6 +334,8 @@ jobs:
         run: npm run check:tone3000route
       - name: "Every catalogue capture says where it came from, and nothing from TONE3000 goes out without permission"
         run: npm run check:ampsource
+      - name: "Want to do more with it? Asked at the right moments, priced, never a nag"
+        run: npm run check:ideas
       - name: "Nothing reaches a supplier for free by accident"
         run: npm run check:gratis
       - name: "Every Music.ai workflow this app names is one she can actually set"

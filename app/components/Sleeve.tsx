@@ -108,6 +108,8 @@ import {
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 import { ArtTag } from './Cover';
+import { IdeaPrompt, WakeSheet } from './BecomeBench';
+import { offerIf, saidNotNow, saidYes } from '../lib/ideas';
 
 export default function Sleeve({
   trackId,
@@ -212,6 +214,20 @@ export default function Sleeve({
      `hasPicture` guards and an `img` with no `src` at all is a broken icon.
      The guard is the function, not this value. */
   const url = word.url ?? '';
+  /* A kept cover is offered a second life: six seconds of movement
+     (`lib/ideas.ts` says how often). Once per cover, never on a bought
+     piece, which is the artist's and not ours to change. */
+  const [idea, setIdea] = useState<'ask' | 'wake' | null>(null);
+  const offeredFor = useRef('');
+  const kept = saysSaved(standing) && word.bought !== true;
+  useEffect(() => {
+    if (!kept || !url || offeredFor.current === url) return undefined;
+    const soon = window.setTimeout(() => {
+      offeredFor.current = url;
+      if (offerIf('coverKept')) setIdea('ask');
+    }, 1200);
+    return () => window.clearTimeout(soon);
+  }, [kept, url]);
 
   /* Whether the question above has been answered yet. `startNow` waits on
      it, because starting a draw before knowing whether one already exists is
@@ -499,6 +515,17 @@ export default function Sleeve({
               `standing === 'kept'` and nothing else: not known is not saved,
               and `check:coverkeep` drives every value the server can send
               through `standingOf` to hold that. */}
+          {kept && idea === 'ask' && (
+            <IdeaPrompt
+              moment="coverKept"
+              thumb={url}
+              t={t}
+              onPick={() => { saidYes('coverKept'); setIdea('wake'); }}
+              onClose={() => setIdea(null)}
+              onNotNow={() => { saidNotNow('coverKept'); setIdea(null); }}
+            />
+          )}
+          {kept && idea === 'wake' && <WakeSheet src={url} t={t} onClose={() => setIdea(null)} />}
           {saysSaved(standing) ? (
             <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
               <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />

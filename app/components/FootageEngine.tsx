@@ -146,6 +146,11 @@ export default function FootageEngine({
               </button>
             ))}
           </div>
+          <p className="text-xs leading-snug text-zinc-400" data-footagewhat>
+            {job === 'cutout'
+              ? t('foot.cutoutWhat', 'Keeps the people and takes away everything behind them, so you can put them anywhere. Up to 20 seconds.')
+              : t('foot.eraseWhat', 'Say one thing in the shot and it disappears from every frame. Up to 8 seconds.')}
+          </p>
           {job === 'erase' && (
             <input
               type="text"

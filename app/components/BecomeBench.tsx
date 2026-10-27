@@ -29,7 +29,9 @@ import { accessToken } from '../lib/cloud';
 import { creditsSaid } from '../lib/credits';
 import { BECOMES, BECOME_SIDE, type BecomeId } from '../lib/becomes';
 import { cutOut, loadPicture, sendable, type Cut } from '../lib/stickerize';
+import { IDEAS, type IdeaMoment } from '../lib/ideas';
 import ModelView from './ModelView';
+import { aboveBar } from './TabBar';
 
 type Say = (key: string, fallback: string) => string;
 
@@ -37,7 +39,6 @@ const KNOP = 'inline-flex min-h-[44px] w-full items-center justify-center gap-1.
   + ' border border-zinc-700 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 text-center';
 const VUL = 'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl'
   + ' bg-emerald-500 px-4 text-sm font-bold text-black disabled:opacity-40';
-const GEKIES = 'border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.35)]';
 
 /* ── The two yeses, asked once on this device ─────────────────────────── */
 
@@ -128,6 +129,71 @@ async function keep(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * A slow one from start to finish: asked, waited for, and brought onto the
+ * phone. Either the file (a blob address) or what to tell them.
+ */
+async function slowOne(body: Record<string, unknown>, t: Say): Promise<{ readonly file?: string; readonly said?: string }> {
+  try {
+    const got = await ask(body);
+    if (!got.ok || !got.ticket) return { said: got.message ?? t('become.noStart', 'That did not start. Nothing was charged.') };
+    const done = await waitFor(got.ticket);
+    if (done.state !== 'done' || !done.url) {
+      return { said: done.state === 'slow' ? t('become.slow', 'This is taking longer than ten minutes. If it does not arrive, your credits come back.') : done.message ?? t('become.failed', 'That did not work this time. Your credits are back.') };
+    }
+    const file = await keep(done.url);
+    return file ? { file } : { said: t('become.noFetch', 'It was made but could not be brought onto this phone. Try again in a moment.') };
+  } catch {
+    return { said: t('become.failed', 'That did not work this time. Your credits are back.') };
+  }
+}
+
+/* ── How each press looks ─────────────────────────────────────────────── */
+
+const ICONS: Readonly<Record<BecomeId, React.ComponentType<{ className?: string }>>> = { sticker: Hand, alive: Sparkles, model3d: BoxIcon };
+
+const WHAT: Readonly<Record<BecomeId, readonly [string, string]>> = {
+  sticker: ['become.stickerWhat', 'Tap a thing in the photo. It peels off as a sticker.'],
+  alive: ['become.aliveWhat', 'Six seconds of movement, with its own sound.'],
+  model3d: ['become.model3dWhat', 'The thing you pulled out, as a model you can spin.'],
+};
+
+/** A press as a card: what it is, what it does, how long, and its price. */
+function BecomeCard({ id, t, busy, on, disabled, onClick, title }: {
+  readonly id: BecomeId;
+  readonly t: Say;
+  readonly busy: boolean;
+  readonly on?: boolean;
+  readonly disabled: boolean;
+  readonly onClick: () => void;
+  readonly title?: string;
+}): React.ReactElement {
+  const Icon = ICONS[id];
+  return (
+    <button
+      type="button"
+      data-become={id}
+      aria-pressed={on}
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex min-h-[68px] w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors disabled:opacity-50 ${on ? 'border-emerald-400 bg-emerald-500/15' : 'border-zinc-700 bg-gradient-to-br from-zinc-900 to-zinc-950'}`}
+    >
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-emerald-300">
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold text-zinc-100">{title ?? t(BECOMES[id].name[0], BECOMES[id].name[1])}</span>
+        <span className="block text-xs leading-snug text-zinc-400">
+          {t(WHAT[id][0], WHAT[id][1])} {t(BECOMES[id].wait[0], BECOMES[id].wait[1])}.
+        </span>
+      </span>
+      <span className="shrink-0 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-200">
+        {creditsSaid(BECOMES[id].credits, t)}
+      </span>
+    </button>
+  );
+}
+
 /* ── The bench ────────────────────────────────────────────────────────── */
 
 export interface PullTap {
@@ -214,16 +280,9 @@ export default function BecomeBench({
     setBusy('alive');
     setSaid(t('become.waking', 'Waking it up. This takes about a minute.'));
     try {
-      const got = await ask({ become: 'alive', picture: sent.data, words: words.trim() });
-      if (!got.ok || !got.ticket) { setSaid(got.message ?? t('become.noStart', 'That did not start. Nothing was charged.')); return; }
-      const done = await waitFor(got.ticket);
-      if (done.state !== 'done' || !done.url) {
-        setSaid(done.state === 'slow' ? t('become.slow', 'This is taking longer than ten minutes. If it does not arrive, your credits come back.') : done.message ?? t('become.failed', 'That did not work this time. Your credits are back.'));
-        return;
-      }
-      const kept = await keep(done.url);
-      if (!kept) { setSaid(t('become.noFetch', 'It was made but could not be brought onto this phone. Try again in a moment.')); return; }
-      setVideo(kept);
+      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim() }, t);
+      if (!got.file) { setSaid(got.said ?? ''); return; }
+      setVideo(got.file);
       setSaid(t('become.awake', 'It is alive. Press play for the sound, and Keep it to save it.'));
     } finally {
       setBusy(null);
@@ -240,16 +299,9 @@ export default function BecomeBench({
     setBusy('model3d');
     setSaid(t('become.building', 'Building it in 3D. This takes about two minutes.'));
     try {
-      const got = await ask({ become: 'model3d', picture: lastCut.bare.toDataURL('image/png') });
-      if (!got.ok || !got.ticket) { setSaid(got.message ?? t('become.noStart', 'That did not start. Nothing was charged.')); return; }
-      const done = await waitFor(got.ticket);
-      if (done.state !== 'done' || !done.url) {
-        setSaid(done.state === 'slow' ? t('become.slow', 'This is taking longer than ten minutes. If it does not arrive, your credits come back.') : done.message ?? t('become.failed', 'That did not work this time. Your credits are back.'));
-        return;
-      }
-      const kept = await keep(done.url);
-      if (!kept) { setSaid(t('become.noFetch', 'It was made but could not be brought onto this phone. Try again in a moment.')); return; }
-      setModel(kept);
+      const got = await slowOne({ become: 'model3d', picture: lastCut.bare.toDataURL('image/png') }, t);
+      if (!got.file) { setSaid(got.said ?? ''); return; }
+      setModel(got.file);
       setSaid(t('become.built', 'Here it is. Turn it with a finger, and Keep it to save the 3D file.'));
     } finally {
       setBusy(null);
@@ -281,8 +333,6 @@ export default function BecomeBench({
     return <p className="text-[13px] text-zinc-400" data-becomenone>{t('become.none', 'Bring a photo in first.')}</p>;
   }
 
-  const price = (id: BecomeId): string => creditsSaid(BECOMES[id].credits, t);
-
   /* One column, not several: under the photo on a phone each child of a
      bench becomes a column of its own that scrolls sideways, and the words
      for Wake it up landed off the edge of the screen. */
@@ -296,41 +346,30 @@ export default function BecomeBench({
           onYes={() => { giveYes(); const id = asking; setAsking(null); window.setTimeout(() => go(id), 0); }}
         />
       )}
+      {said && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.07] px-3 py-2 text-[13px] text-emerald-100" data-becomesaid>{said}</p>}
       <div className="grid grid-cols-1 gap-2">
-        <button
-          type="button"
-          data-become="sticker"
-          aria-pressed={pulling}
+        <BecomeCard
+          id="sticker"
+          t={t}
+          busy={busy === 'sticker'}
+          on={pulling}
           disabled={busy !== null}
           onClick={() => go('sticker')}
-          className={`${KNOP} ${pulling ? GEKIES : ''}`}
-        >
-          {busy === 'sticker' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hand className="h-4 w-4" />}
-          {pulling ? t('become.stickerOn', 'Tap the thing in the photo') : t(BECOMES.sticker.name[0], BECOMES.sticker.name[1])}
-          <span className="font-semibold text-zinc-400">· {price('sticker')}</span>
-        </button>
-        <button type="button" data-become="alive" disabled={busy !== null} onClick={() => go('alive')} className={KNOP}>
-          {busy === 'alive' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {t(BECOMES.alive.name[0], BECOMES.alive.name[1])}
-          <span className="font-semibold text-zinc-400">· {price('alive')}</span>
-        </button>
-        <button type="button" data-become="model3d" disabled={busy !== null} onClick={() => go('model3d')} className={KNOP}>
-          {busy === 'model3d' ? <Loader2 className="h-4 w-4 animate-spin" /> : <BoxIcon className="h-4 w-4" />}
-          {t(BECOMES.model3d.name[0], BECOMES.model3d.name[1])}
-          <span className="font-semibold text-zinc-400">· {price('model3d')}</span>
-        </button>
+          title={pulling ? t('become.stickerOn', 'Tap the thing in the photo') : undefined}
+        />
+        <BecomeCard id="alive" t={t} busy={busy === 'alive'} disabled={busy !== null} onClick={() => go('alive')} />
+        <input
+          type="text"
+          value={words}
+          maxLength={200}
+          onChange={(event) => setWords(event.target.value)}
+          placeholder={t('become.aliveWords', 'What should move? (you can leave this empty)')}
+          aria-label={t('become.aliveWords', 'What should move? (you can leave this empty)')}
+          className="-mt-1 min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-white"
+          data-becomewords
+        />
+        <BecomeCard id="model3d" t={t} busy={busy === 'model3d'} disabled={busy !== null} onClick={() => go('model3d')} />
       </div>
-      <input
-        type="text"
-        value={words}
-        maxLength={200}
-        onChange={(event) => setWords(event.target.value)}
-        placeholder={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-        aria-label={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-        className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-white"
-        data-becomewords
-      />
-      {said && <p role="status" className="text-[13px] text-zinc-300" data-becomesaid>{said}</p>}
       {video && (
         <div className="space-y-2" data-becomevideo>
           <video src={video} controls loop playsInline className="w-full rounded-2xl border border-zinc-700" />
@@ -421,32 +460,191 @@ export function PeelOverlay({ src, rect, t, onPeeled, onDismiss }: {
  * photo is opened ("Make it come alive"), and when a sticker is peeled
  * ("Make it 3D"). Small, over the photo, gone in nine seconds or at a tap,
  * and each with its price, because a suggestion that hides its price is a
- * trap.
+ * trap. How often it may come is `lib/ideas.ts`.
  */
-export function BecomeNudge({ ids, t, onPick, onClose }: {
+export function BecomeNudge({ ids, t, onPick, onClose, onNotNow }: {
   readonly ids: readonly BecomeId[];
   readonly t: Say;
   readonly onPick: (id: BecomeId) => void;
+  /** Gone by itself, after nine seconds. */
   readonly onClose: () => void;
+  /** Shut with the cross: counted, so it rests if it keeps being shut. */
+  readonly onNotNow: () => void;
 }): React.ReactElement {
+  /* The room draws itself again many times a second while a photo is
+     moved, each time with a new `onClose`: the clock is started once. */
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; });
   useEffect(() => {
-    const gone = window.setTimeout(onClose, 9000);
+    const gone = window.setTimeout(() => close.current(), 9000);
     return () => window.clearTimeout(gone);
-  }, [onClose]);
+  }, [ids]);
   return (
     <div className="pointer-events-none absolute inset-x-0 top-3 z-40 flex flex-col items-center gap-2 px-4" data-becomenudge>
-      {ids.map((id) => (
-        <div key={id} className="fb-nudge pointer-events-auto flex max-w-full items-center gap-1 rounded-full border border-emerald-400/60 bg-zinc-950/90 pl-1 pr-1 shadow-[0_0_24px_rgba(52,211,153,0.35)]">
-          <button type="button" data-becomenudgego={id} onClick={() => onPick(id)} className="inline-flex min-h-[40px] min-w-0 items-center gap-2 rounded-full px-3 text-xs font-bold text-emerald-100">
-            {id === 'model3d' ? <BoxIcon className="h-4 w-4 shrink-0" /> : id === 'alive' ? <Sparkles className="h-4 w-4 shrink-0" /> : <Hand className="h-4 w-4 shrink-0" />}
-            <span className="truncate">{t(BECOMES[id].ask[0], BECOMES[id].ask[1])}</span>
-            <span className="shrink-0 text-emerald-300/80">· {creditsSaid(BECOMES[id].credits, t)}</span>
-          </button>
-          <button type="button" onClick={onClose} aria-label={t('become.nudgeShut', 'Not now')} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-zinc-400">
-            <X className="h-4 w-4" />
-          </button>
+      {ids.map((id) => {
+        const Icon = ICONS[id];
+        return (
+          <div key={id} className="fb-nudge pointer-events-auto flex max-w-full items-center gap-1 rounded-full border border-emerald-400/60 bg-zinc-950/90 pl-1 pr-1 shadow-[0_0_24px_rgba(52,211,153,0.35)]">
+            <button type="button" data-becomenudgego={id} onClick={() => onPick(id)} className="inline-flex min-h-[40px] min-w-0 items-center gap-2 rounded-full px-3 text-xs font-bold text-emerald-100">
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t(BECOMES[id].ask[0], BECOMES[id].ask[1])}</span>
+              <span className="shrink-0 text-emerald-300/80">· {creditsSaid(BECOMES[id].credits, t)}</span>
+            </button>
+            <button type="button" onClick={onNotNow} aria-label={t('become.nudgeShut', 'Not now')} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-zinc-400">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The bigger ask: a card with the picture on it, a heading, one line of
+ * why, each offer with its price, and "Not now". Shown after something was
+ * saved or kept, when a small chip over the photo would be out of sight.
+ * The words and the offers are `IDEAS` in `lib/ideas.ts`.
+ */
+export function IdeaPrompt({ moment, thumb, t, onPick, onNotNow, onClose, floating = false }: {
+  readonly moment: IdeaMoment;
+  /** The picture it is about, shown small on the card. */
+  readonly thumb: string | null;
+  readonly t: Say;
+  readonly onPick: (id: BecomeId) => void;
+  readonly onNotNow: () => void;
+  /** Gone by itself after fifteen seconds; only a floating card goes by itself. */
+  readonly onClose: () => void;
+  /** Over the page at the bottom, rather than in its place on the page. */
+  readonly floating?: boolean;
+}): React.ReactElement {
+  const idea = IDEAS[moment];
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; });
+  useEffect(() => {
+    if (!floating) return undefined;
+    const gone = window.setTimeout(() => close.current(), 15000);
+    return () => window.clearTimeout(gone);
+  }, [floating, moment]);
+  const card = (
+    <div
+      role="dialog"
+      aria-label={t(idea.head[0], idea.head[1])}
+      data-idea={moment}
+      className="fb-idea pointer-events-auto w-full max-w-sm rounded-2xl border border-emerald-400/50 bg-zinc-950/95 p-3 shadow-[0_0_36px_rgba(52,211,153,0.28)] backdrop-blur"
+    >
+      <div className="flex items-start gap-3">
+        {thumb ? (
+          <span aria-hidden className="h-14 w-14 shrink-0 rounded-xl border border-zinc-700 bg-zinc-900 bg-cover bg-center" style={{ backgroundImage: `url(${thumb})` }} />
+        ) : (
+          <span aria-hidden className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-emerald-300"><Sparkles className="h-6 w-6" /></span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-zinc-100">{t(idea.head[0], idea.head[1])}</p>
+          <p className="mt-0.5 text-xs leading-snug text-zinc-400">{t(idea.why[0], idea.why[1])}</p>
         </div>
-      ))}
+        <button type="button" onClick={onNotNow} aria-label={t('become.nudgeShut', 'Not now')} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-zinc-400">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-2">
+        {idea.offers.map((id) => {
+          const Icon = ICONS[id];
+          return (
+            <button
+              key={id}
+              type="button"
+              data-ideago={id}
+              onClick={() => onPick(id)}
+              className="flex min-h-[48px] w-full items-center gap-2.5 rounded-xl bg-emerald-500 px-3 text-left text-sm font-bold text-black"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1">{t(BECOMES[id].ask[0], BECOMES[id].ask[1])}</span>
+              <span className="shrink-0 rounded-full bg-black/15 px-2 py-0.5 text-[11px]">{creditsSaid(BECOMES[id].credits, t)}</span>
+            </button>
+          );
+        })}
+        <button type="button" onClick={onNotNow} data-ideanot className="min-h-[40px] w-full rounded-xl text-xs font-bold text-zinc-400">
+          {t('become.nudgeShut', 'Not now')}
+        </button>
+      </div>
+    </div>
+  );
+  if (!floating) return card;
+  return (
+    <div className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4" style={{ bottom: aboveBar() }}>
+      {card}
+    </div>
+  );
+}
+
+/* ── Wake it up, anywhere a picture is ───────────────────────────────── */
+
+/**
+ * The same Wake it up as the bench, for a picture outside the Photo Editor:
+ * a song's cover. The picture is fetched by its address, made small, and
+ * sent; the two yeses are the same two, kept on the same key.
+ */
+export function WakeSheet({ src, t, onClose }: {
+  readonly src: string;
+  readonly t: Say;
+  readonly onClose: () => void;
+}): React.ReactElement {
+  const [yes, giveYes] = useEngineYes();
+  const [asking, setAsking] = useState(!yes);
+  const [words, setWords] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState('');
+  const [video, setVideo] = useState<string | null>(null);
+  useEffect(() => () => { if (video) URL.revokeObjectURL(video); }, [video]);
+
+  const wake = async (): Promise<void> => {
+    setBusy(true);
+    setSaid(t('become.waking', 'Waking it up. This takes about a minute.'));
+    try {
+      const picture = await loadPicture(src).catch(() => null);
+      const sent = picture ? sendable(picture, BECOME_SIDE) : null;
+      if (!sent) { setSaid(t('become.noPicture', 'This picture could not be read. Nothing was charged.')); return; }
+      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim() }, t);
+      if (!got.file) { setSaid(got.said ?? ''); return; }
+      setVideo(got.file);
+      setSaid(t('become.awake', 'It is alive. Press play for the sound, and Keep it to save it.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2.5 rounded-2xl border border-emerald-500/40 bg-zinc-950/95 p-3" data-wakesheet>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold text-zinc-100">{t(BECOMES.alive.name[0], BECOMES.alive.name[1])}</p>
+        <button type="button" onClick={onClose} disabled={busy} aria-label={t('become.close', 'Close')} className="grid h-8 w-8 place-items-center rounded-full text-zinc-400 disabled:opacity-40">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      {asking ? (
+        <YesSheet t={t} onNo={onClose} onYes={() => { giveYes(); setAsking(false); }} />
+      ) : video ? (
+        <div className="space-y-2" data-becomevideo>
+          <video src={video} controls loop playsInline className="w-full rounded-2xl border border-zinc-700" />
+          <a href={video} download="living-cover.mp4" className={VUL}>{t('become.keep', 'Keep it')}</a>
+        </div>
+      ) : (
+        <>
+          <input
+            type="text"
+            value={words}
+            maxLength={200}
+            onChange={(event) => setWords(event.target.value)}
+            placeholder={t('become.aliveWords', 'What should move? (you can leave this empty)')}
+            aria-label={t('become.aliveWords', 'What should move? (you can leave this empty)')}
+            className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-white"
+            data-becomewords
+          />
+          <BecomeCard id="alive" t={t} busy={busy} disabled={busy} onClick={() => void wake()} />
+        </>
+      )}
+      {said && <p role="status" className="text-[13px] text-zinc-300" data-becomesaid>{said}</p>}
     </div>
   );
 }
