@@ -10078,6 +10078,10 @@ export default function PostStudio({
      story is as tall as the screen) does it lie over the foot of the photo. */
   const panelUp = upright && (stripsUp || here !== null || Boolean(copilot && asking));
   const saveFull = upright && bench === 'save' && !stripsUp && !(copilot && asking);
+  /* Where the lines and suggestions over the photo's room sit: just above a
+     tool's strip when one is out, at the foot otherwise, never on the photo
+     itself (the photo rises to the top while a strip is out). */
+  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(34dvh + 10px)';
 
   /* The space the photograph has, measured, so the canvas fills it. */
   const stage = useRef<HTMLDivElement | null>(null);
@@ -10322,6 +10326,7 @@ export default function PostStudio({
       {nudge && !peel && !becomeBusy && (
         <BecomeNudge
           ids={IDEAS[nudge].offers}
+          bottom={overStrip}
           t={t}
           onPick={(id) => pickNudge(id, nudge)}
           onClose={() => setNudge(null)}
@@ -10329,7 +10334,7 @@ export default function PostStudio({
         />
       )}
       {toolSay && (
-        <div key={toolSay.n} className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: 'calc(34dvh + 10px)' }} data-posttoolsay>
+        <div key={toolSay.n} className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: overStrip }} data-posttoolsay>
           <p role="status" className="fb-nudge max-w-sm rounded-2xl border border-emerald-400/50 bg-zinc-950/90 px-4 py-2 text-center shadow-lg backdrop-blur">
             <span className="block text-[13px] font-bold text-emerald-100">{toolSay.name}</span>
             <span className="mt-0.5 line-clamp-2 block text-[12px] leading-snug text-zinc-300">{toolSay.what}</span>
@@ -10337,7 +10342,7 @@ export default function PostStudio({
         </div>
       )}
       {(photoSay || pulling) && !peel && !nudge && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-becomephotosay>
+        <div className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: overStrip }} data-becomephotosay>
           <p role="status" className="fb-nudge pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 py-1.5 pl-4 pr-1.5 text-center text-xs font-bold text-emerald-100 shadow-lg">
             {becomeBusy && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />}
             <span>{photoSay || t('become.tapThing', 'Tap the thing you want to pull out.')}</span>

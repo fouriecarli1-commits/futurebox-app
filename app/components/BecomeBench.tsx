@@ -495,8 +495,11 @@ export function PeelOverlay({ src, rect, t, onPeeled, onDismiss }: {
  * and each with its price, because a suggestion that hides its price is a
  * trap. How often it may come is `lib/ideas.ts`.
  */
-export function BecomeNudge({ ids, t, onPick, onClose, onNotNow }: {
+export function BecomeNudge({ ids, t, onPick, onClose, onNotNow, bottom }: {
   readonly ids: readonly BecomeId[];
+  /** How far up from the foot of the photo's room: above a tool's strip
+      when one is out, so nothing ever lies over the photograph itself. */
+  readonly bottom: string;
   readonly t: Say;
   readonly onPick: (id: BecomeId) => void;
   /** Gone by itself, after nine seconds. */
@@ -513,7 +516,7 @@ export function BecomeNudge({ ids, t, onPick, onClose, onNotNow }: {
     return () => window.clearTimeout(gone);
   }, [ids]);
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-40 flex flex-col items-center gap-2 px-4" data-becomenudge>
+    <div className="pointer-events-none absolute inset-x-0 z-40 flex flex-col items-center gap-2 px-4" style={{ bottom }} data-becomenudge>
       {ids.map((id) => {
         const Icon = ICONS[id];
         return (

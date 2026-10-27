@@ -7,6 +7,7 @@ import { LanguageProvider } from './lib/i18n';
 import { SiteFooter } from './components/SiteFooter';
 import WorkingBar from './components/WorkingBar';
 import Notices from './components/Notices';
+import NewVersion from './components/NewVersion';
 import Watchdog from './components/Watchdog';
 import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
@@ -195,6 +196,8 @@ export default function RootLayout({
           <WorkingBar />
           {/* And in words: "Working on it…", or what went wrong. */}
           <Notices />
+          {/* A tab left open on an older build is offered the new one. */}
+          <NewVersion />
           {/* The one thing the watchdog cannot do: be seen. */}
           <Blankscreen />
           {/* First in the markup so it is painted first, and the only thing

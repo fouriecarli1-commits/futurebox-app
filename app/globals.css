@@ -4042,6 +4042,11 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   }
 }
 
+/* The name over an icon button (`IconTips`): fades only, because its place
+   is set by its own transform and an animated transform would undo it. */
+.fb-tip { animation: fb-tip-in 0.18s ease-out both; }
+@keyframes fb-tip-in { from { opacity: 0; } to { opacity: 1; } }
+
 /* The one-line notice at the top (`Notices`): drops in, quickly. */
 .fb-notice {
   animation: fb-notice-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
