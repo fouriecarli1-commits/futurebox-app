@@ -398,6 +398,19 @@ Thirteenth to fifteenth pages:
 | `cat-vton`, `fashn/tryon/v1.5` | more try-on |
 | `image-editing/object-removal`, `object-removal`, `image-editing/background-change`, `ideogram/v3/replace-background`, `ideogram/v3/remix`, `ideogram/upscale`, `recraft/upscale/creative`, `drct-super-resolution`, `smoretalk-ai/rembg-enhance`, `hidream-o1-image/edit`, `firered-image-edit-v1.1`, `flux-2-lora-gallery/multiple-angles`, `flux-pro/v1.1-ultra/redux`, `z-image/turbo/controlnet`, `flux-control-lora-depth/…`, `flux-lora-depth`, `qwen-image/image-to-image`, `qwen-image-edit/image-to-image`, `qwen-image-edit-2509`, `qwen-image-edit-plus-lora`, `wan-25-preview/image-to-image`, `lora/image-to-image` | more of the same jobs |
 
+Sixteenth to eighteenth pages:
+
+| Model | Note |
+|---|---|
+| `image-editing/youtube-thumbnails` | **a video thumbnail with its own words**, made from a frame: every Video Editor export can offer one |
+| `bria/fibo-edit-1.5/product-holding`, `bria/embed-product`, `qwen-image-edit-plus-lora-gallery/integrate-product`, `image-apps-v2/product-photography`, `pixelcut/product-photo` | a member's product in a hand, in a scene, in a studio light: **merch adverts**. Bria's are licensed data; a person holding it is the member, or a made-up person |
+| `control-light` | **dark photos brought up without noise**: club, stage and concert pictures |
+| `image-editing/color-correction`, `image-apps-v2/portrait-enhance`, `image-editing/face-enhancement`, `nafnet/denoise` | the "make my photo good" press again |
+| `image-apps-v2/style-transfer`, `telestyle-v2`, `ideogram/character/remix` | a picture redrawn in a named art style, or in the style of a reference picture: style cards again |
+| `qwen-image-edit-plus-lora-gallery/add-background`, `…/remove-element`, `…/multiple-angles` | a scene behind a cut-out; an item taken out; other angles |
+| `image-editing/expression-change`, `flux-2-lora-gallery/face-to-full-portrait`, `photomaker` | a face's expression changed; a face grown into a full figure; new photos of a person. **Face rule**: the member's own face only |
+| `chrono-edit`, `luma-photon/modify`, `joyai-image-edit`, `dreamomni2/edit`, `qwen-image-max/edit`, `firered-image-edit`, `z-image/turbo/inpaint/lora`, `z-image/turbo/controlnet/lora`, `sdxl-controlnet-union/image-to-image`, `flux-lora-canny`, `flux/srpo/image-to-image`, `stable-diffusion-v3-medium/image-to-image`, `fast-lightning-sdxl/image-to-image`, `inpaint`, `finegrain-eraser`, `qwen-image-edit-lora`, `qwen-image-edit-2509-lora`, `…/multiple-angles`, `image-preprocessors/zoe`, `/teed`, `/midas` | more of the same jobs |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
