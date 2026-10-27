@@ -15,6 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Maximize2, X } from 'lucide-react';
 import { HIGH, LOW, paintSpectrogram, spectrogramOf, spectrogramOfBlob, type Spectrogram } from '../lib/spectrogram';
+import { useBackLayer } from '../lib/backstack';
 
 type Say = (key: string, fallback: string) => string;
 
@@ -52,6 +53,8 @@ function SpectrumLook({ sound, from = 0, long, name, t, onClose }: {
     return () => { alive = false; };
   }, [sound, wide]);
 
+  /* The phone's Back closes it, rather than leaving the room under it. */
+  useBackLayer(true, onClose);
   useEffect(() => {
     const key = (event: KeyboardEvent): void => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', key);
@@ -80,7 +83,7 @@ function SpectrumLook({ sound, from = 0, long, name, t, onClose }: {
 
   if (typeof document === 'undefined') return null;
   return createPortal(
-    <div className="fixed inset-0 z-[150] flex flex-col justify-end bg-black/70 backdrop-blur-sm" role="dialog" aria-label={t('spec.title', 'What the sound is made of')} data-spectrumlook>
+    <div className="fixed inset-0 z-[150] flex flex-col justify-end bg-scrim backdrop-blur-sm" role="dialog" aria-label={t('spec.title', 'What the sound is made of')} data-spectrumlook>
       <div className="fb-idea max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-emerald-400/40 bg-zinc-950 p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -98,6 +101,9 @@ function SpectrumLook({ sound, from = 0, long, name, t, onClose }: {
               <span key={hz} className="absolute right-0 -translate-y-1/2 text-[10px] font-semibold text-zinc-400" style={{ top: `${(1 - rise(hz)) * 100}%` }}>{label}</span>
             ))}
           </div>
+          {/* Sideways on purpose: the picture is time, a minute of sound is
+              thousands of pixels wide, and squeezing it to the screen is the
+              thin strip on the lane this was opened to get away from. */}
           <div className="min-w-0 flex-1 overflow-x-auto rounded-xl border border-zinc-800" data-sideways>
             {picture ? (
               <canvas ref={canvas} style={{ width: across, height: TALL, display: 'block' }} data-spectrumcanvas />

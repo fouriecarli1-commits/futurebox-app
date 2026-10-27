@@ -40,7 +40,7 @@
  * in both rooms.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, PersonStanding, Play, Scissors,
   SkipBack, SkipForward, Sparkles, Type, Wand2,
@@ -368,6 +368,23 @@ export default function CutDock({
   readonly paidLine?: string;
   readonly children?: React.ReactNode;
 }): React.ReactElement {
+  /* What a bench is, said for a moment when it is opened. The owner, 27
+     October 2026: *"alles baie baie klein buttons en wanneer mens op die
+     kliek kan daar descriptions wys"*. The descriptions live here, for a
+     moment, instead of under every control. */
+  const [benchSay, setBenchSay] = useState<{ readonly label: string; readonly what: string; readonly n: number } | null>(null);
+  useEffect(() => {
+    if (!benchSay) return undefined;
+    const gone = window.setTimeout(() => setBenchSay(null), 2000);
+    return () => window.clearTimeout(gone);
+  }, [benchSay]);
+  const openSaying = (which: Bench): void => {
+    const spec = [...upper, ...lower].find((one) => one.id === which);
+    setBenchSay(spec && which !== open
+      ? (was) => ({ label: t(spec.label[0], spec.label[1]), what: t(spec.what[0], spec.what[1]), n: (was?.n ?? 0) + 1 })
+      : null);
+    onOpen(which);
+  };
   const { t } = useLang();
   const here = [...upper, ...lower].find((spec) => spec.id === open);
   const sideways = useSideways();
@@ -546,7 +563,7 @@ export default function CutDock({
                 key={spec.id}
                 spec={spec}
                 open={open}
-                onOpen={onOpen}
+                onOpen={openSaying}
                 t={t}
                 tall
                 dim={noClip && NEEDS_A_SHOT.has(spec.id)}
@@ -590,16 +607,24 @@ export default function CutDock({
           three keep the capped sheet under the clock; the rest float. */}
       {sheet && open && ON_CLOCK.has(open) ? sheet : sheet ? (
         <div className="relative shrink-0">
-          <div data-cutfloat="" className="absolute inset-x-0 bottom-0 z-20 flex h-[58dvh] flex-col">
+          <div data-cutfloat="" className="absolute inset-x-0 bottom-0 z-20 flex h-[46dvh] flex-col">
             {sheet}
           </div>
         </div>
       ) : null}
       <div
         data-cutdock=""
-        className="flex shrink-0 items-center gap-1 px-3"
+        className="relative flex shrink-0 items-center gap-1 px-3"
         style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
       >
+        {benchSay && (
+          <div key={benchSay.n} className="pointer-events-none absolute inset-x-0 bottom-full z-40 mb-2 flex justify-center px-4" data-cutbenchsay>
+            <p role="status" className="fb-nudge max-w-sm rounded-2xl border border-emerald-400/50 bg-zinc-950/90 px-4 py-2 text-center shadow-lg backdrop-blur">
+              <span className="block text-[13px] font-bold text-emerald-100">{benchSay.label}</span>
+              <span className="mt-0.5 line-clamp-1 block text-[12px] leading-snug text-zinc-300">{benchSay.what}</span>
+            </p>
+          </div>
+        )}
         {hasTransport ? (
           <div className="flex shrink-0 items-center" data-cuttransport>
             {transport}
@@ -618,7 +643,7 @@ export default function CutDock({
               key={spec.id}
               spec={spec}
               open={open}
-              onOpen={onOpen}
+              onOpen={openSaying}
               t={t}
               slim
               dim={noClip && NEEDS_A_SHOT.has(spec.id)}
