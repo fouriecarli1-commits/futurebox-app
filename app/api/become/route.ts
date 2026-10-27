@@ -130,7 +130,11 @@ export async function POST(request: Request): Promise<Response> {
         await noteRefusal(caller.id);
         return Response.json({ state: 'refused', message: REFUSED }, { status: 422 });
       }
-      return Response.json({ state: 'failed', message: FAILED }, { status: 502 });
+      /* The engine's own status on the end, a number and nothing of what
+         was sent, so a screenshot of a failure says which failure it was
+         (the owner, 27 October 2026: "Die sticker peel werk steeds nie"). */
+      const code = /answered (\d{3})/.exec(ran.why)?.[1] ?? (/timeout|abort/i.test(ran.why) ? 'timeout' : 'no answer');
+      return Response.json({ state: 'failed', message: `${FAILED} (fal.ai: ${code})` }, { status: 502 });
     }
     const url = spec.gives === 'mask' ? maskUrlOf(ran.data) : fileUrlOf(ran.data);
     if (!url) {

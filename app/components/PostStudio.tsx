@@ -1036,6 +1036,21 @@ export default function PostStudio({
      is below the photo, and a press that seemed to do nothing was a press
      whose answer was out of sight. */
   const [photoSay, setPhotoSay] = useState('');
+  /* A tool's panel tucked down to its handle: the tool stays on, the photo
+     gets the screen. The owner, 27 October 2026: *"Ek kan nie 'n tool grab
+     en dit gebruik nie, dit verdwyn as ek die kruisie druk om plek te maak
+     om die prent te sien."* The cross ends the tool; this only moves it
+     out of the way. */
+  const [tucked, setTucked] = useState(false);
+  /* What a tool is, said for a moment when it is picked. The owner, 27
+     October 2026: *"wanneer mens op dit kliek om te sien wat dit is moet
+     dit met 'n pop out notification gee om te sê wat dit is."* */
+  const [toolSay, setToolSay] = useState<{ readonly name: string; readonly what: string; readonly n: number } | null>(null);
+  useEffect(() => {
+    if (!toolSay) return undefined;
+    const gone = window.setTimeout(() => setToolSay(null), 2800);
+    return () => window.clearTimeout(gone);
+  }, [toolSay]);
   /* The photo's colours, blurred, behind the room on a phone (`lib/ambient.ts`). */
   const ambient = useMemo(() => ambientOf(picture), [picture]);
   const nudgedFor = useRef('');
@@ -8630,6 +8645,8 @@ export default function PostStudio({
     /* Pulling stays on with the bench shut: that is the point of it (see
        `aliveBench`). Another tool opened turns it off. */
     if (bench !== null && bench !== 'alive') setPulling(false);
+    /* A tool opened opens its panel, even if the last one was tucked away. */
+    setTucked(false);
   }, [bench]);
   useEffect(() => {
     if (!photoSay) return undefined;
@@ -10241,7 +10258,11 @@ export default function PostStudio({
     <div
       ref={stage}
       data-poststage
-      className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp ? 'items-start pt-2' : 'items-center'}`}
+      /* Whole, always: a tool's strip floats over the foot of the room, so
+         while it is out the photo rises to the top of its space (the owner's
+         15 October rule: it moves, it never shrinks) and sits clear above
+         the strip; tucked or shut, it sits in the middle. */
+      className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp && !tucked && !saveFull ? 'items-start pt-2' : 'items-center'}`}
       onWheel={(event) => {
         const box = event.currentTarget.getBoundingClientRect();
         viewTo(view.scale * (event.deltaY < 0 ? 1.15 : 1 / 1.15), {
@@ -10306,6 +10327,14 @@ export default function PostStudio({
           onClose={() => setNudge(null)}
           onNotNow={() => { saidNotNow(nudge); setNudge(null); }}
         />
+      )}
+      {toolSay && (
+        <div key={toolSay.n} className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: 'calc(34dvh + 10px)' }} data-posttoolsay>
+          <p role="status" className="fb-nudge max-w-sm rounded-2xl border border-emerald-400/50 bg-zinc-950/90 px-4 py-2 text-center shadow-lg backdrop-blur">
+            <span className="block text-[13px] font-bold text-emerald-100">{toolSay.name}</span>
+            <span className="mt-0.5 line-clamp-2 block text-[12px] leading-snug text-zinc-300">{toolSay.what}</span>
+          </p>
+        </div>
       )}
       {(photoSay || pulling) && !peel && !nudge && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-becomephotosay>
@@ -10837,7 +10866,12 @@ export default function PostStudio({
       data-cutbench={spec.id}
       aria-pressed={bench === spec.id}
       title={t(spec.what[0], spec.what[1])}
-      onClick={() => openBench(spec.id)}
+      onClick={() => {
+        /* Picked: it says what it is. Pressed again: it is put down. */
+        if (bench !== spec.id) setToolSay((was) => ({ name: t(spec.label[0], spec.label[1]), what: t(spec.what[0], spec.what[1]), n: (was?.n ?? 0) + 1 }));
+        else setToolSay(null);
+        openBench(spec.id);
+      }}
       className={`${rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''}`}
       style={bench === spec.id ? undefined : { color: INK_DIM }}
     >
@@ -11100,42 +11134,57 @@ export default function PostStudio({
                 {toolSheet}
               </div>
             ) : null}
+              {/* ── The tool's controls: a small glass strip over the photo's foot ──
+                  The owner, 27 October 2026, with a screenshot of a tool open:
+                  *"Die oomblik wanneer mens 'n funksie oop maak dan maak dit
+                  die prent klein, en die funksie is lewensgroot."* So the
+                  photograph never shrinks for a tool any more: it keeps the
+                  whole room, and the tool's controls float over its lower
+                  third on glass, small, scrolling inside themselves, with a
+                  handle to tuck them down to one button when the whole photo
+                  is wanted. (Docked under the photo, from 23 October, it
+                  shrank the photo to a stamp on a phone with large text.) */}
+            {panelUp && !(saveFull && toolSheet) && (stripsUp || toolSheet || copilotSheet) && (
+              <div
+                data-postpop
+                data-postunder
+                data-neon
+                className="absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col"
+                /* Up to the middle of the page. The owner, 23 October 2026,
+                   looking at the docked panel: "die pop out van die funksies
+                   moet bietjie groter wees, dalk tot die middel van die
+                   bladsy." Half the screen for the tool, half for the picture. */
+                /* And a little higher since 27 October 2026, as high as the
+                   Video Editor's panels reach: "bietjie hoer op gaan in die
+                   editor". */
+                /* And over the photograph's foot since the same evening —
+                   "nogsteeds solid oor 'n groot gedeelte van die skerm met 'n
+                   swart agtergrond": the top of the glass rides 14% of the
+                   screen up over the photo, which shows through it, so the
+                   panel reads as glass over the picture rather than a black
+                   floor under it. The middle of the photo stays clear. */
+                style={stripsUp
+                  ? { height: STRIP_LEAST + 4 }
+                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '34dvh' }}
+              >
+                {!stripsUp && (
+                  <button
+                    type="button"
+                    data-posttuck={tucked ? 'down' : 'up'}
+                    aria-expanded={!tucked}
+                    onClick={() => setTucked((was) => !was)}
+                    className="mx-auto mb-1 inline-flex min-h-[32px] shrink-0 items-center gap-1.5 rounded-full px-4 text-[12px] font-bold"
+                  >
+                    {tucked ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {tucked ? t('post.tuckShow', 'Show the tool') : t('post.tuckHide', 'Hide, to see the photo')}
+                  </button>
+                )}
+                {stripsUp
+                  ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
+                  : copilotSheet ?? toolSheet}
+              </div>
+            )}
           </div>
-          {/* ── The tool's controls, docked under the photograph ──────────
-              The owner, 23 October 2026: *"Die buttons gaan halfpad oor die
-              skerm en is deurskynend. Dis tans baie onprakties."* So the
-              panel is no longer laid over the photograph: it is a solid
-              bench under it, the photograph shrinks to sit above it, and
-              every button has a floor. The way every desk editor's phone
-              app does it — picture on top, a dark panel of controls below. */}
-          {panelUp && !(saveFull && toolSheet) && (stripsUp || toolSheet || copilotSheet) && (
-            <div
-              data-postpop
-              data-postunder
-              data-neon
-              className="flex min-h-0 shrink-0 flex-col"
-              /* Up to the middle of the page. The owner, 23 October 2026,
-                 looking at the docked panel: "die pop out van die funksies
-                 moet bietjie groter wees, dalk tot die middel van die
-                 bladsy." Half the screen for the tool, half for the picture. */
-              /* And a little higher since 27 October 2026, as high as the
-                 Video Editor's panels reach: "bietjie hoer op gaan in die
-                 editor". */
-              /* And over the photograph's foot since the same evening —
-                 "nogsteeds solid oor 'n groot gedeelte van die skerm met 'n
-                 swart agtergrond": the top of the glass rides 14% of the
-                 screen up over the photo, which shows through it, so the
-                 panel reads as glass over the picture rather than a black
-                 floor under it. The middle of the photo stays clear. */
-              style={stripsUp
-                ? { height: STRIP_LEAST + 4 }
-                : { height: '42dvh' }}
-            >
-              {stripsUp
-                ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
-                : copilotSheet ?? toolSheet}
-            </div>
-          )}
           <nav
             data-cutdock=""
             data-cutbenchrow=""

@@ -65,6 +65,7 @@ import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
 import { Pencil } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { SpectrumButton } from './SpectrumLook';
 import type { LiveClock } from '../lib/liveclock';
 
 /* ── The booth's own palette ──────────────────────────────────────────── */
@@ -1808,6 +1809,18 @@ export default function BoothTimeline({
                       onRename={(name) => onChange(lane.id, { name })}
                     />
                     <Wave lane={lane} view={view} />
+                    {/* Tapped open big, with the words to read it by. The
+                        owner, 27 October 2026: "Moet mens nie op dit kan
+                        kliek en dit word groot". */}
+                    {view === 'spectrum' && (
+                      <SpectrumButton
+                        sound={lane.amped?.audio ?? lane.audio}
+                        from={windowOf(lane).from}
+                        long={windowOf(lane).to - windowOf(lane).from}
+                        name={lane.name}
+                        t={t}
+                      />
+                    )}
                     {/* ── Where it goes round ────────────────────────
 
                         A seam at every repeat, so a part that goes round

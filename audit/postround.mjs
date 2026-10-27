@@ -46,30 +46,38 @@ try {
   await page.locator('[data-poststudio] input[type=file]').first().setInputFiles('public/welcome-cover.jpg');
   await page.waitForTimeout(1500);
 
-  /* ── The tools sit UNDER the photograph, not over it ──────────────────
-     Until 23 October 2026 a tool's panel reached up to the middle of the
-     photograph. The owner, looking at it: "Die buttons gaan halfpad oor die
-     skerm en is deurskynend. Dis tans baie onprakties." So the panel is
-     docked below the picture now, and the picture shrinks above it: the
-     two never overlap, and the photograph is still a photograph. Since
-     27 October 2026 the docked panel wears the Video Editor's glass — the
-     owner: *"Kan die buttons en menu ook nie maar so deurskynend wees soos
-     video editor"* — so it is docked AND glass, never over the photo. */
+  /* ── A tool never shrinks the photograph ──────────────────────────────
+     The owner, 27 October 2026, with a screenshot of a tool open and the
+     photo a stamp above it: *"Die oomblik wanneer mens 'n funksie oop maak
+     dan maak dit die prent klein, en die funksie is lewensgroot."* The
+     photo keeps its size with a tool out; the tool is a small glass strip
+     over the foot of the room, with a handle to tuck it away. */
+  const sized = () => page.evaluate(() => {
+    const r = document.querySelector('[data-postcanvas]')?.getBoundingClientRect();
+    return r ? Math.round(r.width * r.height) : 0;
+  });
+  await pic.click();
+  await page.waitForTimeout(400);
+  const shut = await sized();
+  await pic.click();
+  await page.waitForTimeout(500);
+  const open = await sized();
+  check('a tool opened leaves the photograph its full size', shut > 0 && open >= shut * 0.98, `${shut} shut, ${open} open`);
   const reach = await page.evaluate(() => {
     const panel = document.querySelector('[data-postunder]')?.getBoundingClientRect();
     const photo = document.querySelector('[data-postcanvas]')?.getBoundingClientRect();
     const bg = panel ? getComputedStyle(document.querySelector('[data-postunder]')).backgroundImage : '';
-    return panel && photo ? { top: panel.top, bottom: photo.bottom, tall: panel.height, photoTall: photo.height, bg } : null;
+    return panel && photo ? { tall: panel.height, top: panel.top, photoBottom: photo.bottom, bg } : null;
   });
-  /* Since the evening of 27 October the glass's top edge rides a little
-     over the photograph's foot so it shows through — never more than a
-     sixth of the screen, so the middle of the photo stays clear. */
-  check('a tool opens under the photograph, its glass over no more than the photo\u2019s foot',
-    !!reach && reach.top >= reach.bottom - 760 / 6 && reach.tall >= 170 && reach.photoTall >= 150,
-    JSON.stringify(reach));
-  check('  and its panel is see-through glass, clearest at the top where the photo shows through',
+  check('  and its strip takes no more than a third of the screen', !!reach && reach.tall >= 170 && reach.tall <= 760 * 0.36, JSON.stringify(reach));
+  check('  and is see-through glass, clearest at the top where the photo shows through',
     !!reach && /^linear-gradient\(rgba\(10, 12, 16, 0\.[0-3]\d*\)/.test(reach.bg),
     reach?.bg ?? 'no panel');
+  await page.locator('[data-posttuck]').click();
+  await page.waitForTimeout(400);
+  const tucked = await page.evaluate(() => document.querySelector('[data-postunder]')?.getBoundingClientRect().height ?? 0);
+  check('  and tucks down to one button, the tool still on', tucked > 0 && tucked <= 48
+    && (await page.locator('[data-cutbench="pic"][aria-pressed="true"]').count()) === 1, `${tucked}px`);
   await pic.click();
   await page.waitForTimeout(400);
 

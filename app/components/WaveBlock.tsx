@@ -31,6 +31,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { peaksOf, type Peaks } from '../lib/peaks';
 import { paintSpectrogram, spectrogramOfBlob, type Spectrogram } from '../lib/spectrogram';
+import { useLang } from '../lib/i18n';
+import { SpectrumButton } from './SpectrumLook';
 
 const remembered = new WeakMap<Blob, Peaks>();
 /** The ones already being read, so two lanes asking at once decode once. */
@@ -88,6 +90,7 @@ export default function WaveBlock({
   readonly from?: number;
   readonly long?: number;
 }): React.ReactElement {
+  const { t } = useLang();
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [shape, setShape] = useState<Peaks | null>(null);
   const [picture, setPicture] = useState<Spectrogram | null>(null);
@@ -150,12 +153,20 @@ export default function WaveBlock({
     }
   }, [shape, picture, view, wide, tall, colour, from, long]);
 
-  return (
+  const drawn = (
     <canvas
       ref={canvas}
       data-wave={view}
       aria-hidden
       style={{ width: wide, height: tall, display: 'block' }}
     />
+  );
+  if (view !== 'spectrum' || wide < 40) return drawn;
+  /* A spectrogram opens big at a tap on its magnifier (`SpectrumLook`). */
+  return (
+    <div className="relative" style={{ width: wide, height: tall }}>
+      {drawn}
+      <SpectrumButton sound={sound} from={from} long={long} t={t} />
+    </div>
   );
 }

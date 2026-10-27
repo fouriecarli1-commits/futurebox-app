@@ -4006,6 +4006,25 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   from { opacity: 0; transform: translateY(-10px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
+/* ── The Photo Editor's tool strip is small (27 October 2026) ────────────
+   The owner, a tool open on her phone: *"die funksie is lewensgroot"*. The
+   controls float over the photo's foot now, so they are kept small: the
+   long explanations are two lines (the ? opens the rest), the headings and
+   words a size down, and the bench's own title row tighter. Buttons keep
+   the 44-pixel floor a thumb needs. */
+[data-postunder] [data-desk] > header { padding-top: 0 !important; padding-bottom: 2px !important; min-height: 0 !important; }
+[data-postunder] [data-desk] > header :is(h2, h3) { font-size: 15px !important; }
+[data-postunder] [data-desk] p:not([role]) {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+[data-postunder] [data-desk] :is(button, label, input, select) { font-size: 13px !important; }
+[data-postunder] [data-desk] :is(h4, legend) { font-size: 11px !important; margin-bottom: 2px !important; }
+
 /* The one-line notice at the top (`Notices`): drops in, quickly. */
 .fb-notice {
   animation: fb-notice-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
