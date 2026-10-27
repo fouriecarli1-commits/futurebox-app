@@ -530,6 +530,25 @@ five seconds made in under five), `pixverse/v3.5/image-to-video/fast`,
 | `sam-3/3d-objects`, `sam-3/3d-body` | an object, or **a person's body shape and pose**, rebuilt in 3D from a photo. A body is the member's own |
 | `hitem3d/hi3d/v3.0/image-to-3d`, `…/multi-view-to-3d` | partner |
 
+Last pages of image to 3D: `hunyuan3d-v3/sketch-to-3d` (**a 3D model from a
+drawing or words**), `hunyuan_world/image-to-world` (one picture to a world
+to look around in), `trellis-2/retexture`, `trellis-2-lora`, `triposr`,
+`pixal3d`, `reconviagen-0.5`, `hunyuan3d/v2/multi-view`, `…/turbo`, `/mini`,
+`/mini/turbo`, `…/multi-view/turbo`, `tripo3d/tripo/v2.5/multiview-to-3d`,
+`tripo3d/p1/image-to-3d`, `meshy/v6-preview/image-to-3d`,
+`meshy/v7/multi-image-to-3d`, `hitem3d/hi3d/image-to-3d`, `…/multi-view-to-3d`.
+
+### Changing a 3D model (3D to 3D), 13
+
+| Model | Note |
+|---|---|
+| `meshy/rigging`, `meshy/rigging/multi-animation` | partner; **a skeleton put into a 3D character and dances or walks added**. With `hunyuan-motion`, the member's mascot dancing to their song |
+| `hitem3d/hi3d/multicolor` | partner; **a textured model made ready for full-colour 3D printing**: a figure of the member's character, sold as merch |
+| `meshy/v7/retexture`, `meshy/v6/retexture`, `meshy/v6-lite/retexture`, `hitem3d/hi3d/texture` | new textures from words or a picture: the same figure in a new outfit or finish |
+| `tripo3d/tripo/remesh`, `hunyuan-3d/v3.1/smart-topology` | a clean mesh at a chosen size, for games and animation |
+| `tripo3d/tripo/segment`, `hunyuan-3d/v3.1/part`, `hitem3d/hi3d/split` | a model split into parts to edit or print separately |
+| `sam-3/3d-align` | objects and people placed together in one 3D scene |
+
 ## Where this is pointing, so far
 
 - **Every category has a draft tier and a final tier** (Flux 3 draft,
@@ -579,8 +598,9 @@ five seconds made in under five), `pixverse/v3.5/image-to-video/fast`,
   tints, trims and merges cost nothing and never leave the device. fal.ai
   is for what only a model can do.
 - **A 3D product line**: a member's character, logo or mascot from one
-  drawing to a textured 3D model (Trellis first), ready for a 3D-printed
-  figure, a game, or a cover that turns.
+  drawing to a textured 3D model (Trellis first), rigged so it can dance,
+  made ready for full-colour printing: a figure on the merch table, a
+  character in a game, a cover that turns.
 - **What is safest to sell** decides the default: Sonilo for music and
   Marey for video say they are trained on licensed material. Their own
   terms are read before that is promised.
