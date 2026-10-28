@@ -699,6 +699,12 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
    glass bar the owner asked for on 27 October 2026. The open tool keeps its
    ring (\`GEKIES\`). */
 const TOOL_FOOT = 'flex min-h-[56px] w-[58px] shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg px-0 text-[9px] font-bold leading-tight';
+/** A tool down a side rail on a phone: an icon and a word, small.
+    The owner, 28 October 2026, with a drawing round the empty sides of the
+    photo: *"Why can't all the functions be sprung up on the sides as I have
+    drawn ... It can all be done much much more minimalistic, clean and out
+    of the way."* */
+const TOOL_SIDE = 'flex h-[48px] w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0 text-[8.5px] font-bold leading-none';
 /** A tool down the rail at a desk. */
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
 
@@ -10472,6 +10478,8 @@ export default function PostStudio({
      to the space it has, measured, so it is as big as the screen allows. */
   const upright = !onEdge;
   const ALL_BENCHES = POST_TOOLS;
+  /* Half the tools down the left of the photo, the rest down the right. */
+  const SIDE_HALF = Math.ceil(ALL_BENCHES.length / 2);
   const here = [...ALL_BENCHES, POST_CELL].find((one) => one.id === bench) ?? null;
   const chipStyle: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
   const openBench = (next: Exclude<Bench, null>): void => {
@@ -10793,7 +10801,9 @@ export default function PostStudio({
           onNotNow={() => { saidNotNow(nudge); setNudge(null); }}
         />
       )}
-      {toolSay && (
+      {/* Not on a phone: there the tool's own panel opens with its name on it,
+          and a second card saying the same was one more thing in the way. */}
+      {toolSay && !upright && (
         <div key={toolSay.n} className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: overStrip }} data-posttoolsay>
           <p role="status" className="fb-nudge max-w-sm rounded-2xl border border-emerald-400/50 bg-zinc-950/90 px-4 py-2 text-center shadow-lg backdrop-blur">
             <span className="block text-[13px] font-bold text-emerald-100">{toolSay.name}</span>
@@ -10993,8 +11003,11 @@ export default function PostStudio({
       })()}
       {cellNow && !editingCell && bench === null && (
         <div data-postcellbar className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center">
+          {/* Sideways on purpose — one row: between the side rails the photo is
+              narrower than eight buttons, and a second row covered it. */}
           <div
-            className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl px-1 py-1"
+            data-sideways
+            className="pointer-events-auto flex max-w-full flex-nowrap items-center gap-0.5 overflow-x-auto rounded-2xl px-1 py-0.5"
             style={{ background: PHOTO.popGlass, border: `1px solid ${PHOTO.accentDim}`, boxShadow: PHOTO.glowEmerald }}
           >
             {([
@@ -11019,7 +11032,7 @@ export default function PostStudio({
                 disabled={off}
                 aria-pressed={id === 'place' ? framing : undefined}
                 onClick={run}
-                className={`flex min-h-[48px] min-w-[40px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[9px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
+                className={`flex min-h-[44px] min-w-[40px] shrink-0 flex-col items-center justify-center gap-0 rounded-xl px-0.5 text-[9px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
                 style={{ color: PHOTO.ink }}
               >
                 {icon}
@@ -11324,7 +11337,7 @@ export default function PostStudio({
   ) : null;
 
   /* ── The eight tools ──────────────────────────────────────────────── */
-  const toolButton = (spec: BenchSpec, rail: boolean): React.ReactElement => (
+  const toolButton = (spec: BenchSpec, rail: boolean, side = false): React.ReactElement => (
     <button
       key={spec.id}
       type="button"
@@ -11339,10 +11352,12 @@ export default function PostStudio({
       }}
       /* Alive wears colour, the owner, 28 October 2026: *"Ek hou van die
          live funksie op sy eie. Gee daai button net kleur."* (`fb-alivetool`) */
-      className={`${rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''} ${spec.id === 'alive' ? 'fb-alivetool' : ''}`}
+      className={`${side ? TOOL_SIDE : rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''} ${spec.id === 'alive' ? 'fb-alivetool' : ''}`}
       style={bench === spec.id || spec.id === 'alive' ? undefined : { color: INK_DIM }}
     >
-      <ToolTile id={spec.id} from={thumb} icon={spec.icon} size={rail ? 38 : 34} />
+      {side
+        ? <span aria-hidden className="flex h-6 w-6 items-center justify-center [&>svg]:h-[18px] [&>svg]:w-[18px]">{spec.icon}</span>
+        : <ToolTile id={spec.id} from={thumb} icon={spec.icon} size={rail ? 38 : 34} />}
       <span className="w-full truncate text-center">{t(POST_SHORT[spec.id][0], POST_SHORT[spec.id][1])}</span>
     </button>
   );
@@ -11567,7 +11582,23 @@ export default function PostStudio({
               with no panel behind them, drawn in bright neon with a dark
               edge on every letter so they read over any picture
               (`[data-neon]` in globals.css). */}
-          <div className="relative flex min-h-0 flex-1 flex-col">
+          {/* ── The tools down both sides of the photo ──────────────────
+              The owner, 28 October 2026, drawing round the empty sides of a
+              tall photo: the tools there, small, rather than a bar of big
+              pictures along the foot. Half on each side; a press opens the
+              tool's controls at the foot, where that bar used to be. */}
+          <div className="relative flex min-h-0 flex-1">
+            <nav
+              data-cutdock=""
+              data-cutbenchrow=""
+              data-postside="left"
+              aria-label={t('post.toolsAria', 'Tools')}
+              className="flex w-[48px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden py-1.5 backdrop-blur-md"
+              style={{ background: 'rgba(10,12,16,0.55)', borderRight: `1px solid ${PHOTO.edge}` }}
+            >
+              {ALL_BENCHES.slice(0, SIDE_HALF).map((spec) => toolButton(spec, false, true))}
+            </nav>
+          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
             {photo}
             {/* Undo and redo ride on the photograph's corner on a phone: in
                 the bar they pushed "Take it out" off the right edge of a
@@ -11587,6 +11618,17 @@ export default function PostStudio({
                 {`${view.scale.toFixed(1)}×`}
               </button>
             )}
+          </div>
+            <nav
+              data-cutdock=""
+              data-cutbenchrow=""
+              data-postside="right"
+              aria-label={t('post.toolsAria', 'Tools')}
+              className="flex w-[48px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden py-1.5 backdrop-blur-md"
+              style={{ background: 'rgba(10,12,16,0.55)', borderLeft: `1px solid ${PHOTO.edge}` }}
+            >
+              {ALL_BENCHES.slice(SIDE_HALF).map((spec) => toolButton(spec, false, true))}
+            </nav>
             {saveFull && toolSheet ? (
               /* The owner, 15 October 2026: "Take it out se pop out kan oor die
                  hele skerm gaan." So it does: the whole space between the
@@ -11639,11 +11681,14 @@ export default function PostStudio({
                     type="button"
                     data-posttuck={tucked ? 'down' : 'up'}
                     aria-expanded={!tucked}
+                    aria-label={tucked ? t('post.tuckShow', 'Show the tool') : t('post.tuckHide', 'Hide, to see the photo')}
+                    title={tucked ? t('post.tuckShow', 'Show the tool') : t('post.tuckHide', 'Hide, to see the photo')}
                     onClick={() => setTucked((was) => !was)}
-                    className="mx-auto mb-1 inline-flex min-h-[32px] shrink-0 items-center gap-1.5 rounded-full px-4 text-[12px] font-bold"
+                    /* A handle, not a sentence: the owner, 28 October 2026 —
+                       "much much more minimalistic, clean and out of the way". */
+                    className="mx-auto mb-0.5 inline-flex h-7 w-14 shrink-0 items-center justify-center rounded-full"
                   >
                     {tucked ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    {tucked ? t('post.tuckShow', 'Show the tool') : t('post.tuckHide', 'Hide, to see the photo')}
                   </button>
                 )}
                 {stripsUp
@@ -11652,19 +11697,6 @@ export default function PostStudio({
               </div>
             )}
           </div>
-          <nav
-            data-cutdock=""
-            data-cutbenchrow=""
-            data-postfoot
-            data-sideways
-            /* Sideways on purpose: the owner, 14 October 2026 — the tools stay
-               small along the foot and scroll left and right, so the photo
-               keeps the whole screen above them. */
-            className="flex shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1 backdrop-blur-md"
-            style={{ background: 'rgba(10,12,16,0.72)', borderTop: `1px solid ${PHOTO.edge}` }}
-          >
-            {ALL_BENCHES.map((spec) => toolButton(spec, false))}
-          </nav>
         </div>
       ) : (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

@@ -43,12 +43,17 @@ try {
   await toRoom(page, 'Photo Editor');
   await page.waitForTimeout(900);
 
-  /* ── The tools as pictures ── */
-  const drawn = await page.evaluate(() => [...document.querySelectorAll('[data-cutbench] canvas[data-posttooltile]')]
-    .filter((el) => getComputedStyle(el).opacity === '1').length);
-  check('the tools along the foot are pictures, not only symbols', drawn >= 10, `${drawn} drawn`);
-  check('  and Filters is one of them', (await page.locator('[data-cutbench="filters"]').count()) > 0);
-  const sample = await middle('[data-cutbench="pic"] canvas');
+  /* ── The tools down both sides ──
+     The owner, 28 October 2026: the tools on the empty sides of the photo,
+     small — "much much more minimalistic, clean and out of the way". Icons
+     on a phone; the pictures of her photo stay on the desk's rail. */
+  const sides = await page.evaluate(() => ['left', 'right'].map((side) => {
+    const rail = document.querySelector(`[data-postside="${side}"]`);
+    const tools = rail ? [...rail.querySelectorAll('[data-cutbench]')] : [];
+    return { n: tools.length, widest: Math.max(0, ...tools.map((el) => el.getBoundingClientRect().width)) };
+  }));
+  check('the tools run down both sides of the photo, small', sides.every((one) => one.n >= 6 && one.widest <= 48), JSON.stringify(sides));
+  check('  and Filters is one of them', (await page.locator('[data-postside] [data-cutbench="filters"]').count()) > 0);
 
   await tool('pic');
   const brought = await page.evaluate(async () => {
@@ -70,10 +75,6 @@ try {
   });
   check('a photograph is brought in', brought === true);
   await page.waitForTimeout(1400);
-  await tool('pic');
-  const mine = await middle('[data-cutbench="pic"] canvas');
-  check('  and the tool pictures become her photograph', mine && mine.r > 150 && mine.g < 110 && far(sample, mine) > 60,
-    `${JSON.stringify(sample)} → ${JSON.stringify(mine)}`);
 
   /* ── The filters ── */
   await tool('filters');

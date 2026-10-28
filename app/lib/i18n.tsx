@@ -2041,6 +2041,7 @@ export const STRINGS: Dict = {
   "become.pullStop": { en: "Done", af: "Klaar" },
   "post.tuckShow": { en: "Show the tool", af: "Wys die gereedskap" },
   "post.tuckHide": { en: "Hide, to see the photo", af: "Steek weg, om die foto te sien" },
+  "post.toolsAria": { en: "Tools", af: "Gereedskap" },
   "spec.title": { en: "What the sound is made of", af: "Waarvan die klank gemaak is" },
   "spec.close": { en: "Close", af: "Maak toe" },
   "spec.open": { en: "Open the spectrogram big", af: "Maak die spektrogram groot oop" },

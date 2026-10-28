@@ -105,11 +105,11 @@ try {
   const cover = await page.evaluate(() => {
     const sheet = document.querySelector('[data-postsavefull]')?.getBoundingClientRect();
     const bar = document.querySelector('[data-postbar]')?.getBoundingClientRect();
-    const foot = document.querySelector('[data-postfoot]')?.getBoundingClientRect();
-    return sheet && bar && foot ? { gapTop: sheet.top - bar.bottom, gapFoot: foot.top - sheet.bottom, wide: sheet.width } : null;
+    const room = document.querySelector('[data-postsavefull]')?.parentElement?.getBoundingClientRect();
+    return sheet && bar && room ? { gapTop: sheet.top - bar.bottom, gapFoot: room.bottom - sheet.bottom, wide: sheet.width, roomWide: room.width } : null;
   });
-  check('Take it out opens over the whole screen between the bar and the tools',
-    cover !== null && Math.abs(cover.gapTop) <= 2 && Math.abs(cover.gapFoot) <= 2,
+  check('Take it out opens over the whole screen under the bar, the side tools too',
+    cover !== null && Math.abs(cover.gapTop) <= 2 && Math.abs(cover.gapFoot) <= 2 && cover.wide >= cover.roomWide - 2,
     JSON.stringify(cover));
   check('  with its price on it', (await page.locator('[data-postsavefull] [data-postexport]').count()) > 0);
   await page.locator('[data-postexportopen]').click();
