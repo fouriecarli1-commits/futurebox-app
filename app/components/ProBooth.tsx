@@ -61,6 +61,7 @@ import { type Limit } from '../lib/squeeze';
 import FileSize from './FileSize';
 import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
+import { whatsIn, type Heard as PieceHeard } from '../lib/whatsin';
 import { transitionsIn } from '../lib/transitions';
 import { midiBlob, midiFor, type Source } from '../lib/midi';
 import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
@@ -2728,6 +2729,18 @@ export default function ProBooth({
      would have been a button that could not. */
   const [region, setRegion] = useState<{ readonly from: number; readonly to: number } | null>(null);
   const [regionOpen, setRegionOpen] = useState(false);
+  /* What the marked piece sounds like, read when the sheet opens (`whatsIn`).
+     The owner, 28 October 2026: "hum and instrument or vocal in this part". */
+  const [pieceHeard, setPieceHeard] = useState<readonly PieceHeard[] | null>(null);
+  useEffect(() => {
+    if (!regionOpen || !region) { setPieceHeard(null); return; }
+    const lane = lanes.find((one) => one.id === picked);
+    const ctx = context();
+    const carved = lane ? carveLane(lane, region.from, region.to) : null;
+    if (!carved || !ctx) { setPieceHeard(null); return; }
+    const sound = playsOf(carved.inside, ctx);
+    setPieceHeard(whatsIn(sound.getChannelData(0), sound.sampleRate));
+  }, [regionOpen, region, lanes, picked, context]);
   /* ── Loop the marked piece ─────────────────────────────────────────────
      The owner, 18 October 2026: play a marked piece round and round, and sing
      over it until one is right. The clock reads `loopSpan`; a piece shorter
@@ -4241,6 +4254,18 @@ export default function ProBooth({
                   Each one cuts the mark onto a piece of its own first, so
                   what changes is what she drew and what is billed is its
                   length. */}
+              {pieceHeard && pieceHeard.length > 0 && (
+                <p role="status" data-pieceheard className="rounded-xl bg-sky-500/10 px-3 py-2 text-[13px] text-sky-100">
+                  <span className="font-black">{t('pro.heardTitle', 'In this piece:')}</span>{' '}
+                  {pieceHeard.map((one) => (one === 'voice'
+                    ? t('pro.heardVoice', 'sounds like a voice')
+                    : one === 'instruments'
+                      ? t('pro.heardInstruments', 'instruments')
+                      : one === 'hum'
+                        ? t('pro.heardHum', 'a steady hum or drone')
+                        : t('pro.heardQuiet', 'quiet stretches'))).join(' · ')}
+                </p>
+              )}
               <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-sky-300">
                 <Sparkles className="h-3.5 w-3.5" />
                 {t('pro.magicTitle', 'AI magic on this piece')}

@@ -1941,6 +1941,8 @@ jobs:
         run: npm run check:smartcrop
       - name: A sine lands in its spectrogram row
         run: npm run check:spectrogram
+      - name: A marked piece says voice, instruments, hum or quiet
+        run: npm run check:whatsin
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.
