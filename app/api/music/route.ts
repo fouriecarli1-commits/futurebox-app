@@ -359,8 +359,13 @@ export async function POST(request: Request): Promise<Response> {
     .flatMap((one) => one.lines ?? [])
     .join('\n');
   const afrikaans = looksAfrikaans(sung);
+  /* The owner, 28 October 2026: *"Kan jy gou google op hook vir afrikaans
+     dat ek dit kan toets?"* Afrikaans still goes to ElevenLabs for everyone
+     else; the owner alone can ask for Google on an Afrikaans song, to hear
+     the two side by side before choosing. */
+  const ownerTriesGoogle = afrikaans && (body as { engine?: unknown }).engine === 'google' && callerIsOwner(caller);
 
-  if (!afrikaans && (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google') {
+  if ((!afrikaans && (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google') || ownerTriesGoogle) {
     if (!googleOn()) {
       return Response.json(
         { message: 'The Google music engine is named but not switched on. See docs/GOOGLE-OPSTEL.md.' },
@@ -534,11 +539,15 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 /** Whether a key is set, so the studio can offer the real thing or not. */
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
   /* And which engine a song with English words goes to, so a screen can say
      the price it will really be charged: ElevenLabs and Google are priced
      differently since 14 October 2026. Afrikaans words always go to
      ElevenLabs, which the screen works out from the words itself. */
   const google = (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google' && googleOn();
-  return Response.json({ available: ready('music'), engine: google ? 'google' : 'eleven' });
+  /* Asked with `?owner=1` by the song form: whether this is the owner, who
+     may send an Afrikaans song to Google to compare (see the POST). */
+  const owner = new URL(request.url).searchParams.get('owner') === '1' && googleOn()
+    && callerIsOwner(await callerFrom(request).catch(() => null));
+  return Response.json({ available: ready('music'), engine: google ? 'google' : 'eleven', ...(owner ? { owner: true } : {}) });
 }

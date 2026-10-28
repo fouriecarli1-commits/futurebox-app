@@ -28,6 +28,7 @@ answer, and the **ceiling** (the longest answer the route allows, its
 | **Songwriter help** (`/api/songwriter`) | writes or improves the words | R0.90 | R3.40 (8,000 out) | **12 credits** | R18.00 − R3.40 = R14.60 (81%) |
 | **Story helper: Write it for me / Make mine better** (`/api/story`) | writes the story the pictures and the reading are made from | R0.90 | R3.40 | **12 credits** | R14.60 (81%) |
 | **Kids story** (`/api/kids/story`) | the same, in the kids room, from the parent's allowance | R0.90 | R3.40 | **12 credits** | R14.60 (81%) |
+| **Read it aloud first** (`/api/sayas`) | listens to the reading and respells each line the way it was said, asking once more when Afrikaans spellings are left | R0.06 | R0.15 (two listens of a 3-minute reading) | **1 credit** | R1.50 − R0.15 = R1.35 (90%) |
 | **The copilot** (`/api/copilot`) | every question in the copilot panel | R0.70 | R3.40 | see below | |
 
 **The copilot is the one to decide differently.** At 12 credits a question

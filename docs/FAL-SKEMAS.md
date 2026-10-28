@@ -22,9 +22,8 @@ None of these pages carried "Pending Enterprise Ready".
 - **Confirmed by fal.ai (27 October 2026):** each point is `x` and `y`
   (whole numbers, pixels), `label` (1 thing, 0 background), and an optional
   `object_id` and `frame_index`. Only `image_url` is required. Sent as
-  `{ x, y, label: 1 }`, rounded. Still to ask their support: whether an
-  empty `prompt` with a point is the right way to send a tap with no words
-  (the prompt otherwise defaults to "wheel").
+  `{ x, y, label: 1 }`, rounded. fal.ai support, 28 October 2026: a tap
+  with no words sends `"prompt": ""`; leaving it out means "wheel".
 
 ## `fal-ai/birefnet/v2`: clean edges on a cut-out
 

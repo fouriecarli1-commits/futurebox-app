@@ -145,9 +145,15 @@ export default function BoothTransport({
 }): React.ReactElement {
   const { t } = useLang();
   return (
+    /* Sideways on purpose, on a phone: one row of small keys that slides,
+       not two rows that push the lanes (the song itself) off the screen.
+       The owner, 27 October 2026, of this room: "Ek weet nie wat dit doen
+       nie" — each key now says its name when pressed (`IconTips`). Wraps
+       again from `sm` up, where there is width for all of it. */
     <div
       data-transport=""
-      className="flex shrink-0 flex-wrap items-center gap-1 px-3 py-1.5 sm:gap-1.5"
+      data-sideways
+      className="flex shrink-0 flex-nowrap items-center gap-1 overflow-x-auto px-3 py-1.5 sm:flex-wrap sm:gap-1.5"
       style={{ background: PANEL, borderBottom: `1px solid ${EDGE}` }}
     >
       <Key data="start" keys="Home" label={t('daw.toStart', 'Back to the start')} onPress={onStart} disabled={recording}>

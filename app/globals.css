@@ -4014,7 +4014,8 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
    the 44-pixel floor a thumb needs. */
 [data-postunder] [data-desk] > header { padding-top: 0 !important; padding-bottom: 2px !important; min-height: 0 !important; }
 [data-postunder] [data-desk] > header :is(h2, h3) { font-size: 15px !important; }
-[data-postunder] [data-desk] p:not([role]) {
+[data-postunder] [data-desk] p[data-open] { font-size: 12px !important; line-height: 1.35 !important; }
+[data-postunder] [data-desk] p:not([role]):not([data-open]) {
   font-size: 12px !important;
   line-height: 1.35 !important;
   display: -webkit-box;
@@ -4031,8 +4032,10 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
    smaller size; the full sentence is a tap away in the bench's ? and in the
    line that comes up when a bench is opened (`CutDock`). Status lines and
    alerts keep their size: those are answers, not descriptions. */
+/* The booths too (their front door is long sentences under long
+   sentences), and a tap on a shortened line opens it (`IconTips`). */
 @media (max-width: 767.98px) {
-  [data-cutroom] p:not([role]):not([data-keep]) {
+  :is([data-cutroom], [data-booth]) p:not([role]):not([data-keep]):not([data-open]) {
     font-size: 12px !important;
     line-height: 1.35 !important;
     display: -webkit-box;
@@ -4040,6 +4043,7 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  :is([data-cutroom], [data-booth]) p[data-open] { font-size: 12px !important; line-height: 1.35 !important; }
 }
 
 /* The name over an icon button (`IconTips`): fades only, because its place

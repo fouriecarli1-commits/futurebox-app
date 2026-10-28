@@ -316,3 +316,24 @@ Steve answered the owner's second letter. What it settles:
 | Webhooks | Signed with ED25519, checked against their public keys. | The app polls today; a webhook, if added, must verify the signature. |
 | Billing and discounts | Invoicing only from a **$100k a year** commitment; a commitment brings higher concurrency and discounts. | Not before launch. Revisit after about three months of real usage, with the numbers. |
 
+
+## Third reply, 28 October 2026
+
+- **SAM 3 with a tap only** (empty `prompt`, or leave it out?): passed to
+  fal.ai support (support@fal.ai). The owner emails support directly as
+  well, so it has its own ticket.
+- **Retention in writing** (`X-Fal-Store-IO: 0` plus the one-hour
+  lifecycle for our setup): support to confirm in writing. Until then:
+  https://fal.ai/docs/documentation/model-apis/media-expiration.
+- **Commitment:** agreed to revisit after about three months of live
+  numbers. Steve will check in at the end of January 2027.
+
+## fal.ai support, 28 October 2026 — both answered
+
+- **SAM 3, a tap with no words:** send `"prompt": ""`. Leaving it out
+  falls back to the default "wheel", which is not the same as no text.
+  This is what `becomeInput` sends; `check:falwire` now holds it.
+- **Retention:** our setup is fine. The header they named,
+  `X-Fal-Object-Lifecycle-Preference: {"expiration_duration_seconds": 3600}`,
+  is the one sent on every call with `X-Fal-Store-IO: 0`
+  (`lib/server/fal.ts`).

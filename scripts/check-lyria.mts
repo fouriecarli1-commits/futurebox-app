@@ -291,6 +291,17 @@ ok('  and the answer says which engine made it',
   'a song that came back should be tellable from the other engine\u2019s'
   + ' without guessing from how it sounds');
 
+/* The owner, 28 October 2026: "Kan jy gou google op hook vir afrikaans dat
+   ek dit kan toets?" Only she can send an Afrikaans song to Google. */
+ok('an Afrikaans song is sent to Google only when the owner asks for it',
+  /const ownerTriesGoogle = afrikaans && \(body as \{ engine\?: unknown \}\)\.engine === 'google' && callerIsOwner\(caller\)/.test(booth)
+  && /\(!afrikaans && \(process\.env\.MUSIC_ENGINE[^)]*\)\.trim\(\)\.toLowerCase\(\) === 'google'\) \|\| ownerTriesGoogle/.test(booth),
+  'everyone else\u2019s Afrikaans still goes to ElevenLabs');
+ok('  and the words go as written, with the language said',
+  /Sung in Afrikaans, with natural Afrikaans pronunciation\./.test(out.prompt)
+  && !/Sung in Afrikaans/.test(promptFor({ sections: [{ name: 'Verse', lines: ['I walk the line tonight', 'and the road is long'], seconds: 20 }] }).prompt),
+  out.prompt.slice(0, 120));
+
 if (bad) {
   console.error(`\ncheck:lyria — ${bad} assertion(s) failed.\n`);
   process.exit(1);

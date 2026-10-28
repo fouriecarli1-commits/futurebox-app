@@ -31,6 +31,14 @@ export default function IconTips(): React.ReactElement | null {
   useEffect(() => {
     const pressed = (event: Event): void => {
       const target = event.target instanceof Element ? event.target : null;
+      /* A description shortened to two lines on a phone (globals.css,
+         "says less") opens at a tap, and closes at the next. */
+      const line = target?.closest(':is([data-cutroom], [data-booth], [data-postunder]) p:not([role])');
+      if (line instanceof HTMLElement && !target?.closest('button, a, input, label')) {
+        if (line.hasAttribute('data-open')) line.removeAttribute('data-open');
+        else if (line.scrollHeight > line.clientHeight + 2) line.setAttribute('data-open', '');
+        return;
+      }
       const button = target?.closest('button, [role="button"]');
       if (!button || button.closest('[data-notip]')) return;
       /* A button with its own words needs no line; one with a single

@@ -269,11 +269,22 @@ check('while it is the other person’s turn, the copilot cannot write into the 
 /* ── Read it aloud, and it is sung the way it was said ────────────────
    The owner, 22 October 2026: "Is daar nie 'n manier dat iemand hulle
    liedjie se woorde vooraf kan rekord … om die uitspraak reg te kry nie?" */
-const { linesIn, cleanSayAs } = await import('../app/lib/server/sayas.ts');
+const { linesIn, cleanSayAs, leftovers, sayAsBody } = await import('../app/lib/server/sayas.ts');
 const answer = (lines: unknown) => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ lines }) }] } }] });
 check('the listener’s answer is taken only with a line for every line asked',
   JSON.stringify(linesIn(answer(['Dee pahd', 'Ons stup']), 2)) === '["Dee pahd","Ons stup"]'
   && linesIn(answer(['Dee pahd']), 2) === null && linesIn(answer(['Dee pahd', '']), 2) === null && linesIn({}, 1) === null);
+/* The owner, 28 October 2026: a reading came back "Daar vas uh haai in
+   Mos-sel-baai", half respelled, and the song came out wrong. */
+check('words left in Afrikaans spelling are found, and English words are not',
+  JSON.stringify(leftovers(['Daar vas uh haai in Mos-sel-baai', 'snee-oo in Pre-toh-ree-uh', 'Laakh saam met my'])) === '["Daar","haai","Mos-sel-baai","Laakh","saam"]'
+  && leftovers(['Dahr vus uh high in Moss-ul-buy', 'I love the sea']).length === 0);
+check('  and a second listen names them',
+  /left these words in Afrikaans spelling[^"]*haai, saam/.test(sayAsBody({ data: '', mime: 'audio/webm' }, ['x'], ['haai', 'saam']))
+  && !/left these words/.test(sayAsBody({ data: '', mime: 'audio/webm' }, ['x'])));
+check('  and the listening asks once more when any are left, keeping the answer with fewer',
+  /const left = leftovers\(first\.lines\)/.test(readFileSync(new URL('../app/lib/server/sayas.ts', import.meta.url), 'utf8'))
+  && /leftovers\(second\.lines\)\.length < left\.length \? second : first/.test(readFileSync(new URL('../app/lib/server/sayas.ts', import.meta.url), 'utf8')));
 check('a reading can only respell lines that are in the song',
   JSON.stringify(cleanSayAs({ 'Die pad is lank': 'Dee pahd iss lunk', 'Something else': 'x', 'Ons': 5 }, ['Die pad is lank', 'Ons']))
     === '{"Die pad is lank":"Dee pahd iss lunk"}');
@@ -285,6 +296,10 @@ const readSong = buildRequest({
 const sungText = readSong.composition_plan.chunks[0]?.text ?? '';
 check('a line read aloud goes to the engine as it was said, and the rest as before',
   sungText.includes('Dee pahd iss lunk') && !sungText.includes('Die pad is lank') && /lief|leef/.test(sungText), sungText);
+const { readAloudCount } = await import('../app/lib/engines.ts');
+check('after a song from a reading, it says how many lines were sung the way they were read',
+  JSON.stringify(readAloudCount('[Verse]\nDie pad is lank\nEk is baie lief vir jou\n[Chorus]\nDie pad is lank', { 'Die pad is lank': 'Dee pahd iss lunk', 'Ou lyn': 'oh' })) === '{"read":1,"of":2}'
+  && /make\.readCount/.test(readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8')));
 const musicRoute = readFileSync(new URL('../app/api/music/route.ts', import.meta.url), 'utf8');
 check('  and the music route cleans it and screens it with everything else',
   /sayAs: cleanSayAs\(body\.sayAs/.test(musicRoute) && /\.\.\.Object\.values\(body\.sayAs \?\? \{\}\)/.test(musicRoute));

@@ -111,8 +111,16 @@ try {
     check(`${at} the transport has back-to-start, stop, record, loop and click over the lanes`,
       (await Promise.all(['start', 'stop', 'record', 'loop', 'click'].map((k) => key(k).isVisible()))).every(Boolean));
     const keyBoxes = await p.locator('[data-transport-key]').evaluateAll((els) => els
-      .filter((e) => e.offsetParent).map((e) => { const r = e.getBoundingClientRect(); return { w: r.width, h: r.height, right: r.right }; }));
-    check(`${at} every transport key is a thumb's size and on the screen`,
+      .filter((e) => e.offsetParent).map((e) => {
+        const r = e.getBoundingClientRect();
+        /* On a phone the keys are one row that slides sideways (the owner,
+           27 October 2026: small buttons in one line), so a key past the
+           edge is fine when the row under it scrolls to it. */
+        const row = e.closest('[data-sideways]');
+        const slides = !!row && getComputedStyle(row).overflowX === 'auto' && row.scrollWidth > row.clientWidth;
+        return { w: r.width, h: r.height, right: slides ? 0 : r.right };
+      }));
+    check(`${at} every transport key is a thumb's size and on the screen, or in the row that slides to it`,
       keyBoxes.every((b) => b.w >= 43.5 && b.h >= 43.5 && b.right <= width + 0.5),
       JSON.stringify(keyBoxes.filter((b) => b.w < 43.5 || b.h < 43.5 || b.right > width + 0.5)));
     check(`${at} the page never scrolls sideways`,

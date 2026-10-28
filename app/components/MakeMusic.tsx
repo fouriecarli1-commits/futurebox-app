@@ -28,7 +28,7 @@ import { accessToken } from '../lib/cloud';
 import { saveSong } from '../lib/songfile';
 import { durationOf, readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
-import { Refused, engines, songEngine, splitSections, type Stage } from '../lib/engines';
+import { Refused, engines, ownerTriesSongs, readAloudCount, songEngine, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
@@ -195,7 +195,14 @@ export default function MakeMusic({
      dearer of the two. */
   const [engineOn, setEngineOn] = useState<SongEngine>('eleven');
   useEffect(() => { void songEngine().then(setEngineOn); }, []);
-  const singer: SongEngine = looksAfrikaans(lyrics ?? '') ? 'eleven' : engineOn;
+  /* The owner alone can send an Afrikaans song to Google, to compare the
+     two engines by ear (`app/api/music`, 28 October 2026). */
+  const [ownerHere, setOwnerHere] = useState(false);
+  const [afrikaansOn, setAfrikaansOn] = useState<SongEngine>('eleven');
+  useEffect(() => { void ownerTriesSongs().then(setOwnerHere); }, []);
+  const afrikaansSong = looksAfrikaans(lyrics ?? '');
+  const singer: SongEngine = afrikaansSong ? (ownerHere && afrikaansOn === 'google' ? 'google' : 'eleven') : engineOn;
+  const afrikaansEngine: SongEngine | undefined = afrikaansSong && singer === 'google' ? 'google' : undefined;
   /* Whether anybody is going to sing on this.
  
      `splitSections` is what the engine call uses, so asking it here is asking
@@ -662,6 +669,8 @@ export default function MakeMusic({
    */
   const [stage, setStage] = useState<Stage | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  /** After a song from a reading: how many lines were sung the way they were read. */
+  const [readNote, setReadNote] = useState<string | null>(null);
   /* ── The one refusal with a way out of it ──────────────────────────────
  
      The owner, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
@@ -1073,6 +1082,13 @@ export default function MakeMusic({
       setBusy(true);
       setStage(null);
       setStatus(t('make.goingNote'));
+      setReadNote(null);
+      const reading = canvas.sayAs && Object.keys(canvas.sayAs).length && !singItYourself && engines.available('audio')
+        ? readAloudCount(lyrics, canvas.sayAs)
+        : null;
+      const sayRead = (): void => {
+        if (reading) setReadNote(t('make.readCount', '{n} of {of} lines sung the way you read them.').replace('{n}', String(reading.read)).replace('{of}', String(reading.of)));
+      };
 
       // Yields once so the button visibly changes before the work starts.
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -1106,6 +1122,7 @@ export default function MakeMusic({
               instrumental: singItYourself,
               finetuneId: ownSound || undefined,
               sayAs: canvas.sayAs,
+              afrikaansEngine,
               versions,
               take,
               bundle,
@@ -1114,6 +1131,7 @@ export default function MakeMusic({
             takes.push({ blob: result.blob, model: result.model, sung: result.sung, sungAt: result.sungAt, url: URL.createObjectURL(result.blob) });
           }
           setPicking({ name, spec, began, takes });
+          sayRead();
           setStatus(t('make.versionsPick', 'Listen to each one and keep the one you want. The others are dropped.'));
           return;
         }
@@ -1141,6 +1159,7 @@ export default function MakeMusic({
             finetuneId: ownSound || undefined,
             pair: pairGate?.id,
             sayAs: canvas.sayAs,
+            afrikaansEngine,
             onStage: setStage,
           });
           if (pairGate) onPairMade?.();
@@ -1174,6 +1193,7 @@ export default function MakeMusic({
 
 
         await settle({ blob, source, models, sungBack, sungAt, name, spec, remixOf, began });
+        sayRead();
       } catch (error) {
         // The reason travels all the way here and used to be dropped on the
         // floor: `catch {}` without binding it, then a generic line. The music
@@ -1188,7 +1208,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.sayAs, canvas.style, lyrics, onPairMade, ownSound, pairGate, seconds, settle, singItYourself, songKey, sounds.mine, styleText, t, title, userPlan, versions, wordless],
+    [afrikaansEngine, bpm, canvas.sayAs, canvas.style, lyrics, onPairMade, ownSound, pairGate, seconds, settle, singItYourself, songKey, sounds.mine, styleText, t, title, userPlan, versions, wordless],
   );
 
   const toggle = async (track: Track) => {
@@ -1946,6 +1966,22 @@ export default function MakeMusic({
             {/* On every song, whatever language it is set to: the owner, 24
                 October 2026, still could not find it with the box set to
                 English. The button names what it is for. */}
+            {!singItYourself && ownerHere && afrikaansSong && (
+              <div className="flex items-center gap-1.5 pt-1 text-xs text-zinc-400" data-afrikaansengine>
+                <span>{t('make.afEngine', 'Owner test, Afrikaans sung by:')}</span>
+                {(['eleven', 'google'] as const).map((one) => (
+                  <button
+                    key={one}
+                    type="button"
+                    aria-pressed={afrikaansOn === one}
+                    onClick={() => setAfrikaansOn(one)}
+                    className={`rounded-full px-2.5 py-1 font-semibold ${afrikaansOn === one ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-200'}`}
+                  >
+                    {one === 'eleven' ? 'ElevenLabs' : 'Google'}
+                  </button>
+                ))}
+              </div>
+            )}
             {!singItYourself && (
               <SayItFirst
                 folded={!(looksAfrikaans(lyrics) || singWanted === 'af')}
@@ -2206,6 +2242,7 @@ export default function MakeMusic({
         </div>
 
         {status && <p className="text-sm text-emerald-300">{status}</p>}
+        {readNote && <p className="text-xs text-zinc-400" data-readnote>{readNote}</p>}
         {canSayIt && (
           <button
             type="button"

@@ -9,7 +9,7 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
-import { BECOMES } from '../app/lib/becomes.ts';
+import { BECOMES, becomeInput } from '../app/lib/becomes.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -72,6 +72,11 @@ ok('a sticker is cut from the MASK, never the preview (which is the whole photo 
   /spec\.gives === 'mask' \? maskUrlOf\(ran\.data\)/.test(become)
   && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [{ url: 'https://v3.fal.media/mask.png' }] }) === 'https://v3.fal.media/mask.png'
   && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [] }) === null);
+const tapOnly = becomeInput('sticker', 'data:image/jpeg;base64,AA', { tap: { x: 10.4, y: 20.6 } });
+ok('a tap with no words sends an EMPTY prompt, never none (none means "wheel", fal.ai support, 28 October 2026)',
+  tapOnly.prompt === '' && JSON.stringify(tapOnly.point_prompts) === '[{"x":10,"y":21,"label":1}]');
+ok('every call keeps nothing past the hour (X-Fal-Object-Lifecycle-Preference, as fal.ai support named it)',
+  /'X-Fal-Object-Lifecycle-Preference': JSON\.stringify\(\{ expiration_duration_seconds: FAL_KEEP_SECONDS \}\)/.test(readFileSync('app/lib/server/fal.ts', 'utf8')) && FAL_KEEP_SECONDS === 3600);
 ok('a make\'s words are screened as footage is', /guard\(request, words, 'footage', caller\)/.test(become));
 ok('a make that fails gives the credits back once', /await paid\.refund\(\)/.test(become) && /reason', 'refund'\)/.test(become));
 ok('the key stays off the screen here too', !/FAL_KEY/.test(bench));

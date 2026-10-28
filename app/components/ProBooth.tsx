@@ -6187,7 +6187,10 @@ export default function ProBooth({
         </div>
       )}
       {(cameBack || savedAt !== null || saveFailed) && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs">
+        /* A plain "saved" is said on a desk only: on a phone it was a whole
+           row taken from the lanes to say that nothing is wrong. A failure
+           and "Carried on … Start fresh" still show everywhere. */
+        <div className={`${cameBack || saveFailed ? 'flex' : 'hidden sm:flex'} flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs`}>
           {saveFailed ? (
             <span className="font-semibold text-amber-300">
               {saveFailed === 'full'
@@ -6270,7 +6273,9 @@ export default function ProBooth({
               busy={busy || making}
             />
           )}
-          {!sideways && <BoothScope ear={scopeRef} playing={playing} />}
+          {/* Only while there is sound to draw: still, it was an empty strip
+              above the lanes. */}
+          {!sideways && (playing || recording) && <BoothScope ear={scopeRef} playing={playing} />}
           <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
             {(['wave', 'spectrum'] as const).map((one) => (
               <button

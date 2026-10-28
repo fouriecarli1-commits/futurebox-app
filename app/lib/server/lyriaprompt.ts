@@ -28,6 +28,7 @@
  */
 
 import type { Body, MusicSection } from './musicplan';
+import { looksAfrikaans } from '../lyriclang';
 
 /** Section names, as Lyria wants to see them. */
 const tagged = (one: MusicSection): string => {
@@ -91,6 +92,11 @@ export function promptFor(body: Body): Rendered {
        if it fails, and belt and braces costs nothing. */
     parts.push('Instrumental only, no vocals.');
   } else if (sections.length) {
+    /* Only the owner's Afrikaans test reaches here with Afrikaans words
+       (`app/api/music`); the words go as written, and the language is said. */
+    if (looksAfrikaans((body.sections ?? []).flatMap((one) => one.lines ?? []).join('\n'))) {
+      parts.push('Sung in Afrikaans, with natural Afrikaans pronunciation.');
+    }
     parts.push('Sung, with these words:');
     parts.push(sections.join('\n\n'));
   } else if (plain) {

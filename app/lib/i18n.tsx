@@ -1774,6 +1774,8 @@ export const STRINGS: Dict = {
   "make.keepVersion": { en: "Keep this one", af: "Hou hierdie een" },
   "make.dropVersions": { en: "Drop them all", af: "Los hulle almal" },
   "make.versionsDropped": { en: "Dropped. Nothing was saved.", af: "Gelos. Niks is gestoor nie." },
+  "make.readCount": { en: "{n} of {of} lines sung the way you read them.", af: "{n} van {of} reëls gesing soos jy dit gelees het." },
+  "make.afEngine": { en: "Owner test, Afrikaans sung by:", af: "Eienaar se toets, Afrikaans gesing deur:" },
   "edit.underAdd": {
     en: "Put a track under it",
     af: "Sit ’n liedjie daaronder",

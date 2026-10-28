@@ -102,6 +102,8 @@ export interface AudioRequest {
    * shown and released stay the written ones.
    */
   readonly sayAs?: Readonly<Record<string, string>>;
+  /** The owner's test: an Afrikaans song sent to Google instead of ElevenLabs. */
+  readonly afrikaansEngine?: SongEngine;
   /**
    * One of several versions of the same song, made in one press so she can
    * pick: how many, which one this is (from nought), and the id of the run,
@@ -210,6 +212,18 @@ export async function songEngine(): Promise<SongEngine> {
   return songEngineIs;
 }
 
+/** Whether the one signed in is the owner, who may try Google on an Afrikaans song. */
+export async function ownerTriesSongs(): Promise<boolean> {
+  try {
+    const token = await accessToken();
+    if (!token) return false;
+    const answer = await fetch('/api/music?owner=1', { headers: { Authorization: `Bearer ${token}` } });
+    return answer.ok && (await answer.json() as { owner?: boolean }).owner === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function probeAudio(): Promise<boolean> {
   if (audioReady !== null) return audioReady;
   if (!audioProbe) {
@@ -233,6 +247,19 @@ export async function probeAudio(): Promise<boolean> {
    without importing the song engine's door to `/api/music` along with it
    (`check:kidsafe` follows imports, and counts every door it finds). */
 export { probeVideo, probeVideoEngine, videoIsReady, type VideoEngine, type VideoGrades } from './videograde';
+
+/**
+ * How many of a song's lines go to the engine the way they were read aloud
+ * (`SayItFirst`). A reading is kept by the exact line, as the music route's
+ * `cleanSayAs` does, so a line changed after the reading is sung from the
+ * spelling again. The owner, 28 October 2026, after an Afrikaans song came
+ * out wrong: she should see how many lines her reading reached.
+ */
+export function readAloudCount(lyrics: string, sayAs: Readonly<Record<string, string>> | undefined): { read: number; of: number } {
+  const lines = [...new Set(splitSections(lyrics).flatMap((section) => section.lines))];
+  const said = new Set(Object.entries(sayAs ?? {}).filter(([, as]) => as.trim()).map(([line]) => line.trim()));
+  return { read: lines.filter((line) => said.has(line)).length, of: lines.length };
+}
 
 /**
  * Splits a lyric sheet on its [Section] tags and gives the song a shape.
@@ -362,6 +389,7 @@ export const engines: Engines = {
         finetuneId: request.finetuneId || undefined,
         pair: request.pair || undefined,
         sayAs: request.sayAs && Object.keys(request.sayAs).length ? request.sayAs : undefined,
+        engine: request.afrikaansEngine === 'google' ? 'google' : undefined,
         ...(request.versions && request.versions > 1
           ? { versions: request.versions, take: request.take ?? 0, bundle: request.bundle }
           : {}),

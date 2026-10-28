@@ -942,6 +942,10 @@ try {
              Under eight is a text node a hair wider than the box that holds
              it, and chasing those turns a check that found four real faults
              into one nobody trusts. */
+          /* A row marked as sliding on purpose (`data-sideways`) says so:
+             globals.css fades its edge. The owner, 27 October 2026, asked
+             for the small keys in one line that slides. */
+          if (el.matches('[data-sideways]') && getComputedStyle(el).overflowX === 'auto') continue;
           if (el.scrollWidth > el.clientWidth + 8 && el.clientWidth > 40) {
             out.push(`${Math.round(el.clientWidth)} wide holding ${Math.round(el.scrollWidth)}: .${String(el.className).slice(0, 50)}`);
           }
