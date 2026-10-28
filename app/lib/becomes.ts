@@ -88,15 +88,55 @@ export interface Tap {
   readonly y: number;
 }
 
+/**
+ * What can move when a photo wakes up, chosen with a tap. The owner, 28
+ * October 2026: *"maak die wake it up met kies funksies, of sou mens dalk
+ * kon prompt met 'n klein copilot window"*: both, the choices first and the
+ * member's own words beside them. Each choice is a phrase the engine reads
+ * well; only these ids cross from the phone, so the phrases are ours.
+ */
+export const WAKE_MOVES = [
+  { id: 'breeze', name: ['become.moveBreeze', 'Breeze'], says: 'a soft breeze moves hair, clothes and leaves' },
+  { id: 'smile', name: ['become.moveSmile', 'Smile'], says: 'the people smile and blink naturally' },
+  { id: 'wave', name: ['become.moveWave', 'Wave hello'], says: 'the person waves at the camera' },
+  { id: 'dance', name: ['become.moveDance', 'Dance'], says: 'the people start to dance' },
+  { id: 'water', name: ['become.moveWater', 'Water flows'], says: 'water flows and ripples' },
+  { id: 'clouds', name: ['become.moveClouds', 'Clouds drift'], says: 'clouds drift across the sky' },
+  { id: 'light', name: ['become.moveLight', 'Light plays'], says: 'sunlight shifts and flickers through the scene' },
+  { id: 'fire', name: ['become.moveFire', 'Flames'], says: 'flames and candlelight flicker' },
+  { id: 'snow', name: ['become.moveSnow', 'Snow'], says: 'snow falls gently' },
+  { id: 'rain', name: ['become.moveRain', 'Rain'], says: 'rain falls softly' },
+  { id: 'pushin', name: ['become.movePushIn', 'Camera in'], says: 'the camera slowly pushes in' },
+  { id: 'circle', name: ['become.moveCircle', 'Camera around'], says: 'the camera slowly circles around the subject' },
+] as const;
+export type WakeMove = (typeof WAKE_MOVES)[number]['id'];
+/** As many as can be asked for at once and still all be seen in six seconds. */
+export const WAKE_MOST = 3;
+
+/** The choices as they arrive from a phone: known ids only, each once, at most three. */
+export function wakeMoves(raw: unknown): WakeMove[] {
+  if (!Array.isArray(raw)) return [];
+  const known = new Set<string>(WAKE_MOVES.map((one) => one.id));
+  return [...new Set(raw.filter((one): one is WakeMove => typeof one === 'string' && known.has(one)))].slice(0, WAKE_MOST);
+}
+
 /** What moves, when the member says nothing. */
 const ALIVE_PROMPT = 'The photo comes gently alive: natural movement in the scene, hair and clothes and leaves stirring, light shifting, a slow cinematic camera move, with ambient sound that fits the place.';
+
+/** The wake-up prompt: the chosen moves and the member's words lead, or the gentle default. */
+function aliveAsked(said: string, moves: readonly WakeMove[]): string {
+  const chosen = moves.map((id) => WAKE_MOVES.find((one) => one.id === id)?.says).filter(Boolean);
+  const asked = [...chosen, said].filter(Boolean).join('; ');
+  if (!asked) return ALIVE_PROMPT;
+  return `${asked.charAt(0).toUpperCase()}${asked.slice(1)}. Natural, smooth movement, with ambient sound that fits the place.`;
+}
 
 /**
  * What each model is sent. The fields are copied from its own page
  * (`docs/FAL-SKEMAS.md`); this is the one place they live, so a field fal.ai
  * renames is a one-line change.
  */
-export function becomeInput(id: BecomeId, picture: string, opts: { readonly tap?: Tap; readonly words?: string } = {}): Record<string, unknown> {
+export function becomeInput(id: BecomeId, picture: string, opts: { readonly tap?: Tap; readonly words?: string; readonly moves?: readonly WakeMove[] } = {}): Record<string, unknown> {
   const said = (opts.words ?? '').trim();
   if (id === 'sticker') {
     return {
@@ -113,7 +153,7 @@ export function becomeInput(id: BecomeId, picture: string, opts: { readonly tap?
   if (id === 'alive') {
     return {
       image_url: picture,
-      prompt: said ? `${said}. ${ALIVE_PROMPT}` : ALIVE_PROMPT,
+      prompt: aliveAsked(said, opts.moves ?? []),
       duration: 6,
       resolution: '1080p',
       aspect_ratio: 'auto',

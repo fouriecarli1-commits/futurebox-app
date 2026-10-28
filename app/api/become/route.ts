@@ -23,7 +23,7 @@
  */
 import { admin, callerFrom } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
-import { BECOME_IDS, BECOMES, becomeInput, type BecomeId, type Tap } from '@/app/lib/becomes';
+import { BECOME_IDS, BECOMES, becomeInput, wakeMoves, type BecomeId, type Tap } from '@/app/lib/becomes';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
@@ -119,7 +119,7 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, spec.credits, `become:${id}`);
   if (!paid.ok) return paid.response;
 
-  const input = becomeInput(id, picture, { tap, words });
+  const input = becomeInput(id, picture, { tap, words, moves: id === 'alive' ? wakeMoves(body.moves) : [] });
 
   if (spec.now) {
     const ran = await falNow(spec.model, input);

@@ -9,7 +9,7 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
-import { BECOMES, becomeInput } from '../app/lib/becomes.ts';
+import { BECOMES, becomeInput, wakeMoves } from '../app/lib/becomes.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -72,6 +72,11 @@ ok('a sticker is cut from the MASK, never the preview (which is the whole photo 
   /spec\.gives === 'mask' \? maskUrlOf\(ran\.data\)/.test(become)
   && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [{ url: 'https://v3.fal.media/mask.png' }] }) === 'https://v3.fal.media/mask.png'
   && maskUrlOf({ image: { url: 'https://v3.fal.media/preview.png' }, masks: [] }) === null);
+/* Wake it up's choices: only our own phrases reach the engine. */
+const chose = becomeInput('alive', 'data:image/jpeg;base64,AA', { moves: wakeMoves(['breeze', 'pushin', 'nonsense', 'breeze', 'snow', 'rain']), words: 'the dog jumps' });
+ok('wake-up choices become the engine\u2019s own phrases, known ones only, at most three, with the member\u2019s words after',
+  /^A soft breeze moves hair, clothes and leaves; the camera slowly pushes in; snow falls gently; the dog jumps\. /.test(String(chose.prompt))
+  && !/nonsense|rain/.test(String(chose.prompt)) && wakeMoves('breeze').length === 0);
 const tapOnly = becomeInput('sticker', 'data:image/jpeg;base64,AA', { tap: { x: 10.4, y: 20.6 } });
 ok('a tap with no words sends an EMPTY prompt, never none (none means "wheel", fal.ai support, 28 October 2026)',
   tapOnly.prompt === '' && JSON.stringify(tapOnly.point_prompts) === '[{"x":10,"y":21,"label":1}]');

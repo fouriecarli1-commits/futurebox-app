@@ -138,6 +138,25 @@ try {
   await page.locator('[data-becomebench]').scrollIntoViewIfNeeded();
   await snap('cards');
 
+  /* ── Wake it up: choices to tap, and room to say it ──
+     The owner, 28 October 2026: "maak die wake it up met kies funksies". */
+  const moves = page.locator('[data-wakemove]');
+  check('Wake it up offers moves to choose', (await moves.count()) >= 10);
+  for (const n of [0, 1, 2]) await moves.nth(n).click();
+  check('  up to three of them, and a fourth waits until one is dropped',
+    (await page.locator('[data-wakemove][aria-pressed="true"]').count()) === 3 && await moves.nth(3).isDisabled());
+  await moves.nth(0).click();
+  check('  and a chosen one is dropped with a second tap', !(await moves.nth(3).isDisabled()));
+  const chipsFit = await page.evaluate(() => [...document.querySelectorAll('[data-wakemove]')].every((el) => el.getBoundingClientRect().right <= 391));
+  check('  all of them on the screen', chipsFit);
+  check('  with a box beside them to say it in your own words', (await page.locator('[data-wakeask] [data-becomewords]').count()) === 1);
+  const alive = await page.evaluate(() => {
+    const el = document.querySelector('[data-cutbench="alive"]');
+    const word = el?.querySelector(':scope > span:last-child');
+    return { coloured: el?.classList.contains('fb-alivetool'), ink: word ? getComputedStyle(word).webkitTextFillColor : '' };
+  });
+  check('the Alive tool wears colour in the bar', alive.coloured === true && /rgba\(0, 0, 0, 0\)|transparent/.test(alive.ink), JSON.stringify(alive));
+
   /* ── Saved: a card asks whether they want to do more with it ── */
   await page.locator('[data-becomenudge] button[aria-label]').first().click().catch(() => {});
   await page.locator('[data-postexportopen]').click();

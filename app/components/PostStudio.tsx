@@ -10877,8 +10877,10 @@ export default function PostStudio({
         else setToolSay(null);
         openBench(spec.id);
       }}
-      className={`${rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''}`}
-      style={bench === spec.id ? undefined : { color: INK_DIM }}
+      /* Alive wears colour, the owner, 28 October 2026: *"Ek hou van die
+         live funksie op sy eie. Gee daai button net kleur."* (`fb-alivetool`) */
+      className={`${rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''} ${spec.id === 'alive' ? 'fb-alivetool' : ''}`}
+      style={bench === spec.id || spec.id === 'alive' ? undefined : { color: INK_DIM }}
     >
       <ToolTile id={spec.id} from={thumb} icon={spec.icon} size={rail ? 38 : 34} />
       <span className="w-full truncate text-center">{t(POST_SHORT[spec.id][0], POST_SHORT[spec.id][1])}</span>

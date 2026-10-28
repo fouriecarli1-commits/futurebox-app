@@ -27,7 +27,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box as BoxIcon, Hand, Loader2, Sparkles, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { creditsSaid } from '../lib/credits';
-import { BECOMES, BECOME_SIDE, type BecomeId } from '../lib/becomes';
+import { BECOMES, BECOME_SIDE, WAKE_MOST, WAKE_MOVES, type BecomeId, type WakeMove } from '../lib/becomes';
 import { cutOut, loadPicture, sendable, type Cut } from '../lib/stickerize';
 import { IDEAS, type IdeaMoment } from '../lib/ideas';
 import ModelView from './ModelView';
@@ -252,6 +252,7 @@ export default function BecomeBench({
   const [busy, setBusy] = useState<BecomeId | null>(null);
   const [said, setSaid] = useState('');
   const [words, setWords] = useState('');
+  const [moves, setMoves] = useState<WakeMove[]>([]);
   const [video, setVideo] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
   /* A tap made before this bench was drawn is not a tap for it: the bench
@@ -312,14 +313,14 @@ export default function BecomeBench({
     setBusy('alive');
     setSaid(t('become.waking', 'Waking it up. This takes about a minute.'));
     try {
-      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim() }, t);
+      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim(), moves }, t);
       if (!got.file) { setSaid(got.said ?? ''); return; }
       setVideo(got.file);
       setSaid(t('become.awake', 'It is alive. Press play for the sound, and Keep it to save it.'));
     } finally {
       setBusy(null);
     }
-  }, [picture, words, t]);
+  }, [picture, words, moves, t]);
 
   const make3d = useCallback(async (): Promise<void> => {
     if (!lastCut) {
@@ -391,16 +392,7 @@ export default function BecomeBench({
           title={pulling ? t('become.stickerOn', 'Tap the thing in the photo') : undefined}
         />
         <BecomeCard id="alive" t={t} busy={busy === 'alive'} disabled={busy !== null} onClick={() => go('alive')} />
-        <input
-          type="text"
-          value={words}
-          maxLength={200}
-          onChange={(event) => setWords(event.target.value)}
-          placeholder={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-          aria-label={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-          className="-mt-1 min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-white"
-          data-becomewords
-        />
+        <WakeChoices t={t} moves={moves} onMoves={setMoves} words={words} onWords={setWords} disabled={busy !== null} />
         <BecomeCard id="model3d" t={t} busy={busy === 'model3d'} disabled={busy !== null} onClick={() => go('model3d')} />
       </div>
       {video && (
@@ -614,6 +606,64 @@ export function IdeaPrompt({ moment, thumb, t, onPick, onNotNow, onClose, floati
   );
 }
 
+/* ── What moves when it wakes up ──────────────────────────────────────── */
+
+/**
+ * The owner, 28 October 2026: *"maak die wake it up met kies funksies, of
+ * sou mens dalk kon prompt met 'n klein copilot window wat 'n mens soek?"*
+ * Both: small choices to tap (up to three, `WAKE_MOVES`), and beside them a
+ * small box to say it in your own words. The words go to the engine with
+ * the choices, so asking costs nothing more than the wake-up itself.
+ */
+function WakeChoices({ t, moves, onMoves, words, onWords, disabled }: {
+  readonly t: Say;
+  readonly moves: readonly WakeMove[];
+  readonly onMoves: (next: WakeMove[]) => void;
+  readonly words: string;
+  readonly onWords: (next: string) => void;
+  readonly disabled: boolean;
+}): React.ReactElement {
+  return (
+    <div className="-mt-0.5 space-y-1.5" data-wakechoices>
+      <p className="text-[11px] text-zinc-400">{t('become.movesHow', 'What should move? Tap up to 3, or say it below.')}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {WAKE_MOVES.map((one) => {
+          const on = moves.includes(one.id);
+          const full = !on && moves.length >= WAKE_MOST;
+          return (
+            <button
+              key={one.id}
+              type="button"
+              data-wakemove={one.id}
+              aria-pressed={on}
+              disabled={disabled || full}
+              title={full ? t('become.movesFull', 'Three at a time. Tap one to drop it first.') : undefined}
+              onClick={() => onMoves(on ? moves.filter((id) => id !== one.id) : [...moves, one.id])}
+              className={`min-h-[34px] rounded-full px-3 text-[12px] font-semibold disabled:opacity-40 ${on ? 'bg-emerald-500 text-black' : 'bg-zinc-800/90 text-zinc-200'}`}
+            >
+              {t(one.name[0], one.name[1])}
+            </button>
+          );
+        })}
+      </div>
+      <label className="flex min-h-[44px] items-center gap-2 rounded-xl bg-zinc-900/90 px-3 ring-1 ring-violet-400/40" data-wakeask>
+        <Sparkles className="h-4 w-4 shrink-0 text-violet-300" aria-hidden />
+        <input
+          type="text"
+          value={words}
+          maxLength={200}
+          disabled={disabled}
+          onChange={(event) => onWords(event.target.value)}
+          placeholder={t('become.aliveOwn', 'Or tell it what should happen…')}
+          aria-label={t('become.aliveOwn', 'Or tell it what should happen…')}
+          className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+          data-becomewords
+        />
+      </label>
+    </div>
+  );
+}
+
 /* ── Wake it up, anywhere a picture is ───────────────────────────────── */
 
 /**
@@ -629,6 +679,7 @@ export function WakeSheet({ src, t, onClose }: {
   const [yes, giveYes] = useEngineYes();
   const [asking, setAsking] = useState(!yes);
   const [words, setWords] = useState('');
+  const [moves, setMoves] = useState<WakeMove[]>([]);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [video, setVideo] = useState<string | null>(null);
@@ -641,7 +692,7 @@ export function WakeSheet({ src, t, onClose }: {
       const picture = await loadPicture(src).catch(() => null);
       const sent = picture ? sendable(picture, BECOME_SIDE) : null;
       if (!sent) { setSaid(t('become.noPicture', 'This picture could not be read. Nothing was charged.')); return; }
-      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim() }, t);
+      const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim(), moves }, t);
       if (!got.file) { setSaid(got.said ?? ''); return; }
       setVideo(got.file);
       setSaid(t('become.awake', 'It is alive. Press play for the sound, and Keep it to save it.'));
@@ -667,16 +718,7 @@ export function WakeSheet({ src, t, onClose }: {
         </div>
       ) : (
         <>
-          <input
-            type="text"
-            value={words}
-            maxLength={200}
-            onChange={(event) => setWords(event.target.value)}
-            placeholder={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-            aria-label={t('become.aliveWords', 'What should move? (you can leave this empty)')}
-            className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-white"
-            data-becomewords
-          />
+          <WakeChoices t={t} moves={moves} onMoves={setMoves} words={words} onWords={setWords} disabled={busy} />
           <BecomeCard id="alive" t={t} busy={busy} disabled={busy} onClick={() => void wake()} />
         </>
       )}

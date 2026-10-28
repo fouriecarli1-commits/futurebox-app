@@ -4049,6 +4049,31 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 /* The name over an icon button (`IconTips`): fades only, because its place
    is set by its own transform and an animated transform would undo it. */
 .fb-tip { animation: fb-tip-in 0.18s ease-out both; }
+
+/* ── Alive, in colour ────────────────────────────────────────────────────
+   The owner, 28 October 2026: "Gee daai button net kleur." The Photo
+   Editor's Alive tool glows in the three colours of what it makes, and its
+   word is written in them, so it is found at a glance in the bar. */
+.fb-alivetool > span:first-child {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1.5px rgba(167, 139, 250, 0.95), 0 0 12px rgba(244, 114, 182, 0.55);
+  animation: fb-alive-glow 2.6s ease-in-out infinite;
+}
+.fb-alivetool > span:first-child svg { color: #f0abfc; }
+.fb-alivetool > span:last-child {
+  background: linear-gradient(90deg, #34d399, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Wins over the open tool's own ink, so it stays in colour when picked. */
+  -webkit-text-fill-color: transparent;
+}
+@keyframes fb-alive-glow {
+  50% { box-shadow: 0 0 0 1.5px rgba(52, 211, 153, 0.95), 0 0 16px rgba(52, 211, 153, 0.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fb-alivetool > span:first-child { animation: none; }
+}
 @keyframes fb-tip-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* The one-line notice at the top (`Notices`): drops in, quickly. */
