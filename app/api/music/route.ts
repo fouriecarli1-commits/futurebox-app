@@ -547,7 +547,9 @@ export async function GET(request: Request): Promise<Response> {
   const google = (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google' && googleOn();
   /* Asked with `?owner=1` by the song form: whether this is the owner, who
      may send an Afrikaans song to Google to compare (see the POST). */
-  const owner = new URL(request.url).searchParams.get('owner') === '1' && googleOn()
+  const owner = new URL(request.url).searchParams.get('owner') === '1'
     && callerIsOwner(await callerFrom(request).catch(() => null));
-  return Response.json({ available: ready('music'), engine: google ? 'google' : 'eleven', ...(owner ? { owner: true } : {}) });
+  /* Whether Google can take it is said alongside, so the owner sees the
+     choice and, when Google is not switched on, why it cannot be picked. */
+  return Response.json({ available: ready('music'), engine: google ? 'google' : 'eleven', ...(owner ? { owner: true, googleReady: googleOn() } : {}) });
 }

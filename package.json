@@ -84,6 +84,7 @@
     "check:kidsloop": "node audit/kidsloop.mjs 3322",
     "check:magicbrush": "node audit/magicbrush.mjs 3345",
     "check:becomebench": "node audit/becomebench.mjs 3351",
+    "check:postpages": "node audit/postpages.mjs 3413",
     "check:notices": "node audit/notices.mjs 3364",
     "check:darkroom": "node audit/darkroom.mjs 3353",
     "check:pdfroom": "node audit/pdfroom.mjs 3354",

@@ -134,8 +134,14 @@ const ways = (photo.match(/\.download\s*=|downloadBlob\(/g) ?? []).length;
 ok('the photo room has exactly one way to put a file on a phone',
   ways === 1, `${ways} — every extra one is another thing to keep behind the charge`);
 
+/* Both saves, the one picture and the ticked pages (28 October 2026), hand
+   the file over through `handOut`, the one download line, only after the
+   charge has answered. */
 ok('  and it is behind the paid picture',
-  /const take = async[\s\S]{0,400}await paidPicture\(\)[\s\S]{0,400}\.download\s*=/.test(photo),
+  /const handOut = [\s\S]{0,300}\.download\s*=/.test(photo)
+  && /const take = async[\s\S]{0,400}await paidPicture\(\)[\s\S]{0,200}handOut\(/.test(photo)
+  && /const takePages = async[\s\S]{0,1200}await paidNow\.current\(\)[\s\S]{0,200}handOut\(/.test(photo)
+  && (photo.match(/\bhandOut\(/g) ?? []).length === 2,
   'the export charge and the file have to be the same press, or one of them'
   + ' happens without the other');
 

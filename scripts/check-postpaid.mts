@@ -235,15 +235,20 @@ ok('  and asks to be charged before it draws it',
 /* ── Every way out goes through it ───────────────────────────────────────── */
 
 /** Each way a picture can leave, and the function it leaves from. */
+/* Every road out goes through `handOut`, the one download line, and each
+   reaches it only after the charge: `paidPicture()`, or for the pages saved
+   one after another (the owner, 28 October 2026) the same function as the
+   latest drawing holds it, `paidNow.current()`. */
 const ROADS = [
-  { what: 'saved to the device', in: 'const take', by: 'a.download' },
+  { what: 'saved to the device', in: 'const take = ', by: 'handOut(' },
+  { what: 'saved to the device, page by page', in: 'const takePages', by: 'handOut(' },
   { what: "handed to the film's cover", in: 'const intoFilm', by: 'onIntoFilm(' },
 ] as const;
 
 for (const road of ROADS) {
   const body = upTo(from(studio, road.in), '\n  };');
   ok(`  ${road.what} is downstream of the charge`,
-    body.length > 0 && body.includes('paidPicture()') && body.includes(road.by),
+    body.length > 0 && (body.includes('paidPicture()') || body.includes('paidNow.current()')) && body.includes(road.by),
     body.length === 0
       ? `${road.in} is gone, so this road is not where this rule thinks it is`
       : `it reaches ${road.by} without calling paidPicture()`);
@@ -252,7 +257,7 @@ for (const road of ROADS) {
 /* The list has to be the whole list, or it holds the roads it happens to
    name while a third one is open. `onIntoFilm` and the download anchor are
    the only two things in this file that hand bytes anywhere. */
-const handOvers = (studio.match(/\bonIntoFilm\(|a\.download\s*=/g) ?? []).length;
+const handOvers = (studio.match(/\bonIntoFilm\(|\bhandOut\(/g) ?? []).length;
 ok(`  and those are all the ways out there are (${handOvers})`,
   handOvers === ROADS.length, 'something hands the picture somewhere this rule does not read');
 

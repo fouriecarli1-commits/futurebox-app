@@ -212,15 +212,19 @@ export async function songEngine(): Promise<SongEngine> {
   return songEngineIs;
 }
 
-/** Whether the one signed in is the owner, who may try Google on an Afrikaans song. */
-export async function ownerTriesSongs(): Promise<boolean> {
+/**
+ * Whether the one signed in is the owner, who may try Google on an Afrikaans
+ * song, and whether Google is switched on to take it.
+ */
+export async function ownerTriesSongs(): Promise<{ readonly owner: boolean; readonly google: boolean }> {
   try {
     const token = await accessToken();
-    if (!token) return false;
+    if (!token) return { owner: false, google: false };
     const answer = await fetch('/api/music?owner=1', { headers: { Authorization: `Bearer ${token}` } });
-    return answer.ok && (await answer.json() as { owner?: boolean }).owner === true;
+    const said = answer.ok ? await answer.json() as { owner?: boolean; googleReady?: boolean } : {};
+    return { owner: said.owner === true, google: said.googleReady === true };
   } catch {
-    return false;
+    return { owner: false, google: false };
   }
 }
 

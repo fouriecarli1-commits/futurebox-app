@@ -198,10 +198,16 @@ export default function MakeMusic({
   /* The owner alone can send an Afrikaans song to Google, to compare the
      two engines by ear (`app/api/music`, 28 October 2026). */
   const [ownerHere, setOwnerHere] = useState(false);
+  const [googleHere, setGoogleHere] = useState(false);
   const [afrikaansOn, setAfrikaansOn] = useState<SongEngine>('eleven');
-  useEffect(() => { void ownerTriesSongs().then(setOwnerHere); }, []);
+  /* Asked again when the plan arrives: on first draw the sign-in has often
+     not loaded yet, and asking only then never showed the owner the row
+     (the owner, 28 October 2026: "Die owners choice ... is nie daar nie"). */
+  useEffect(() => {
+    void ownerTriesSongs().then((said) => { setOwnerHere(said.owner); setGoogleHere(said.google); });
+  }, [userPlan]);
   const afrikaansSong = looksAfrikaans(lyrics ?? '');
-  const singer: SongEngine = afrikaansSong ? (ownerHere && afrikaansOn === 'google' ? 'google' : 'eleven') : engineOn;
+  const singer: SongEngine = afrikaansSong ? (ownerHere && googleHere && afrikaansOn === 'google' ? 'google' : 'eleven') : engineOn;
   const afrikaansEngine: SongEngine | undefined = afrikaansSong && singer === 'google' ? 'google' : undefined;
   /* Whether anybody is going to sing on this.
  
@@ -1974,8 +1980,10 @@ export default function MakeMusic({
                     key={one}
                     type="button"
                     aria-pressed={afrikaansOn === one}
+                    disabled={one === 'google' && !googleHere}
+                    title={one === 'google' && !googleHere ? t('make.afGoogleOff', 'Google’s music engine is not switched on in this deployment.') : undefined}
                     onClick={() => setAfrikaansOn(one)}
-                    className={`rounded-full px-2.5 py-1 font-semibold ${afrikaansOn === one ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-200'}`}
+                    className={`rounded-full px-2.5 py-1 font-semibold disabled:opacity-40 ${afrikaansOn === one ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-200'}`}
                   >
                     {one === 'eleven' ? 'ElevenLabs' : 'Google'}
                   </button>

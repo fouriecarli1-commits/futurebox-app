@@ -300,6 +300,15 @@ const { readAloudCount } = await import('../app/lib/engines.ts');
 check('after a song from a reading, it says how many lines were sung the way they were read',
   JSON.stringify(readAloudCount('[Verse]\nDie pad is lank\nEk is baie lief vir jou\n[Chorus]\nDie pad is lank', { 'Die pad is lank': 'Dee pahd iss lunk', 'Ou lyn': 'oh' })) === '{"read":1,"of":2}'
   && /make\.readCount/.test(readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8')));
+/* The owner, 28 October 2026: "Die owners choice van AI masjiene by make a
+   song is nie daar nie." Asked once on first draw, before the sign-in had
+   loaded, so it was never shown. */
+{
+  const form = readFileSync(new URL('../app/components/MakeMusic.tsx', import.meta.url), 'utf8');
+  check('the owner’s engine choice is asked for again once the sign-in has loaded',
+    /ownerTriesSongs\(\)\.then\([\s\S]{0,120}\}, \[userPlan\]\)/.test(form)
+    && /data-afrikaansengine/.test(form));
+}
 const musicRoute = readFileSync(new URL('../app/api/music/route.ts', import.meta.url), 'utf8');
 check('  and the music route cleans it and screens it with everything else',
   /sayAs: cleanSayAs\(body\.sayAs/.test(musicRoute) && /\.\.\.Object\.values\(body\.sayAs \?\? \{\}\)/.test(musicRoute));

@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Files, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import CropSheet from './CropSheet';
@@ -370,6 +370,47 @@ interface Step {
   /** The photo grid's frames and photographs — `lib/postcells.ts`. */
   readonly cells?: readonly Cell[];
 }
+/**
+ * One page of a design with several: everything that makes the picture, kept
+ * while another page is being worked on. The owner, 28 October 2026: *"Photo
+ * het nog nie ekstra bladsye wat mens kan add om designs rond te skuif nie."*
+ * Each page is its own post (`post`), so each is saved, and charged, once.
+ */
+interface PostPage {
+  readonly key: string;
+  readonly post: string;
+  readonly size: PostSize;
+  readonly picture: HTMLImageElement | null;
+  readonly crop: Crop;
+  readonly look: Look;
+  readonly back: string | null;
+  readonly words: Words[];
+  readonly marks: Mark[];
+  readonly cells: Cell[];
+  readonly photoHidden: boolean;
+  readonly photoAlpha: number;
+  readonly photoAt: number;
+  readonly backHidden: boolean;
+  readonly allLook: Look;
+  /** A small copy of the page as it was left, drawn in the page row. */
+  readonly thumb: HTMLCanvasElement | null;
+}
+
+/** A page's small picture, drawn from its kept canvas: it never leaves the screen. */
+function PageThumb({ from }: { readonly from: HTMLCanvasElement | null }): React.ReactElement {
+  const drawn = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const on = drawn.current;
+    if (!on || !from) return;
+    on.width = from.width;
+    on.height = from.height;
+    on.getContext('2d')?.drawImage(from, 0, 0);
+  }, [from]);
+  return from
+    ? <canvas ref={drawn} className="h-full w-full object-contain" />
+    : <span className="grid h-full w-full place-items-center text-zinc-600"><Files className="h-4 w-4" /></span>;
+}
+
 /** Steps beyond this many are forgotten, oldest first. */
 const KEEP_STEPS = 40;
 
@@ -579,6 +620,14 @@ const POST_ALIVE: BenchSpec = {
 };
 /* The owner, 16 October 2026: *"Die photo editor sal moet layers kry."* Beside
    the shapes, because the layers are the words and shapes she has put on. */
+/* The owner, 28 October 2026: pages to move designs between, and an export
+   that shows every page with a tick. `PostPage`. */
+const POST_PAGES: BenchSpec = {
+  id: 'pages',
+  icon: <Files className="h-5 w-5" />,
+  label: ['post.benchPages', 'Pages'],
+  what: ['post.benchPagesWhat', 'Add pages to one design: a carousel, slides, a menu. Copy a page, move words or shapes to another page, and save the pages you tick.'],
+};
 const POST_LAYERS: BenchSpec = {
   id: 'layers',
   icon: <Layers className="h-5 w-5" />,
@@ -624,7 +673,7 @@ const POST_CHARTS: BenchSpec = {
    *"Waar in watter funtion le dit"* — seventh in the bar, it was off the
    right edge of the screen. */
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_UPPER[0], POST_ALIVE, POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
+  POST_UPPER[0], POST_ALIVE, POST_STARTS, POST_PAGES, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -639,6 +688,7 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   shapes: ['post.toolShapes', 'Shapes'],
   charts: ['post.toolCharts', 'Charts'],
   layers: ['post.toolLayers', 'Layers'],
+  pages: ['post.toolPages', 'Pages'],
   grid: ['post.toolGrid', 'Grids'],
   cell: ['post.toolCell', 'Photo'],
   save: ['post.toolSave', 'Export'],
@@ -3829,21 +3879,27 @@ export default function PostStudio({
    * refuses in its own words — signed out, no credits — and those sentences
    * are better than any invented here.
    */
+  /** A paid file onto the device: the one place a picture is handed out. */
+  const handOut = (blob: Blob, name: string): string => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    /* Let go a little later, not on the same tick: some browsers start
+       the download after `click` returns, and a URL revoked under them is
+       a paid picture that never arrives. */
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    return url;
+  };
+
   const take = async (): Promise<void> => {
     setBusy(true);
     setSaid('');
     try {
       const blob = await paidPicture();
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nameFor(size.id, kind, scale);
-      a.click();
-      /* Let go a little later, not on the same tick: some browsers start
-         the download after `click` returns, and a URL revoked under them is
-         a paid picture that never arrives. */
-      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      const url = handOut(blob, nameFor(size.id, kind, scale));
       setSaid(t('post.saved', 'Saved to your device.'));
       /* Saved is when they are most open to more: what it can become. */
       if (picture && offerIf('postSaved')) window.setTimeout(() => setIdea({ moment: 'postSaved', thumb: url }), 900);
@@ -3851,6 +3907,203 @@ export default function PostStudio({
       setSaid(t('post.noExport', 'That could not be exported.'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  /* ── Pages ─────────────────────────────────────────────────────────────
+     The owner, 28 October 2026: *"Photo het nog nie ekstra bladsye wat mens
+     kan add om designs rond te skuif nie. Maak ook export wys al die
+     bladsye, en die bladsye wat gedownload word moet getick kan word."*
+
+     The page on the screen lives in the room's own state, as a single post
+     always has; the others wait in `pages` as `PostPage`s. With one page
+     `pages` is empty and nothing about the room changes. Going to another
+     page keeps this one and puts that one back; its history of steps does
+     not travel, because a Put back on page two must not undo page one. */
+  const [pages, setPages] = useState<readonly PostPage[]>([]);
+  const [pageAt, setPageAt] = useState(0);
+  /* Pages left out of the next save; every page is ticked until untapped. */
+  const [pagesSkipped, setPagesSkipped] = useState<ReadonlySet<string>>(new Set());
+  const [pageDropping, setPageDropping] = useState(false);
+
+  /** A small copy of the canvas as it is now, for the page row. */
+  const pageThumb = (): HTMLCanvasElement | null => {
+    const on = canvas.current;
+    if (!on || !on.width || !on.height) return null;
+    const k = 120 / Math.max(on.width, on.height);
+    const small = document.createElement('canvas');
+    small.width = Math.max(1, Math.round(on.width * k));
+    small.height = Math.max(1, Math.round(on.height * k));
+    small.getContext('2d')?.drawImage(on, 0, 0, small.width, small.height);
+    return small;
+  };
+
+  /** This page, as it stands, kept. */
+  const pageNow = (): PostPage => ({
+    key: pages[pageAt]?.key ?? freshId(),
+    post, size, picture, crop, look, back, words, marks, cells,
+    photoHidden, photoAlpha, photoAt, backHidden, allLook,
+    thumb: pageThumb(),
+  });
+
+  /** A new, empty page the same shape as this one. */
+  const pageBlank = (): PostPage => ({
+    key: freshId(),
+    post: freshId(),
+    size,
+    picture: null,
+    crop: MIDDLE,
+    look: PLAIN,
+    back: '#111113',
+    words: [],
+    marks: [],
+    cells: [],
+    photoHidden: false,
+    photoAlpha: 1,
+    photoAt: 0,
+    backHidden: false,
+    allLook: PLAIN,
+    thumb: null,
+  });
+
+  /** Put a kept page on the screen. */
+  const showPage = (one: PostPage): void => {
+    history.current.clear();
+    steps.current = { back: [], forward: [] };
+    setTold((n) => n + 1);
+    setPost(one.post);
+    setSize(one.size);
+    setPicture(one.picture);
+    setCrop(one.crop);
+    setLook(one.look);
+    setBack(one.back);
+    setWords(one.words);
+    setMarks(one.marks);
+    setCells(one.cells);
+    setPhotoHidden(one.photoHidden);
+    setPhotoAlpha(one.photoAlpha);
+    setPhotoAt(one.photoAt);
+    setBackHidden(one.backHidden);
+    setAllLook(one.allLook);
+    setWordOn(null);
+    setMarkOn(null);
+    setCellOn(null);
+    setLayerOn('all');
+    setPeels([]);
+    setCropBox(null);
+    setTraced(null);
+    setPageDropping(false);
+  };
+
+  /** The pages with this one's latest state in its place. */
+  const pagesNow = (): PostPage[] => {
+    const now = pageNow();
+    return pages.length ? pages.map((one, j) => (j === pageAt ? now : one)) : [now];
+  };
+
+  const goPage = (to: number): void => {
+    if (to === pageAt || to < 0 || to >= pages.length) return;
+    const list = pagesNow();
+    setPages(list);
+    setPageAt(to);
+    showPage(list[to]);
+  };
+
+  /** A page after this one: empty, or a copy of this one to change. */
+  const addPage = (copy: boolean): void => {
+    const list = pagesNow();
+    const here = list[pageAt] ?? list[0];
+    const next: PostPage = copy ? { ...here, key: freshId(), post: freshId() } : pageBlank();
+    list.splice(pageAt + 1, 0, next);
+    setPages(list);
+    setPageAt(pageAt + 1);
+    showPage(next);
+    setSaid(copy ? t('post.pageCopied', 'A copy of the page, ready to change.') : t('post.pageAdded', 'A new page. Each page saves as its own picture.'));
+  };
+
+  /** This page one place earlier or later in the set. */
+  const shiftPage = (by: -1 | 1): void => {
+    const to = pageAt + by;
+    if (to < 0 || to >= pages.length) return;
+    const list = pagesNow();
+    [list[pageAt], list[to]] = [list[to], list[pageAt]];
+    setPages(list);
+    setPageAt(to);
+  };
+
+  /** This page gone, after a second tap: a page is a lot of work to lose. */
+  const dropPage = (): void => {
+    if (pages.length < 2) return;
+    if (!pageDropping) { setPageDropping(true); return; }
+    const list = pagesNow().filter((_, j) => j !== pageAt);
+    const to = Math.min(pageAt, list.length - 1);
+    setPages(list.length > 1 ? list : []);
+    setPageAt(list.length > 1 ? to : 0);
+    showPage(list[to]);
+    setSaid(t('post.pageDropped', 'The page is gone.'));
+  };
+
+  /** The words, shape or photo frame chosen on this page, moved or copied to another. */
+  const chosenToPage = (to: number, keep: boolean): void => {
+    if (to === pageAt || !pages[to]) return;
+    const line = wordOn ? words.find((one) => one.id === wordOn) : undefined;
+    const mark = markOn ? marks.find((one) => one.id === markOn) : undefined;
+    const cell = cellOn ? cells.find((one) => one.id === cellOn) : undefined;
+    if (!line && !mark && !cell) return;
+    setPages((was) => was.map((one, j) => (j !== to ? one : {
+      ...one,
+      words: line ? [...one.words, keep ? { ...line, id: freshId() } : line] : one.words,
+      marks: mark ? [...one.marks, keep ? { ...mark, id: freshId() } : mark] : one.marks,
+      cells: cell ? [...one.cells, keep ? { ...cell, id: freshId() } : cell] : one.cells,
+    })));
+    if (!keep) {
+      beforeLayers(t('post.stepToPage', 'moving it to another page'));
+      if (line) { setWords((was) => was.filter((one) => one.id !== line.id)); setWordOn(null); }
+      if (mark) { setMarks((was) => was.filter((one) => one.id !== mark.id)); setMarkOn(null); }
+      if (cell) { setCells((was) => was.filter((one) => one.id !== cell.id)); setCellOn(null); }
+    }
+    setSaid((keep ? t('post.copiedToPage', 'Copied to page {n}.') : t('post.movedToPage', 'Moved to page {n}.')).replace('{n}', String(to + 1)));
+  };
+
+  /* The save, as the latest drawing of the room knows it: a page put on the
+     screen is only drawn after the press that asked for it has moved on. */
+  const paidNow = useRef(paidPicture);
+  paidNow.current = paidPicture;
+  const nameNow = useRef(() => nameFor(size.id, kind, scale));
+  nameNow.current = () => nameFor(size.id, kind, scale);
+  const drawnYet = (): Promise<void> => new Promise((done) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => { window.setTimeout(done, 150); }));
+  });
+
+  /** Every ticked page, each as its own file, each through the one charge. */
+  const takePages = async (): Promise<void> => {
+    const list = pagesNow();
+    const chosen = list.map((one, j) => ({ one, j })).filter(({ one }) => !pagesSkipped.has(one.key));
+    if (!chosen.length) { setSaid(t('post.pagesNone', 'Tick at least one page to save.')); return; }
+    const from = pageAt;
+    setBusy(true);
+    setSaid('');
+    setPages(list);
+    let saved = 0;
+    try {
+      for (const { one, j } of chosen) {
+        setPageAt(j);
+        showPage(one);
+        await drawnYet();
+        const blob = await paidNow.current();
+        if (!blob) break;
+        handOut(blob, nameNow.current().replace(/(\.[a-z0-9]+)$/i, `-page-${j + 1}$1`));
+        saved += 1;
+      }
+    } catch {
+      setSaid(t('post.noExport', 'That could not be exported.'));
+    } finally {
+      setPageAt(from);
+      showPage(list[from]);
+      setBusy(false);
+    }
+    if (saved === chosen.length) {
+      setSaid(t('post.pagesSaved', '{n} pages saved to your device.').replace('{n}', String(saved)));
     }
   };
 
@@ -9097,14 +9350,62 @@ export default function PostStudio({
         and this room's own bar is full on a small phone (`lib/reports.ts`). */}
     <ReportFlag target={{ kind: 'ai', ref: 'photo', where: 'photo' }} label />
 
+    {/* Every page, each with a tick: only the ticked ones are saved, each
+        its own file and its own charge (a page saved before is not charged
+        again). The owner, 28 October 2026. */}
+    {pages.length > 1 && (
+      <div className="space-y-1.5" data-postexportpages>
+        <p className={MIKRO}>{t('post.pagesWhich', 'Which pages to save')}</p>
+        <div className="grid grid-cols-4 gap-2">
+          {pages.map((one, j) => {
+            const on = !pagesSkipped.has(one.key);
+            return (
+              <button
+                key={one.key}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                aria-label={t('post.pageN', 'Page {n}').replace('{n}', String(j + 1))}
+                data-postexportpage={j + 1}
+                onClick={() => setPagesSkipped((was) => {
+                  const next = new Set(was);
+                  if (next.has(one.key)) next.delete(one.key); else next.add(one.key);
+                  return next;
+                })}
+                className={`relative aspect-square overflow-hidden rounded-lg bg-zinc-900 ${on ? 'ring-2 ring-emerald-400' : 'opacity-50 ring-1 ring-zinc-700'}`}
+              >
+                <PageThumb from={j === pageAt ? pageThumb() : one.thumb} />
+                <span className={`absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full text-[10px] font-black ${on ? 'bg-emerald-400 text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                  {on ? <Check className="h-3 w-3" /> : j + 1}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
     <div className="space-y-2">
-      <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
-        {busy
-          ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-          : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
-              {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
-            </span>}
-      </button>
+      {pages.length > 1 ? (() => {
+        const n = pages.filter((one) => !pagesSkipped.has(one.key)).length;
+        return (
+          <button type="button" onClick={() => void takePages()} disabled={busy || n === 0} data-postexport title={n === 0 ? t('post.pagesNone', 'Tick at least one page to save.') : undefined} className={VUL}>
+            {busy
+              ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+              : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
+                  {t('post.savePages', 'Save {n} pages').replace('{n}', String(n))} · {creditsSaid(CREDITS.postOut * n, t)}
+                </span>}
+          </button>
+        );
+      })() : (
+        <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
+          {busy
+            ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+            : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
+                {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
+              </span>}
+        </button>
+      )}
       {/* ── Kept, rather than taken out ───────────────────────
 
           Free, and the line under it says why — a free button beside a paid
@@ -9163,6 +9464,10 @@ export default function PostStudio({
           steps.current = { back: [], forward: [] };
           setTold((n) => n + 1);
           setPost(freshId());
+          /* A new design starts with one page again. */
+          setPages([]);
+          setPageAt(0);
+          setPagesSkipped(new Set());
           shapeChosen.current = false;
           setWords([]);
           setWordOn(null);
@@ -10018,7 +10323,113 @@ export default function PostStudio({
     </div>
   );
 
+  const chosenThing = Boolean(wordOn || markOn || cellOn);
+  const pagesBench = (
+    <div className="space-y-3" data-postpages>
+      <p className="text-[12px] leading-relaxed text-zinc-400">
+        {pages.length > 1
+          ? t('post.pagesHow', 'Tap a page to work on it. Each page saves as its own picture.')
+          : t('post.pagesOne', 'One page so far. Add another to make a set: a carousel, slides, a menu.')}
+      </p>
+      {pages.length > 1 && (
+        /* Sideways on purpose: a set of pages is a row, as it will be in a
+           carousel, and a long set should not push the tools off the screen. */
+        <div className="flex gap-2 overflow-x-auto pb-1" data-sideways data-postpagerow>
+          {pages.map((one, j) => (
+            <button
+              key={one.key}
+              type="button"
+              onClick={() => goPage(j)}
+              aria-pressed={j === pageAt}
+              aria-label={t('post.pageN', 'Page {n}').replace('{n}', String(j + 1))}
+              data-postpage={j + 1}
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-zinc-900 ${j === pageAt ? 'ring-2 ring-emerald-400' : 'ring-1 ring-zinc-700'}`}
+            >
+              <PageThumb from={j === pageAt ? pageThumb() : one.thumb} />
+              <span className="absolute bottom-0.5 right-1 text-[10px] font-bold text-white [text-shadow:0_1px_2px_#000]">{j + 1}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => addPage(false)} data-postpageadd className={LEEG}>
+          <Plus className="h-4 w-4" />{t('post.pageAdd', 'Add a page')}
+        </button>
+        <button type="button" onClick={() => addPage(true)} data-postpagecopy className={LEEG}>
+          <Copy className="h-4 w-4" />{t('post.pageCopy', 'Copy this page')}
+        </button>
+      </div>
+      {pages.length > 1 && (
+        <div className={RY3}>
+          <button type="button" onClick={() => shiftPage(-1)} disabled={pageAt === 0} className={`${LEEG} disabled:opacity-40`}>
+            <ChevronLeft className="h-4 w-4" />{t('post.pageEarlier', 'Earlier')}
+          </button>
+          <button type="button" onClick={() => shiftPage(1)} disabled={pageAt === pages.length - 1} className={`${LEEG} disabled:opacity-40`}>
+            {t('post.pageLater', 'Later')}<ChevronRight className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={dropPage} data-postpagedrop className={LEEG}>
+            <Trash2 className="h-4 w-4" />{pageDropping ? t('post.pageDropSure', 'Tap again') : t('post.pageDrop', 'Delete page')}
+          </button>
+        </div>
+      )}
+      {/* This page's layers, to pick one to move without hunting for it on
+          the picture. */}
+      {pages.length > 1 && (words.length + marks.length + cells.length) > 0 && (
+        <div className="space-y-1.5" data-postpagelayers>
+          <p className={MIKRO}>{t('post.pageLayers', 'On this page')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              ...words.map((one) => ({ id: one.id, kind: 'words' as const, name: one.text.trim().slice(0, 18) || t('post.layerWords', 'Words') })),
+              ...marks.map((one) => ({ id: one.id, kind: 'mark' as const, name: t('post.layerShape', 'Shape') })),
+              ...cells.map((one) => ({ id: one.id, kind: 'cell' as const, name: t('post.layerFrame', 'Photo frame') })),
+            ].map((one) => {
+              const on = one.id === wordOn || one.id === markOn || one.id === cellOn;
+              return (
+                <button
+                  key={one.id}
+                  type="button"
+                  aria-pressed={on}
+                  data-postpagelayer={one.kind}
+                  onClick={() => {
+                    setWordOn(one.kind === 'words' && !on ? one.id : null);
+                    setMarkOn(one.kind === 'mark' && !on ? one.id : null);
+                    setCellOn(one.kind === 'cell' && !on ? one.id : null);
+                  }}
+                  className={`min-h-[36px] max-w-[11rem] truncate rounded-full px-3 text-[12px] font-semibold ${on ? 'bg-emerald-500 text-black' : 'bg-zinc-800/90 text-zinc-200'}`}
+                >
+                  {one.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {pages.length > 1 && (chosenThing ? (
+        <div className="space-y-1.5" data-postpagemove>
+          <p className={MIKRO}>{t('post.pageMoveWhat', 'The chosen layer, to page')}</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {pages.map((one, j) => (j === pageAt ? null : (
+              <React.Fragment key={one.key}>
+                <button type="button" onClick={() => chosenToPage(j, false)} data-postpagemoveto={j + 1} className={LEEG}>
+                  {t('post.pageMoveTo', 'Move to {n}').replace('{n}', String(j + 1))}
+                </button>
+                <button type="button" onClick={() => chosenToPage(j, true)} data-postpagecopyto={j + 1} className={LEEG}>
+                  {t('post.pageCopyTo', 'Copy to {n}').replace('{n}', String(j + 1))}
+                </button>
+              </React.Fragment>
+            )))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] leading-relaxed text-zinc-500">
+          {t('post.pageMoveHint', 'To move words, a shape or a photo frame to another page, choose it above or tap it on the picture.')}
+        </p>
+      ))}
+    </div>
+  );
+
   const benchFor: Record<string, React.ReactNode> = {
+    pages: pagesBench,
     starts: startsBench,
     grid: gridBench,
     cell: cellBench,
@@ -10338,6 +10749,18 @@ export default function PostStudio({
       {/* ── Bring to life, over the photograph ──────────────────────────
           The sticker waiting to be peeled, and the suggestion of what the
           photo or the sticker can become next (`BecomeBench.tsx`). */}
+      {/* Which page this is, and the way to the next, small in the corner. */}
+      {pages.length > 1 && (
+        <div className="absolute left-2 top-2 z-30 flex items-center rounded-full bg-zinc-950/80 text-[11px] font-bold text-zinc-100 backdrop-blur" data-postpagenow>
+          <button type="button" onClick={() => goPage(pageAt - 1)} disabled={pageAt === 0} aria-label={t('post.pagePrev', 'The page before')} className="grid h-8 w-8 place-items-center disabled:opacity-30">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="tabular-nums">{pageAt + 1}/{pages.length}</span>
+          <button type="button" onClick={() => goPage(pageAt + 1)} disabled={pageAt === pages.length - 1} aria-label={t('post.pageNext', 'The next page')} className="grid h-8 w-8 place-items-center disabled:opacity-30">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {peels.map((one) => (
         <PeelOverlay
           key={one.id}
