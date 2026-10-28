@@ -2234,7 +2234,7 @@ jobs:
           - group: doors two
             probes: check:contrastlight check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
-            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:boothsound check:boothmagic check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
+            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:boothsound check:boothmagic check:boothpress check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
             probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover check:becomebench check:postpages check:notices
           - group: rooms

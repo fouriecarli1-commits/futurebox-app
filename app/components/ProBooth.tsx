@@ -4470,7 +4470,7 @@ export default function ProBooth({
                 </p>
                 <p className="text-sm text-zinc-500 leading-snug truncate">{changing.name}</p>
               </div>
-              <button type="button" onClick={() => { setChanging(null); setAsInstrument(false); }} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white">
+              <button type="button" onClick={() => { setChanging(null); setAsInstrument(false); }} aria-label={t('share.close', 'Close')} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
