@@ -79,6 +79,8 @@ ok('every call keeps nothing past the hour (X-Fal-Object-Lifecycle-Preference, a
   /'X-Fal-Object-Lifecycle-Preference': JSON\.stringify\(\{ expiration_duration_seconds: FAL_KEEP_SECONDS \}\)/.test(readFileSync('app/lib/server/fal.ts', 'utf8')) && FAL_KEEP_SECONDS === 3600);
 ok('a make\'s words are screened as footage is', /guard\(request, words, 'footage', caller\)/.test(become));
 ok('a make that fails gives the credits back once', /await paid\.refund\(\)/.test(become) && /reason', 'refund'\)/.test(become));
+ok('a key pasted with a line break or a space still works',
+  /const falKey = \(\): string => \(process\.env\.FAL_KEY \?\? ''\)\.replace\(\/\\s\+\/g, ''\)/.test(lib) && /Key \$\{falKey\(\)\}/.test(lib));
 ok('the key stays off the screen here too', !/FAL_KEY/.test(bench));
 
 console.log(bad === 0

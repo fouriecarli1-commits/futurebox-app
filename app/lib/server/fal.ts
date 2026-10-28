@@ -47,13 +47,21 @@ const NOW = 'https://fal.run';
 /** How long a quick model may take before it is given up on. */
 const NOW_WAIT_MS = 50_000;
 
+/**
+ * The key as fal issued it. A key pasted into Vercel can carry a line break
+ * or a space from the copy (the owner, 28 October 2026: Vercel warned "this
+ * key has return characters"), and a line break in a header makes the call
+ * fail before it leaves. No fal key has whitespace in it, so all of it goes.
+ */
+const falKey = (): string => (process.env.FAL_KEY ?? '').replace(/\s+/g, '');
+
 export function falReady(): boolean {
-  return Boolean(process.env.FAL_KEY);
+  return Boolean(falKey());
 }
 
 function headers(): Record<string, string> {
   return {
-    Authorization: `Key ${process.env.FAL_KEY ?? ''}`,
+    Authorization: `Key ${falKey()}`,
     'Content-Type': 'application/json',
     'X-Fal-Store-IO': '0',
     'X-Fal-No-Retry': '1',
