@@ -63,7 +63,7 @@ const ALLOWED = new Set([
   'landing.freeTitle', 'pay.freeAlways', 'credits.freeIsReal', 'addon.stillFree',
   'plan.free.who', 'plan.free.inc.0', 'plan.free.inc.1', 'plan.free.inc.2',
   'plan.free.inc.3', 'plan.free.inc.4', 'plan.maker.inc.1', 'edit.lockedFree',
-  'common.createAccount', 'feed.freeClass',
+  'common.createAccount',
   /* The free entry route, which the Consumer Protection Act requires. */
   'arena.sub', 'arena.freeRoute', 'arena.enterFree', 'arena.freeOnly',
   'arena.rubricNote',

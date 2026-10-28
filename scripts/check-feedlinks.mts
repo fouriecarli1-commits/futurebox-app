@@ -104,6 +104,22 @@ ok('and no card plays a video the classes shelf already uses',
 ok('the podcast shelf has not quietly emptied out',
   cards.length >= 5, `${cards.length} cards left`);
 
+/* ── Every shelf on Spotlight has something on it ───────────────────────
+   The owner, 28 October 2026: *"maak seker elke opsie het iets in en wys nie
+   niks nie"*, with the music shelf filled from ad-free primary sources. */
+{
+  const { INSIGHT_CATEGORIES, FUTURE_INSIGHTS } = await import('../app/lib/futureinsights.ts');
+  const empty = INSIGHT_CATEGORIES.filter((cat) => cat.id !== 'all' && !FUTURE_INSIGHTS.some((one) => one.category === cat.id));
+  ok('every insight shelf has at least one piece on it', empty.length === 0, empty.map((cat) => cat.id).join(', '));
+  const music = FUTURE_INSIGHTS.filter((one) => one.category === 'music');
+  ok('  and the music shelf has at least five, each with its original at the publisher',
+    music.length >= 5 && music.every((one) => one.link && /^https:\/\//.test(one.link.url) && one.link.publisher.trim() && one.sourceName !== 'FutureBox editorial'),
+    music.filter((one) => !one.link).map((one) => one.id).join(', '));
+  const page = readFileSync('app/page.tsx', 'utf8');
+  ok('  and the Music & video tab opens on it, so it is never an empty page',
+    /<FutureInsightsHub\s+startAt="music"/.test(page));
+}
+
 if (failures) {
   console.error(`\ncheck:feedlinks — ${failures} failure(s).\n`);
   process.exit(1);

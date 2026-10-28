@@ -23,6 +23,7 @@
 
 export type InsightCategory =
   | 'all'
+  | 'music'
   | 'ai'
   | 'business'
   | 'vibecoding'
@@ -40,6 +41,7 @@ export interface InsightCategoryMeta {
 
 export const INSIGHT_CATEGORIES: readonly InsightCategoryMeta[] = [
   { id: 'all', key: 'insight.cat.all', en: 'All Insights', af: 'Alle Insigte', iconName: 'sparkles' },
+  { id: 'music', key: 'insight.cat.music', en: 'Music & Video', af: 'Musiek & Video', iconName: 'music' },
   { id: 'ai', key: 'insight.cat.ai', en: 'Artificial Intelligence', af: 'Kunsmatige Intelligensie', iconName: 'cpu' },
   { id: 'business', key: 'insight.cat.biz', en: 'Future Business & Scale', af: 'Toekoms-besigheid & Groei', iconName: 'trendingUp' },
   { id: 'vibecoding', key: 'insight.cat.vibe', en: 'Vibecoding & AI Dev', af: 'Vibecoding & KI-kodering', iconName: 'code2' },
@@ -73,9 +75,264 @@ export interface InsightArticle {
   readonly takeawaysAf: readonly string[];
   readonly bodyEn: readonly string[];
   readonly bodyAf: readonly string[];
+  /**
+   * The original, for a piece that summarises somebody else's publication:
+   * read in full at the publisher, who must carry no advertising on it.
+   */
+  readonly link?: { readonly url: string; readonly publisher: string };
 }
 
 export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
+  /* ── Music & Video ──────────────────────────────────────────────────────
+     The owner, 28 October 2026: *"Gaan aan om spotlight se musiek te update…
+     Soek vir kwaliteit artikels en moet ad free wees, en maak seker elke opsie
+     het iets in en wys nie niks nie."*
+
+     Each one is a primary source: the body that made the rule, ran the study
+     or built the model, on its own site, with no advertising. The summary is
+     ours and says only what the source says; the full piece is one press
+     away (`link`). The rating is how close the source is to the fact: the
+     rule-maker or the maker itself 98–99, an industry body's commissioned
+     study 97. */
+  {
+    id: 'music-who-owns-an-ai-song',
+    category: 'music',
+    titleEn: 'Who Owns a Song Made with AI? The U.S. Copyright Office Answers',
+    titleAf: 'Wie Besit ’n Liedjie Wat met KI Gemaak Is? Die Amerikaanse Kopieregkantoor Antwoord',
+    blurbEn: 'Copyright needs a human author. A prompt alone is not enough, but the words you write, the voice you record and the choices you make can be protected.',
+    blurbAf: 'Kopiereg vra ’n menslike outeur. ’n Opdrag alleen is nie genoeg nie, maar die woorde wat jy skryf, die stem wat jy opneem en die keuses wat jy maak, kan beskerm word.',
+    sourceRating: 99,
+    sourceName: 'U.S. Copyright Office',
+    readTimeEn: '4 min read',
+    readTimeAf: '4 min leestyd',
+    publishedDate: '29 January 2025',
+    takeawaysEn: [
+      'Copyright protects what a person creates. What an AI makes on its own is not protected.',
+      'Typing a prompt alone is not enough authorship, because the person does not control how the result is made.',
+      'Your own lyrics, your own vocals, and how you select, arrange and change AI parts can be protected, decided case by case.',
+    ],
+    takeawaysAf: [
+      'Kopiereg beskerm wat ’n mens skep. Wat ’n KI op sy eie maak, word nie beskerm nie.',
+      '’n Opdrag intik alleen is nie genoeg outeurskap nie, want die mens beheer nie hoe die resultaat gemaak word nie.',
+      'Jou eie lirieke, jou eie sang, en hoe jy KI-dele kies, rangskik en verander, kan beskerm word, geval vir geval.',
+    ],
+    bodyEn: [
+      'In Part 2 of its report on copyright and artificial intelligence, the U.S. Copyright Office looked at one question every AI musician asks: can I own what I made? After reviewing more than 10,000 public comments, its answer is that copyright still requires human authorship, and that existing law already handles AI, so it recommends no new legislation.',
+      'Prompts on their own do not make you the author, in the Office’s view, because today’s systems decide how the output is expressed. What does count is the human part: lyrics you wrote, a melody you sang, a recording you made, and the creative way you choose, arrange and modify generated material. A work that is partly human and partly AI can be protected for its human part.',
+      'For a song made in FutureBox, that points one way: write your own words, sing or record your own parts, and keep your drafts. Those are the parts that are yours. South Africa’s own Copyright Act has a rule for computer-generated works that names the person who made the arrangements for the work as its author; how a court applies it to AI music has not yet been tested.',
+    ],
+    bodyAf: [
+      'In Deel 2 van sy verslag oor kopiereg en kunsmatige intelligensie het die Amerikaanse Kopieregkantoor gekyk na die vraag wat elke KI-musikant vra: besit ek wat ek gemaak het? Ná meer as 10 000 openbare kommentare is die antwoord dat kopiereg steeds menslike outeurskap vereis, en dat die bestaande wet KI reeds hanteer, so dit beveel geen nuwe wetgewing aan nie.',
+      'Opdragte alleen maak jou nie die outeur nie, volgens die Kantoor, want vandag se stelsels besluit self hoe die resultaat uitgedruk word. Wat wel tel, is die menslike deel: lirieke wat jy geskryf het, ’n melodie wat jy gesing het, ’n opname wat jy gemaak het, en die kreatiewe manier waarop jy gegenereerde materiaal kies, rangskik en verander. ’n Werk wat deels menslik en deels KI is, kan vir sy menslike deel beskerm word.',
+      'Vir ’n liedjie wat in FutureBox gemaak is, wys dit een rigting: skryf jou eie woorde, sing of neem jou eie dele op, en hou jou konsepte. Dit is die dele wat joune is. Suid-Afrika se eie Kopieregwet het ’n reël vir rekenaargegenereerde werke wat die persoon wat die reëlings vir die werk getref het, as die outeur noem; hoe ’n hof dit op KI-musiek toepas, is nog nie getoets nie.',
+    ],
+    link: { url: 'https://www.copyright.gov/ai/', publisher: 'copyright.gov' },
+  },
+  {
+    id: 'music-cisac-ai-study',
+    category: 'music',
+    titleEn: 'What Generative AI Could Cost Music Creators by 2028',
+    titleAf: 'Wat Generatiewe KI Musiekskeppers Teen 2028 Kan Kos',
+    blurbEn: 'The first global economic study of AI in music and screen work puts 24% of music creators’ income at risk by 2028, and says where the money goes.',
+    blurbAf: 'Die eerste wêreldwye ekonomiese studie oor KI in musiek en skermwerk stel 24% van musiekskeppers se inkomste teen 2028 in gevaar, en sê waarheen die geld gaan.',
+    sourceRating: 97,
+    sourceName: 'CISAC (PMP Strategy study)',
+    readTimeEn: '3 min read',
+    readTimeAf: '3 min leestyd',
+    publishedDate: 'December 2024',
+    takeawaysEn: [
+      'Music creators could lose 24% of their revenue by 2028: about €10 billion over five years.',
+      'The market for AI-made music and screen content is projected to grow many times over by 2028.',
+      'The study names two causes: training on creators’ work without a licence, and AI output replacing human work.',
+    ],
+    takeawaysAf: [
+      'Musiekskeppers kan teen 2028 24% van hul inkomste verloor: sowat €10 miljard oor vyf jaar.',
+      'Die mark vir KI-gemaakte musiek en skerminhoud sal na verwagting teen 2028 baie keer groter wees.',
+      'Die studie noem twee oorsake: opleiding op skeppers se werk sonder ’n lisensie, en KI-uitsette wat menslike werk vervang.',
+    ],
+    bodyEn: [
+      'CISAC, the international confederation of authors’ societies, commissioned PMP Strategy to measure what generative AI does to the money creators earn. Its projection: 24% of music creators’ revenue and 21% of audiovisual creators’ revenue at risk by 2028, a cumulative loss of about €10 billion in music over five years.',
+      'The study traces the loss to two things. One is AI models trained on creators’ works without a licence, which it describes as a transfer of value from creators to AI companies. The other is substitution: generated tracks taking the place of commissioned human work. Translators and adaptors for dubbing and subtitling are the most exposed.',
+      'For an independent artist the lesson is practical. Use engines that license what they learned from, put your own voice and words at the centre of what you release, and register your works so the money that is still there reaches you.',
+    ],
+    bodyAf: [
+      'CISAC, die internasionale konfederasie van outeursverenigings, het PMP Strategy aangestel om te meet wat generatiewe KI aan skeppers se inkomste doen. Die vooruitskatting: 24% van musiekskeppers se inkomste en 21% van oudiovisuele skeppers se inkomste is teen 2028 in gevaar, ’n gesamentlike verlies van sowat €10 miljard in musiek oor vyf jaar.',
+      'Die studie skryf die verlies aan twee dinge toe. Een is KI-modelle wat sonder ’n lisensie op skeppers se werk opgelei is, wat dit beskryf as ’n oordrag van waarde van skeppers na KI-maatskappye. Die ander is vervanging: gegenereerde snitte wat die plek inneem van menslike werk waarvoor betaal sou word. Vertalers en aanpassers vir oorklanking en onderskrifte is die kwesbaarste.',
+      'Vir ’n onafhanklike kunstenaar is die les prakties. Gebruik enjins wat lisensies het vir wat hulle geleer het, sit jou eie stem en woorde in die middel van wat jy uitreik, en registreer jou werke sodat die geld wat daar nog is, jou bereik.',
+    ],
+    link: { url: 'https://www.cisac.org/Newsroom/news-releases/global-economic-study-shows-human-creators-future-risk-generative-ai', publisher: 'cisac.org' },
+  },
+  {
+    id: 'music-youtube-ai-label',
+    category: 'music',
+    titleEn: 'Posting an AI Music Video on YouTube: When You Must Label It',
+    titleAf: '’n KI-musiekvideo op YouTube Plaas: Wanneer Jy Dit Moet Merk',
+    blurbEn: 'YouTube asks creators to say so when realistic-looking content was made or changed with AI. Here is what counts, and what the label does and does not do.',
+    blurbAf: 'YouTube vra skeppers om dit te sê wanneer inhoud wat eg lyk met KI gemaak of verander is. Hier is wat tel, en wat die etiket doen en nie doen nie.',
+    sourceRating: 99,
+    sourceName: 'YouTube Help',
+    readTimeEn: '3 min read',
+    readTimeAf: '3 min leestyd',
+    publishedDate: 'YouTube policy, current',
+    takeawaysEn: [
+      'Disclose at upload, in YouTube Studio, when content looks real but was meaningfully altered or generated.',
+      'Clearly unrealistic content, such as animation or fantasy, and minor edits do not need the label.',
+      'Disclosing does not limit who sees the video or whether it can earn money.',
+    ],
+    takeawaysAf: [
+      'Sê dit wanneer jy oplaai, in YouTube Studio, as inhoud eg lyk maar betekenisvol verander of gegenereer is.',
+      'Duidelik onwerklike inhoud, soos animasie of fantasie, en klein wysigings het nie die etiket nodig nie.',
+      'Om dit te sê, beperk nie wie die video sien of of dit geld kan verdien nie.',
+    ],
+    bodyEn: [
+      'YouTube’s rule is about realism. If a viewer could mistake what they see or hear for something real, a real person saying or doing something they did not, a real place changed, or a realistic scene that never happened, the creator ticks the disclosure when uploading in YouTube Studio.',
+      'Content that is plainly not real does not need it: an animated lyric video, a fantasy world, a visual effect nobody would take for footage. Nor do small edits like colour correction or a filter. When you do disclose, a label is added to the video’s description, and for sensitive topics a more visible one appears on the player.',
+      'Two points matter for musicians. Disclosing does not reduce the video’s reach or its eligibility to earn, and YouTube may add the label itself if it believes content could mislead. Label honestly at upload, and the question never comes back.',
+    ],
+    bodyAf: [
+      'YouTube se reël gaan oor egtheid. As ’n kyker kan dink dat wat hulle sien of hoor eg is, ’n werklike persoon wat iets sê of doen wat hulle nie gedoen het nie, ’n werklike plek wat verander is, of ’n realistiese toneel wat nooit gebeur het nie, merk die skepper dit wanneer hulle in YouTube Studio oplaai.',
+      'Inhoud wat duidelik nie eg is nie, het dit nie nodig nie: ’n geanimeerde liriekvideo, ’n fantasiewêreld, ’n visuele effek wat niemand vir regte beeldmateriaal sal aansien nie. Klein wysigings soos kleurregstelling of ’n filter ook nie. Wanneer jy dit wel sê, word ’n etiket by die video se beskrywing gevoeg, en vir sensitiewe onderwerpe verskyn ’n duideliker een op die speler.',
+      'Twee punte is belangrik vir musikante. Om dit te sê, verminder nie die video se bereik of sy reg om te verdien nie, en YouTube kan self die etiket byvoeg as dit dink inhoud kan mislei. Merk eerlik wanneer jy oplaai, en die vraag kom nooit terug nie.',
+    ],
+    link: { url: 'https://support.google.com/youtube/answer/14328491', publisher: 'support.google.com' },
+  },
+  {
+    id: 'music-spotify-ai-protections',
+    category: 'music',
+    titleEn: 'Releasing AI-Assisted Music on Spotify: Impersonation, Spam and Credits',
+    titleAf: 'KI-ondersteunde Musiek op Spotify Uitreik: Nabootsing, Gemors en Krediete',
+    blurbEn: 'Spotify’s rules for AI music target voice clones without permission and spam uploads, not artists who use AI well, and add AI credits to songs.',
+    blurbAf: 'Spotify se reëls vir KI-musiek mik op stemklone sonder toestemming en gemors-oplaaie, nie kunstenaars wat KI goed gebruik nie, en voeg KI-krediete by liedjies.',
+    sourceRating: 98,
+    sourceName: 'Spotify For the Record',
+    readTimeEn: '3 min read',
+    readTimeAf: '3 min leestyd',
+    publishedDate: '25 September 2025',
+    takeawaysEn: [
+      'Cloning another artist’s voice without permission is treated as impersonation and removed.',
+      'A spam filter tags spam uploads and stops recommending them; over 75 million spam tracks were removed in a year.',
+      'An industry standard for AI credits (DDEX) lets artists show how AI was used, without being down-ranked for it.',
+    ],
+    takeawaysAf: [
+      'Om ’n ander kunstenaar se stem sonder toestemming te kloon, word as nabootsing hanteer en verwyder.',
+      '’n Gemorsfilter merk gemors-oplaaie en hou op om dit aan te beveel; meer as 75 miljoen gemorssnitte is in ’n jaar verwyder.',
+      '’n Bedryfstandaard vir KI-krediete (DDEX) laat kunstenaars wys hoe KI gebruik is, sonder dat hulle daarvoor laer geplaas word.',
+    ],
+    bodyEn: [
+      'In September 2025 Spotify set out three protections for the age of AI music. The first is impersonation: vocals that clone a real artist without their permission are not allowed, and artists get a clearer way to have them taken down.',
+      'The second is spam. Uploaders and tracks that use spam tactics to game the system are flagged by a new filter, labelled and no longer recommended. In the twelve months before the announcement, Spotify removed more than 75 million spammy tracks.',
+      'The third is disclosure. Spotify backs a new music-industry standard, developed through DDEX, for showing in a song’s credits where AI played a part, in the vocals, the instruments or the production. Spotify says plainly that this is about trust, not about punishing artists who use AI responsibly. For a FutureBox artist: use your own voice or one you have the right to, release fewer and better songs, and credit the tools honestly.',
+    ],
+    bodyAf: [
+      'In September 2025 het Spotify drie beskermings vir die tyd van KI-musiek uiteengesit. Die eerste is nabootsing: sang wat ’n werklike kunstenaar sonder hul toestemming kloon, word nie toegelaat nie, en kunstenaars kry ’n duideliker manier om dit te laat verwyder.',
+      'Die tweede is gemors. Oplaaiers en snitte wat gemorstaktieke gebruik om die stelsel te kul, word deur ’n nuwe filter gemerk, geëtiketteer en nie meer aanbeveel nie. In die twaalf maande voor die aankondiging het Spotify meer as 75 miljoen gemorssnitte verwyder.',
+      'Die derde is openheid. Spotify ondersteun ’n nuwe musiekbedryf-standaard, deur DDEX ontwikkel, om in ’n liedjie se krediete te wys waar KI ’n rol gespeel het, in die sang, die instrumente of die produksie. Spotify sê duidelik dit gaan oor vertroue, nie oor die straf van kunstenaars wat KI verantwoordelik gebruik nie. Vir ’n FutureBox-kunstenaar: gebruik jou eie stem of een waarop jy reg het, reik minder en beter liedjies uit, en erken die gereedskap eerlik.',
+    ],
+    link: { url: 'https://newsroom.spotify.com/2025-09-25/spotify-strengthens-ai-protections/', publisher: 'newsroom.spotify.com' },
+  },
+  {
+    id: 'music-lyria-synthid',
+    category: 'music',
+    titleEn: 'Lyria and SynthID: How AI Music Carries an Invisible Signature',
+    titleAf: 'Lyria en SynthID: Hoe KI-musiek ’n Onsigbare Handtekening Dra',
+    blurbEn: 'Google DeepMind’s music model marks everything it makes with a watermark you cannot hear, built to survive compression and speed changes.',
+    blurbAf: 'Google DeepMind se musiekmodel merk alles wat dit maak met ’n watermerk wat jy nie kan hoor nie, gebou om kompressie en spoedveranderings te oorleef.',
+    sourceRating: 98,
+    sourceName: 'Google DeepMind',
+    readTimeEn: '4 min read',
+    readTimeAf: '4 min leestyd',
+    publishedDate: '16 November 2023',
+    takeawaysEn: [
+      'Lyria is Google DeepMind’s model for generating music with vocals and instruments.',
+      'Everything Lyria makes carries a SynthID watermark, inaudible to the ear.',
+      'The mark is designed to stay detectable after MP3 compression or a change in playback speed.',
+    ],
+    takeawaysAf: [
+      'Lyria is Google DeepMind se model wat musiek met sang en instrumente genereer.',
+      'Alles wat Lyria maak, dra ’n SynthID-watermerk wat die oor nie kan hoor nie.',
+      'Die merk is ontwerp om ná MP3-kompressie of ’n verandering in speelspoed steeds opspoorbaar te wees.',
+    ],
+    bodyEn: [
+      'When Google DeepMind introduced Lyria, it set out to make music that holds together over time: a melody, a voice and an arrangement that stay musical across a whole passage, which is much harder than an image because sound has to make sense second after second.',
+      'Alongside it came SynthID for audio. The watermark is written into the sound wave itself, inaudible to the listener, and built to remain detectable through the changes music goes through on its way to people: MP3 compression, noise, a faster or slower playback.',
+      'Why that matters to a creator: as platforms ask where AI was used, a song made with a watermarked engine can be shown to be what it is. FutureBox can make songs with Lyria, and tells you on every release which engine made it.',
+    ],
+    bodyAf: [
+      'Toe Google DeepMind Lyria bekendgestel het, was die doel musiek wat oor tyd saamhang: ’n melodie, ’n stem en ’n verwerking wat oor ’n hele gedeelte musikaal bly, wat baie moeiliker as ’n prent is, want klank moet sekonde ná sekonde sin maak.',
+      'Daarmee saam het SynthID vir klank gekom. Die watermerk word in die klankgolf self geskryf, onhoorbaar vir die luisteraar, en gebou om opspoorbaar te bly deur die veranderings wat musiek ondergaan op pad na mense: MP3-kompressie, geraas, vinniger of stadiger speel.',
+      'Hoekom dit vir ’n skepper saak maak: soos platforms vra waar KI gebruik is, kan ’n liedjie wat met ’n gewatermerkte enjin gemaak is, gewys word vir wat dit is. FutureBox kan liedjies met Lyria maak, en sê op elke uitreiking watter enjin dit gemaak het.',
+    ],
+    link: { url: 'https://deepmind.google/discover/blog/transforming-the-future-of-music-creation/', publisher: 'deepmind.google' },
+  },
+  {
+    id: 'music-ifpi-2026',
+    category: 'music',
+    titleEn: 'Global Music Report 2026: Eleven Years of Growth, and Africa Rising',
+    titleAf: 'Globale Musiekverslag 2026: Elf Jaar van Groei, en Afrika Styg',
+    blurbEn: 'Recorded music earned US$31.7 billion in 2025, up 6.4%. Streaming is now about 70% of it, and Sub-Saharan Africa grew 15.2%.',
+    blurbAf: 'Opgeneemde musiek het in 2025 US$31,7 miljard verdien, 6,4% meer. Stroming is nou sowat 70% daarvan, en Afrika suid van die Sahara het 15,2% gegroei.',
+    sourceRating: 98,
+    sourceName: 'IFPI',
+    readTimeEn: '3 min read',
+    readTimeAf: '3 min leestyd',
+    publishedDate: '18 March 2026',
+    takeawaysEn: [
+      'Global recorded music revenue rose 6.4% to US$31.7 billion in 2025, its eleventh year of growth in a row.',
+      'Streaming passed US$22 billion, 69.6% of all recorded music income; paid subscriptions grew 8.8%.',
+      'Sub-Saharan Africa grew 15.2%, joint second-fastest of all regions.',
+    ],
+    takeawaysAf: [
+      'Wêreldwye inkomste uit opgeneemde musiek het in 2025 met 6,4% tot US$31,7 miljard gestyg, die elfde jaar van groei na mekaar.',
+      'Stroming het US$22 miljard verbygesteek, 69,6% van alle inkomste uit opgeneemde musiek; betaalde intekeninge het 8,8% gegroei.',
+      'Afrika suid van die Sahara het 15,2% gegroei, gesamentlik die tweede vinnigste van alle streke.',
+    ],
+    bodyEn: [
+      'IFPI, which represents the recording industry worldwide, publishes the figures every label and distributor plans by. For 2025: US$31.7 billion in recorded music revenue, up 6.4% and the eleventh consecutive year of growth.',
+      'Streaming is the engine, at more than US$22 billion and 69.6% of the total, with paid subscriptions up 8.8%. Physical formats grew again, by 8.0%, while sync income dipped 2.0%.',
+      'The number for us is the region. Sub-Saharan Africa grew 15.2%, level with the Middle East and North Africa as the second-fastest-growing region in the world. The audience for music made here is growing faster than almost anywhere, which is the best reason there is to release your own.',
+    ],
+    bodyAf: [
+      'IFPI, wat die opnamebedryf wêreldwyd verteenwoordig, publiseer die syfers waarvolgens elke etiket en verspreider beplan. Vir 2025: US$31,7 miljard se inkomste uit opgeneemde musiek, 6,4% meer en die elfde jaar van groei na mekaar.',
+      'Stroming is die enjin, met meer as US$22 miljard en 69,6% van die totaal, en betaalde intekeninge wat 8,8% gestyg het. Fisiese formate het weer gegroei, met 8,0%, terwyl inkomste uit sinkronisasie met 2,0% gedaal het.',
+      'Die syfer vir ons is die streek. Afrika suid van die Sahara het 15,2% gegroei, gelyk met die Midde-Ooste en Noord-Afrika as die tweede vinnigste groeiende streek ter wêreld. Die gehoor vir musiek wat hier gemaak word, groei vinniger as byna enige plek, en dit is die beste rede om jou eie uit te reik.',
+    ],
+    link: { url: 'https://www.ifpi.org/global-music-report-2026-global-recorded-music-revenues-grow-6-4-as-record-companies-drive-innovation/', publisher: 'ifpi.org' },
+  },
+  {
+    id: 'music-samro-get-paid',
+    category: 'music',
+    titleEn: 'Getting Paid for Your Songs in South Africa: SAMRO and CAPASSO',
+    titleAf: 'Betaal Word vir Jou Liedjies in Suid-Afrika: SAMRO en CAPASSO',
+    blurbEn: 'Radio, TV, live shows and streams all owe royalties, but only to works that are registered. Two societies collect them; here is what each does.',
+    blurbAf: 'Radio, TV, lewendige vertonings en strome skuld almal tantieme, maar net aan werke wat geregistreer is. Twee verenigings vorder dit in; hier is wat elkeen doen.',
+    sourceRating: 98,
+    sourceName: 'SAMRO',
+    readTimeEn: '3 min read',
+    readTimeAf: '3 min leestyd',
+    publishedDate: 'SAMRO guidance, current',
+    takeawaysEn: [
+      'SAMRO collects performance royalties when your song is played on radio, TV, live or in public.',
+      'Each song is registered with SAMRO through a Notification of Works; an unregistered song’s royalties wait unpaid.',
+      'Mechanical royalties, from streams, downloads and physical copies, are collected by CAPASSO, so register there too.',
+    ],
+    takeawaysAf: [
+      'SAMRO vorder optrede-tantieme in wanneer jou liedjie op radio, TV, lewendig of in die openbaar gespeel word.',
+      'Elke liedjie word by SAMRO geregistreer met ’n Kennisgewing van Werke; ’n ongeregistreerde liedjie se tantieme wag onbetaal.',
+      'Meganiese tantieme, uit strome, aflaaie en fisiese kopieë, word deur CAPASSO ingevorder, so registreer ook daar.',
+    ],
+    bodyEn: [
+      'Every time a song is broadcast, performed live or played in a shop, a royalty is owed to the people who wrote it. In South Africa, SAMRO, the Southern African Music Rights Organisation, collects those performance royalties and pays them to its members.',
+      'The money only reaches you if SAMRO knows the song is yours. Each work is registered with a Notification of Works, and unpublished works can be notified too. Royalties for a song nobody registered are held against the work, waiting for its writer to come forward. Payments run a year behind: what is played this year is paid out next year.',
+      'Streaming, downloads and physical copies earn a different kind of royalty, the mechanical one, collected by CAPASSO. A songwriter who releases music should be registered with both, with split sheets that say who wrote what, and with banking details kept up to date.',
+    ],
+    bodyAf: [
+      'Elke keer wanneer ’n liedjie uitgesaai, lewendig uitgevoer of in ’n winkel gespeel word, is ’n tantième verskuldig aan die mense wat dit geskryf het. In Suid-Afrika vorder SAMRO, die Southern African Music Rights Organisation, daardie optrede-tantieme in en betaal dit aan sy lede.',
+      'Die geld bereik jou net as SAMRO weet die liedjie is joune. Elke werk word geregistreer met ’n Kennisgewing van Werke, en ongepubliseerde werke kan ook aangemeld word. Tantieme vir ’n liedjie wat niemand geregistreer het nie, word teen die werk gehou en wag vir die skrywer om na vore te kom. Betalings loop ’n jaar agter: wat vanjaar gespeel word, word volgende jaar uitbetaal.',
+      'Stroming, aflaaie en fisiese kopieë verdien ’n ander soort tantième, die meganiese een, wat deur CAPASSO ingevorder word. ’n Liedjieskrywer wat musiek uitreik, moet by albei geregistreer wees, met verdeelstate wat sê wie wat geskryf het, en met bankbesonderhede wat op datum gehou word.',
+    ],
+    link: { url: 'https://www.samro.org.za/support', publisher: 'samro.org.za' },
+  },
+
   // ── 1. Vibecoding: The New Era of Creation ──────────────────────────────
   {
     id: 'vibecoding-autonomous-creators',

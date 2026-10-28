@@ -69,19 +69,16 @@ try {
     }
   }
 
-  /* ── Two: the one big class is not behind one ─────────────────────── */
-  /* "Watch it", not "Watch it free": the word came off every tool on 11
-     October 2026 with "Niks is gratis", and this line kept asking for it. */
-  const watch = p.locator('button, a').filter({ hasText: /^Watch it$|^Kyk dit$/i }).first();
-  check('the one big class is on the screen without opening anything',
-    (await watch.count()) > 0 && (await watch.isVisible()),
-    'it is the offer; it does not go behind a chevron');
-
-  /* Its facts come from the data, so the source line is the tell that it
-     is being read rather than retyped. */
+  /* ── Two: no big class; the music shelf instead ──────────────────
+     The owner, 28 October 2026: "die masterclass wat nou daar op is moet
+     af", and the music articles out in the open, each with its source. */
+  const watch = p.locator('button, a').filter({ hasText: /^Watch it$|^Kyk dit$/i });
+  check('the big featured class is gone from Spotlight', (await watch.count()) === 0,
+    'the owner took it off on 28 October 2026');
   const words = await p.locator('body').innerText();
-  check('  and it says where it came from', /From YouTube|Van YouTube/i.test(words),
-    'a curated class with no visible source is a claim on the one card everybody sees');
+  check('  and the music articles are on it, each naming its source',
+    /Who Owns a Song Made with AI|Wie Besit .n Liedjie/i.test(words) && /U\.S\. Copyright Office/.test(words),
+    'the Music & Video shelf of the insights hub');
 
   /* ── Three: the maker's advert stays out in the open ──────────────── */
   check('the maker’s advert is not folded away',
@@ -132,4 +129,4 @@ if (problems.length) {
   for (const one of problems) console.error(`  · ${one}`);
   process.exit(1);
 }
-console.log('\nThe front page on a phone: four drop-downs, all shut, the one big class and the advert out in the open, and each section opens onto something.');
+console.log('\nThe front page on a phone: four drop-downs, all shut, the music articles and the advert out in the open, and each section opens onto something.');

@@ -52,6 +52,7 @@ import { probeAudio } from './lib/engines';
 import Booth from './components/Booth';
 import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
+import FutureInsightsHub from './components/FutureInsightsHub';
 import { Counters, Views, useBoard } from './components/Counters';
 import PodcastStudio from './components/PodcastStudio';
 import { signal } from './lib/signal';
@@ -97,7 +98,6 @@ import {
 import { forgetWhere, noteWhere, whereIWas } from './lib/whereiwas';
 
 import { videoFromHook, videoFromSong } from './lib/hookhandover';
-import { OUTCOME_AF, featuredClass, youTubeId } from './data/masterclasses';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import Fold from './components/Fold';
@@ -1872,20 +1872,6 @@ export default function FutureBoxHome() {
    * Read from the data rather than typed into the markup. See the note
    * beside the section itself.
    */
-  const featured = featuredClass();
-  const openFeatured = useCallback(() => {
-    if (!featured) return;
-    const id = youTubeId(featured.url);
-    setSelectedMedia({
-      title: featured.title,
-      embedUrl: id ? `https://www.youtube.com/embed/${id}` : featured.url,
-      externalUrl: featured.url,
-      type: 'youtube',
-      host: featured.instructor,
-      counts: { kind: 'masterclass', category: featured.track, ref: featured.id },
-    });
-  }, [featured]);
-
   /**
    * Show me different ones.
    *
@@ -3370,101 +3356,9 @@ export default function FutureBoxHome() {
           should meet. Both still live on their own pages.
         */}
 
-        {/* ── 1. THE ONE BIG CLASS ───────────────────────────────────────
-
-            The owner, 21 September 2026: *"Die 1 featured masterclass moet ook
-            groot wees, en die res van die masterclasses in 'n drop down…
-            Daar kan nie goed op wees wat random is nie."*
-
-            It was already big. It was also typed out by hand — the title,
-            the instructor, the length, the YouTube id and the thumbnail
-            seed, four separate times in this file, beside an entry in
-            `data/masterclasses.ts` that already says all five. Two copies
-            of a fact is one fact and one thing that will eventually be
-            wrong, and the front page is the copy nobody re-reads: change a
-            lecture's link in the data and the biggest thing on the home
-            page keeps pointing at the old one.
-
-            One `featured` flag in the data now, `check:masterclasses`
-            holds it to exactly one, and everything below is read. Drawn
-            only when there IS one, because a hero built out of undefined
-            is a white screen where the front page was. */}
-        {activeTab === 'all' && featured && (
-          <section className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-linear-to-b from-zinc-900/60 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
-            <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full flex items-center space-x-1.5">
-                    <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
-                    <span>{t('feed.freeClass')}</span>
-                  </span>
-                  <span className="text-xs text-zinc-400">
-                    {featured.minutes}m • {featured.instructor}
-                  </span>
-                </div>
-                <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                  {featured.title}
-                </h2>
-                {/* What you can DO afterwards, which is the field the data
-                    already carries. The paragraph here was a second
-                    description of the same lecture, written once and never
-                    checked against it again. */}
-                <p className="text-sm text-zinc-400 leading-relaxed">{lang === 'af' ? OUTCOME_AF[featured.id] ?? featured.outcome : featured.outcome}</p>
-
-                {/* Where it came from, said on the front page rather than
-                    only inside the classes room. The owner: the content has to
-                    be from good sources — a source nobody can see is a
-                    claim, and this is the one card everybody sees. */}
-                {featured.source && (
-                  <p className="text-xs text-zinc-500">
-                    {t('feed.from', 'From')} {featured.source}
-                  </p>
-                )}
-
-                <div className="pt-2 flex items-center space-x-4">
-                  <button
-                    onClick={() => openFeatured()}
-                    className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>{t('feed.watchFree')}</span>
-                  </button>
-
-                  <a
-                    href={featured.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1"
-                  >
-                    <span>{t('feed.openYouTube')}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => openFeatured()}
-                aria-label={`${t('feed.watchFree')} — ${featured.title}`}
-                className="relative group block w-full rounded-2xl overflow-hidden border border-zinc-700/60 aspect-video shadow-2xl"
-              >
-                {/* The lecture's own thumbnail. This was a stock photograph
-                    of a stranger over a named, real masterclass. */}
-                <Cover
-                  seed={featured.id}
-                  label={`${featured.title} — ${featured.instructor}`}
-                  url={featured.url}
-                  className="w-full h-full group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/90 text-onAccent flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 fill-current translate-x-0.5" />
-                  </div>
-                </div>
-              </button>
-            </div>
-          </section>
-        )}
+        {/* The big featured masterclass came off Spotlight, the owner, 28
+            October 2026: *"die masterclass wat nou daar op is moet af."* The
+            classes keep their own shelf below and their own room (Cubed). */}
 
         {/* 🎙️ 2. FUTUREBOX PODCASTS */}
         {(activeTab === 'all' || activeTab === 'futurebox') && (
@@ -3706,6 +3600,16 @@ export default function FutureBoxHome() {
             </div>
 
             {picksBar}
+
+            {/* The music shelf first, so this tab is never an empty page.
+                The owner, 28 October 2026: *"maak seker elke opsie het iets
+                in en wys nie niks nie"*. Ad-free, primary sources, each with
+                the original one press away (`lib/futureinsights.ts`). */}
+            <FutureInsightsHub
+              startAt="music"
+              onOpenStudio={() => { setUploadModalOpen(true); goToRoom('make'); }}
+              onOpenPodcast={() => { setUploadModalOpen(true); goToRoom('podcast'); }}
+            />
 
             {/* ── The shelf that had one invented thing on it ──────────
 

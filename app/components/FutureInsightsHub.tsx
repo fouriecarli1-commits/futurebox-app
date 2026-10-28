@@ -37,6 +37,7 @@ import {
   Volume2,
   Loader2,
   Lightbulb,
+  Music,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
@@ -53,6 +54,8 @@ import { useBackLayer } from '../lib/backstack';
 interface FutureInsightsHubProps {
   onOpenStudio?: () => void;
   onOpenPodcast?: () => void;
+  /** The shelf it opens on: Spotlight's Music & video tab opens on music. */
+  startAt?: InsightCategory;
 }
 
 const CATEGORY_ICONS: Record<string, React.ReactElement> = {
@@ -63,6 +66,7 @@ const CATEGORY_ICONS: Record<string, React.ReactElement> = {
   gamepad: <Gamepad2 className="h-4 w-4" />,
   rocket: <Rocket className="h-4 w-4" />,
   headphones: <Headphones className="h-4 w-4" />,
+  music: <Music className="h-4 w-4" />,
 };
 
 interface GeminiAnalysisResult {
@@ -75,10 +79,11 @@ interface GeminiAnalysisResult {
 export default function FutureInsightsHub({
   onOpenStudio,
   onOpenPodcast,
+  startAt = 'all',
 }: FutureInsightsHubProps): React.ReactElement {
   const { lang, t } = useLang();
   const [viewFilter, setViewFilter] = useState<'all' | 'podcasts' | 'articles'>('all');
-  const [activeCategory, setActiveCategory] = useState<InsightCategory>('all');
+  const [activeCategory, setActiveCategory] = useState<InsightCategory>(startAt);
   const [readingArticle, setReadingArticle] = useState<InsightArticle | null>(null);
   /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
   useBackLayer(readingArticle !== null, () => setReadingArticle(null));
@@ -608,10 +613,28 @@ export default function FutureInsightsHub({
               ))}
             </div>
 
+            {/* The original, in full, at the publisher: a summary of somebody
+                else's work always says where the whole of it is. */}
+            {readingArticle.link && (
+              <a
+                href={readingArticle.link.url}
+                target="_blank"
+                rel="noreferrer"
+                data-insightoriginal
+                className="flex min-h-[44px] items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/30 px-4 py-3 text-sm font-bold text-emerald-200 hover:border-emerald-400"
+              >
+                <span>
+                  {t('insight.readOriginal', 'Read the original')}
+                  <span className="block text-xs font-normal text-zinc-400">{readingArticle.link.publisher} · {t('insight.noAdsThere', 'no ads there either')}</span>
+                </span>
+                <ExternalLink className="h-4 w-4 shrink-0" />
+              </a>
+            )}
+
             {/* Action footer */}
             <div className="border-t border-zinc-800 pt-5 flex items-center justify-between gap-4">
               <span className="text-xs text-zinc-500">
-                Futurebox Thought Leadership Series
+                {readingArticle.link ? readingArticle.sourceName : 'Futurebox Thought Leadership Series'}
               </span>
               <button
                 type="button"

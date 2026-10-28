@@ -26,7 +26,7 @@
  */
 import { readFileSync } from 'node:fs';
 import {
-  MASTERCLASSES, PROVENANCE_LABELS, TRACK_LABELS, LEVEL_LABELS, featuredClass, youTubeId,
+  MASTERCLASSES, PROVENANCE_LABELS, TRACK_LABELS, LEVEL_LABELS,
 } from '../app/data/masterclasses';
 
 let failures = 0;
@@ -117,44 +117,18 @@ console.log(
     ` the rest say so on their own cards.\n`,
 );
 
-/* ── The one on the front page ────────────────────────────────────────
+/* ── No big class on the front page ─────────────────────────────────────
  *
- * The owner, 21 September 2026: *"Die 1 featured masterclass moet ook groot
- * wees, en die res van die masterclasses in 'n drop down… Daar kan nie goed
- * op wees wat random is nie."*
- *
- * It was big and it was also typed out by hand: the title, the instructor,
- * the length, the YouTube id and the thumbnail seed, four times over in
- * `page.tsx`, beside an entry here that already said all five. Two copies of
- * a fact is one fact and one thing that will eventually be wrong, and the
- * front page is the copy nobody re-reads — change a lecture's link here and
- * the biggest thing on the home page keeps pointing at the old one.
+ * The owner, 28 October 2026: *"die masterclass wat nou daar op is moet af."*
+ * Spotlight leads with music and articles now; the classes keep their shelf
+ * and their room. No lecture id is typed into the page either.
  */
 {
-  const picked = MASTERCLASSES.filter((one) => one.featured);
-  check('exactly one class is the front page\u2019s big one', picked.length === 1,
-    picked.length === 0
-      ? 'none — the biggest thing on the home page would draw nothing'
-      : `${picked.length}: ${picked.map((one) => one.id).join(', ')}`);
-
-  const hero = featuredClass();
-  check('  and it is one somebody can watch today', Boolean(hero?.url?.trim()),
-    hero ? hero.id : 'none');
-  check('  and it is free, because the front page says it is free',
-    hero ? hero.proOnly !== true : false,
-    hero?.proOnly ? `${hero.id} is Pro, and the badge beside it says free` : '');
-  check('  and it says where it came from',
-    hero ? hero.provenance !== 'curated' || Boolean(hero.source?.trim()) : false,
-    'a curated class with no source is a claim with nothing behind it, on the one card everybody sees');
-  check('  and its link is one an embed can be built from',
-    Boolean(hero && youTubeId(hero.url)), hero?.url ?? 'none');
-
-  /* And the page reads it rather than keeping its own copy. */
   const page = readFileSync('app/page.tsx', 'utf8');
-  check('the front page reads the featured class instead of retyping it',
-    /const featured = featuredClass\(\);/.test(page) && /\{featured\.title\}/.test(page),
-    'a hard-coded hero drifts from the data the first time a link changes');
-  check('  and no lecture id is typed into the page any more',
+  check('Spotlight carries no big featured masterclass',
+    !/featuredClass\(\)/.test(page) && !/\{featured\.title\}/.test(page) && !MASTERCLASSES.some((one) => 'featured' in one),
+    'the owner took it off on 28 October 2026');
+  check('  and no lecture id is typed into the page',
     !/zjkBMFhNj_g/.test(page),
     'the YouTube id was in this file four times');
 

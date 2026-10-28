@@ -179,6 +179,11 @@ const PLAIN: Readonly<Record<string, string>> = {
      request list is read again when the room opens. */
   '*|onOpen': 'a pop-up notice: going to look at what it announced, which the room already holds',
   'collab|onOpenRoom': 'a collab pop-up: the request was answered on the pop-up itself, and the room reads its list again on arrival',
+  /* Spotlight's Music & video tab, 28 October 2026: the articles shelf's
+     two doors, to make a song and to the podcast studio. Somebody choosing
+     a room after reading, not asking for anything in it. */
+  'make|onOpenStudio': 'from the music articles to Make a song: choosing a room after reading, nothing to carry',
+  'podcast|onOpenPodcast': 'from the articles shelf to the podcast studio: choosing a room, nothing to carry',
   '*|backFromTone3000': 'back from TONE3000: it opens the room she left, and the room reads the tone off the address itself',
 };
 
