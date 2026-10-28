@@ -8807,6 +8807,8 @@ export const STRINGS: Dict = {
   "daw.barsIn": { en: "bars counted in", af: "mate ingetel" },
   "daw.loopOff": { en: "Stop looping", af: "Hou op herhaal" },
   "daw.loopOn": { en: "Loop the marked piece, or four bars from here", af: "Herhaal die gemerkte stuk, of vier mate van hier af" },
+  "hum.noVoice": { en: "Choose an instrument first: open the hum panel and tap one, then try again.", af: "Kies eers ’n instrument: maak die neurie-paneel oop en tik op een, probeer dan weer." },
+  "hum.noLane": { en: "Nothing could be read from that piece. Open a lane with a hum or a tapped rhythm on it, and mark a part of it.", af: "Niks kon uit daardie stuk gelees word nie. Maak ’n baan oop met ’n geneurie of ’n getikte ritme daarop, en merk ’n deel daarvan." },
   "pro.silentBlocked": { en: "The browser has not let the sound start yet. Tap Play once more.", af: "Die blaaier het nog nie die klank laat begin nie. Tik weer op Speel." },
   "pro.silentSolo": { en: "Only a soloed lane plays (S), and it is muted or empty. Turn S off on the lanes to hear them all.", af: "Net ’n solo-baan speel (S), en dit is stil of leeg. Skakel S af op die bane om almal te hoor." },
   "pro.silentMuted": { en: "Every lane is muted (M). Tap M on a lane to hear it.", af: "Elke baan is stilgemaak (M). Tik op M op ’n baan om dit te hoor." },

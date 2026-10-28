@@ -4945,7 +4945,19 @@ export default function ProBooth({
        clip. Found on 15 October 2026. */
     const got = humHeard(piece);
     const voices = humVoices.map((id) => voiceById(id)).filter((one): one is NonNullable<typeof one> => Boolean(one));
-    if (!got || !voices.length || humming) return;
+    if (humming) return;
+    /* Every way this stops says why. It returned silently, and a press from
+       the AI magic sheet (which closes as it is pressed) looked like a
+       button that does nothing — the owner, 28 October 2026: "Helfte AI
+       magic se functions werk nie". */
+    if (!voices.length) {
+      setProblem(t('hum.noVoice', 'Choose an instrument first: open the hum panel and tap one, then try again.'));
+      return;
+    }
+    if (!got) {
+      setProblem(t('hum.noLane', 'Nothing could be read from that piece. Open a lane with a hum or a tapped rhythm on it, and mark a part of it.'));
+      return;
+    }
     const { source, at } = got;
     hushHum();
     setHumming(true);
