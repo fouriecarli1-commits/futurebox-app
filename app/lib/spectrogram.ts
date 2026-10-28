@@ -34,6 +34,11 @@ export interface Spectrogram {
   readonly duration: number;
 }
 
+/** How many decibels below the loud end the picture reaches before black. */
+const RANGE_DB = 66;
+/** The rows a lane asks for: enough to tell a voice from a cymbal at a glance. */
+export const LANE_BINS = 96;
+
 /** The FFT frame, in samples. 2048 at 44.1 kHz is 21 Hz per raw bin. */
 export const FRAME = 2048;
 /** The lowest and highest pitch drawn, in hertz. */
@@ -145,8 +150,15 @@ export function spectrogramOf(buffer: AudioBuffer, columns: number, bins = 48): 
   /* Decibels against the loudest cell, over a sixty-decibel range: below
      that is the noise floor of any phone recording, and drawing it would
      paint the whole picture a dim grey. */
+  /* Against the loud end of the picture rather than its single loudest
+     cell: one drum hit used to set the scale for three minutes of song and
+     leave everything else dim (the owner, 28 October 2026: "Die spectogram
+     moet seker beter lyk ... meer detail op hê en kleure"). */
   let loudest = 0;
-  for (let i = 0; i < power.length; i += 1) if (power[i] > loudest) loudest = power[i];
+  {
+    const sorted = Float32Array.from(power).sort();
+    loudest = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.997))] || sorted[sorted.length - 1] || 0;
+  }
   const cells = new Uint8Array(rows * want);
   if (loudest > 0) {
     const floor = loudest * 1e-6;
@@ -154,14 +166,14 @@ export function spectrogramOf(buffer: AudioBuffer, columns: number, bins = 48): 
       const p = power[i];
       if (p <= floor) continue;
       const db = 10 * Math.log10(p / loudest);
-      cells[i] = Math.round(Math.max(0, Math.min(1, 1 + db / 60)) * 255);
+      cells[i] = Math.round(Math.max(0, Math.min(1, 1 + db / RANGE_DB)) * 255);
     }
   }
   return { cells, columns: want, bins: rows, duration: buffer.duration };
 }
 
 /** The same picture, from a file: decoded here, then `spectrogramOf`. */
-export async function spectrogramOfBlob(blob: Blob, columns = 480, bins = 48): Promise<Spectrogram | null> {
+export async function spectrogramOfBlob(blob: Blob, columns = 1600, bins = LANE_BINS): Promise<Spectrogram | null> {
   try {
     const Ctx =
       window.AudioContext ??
@@ -179,20 +191,41 @@ export async function spectrogramOfBlob(blob: Blob, columns = 480, bins = 48): P
   }
 }
 
+/**
+ * The colours a level passes through, quiet to loud: night blue, violet,
+ * magenta, orange, amber, near white. Several hues rather than one teal, so
+ * a level can be told from the next by colour as well as by brightness, and
+ * each step is lighter than the last, so it still reads in black and white.
+ */
+const RAMP: readonly (readonly [number, number, number, number])[] = [
+  [0, 4, 6, 16],
+  [0.16, 27, 12, 64],
+  [0.34, 92, 26, 140],
+  [0.52, 186, 44, 128],
+  [0.68, 238, 92, 64],
+  [0.84, 250, 178, 60],
+  [1, 255, 250, 222],
+];
+
 /** The colour of a cell, 0…255, as red, green and blue. */
 export function heatRgb(level: number): readonly [number, number, number] {
   const v = Math.max(0, Math.min(255, level)) / 255;
-  if (v < 0.35) { const t = v / 0.35; return [Math.round(8 + 10 * t), Math.round(14 + 70 * t), Math.round(22 + 70 * t)]; }
-  if (v < 0.7) { const t = (v - 0.35) / 0.35; return [Math.round(18 + 40 * t), Math.round(84 + 127 * t), Math.round(92 + 61 * t)]; }
-  const t = (v - 0.7) / 0.3;
-  return [Math.round(58 + 197 * t), Math.round(211 + 44 * t), Math.round(153 + 102 * t)];
+  for (let i = 1; i < RAMP.length; i += 1) {
+    const [at, r, g, b] = RAMP[i];
+    if (v <= at) {
+      const [was, r0, g0, b0] = RAMP[i - 1];
+      const t = (v - was) / (at - was);
+      return [Math.round(r0 + (r - r0) * t), Math.round(g0 + (g - g0) * t), Math.round(b0 + (b - b0) * t)];
+    }
+  }
+  const last = RAMP[RAMP.length - 1];
+  return [last[1], last[2], last[3]];
 }
 
 /**
- * The colour of a cell, 0…255 → a CSS colour. One ramp for the whole app:
- * near-black through the room's teal to a hot white, so the loud parts
- * read as hot and a hiss reads as a faint haze — the way every spectrogram
- * anybody has seen reads.
+ * The colour of a cell, 0…255 → a CSS colour. One ramp for the whole app
+ * (`RAMP`), so the loud parts read as hot and a hiss reads as a faint haze —
+ * the way every spectrogram anybody has seen reads.
  */
 export function heat(level: number): string {
   const [r, g, b] = heatRgb(level);
@@ -269,4 +302,67 @@ export function paintSpectrogram(
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
   context.drawImage(sheet, sx, 0, Math.min(sw, picture.columns - sx), picture.bins, x, 0, wide, tall);
+}
+
+/* ── What it says, in words ─────────────────────────────────────────────
+   The owner, 28 October 2026: *"wat is die doel van dit? Moet dit iets vir
+   die editor sê?"* It should. Read off the same picture, on the device: the
+   quiet gaps (where to cut), and whether the bottom or the top of the sound
+   stands out (boomy, thin, sharp or dull). Plain sentences, a few at most. */
+
+export interface SpectrumNote {
+  readonly kind: 'gaps' | 'boomy' | 'thin' | 'sharp' | 'dull' | 'even';
+  /** For `gaps`: where each quiet stretch starts, in seconds. */
+  readonly at?: readonly number[];
+}
+
+/** The pitch, in hertz, at the middle of a row. */
+function rowHz(row: number, bins: number): number {
+  return LOW * (HIGH / LOW) ** ((row + 0.5) / bins);
+}
+
+export function readSpectrum(picture: Spectrogram): SpectrumNote[] {
+  const { cells, columns, bins, duration } = picture;
+  if (!columns || !bins) return [];
+  /* Back to power: a cell is decibels over `RANGE_DB`. */
+  const power = (v: number): number => (v ? 10 ** (((v / 255) - 1) * RANGE_DB / 10) : 0);
+  let low = 0; let mid = 0; let high = 0;
+  const column = new Float64Array(columns);
+  for (let r = 0; r < bins; r += 1) {
+    const hz = rowHz(r, bins);
+    for (let c = 0; c < columns; c += 1) {
+      const p = power(cells[r * columns + c]);
+      column[c] += p;
+      if (hz < 250) low += p; else if (hz < 4000) mid += p; else high += p;
+    }
+  }
+  const all = low + mid + high;
+  if (all <= 0) return [];
+  const notes: SpectrumNote[] = [];
+
+  /* Quiet stretches of half a second or more, against the loud end of the song. */
+  const sorted = Float64Array.from(column).sort();
+  const loud = sorted[Math.floor(sorted.length * 0.9)] || 0;
+  const perColumn = duration / columns;
+  const gaps: number[] = [];
+  let run = 0;
+  for (let c = 0; c <= columns; c += 1) {
+    const quiet = c < columns && column[c] < loud * 0.02;
+    if (quiet) run += 1;
+    else {
+      const start = c - run;
+      if (run * perColumn >= 0.5 && start > 0 && c < columns) gaps.push(start * perColumn);
+      run = 0;
+    }
+  }
+  if (gaps.length) notes.push({ kind: 'gaps', at: gaps.slice(0, 4) });
+
+  const lowShare = low / all;
+  const highShare = high / all;
+  if (lowShare > 0.6) notes.push({ kind: 'boomy' });
+  else if (lowShare < 0.08) notes.push({ kind: 'thin' });
+  if (highShare > 0.22) notes.push({ kind: 'sharp' });
+  else if (highShare < 0.01) notes.push({ kind: 'dull' });
+  if (!notes.some((one) => one.kind !== 'gaps')) notes.push({ kind: 'even' });
+  return notes;
 }

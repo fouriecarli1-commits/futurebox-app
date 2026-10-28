@@ -401,6 +401,18 @@ for (const path of [
   ok(`${path} never names the key`, !read(path).includes('KITS_API_KEY'));
 }
 
+/* The owner, 28 October 2026: "The singing service said no (422):
+   E_VALIDATION_FAILURE". A refusal with the cleanup and dials on is asked
+   once more with only the voice and the sound, and a refusal that stands is
+   said in words she can act on. */
+{
+  const kits = readFileSync('app/lib/server/kits.ts', 'utf8');
+  ok('a 422 with extras on is asked once more with only the voice and the sound',
+    /response\.status === 422 && extras/.test(kits) && /plain\.append\('voiceModelId', voiceModelId\)/.test(kits) && /plain\.append\('soundFile', audio, filename\)/.test(kits));
+  ok('  and a refusal that stands says what to try',
+    /would not take this sound with that voice\. Try a shorter piece/.test(kits));
+}
+
 if (failures > 0) {
   console.log(`\ncheck:sing — ${failures} assertion(s) failed.`);
   process.exitCode = 1;

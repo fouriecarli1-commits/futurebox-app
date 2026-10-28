@@ -867,8 +867,53 @@ export default function ProBooth({
       }
 
       setPlaying(true);
+
+      /* ── Silence says why ─────────────────────────────────────────────
+         The owner, 28 October 2026: *"Geen geen geen klank in die probooth
+         nie."* Play pressed, lanes there, and nothing came out — with no
+         word as to why. A moment after it starts, the master's own ear is
+         asked whether anything is going out; if nothing is, the reason that
+         this room can see is said, and the one it cannot (the device) last. */
+      const playable = audible(lanes);
+      /* Nothing set to play at all: said at once, nothing to wait for. */
+      if (lanes.length && !playable.length) {
+        setProblem(lanes.some((one) => one.soloed)
+          ? t('pro.silentSolo', 'Only a soloed lane plays (S), and it is muted or empty. Turn S off on the lanes to hear them all.')
+          : t('pro.silentMuted', 'Every lane is muted (M). Tap M on a lane to hear it.'));
+        return;
+      }
+      /* Only when there is sound to hear here: a song that opens on a
+         second of silence must not be reported as a broken speaker. */
+      const somethingThere = playable.some((one) => {
+        const into = from - one.at;
+        if (into < -1) return false;
+        const data = one.audio.getChannelData(0);
+        const rate = one.audio.sampleRate;
+        const start = Math.max(0, Math.floor(((one.from ?? 0) + Math.max(0, into)) * rate));
+        const end = Math.min(data.length, start + Math.floor(1.2 * rate));
+        for (let i = start; i < end; i += 64) if (Math.abs(data[i]) > 0.002) return true;
+        return false;
+      });
+      if (!somethingThere && playable.length) return;
+      window.setTimeout(() => {
+        const ear = scopeRef.current;
+        if (!ear || !playingRef.current.length) return;
+        const wave = new Float32Array(ear.fftSize);
+        ear.getFloatTimeDomainData(wave);
+        let loudest = 0;
+        for (let i = 0; i < wave.length; i += 1) loudest = Math.max(loudest, Math.abs(wave[i]));
+        if (loudest > 0.0005) return;
+        const why = ctx.state !== 'running'
+          ? t('pro.silentBlocked', 'The browser has not let the sound start yet. Tap Play once more.')
+          : master.gain * trim <= 0.001
+              ? t('pro.silentMaster', 'The master volume is all the way down. Turn it up in the mixer.')
+              : playable.every((one) => one.gain <= 0.001)
+                ? t('pro.silentLanes', 'The lane volumes are all the way down. Turn a lane up in the mixer.')
+                : t('pro.silentDevice', 'The booth is playing, but nothing is reaching your speakers. Check the device volume, a muted tab, or headphones and Bluetooth.');
+        setProblem(why);
+      }, 1200);
     },
-    [clickDb, clicker, clicking, context, division, hush, lanes, master, meter, trim],
+    [clickDb, clicker, clicking, context, division, hush, lanes, master, meter, t, trim],
   );
 
   const stopPlaying = useCallback(() => {

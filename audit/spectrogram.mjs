@@ -57,6 +57,8 @@ try {
   check('the video editor’s sound bench offers waveform and spectrogram', (await views.count()) === 2 && (await p.locator('[data-editorview="wave"]').getAttribute('aria-pressed')) === 'true');
   const waveBefore = await p.locator('[data-editorshotlane] canvas[data-wave="wave"]').first().evaluate(read).catch(() => null);
   await p.locator('[data-editorview="spectrum"]').click(); await p.waitForTimeout(2500);
+  /* A picture of it, when asked for (`SHOT=folder`), to look at by eye. */
+  if (process.env.SHOT) await p.locator('[data-editorshotlane] canvas[data-wave="spectrum"]').first().screenshot({ path: `${process.env.SHOT}/spectrogram-lane.png` }).catch(() => {});
   const lane = p.locator('[data-editorshotlane] canvas[data-wave="spectrum"]').first();
   check('pressing Spectrogram repaints the shot lane as one', (await lane.count()) === 1);
   const got = await lane.evaluate(read).catch(() => null);

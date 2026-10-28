@@ -38,7 +38,7 @@
  */
 
 import React from 'react';
-import { ClipboardPaste, Circle, Copy, CopyPlus, Flag, Music2, Repeat, SkipBack, SkipForward, Sliders, Square, StepBack } from 'lucide-react';
+import { ClipboardPaste, Circle, Copy, CopyPlus, Flag, Repeat, SkipBack, SkipForward, Sliders, Square, StepBack, Timer } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 
@@ -179,8 +179,10 @@ export default function BoothTransport({
       <Key data="loop" keys="L" on={looping} disabled={recording} label={looping ? t('daw.loopOff', 'Stop looping') : t('daw.loopOn', 'Loop the marked piece, or four bars from here')} onPress={onLoop}>
         <Repeat className="h-4 w-4" />
       </Key>
-      <Key data="click" keys="K" on={clicking} label={clicking ? t('daw.clickOff', 'Click off') : t('daw.clickOn', 'Click on')} onPress={onClick}>
-        <Music2 className="h-4 w-4" />
+      <Key data="click" keys="K" on={clicking} label={clicking ? t('daw.clickOff', 'Metronome on: a tick on every beat. Tap to turn it off') : t('daw.clickOn', 'Metronome: a tick on every beat, to play and sing in time')} onPress={onClick}>
+        {/* A metronome, not a note: the owner, 28 October 2026, could not tell
+            what the note did ("Sy description se net click on, click off"). */}
+        <Timer className="h-4 w-4" />
       </Key>
       <span aria-hidden className="mx-0.5 hidden h-6 w-px shrink-0 sm:block" style={{ background: EDGE }} />
       <Key data="prevmarker" keys="," label={t('daw.prevMarker', 'To the marker before')} onPress={onPrevMarker} disabled={!hasMarkers || recording}>

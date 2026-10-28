@@ -14,7 +14,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Maximize2, X } from 'lucide-react';
-import { HIGH, LOW, paintSpectrogram, spectrogramOf, spectrogramOfBlob, type Spectrogram } from '../lib/spectrogram';
+import { HIGH, LOW, paintSpectrogram, readSpectrum, spectrogramOf, spectrogramOfBlob, type Spectrogram, type SpectrumNote } from '../lib/spectrogram';
 import { useBackLayer } from '../lib/backstack';
 
 type Say = (key: string, fallback: string) => string;
@@ -26,6 +26,20 @@ const MARKS: readonly (readonly [number, string])[] = [[60, '60'], [125, '125'],
 
 /** How far up the picture a pitch sits: the rows run on a log scale from LOW to HIGH. */
 const rise = (hz: number): number => Math.log(hz / LOW) / Math.log(HIGH / LOW);
+
+const clock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+
+/** One finding about the sound, in a sentence. */
+function noteSaid(note: SpectrumNote, t: Say): string {
+  switch (note.kind) {
+    case 'gaps': return t('spec.noteGaps', 'Quiet gaps at {at}: clean places to cut.').replace('{at}', (note.at ?? []).map(clock).join(', '));
+    case 'boomy': return t('spec.noteBoomy', 'Heavy in the bass. It may sound boomy: try turning the low end down.');
+    case 'thin': return t('spec.noteThin', 'Little bass. It may sound thin: a bass part or more low end would fill it.');
+    case 'sharp': return t('spec.noteSharp', 'Bright at the top. It may sound sharp or hissy: try softening above 4k.');
+    case 'dull': return t('spec.noteDull', 'Little above 4k. It may sound dull: a touch of brightness would lift it.');
+    default: return t('spec.noteEven', 'Balanced: no part of the sound stands out too much.');
+  }
+}
 
 function SpectrumLook({ sound, from = 0, long, name, t, onClose }: {
   readonly sound: Blob | AudioBuffer;
@@ -115,8 +129,17 @@ function SpectrumLook({ sound, from = 0, long, name, t, onClose }: {
           </div>
         </div>
         <p className="mt-1 pl-11 text-[10px] text-zinc-500">{t('spec.axis', 'Hz up the side · one faint line a second · swipe sideways through the sound')}</p>
+        {/* What it tells the editor, read off the picture itself. */}
+        {picture && (
+          <div className="mt-3 rounded-xl bg-emerald-500/10 p-3" data-spectrumnotes>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-emerald-300">{t('spec.notesTitle', 'What it tells you')}</p>
+            <ul className="space-y-1 text-[13px] leading-snug text-zinc-100">
+              {readSpectrum(picture).map((one) => <li key={one.kind}>{noteSaid(one, t)}</li>)}
+            </ul>
+          </div>
+        )}
         <ul className="mt-3 space-y-1.5 text-[13px] leading-snug text-zinc-300">
-          <li><b className="text-zinc-100">{t('spec.howTitle', 'How to read it:')}</b> {t('spec.how', 'time runs left to right, pitch goes up, and the brighter a spot, the louder that pitch is at that moment.')}</li>
+          <li><b className="text-zinc-100">{t('spec.howTitle', 'How to read it:')}</b> {t('spec.how', 'time runs left to right, pitch goes up, and colour is loudness: dark blue is quiet, through purple and pink to orange, yellow and white for the loudest.')}</li>
           <li><b className="text-amber-300">{t('spec.lowTitle', 'Bright at the bottom')}</b> {t('spec.low', '(under 250): bass and the kick drum. A thick band all the way along is a song that may sound boomy.')}</li>
           <li><b className="text-emerald-300">{t('spec.midTitle', 'Streaks in the middle')}</b> {t('spec.mid', '(250 to 4k): voices and melody. Wavy lines are a singer holding and bending notes.')}</li>
           <li><b className="text-sky-300">{t('spec.highTitle', 'Speckles at the top')}</b> {t('spec.high', '(over 4k): cymbals, breath and "s" sounds. Too bright here sounds harsh; dark sounds dull.')}</li>

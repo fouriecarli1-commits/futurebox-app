@@ -6,7 +6,7 @@
  * come out of the transform flat — the three things that go wrong in a
  * hand-written FFT.
  */
-import { fft, heat, pixelsOf, rowEdges, spectrogramOf, FRAME, LOW, HIGH } from '../app/lib/spectrogram.ts';
+import { fft, heat, pixelsOf, readSpectrum, rowEdges, spectrogramOf, FRAME, LOW, HIGH, LANE_BINS } from '../app/lib/spectrogram.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -19,6 +19,26 @@ const bufferOf = (samples: Float32Array): AudioBuffer => ({
   length: samples.length, numberOfChannels: 1, sampleRate: rate, duration: samples.length / rate,
   getChannelData: () => samples,
 } as unknown as AudioBuffer);
+
+/* What it says in words (the owner, 28 October 2026: "Moet dit iets vir die
+   editor sê?"): a quiet gap is found where it is, a bass-only sound reads as
+   boomy, a high-only one as sharp. */
+{
+  const tone = (hz: number, seconds: number, gapFrom = -1, gapTo = -1): Float32Array => {
+    const out = new Float32Array(Math.round(rate * seconds));
+    for (let i = 0; i < out.length; i += 1) {
+      const at = i / rate;
+      out[i] = at >= gapFrom && at < gapTo ? 0 : Math.sin((2 * Math.PI * hz * i) / rate) * 0.5;
+    }
+    return out;
+  };
+  const gapped = readSpectrum(spectrogramOf(bufferOf(tone(440, 4, 1.5, 2.5)), 400, LANE_BINS));
+  const gap = gapped.find((one) => one.kind === 'gaps');
+  ok('a quiet second is found, where it is, as a place to cut', Boolean(gap?.at?.length) && Math.abs((gap?.at?.[0] ?? 0) - 1.5) < 0.1, JSON.stringify(gapped));
+  ok('  a sound that is all bass reads as boomy', readSpectrum(spectrogramOf(bufferOf(tone(60, 2)), 200, LANE_BINS)).some((one) => one.kind === 'boomy'));
+  ok('  and one that is all top reads as sharp', readSpectrum(spectrogramOf(bufferOf(tone(9000, 2)), 200, LANE_BINS)).some((one) => one.kind === 'sharp'));
+  ok('the lanes draw with enough rows to tell a voice from a cymbal', LANE_BINS >= 80);
+}
 
 /* An impulse through the transform is flat. */
 {

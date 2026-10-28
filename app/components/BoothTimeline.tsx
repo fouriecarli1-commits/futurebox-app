@@ -59,7 +59,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
-import { paintSpectrogram, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
+import { LANE_BINS, paintSpectrogram, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
@@ -2223,7 +2223,7 @@ function pictureOf(sound: AudioBuffer, columns: number): Spectrogram {
   if (!byColumns) { byColumns = new Map(); pictured.set(sound, byColumns); }
   const had = byColumns.get(columns);
   if (had) return had;
-  const made = spectrogramOf(sound, columns);
+  const made = spectrogramOf(sound, columns, LANE_BINS);
   byColumns.set(columns, made);
   return made;
 }

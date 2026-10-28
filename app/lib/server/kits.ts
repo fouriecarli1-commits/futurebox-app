@@ -1461,6 +1461,36 @@ export async function startConversion(
       message: 'The singing service takes one job a minute for the whole app, and one has just started. Try again in a minute.',
     };
   }
+  /* Refused as invalid with extras on: asked once more with only the voice
+     and the sound. The owner, 28 October 2026, met "E_VALIDATION_FAILURE" on
+     an instrument; a refused cleanup or dial must not cost her the song. No
+     job was started by the refusal, so the one-a-minute rule is not broken. */
+  const extras = form.has('pre') || form.has('post') || form.has('pitchShift') || form.has('conversionStrength') || form.has('modelVolumeMix');
+  if (response.status === 422 && extras) {
+    const plain = new FormData();
+    plain.append('voiceModelId', voiceModelId);
+    plain.append('soundFile', audio, filename);
+    try {
+      const again = await fetch(`${BASE}/voice-conversions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key()}` },
+        body: plain,
+      });
+      if (again.ok) response = again;
+      else console.error(`[kits] 422 with and without extras for model ${voiceModelId}`);
+    } catch {
+      /* The first refusal stands and is said below. */
+    }
+  }
+  /* Their code in words she can act on, with the code kept on the end for
+     whoever reads the screenshot. */
+  if (response.status === 422) {
+    const said = await complain(response);
+    return {
+      ...said,
+      message: `The singing service would not take this sound with that voice. Try a shorter piece (under a minute), or another voice. (${said.message})`,
+    };
+  }
   if (!response.ok) return complain(response);
 
   const answer = (await response.json().catch(() => null)) as unknown;
