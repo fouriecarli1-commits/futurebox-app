@@ -36,6 +36,23 @@ try {
       x.fillStyle = '#fff'; x.beginPath(); x.arc(200, 200, 70, 0, Math.PI * 2); x.fill();
       return c.toDataURL('image/png');
     });
+    /* Everything at once: the ball, a square in the corner, the whole photo
+       (the background, which must not be offered) and the ball again. */
+    if (route.request().postDataJSON()?.all) {
+      const more = await page.evaluate(() => {
+        const draw = (paint) => {
+          const c = document.createElement('canvas');
+          c.width = 400; c.height = 400;
+          const x = c.getContext('2d');
+          x.fillStyle = '#000'; x.fillRect(0, 0, 400, 400);
+          x.fillStyle = '#fff'; paint(x);
+          return c.toDataURL('image/png');
+        };
+        return [draw((x) => x.fillRect(20, 20, 80, 80)), draw((x) => x.fillRect(0, 0, 400, 400))];
+      });
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', urls: [mask, more[0], more[1], mask], credits: 2 }) });
+      return;
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url: mask, credits: 2 }) });
   });
   await page.route('**/api/post/export', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, left: 42 }) }));
@@ -90,14 +107,31 @@ try {
   }
   await snap('bench');
 
-  /* ── Pull it out is a tool: picked, the bench shuts and the photo is whole ──
-     The owner, 27 October 2026: "mens moet die window kan toe maak en die
-     volle foto sien en dan kan click." */
+  /* ── Pull it out finds everything at once, and she picks ──
+     The owner, 28 October 2026: "die sticker opsie moes alles search wat los
+     kon maak en alles op een slag los maak, en dan kies mens net dit wat 'n
+     mens wil peel." */
   await page.locator('[data-become="sticker"]').click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1600);
   check('picking Pull it out shuts the bench, so the whole photo shows', !(await page.locator('[data-become="model3d"]').first().isVisible()));
-  check('  and a line over the photo says to tap the thing, with a way out', (await page.locator('[data-becomephotosay]').count()) === 1
-    && (await page.locator('[data-becomepullstop]').count()) === 1);
+  check('  and everything it found waits on the photo, the background and the repeat left out',
+    (await page.locator('[data-peel][data-peeling="no"]').count()) === 2, String(await page.locator('[data-peel]').count()));
+  check('  with one line for all of them and a way to leave them', (await page.locator('[data-peelmany]').count()) === 1
+    && (await page.locator('[data-peelhint]').count()) === 1);
+  await snap('found');
+  await page.locator('[data-peel]').last().click();
+  await page.waitForTimeout(1500);
+  check('  a tap peels just that one', (await page.locator('[data-peel]').count()) === 1);
+  await page.locator('[data-peelmany] button, [data-peelhint] button').first().click();
+  await page.waitForTimeout(300);
+  check('  and the rest can be left', (await page.locator('[data-peel]').count()) === 0);
+  /* The peel above offered its 3D idea; the single pull below should be
+     offered it again, so the idea's rest is cleared rather than waited out. */
+  await page.locator('[data-becomenudge] button[aria-label]').first().click().catch(() => {});
+  await page.evaluate(() => { try { localStorage.removeItem('fb.ideas.v1'); } catch { /* */ } });
+  await page.waitForTimeout(300);
+  check('  and a tap on the photo still pulls one thing out, with a way out of the tool',
+    (await page.locator('[data-becomepullstop]').count()) === 1);
   await snap('pulling');
 
   /* ── A tap on the thing: it waits, ready to peel ── */

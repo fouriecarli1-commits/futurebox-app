@@ -205,6 +205,15 @@ export function maskUrlOf(result: unknown): string | null {
   return fileUrlOf({ mask_image: row.mask_image });
 }
 
+/** Every mask in an answer, for a call that asked for everything. */
+export function maskUrlsOf(result: unknown): string[] {
+  const row = result && typeof result === 'object' ? result as Record<string, unknown> : {};
+  const masks = Array.isArray(row.masks) ? row.masks : [];
+  return masks
+    .map((one) => (typeof one === 'string' ? one : one && typeof one === 'object' ? (one as { url?: unknown }).url : null))
+    .filter((url): url is string => typeof url === 'string' && /^(https:\/\/|data:)/.test(url));
+}
+
 /** The first file address in an answer, whatever the model calls it. */
 export function fileUrlOf(result: unknown): string | null {
   const row = result && typeof result === 'object' ? result as Record<string, unknown> : {};

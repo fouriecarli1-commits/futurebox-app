@@ -27,7 +27,7 @@ import { BECOME_IDS, BECOMES, becomeInput, wakeMoves, type BecomeId, type Tap } 
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
-import { falNow, falProgress, falQueue, falReady, fileUrlOf, maskUrlOf } from '@/app/lib/server/fal';
+import { falNow, falProgress, falQueue, falReady, fileUrlOf, maskUrlOf, maskUrlsOf } from '@/app/lib/server/fal';
 import { seal, unseal } from '@/app/lib/server/falticket';
 
 export const runtime = 'nodejs';
@@ -109,7 +109,12 @@ export async function POST(request: Request): Promise<Response> {
   const tap = rawTap && Number.isFinite(rawTap.x) && Number.isFinite(rawTap.y)
     ? { x: Math.max(0, Number(rawTap.x)), y: Math.max(0, Number(rawTap.y)) }
     : undefined;
-  if (id === 'sticker' && !tap && !words) return Response.json({ message: 'Tap the thing to pull out.' }, { status: 400 });
+  /* Everything at once: the picture's size, so the points can cover it. */
+  const rawAll = body.all as { w?: unknown; h?: unknown } | undefined;
+  const all = id === 'sticker' && rawAll && Number.isFinite(Number(rawAll.w)) && Number.isFinite(Number(rawAll.h))
+    ? { w: Math.max(1, Math.min(4096, Math.round(Number(rawAll.w)))), h: Math.max(1, Math.min(4096, Math.round(Number(rawAll.h)))) }
+    : undefined;
+  if (id === 'sticker' && !tap && !words && !all) return Response.json({ message: 'Tap the thing to pull out.' }, { status: 400 });
 
   if (words) {
     const screened = await guard(request, words, 'footage', caller);
@@ -119,7 +124,7 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, spec.credits, `become:${id}`);
   if (!paid.ok) return paid.response;
 
-  const input = becomeInput(id, picture, { tap, words, moves: id === 'alive' ? wakeMoves(body.moves) : [] });
+  const input = becomeInput(id, picture, { tap, words, all, moves: id === 'alive' ? wakeMoves(body.moves) : [] });
 
   if (spec.now) {
     const ran = await falNow(spec.model, input);
@@ -135,6 +140,14 @@ export async function POST(request: Request): Promise<Response> {
          (the owner, 27 October 2026: "Die sticker peel werk steeds nie"). */
       const code = /answered (\d{3})/.exec(ran.why)?.[1] ?? (/timeout|abort/i.test(ran.why) ? 'timeout' : 'no answer');
       return Response.json({ state: 'failed', message: `${FAILED} (fal.ai: ${code})` }, { status: 502 });
+    }
+    if (all) {
+      const urls = maskUrlsOf(ran.data);
+      if (!urls.length) {
+        await paid.refund();
+        return Response.json({ state: 'failed', message: 'Nothing stood out to peel in this photo. Tap a thing to pull it out. Your credits are back.' }, { status: 404 });
+      }
+      return Response.json({ state: 'done', urls, credits: spec.credits });
     }
     const url = spec.gives === 'mask' ? maskUrlOf(ran.data) : fileUrlOf(ran.data);
     if (!url) {

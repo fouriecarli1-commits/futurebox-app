@@ -1024,11 +1024,16 @@ export default function PostStudio({
   const [pullTap, setPullTap] = useState<PullTap | null>(null);
   const [becomeStart, setBecomeStart] = useState<StartBecome | null>(null);
   const [lastCut, setLastCut] = useState<Cut | null>(null);
-  const [peel, setPeel] = useState<{
+  /* Every sticker waiting to be peeled: one from a tap, or everything the
+     photo held from one press (`BecomeBench`'s find-all), largest first so
+     the small ones lie on top and can still be tapped. */
+  const [peels, setPeels] = useState<readonly {
+    readonly id: number;
     readonly cut: Cut;
     readonly src: string;
     readonly rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number };
-  } | null>(null);
+  }[]>([]);
+  const peelSeq = useRef(0);
   const [nudge, setNudge] = useState<IdeaMoment | null>(null);
   const [idea, setIdea] = useState<{ readonly moment: IdeaMoment; readonly thumb: string } | null>(null);
   const [becomeBusy, setBecomeBusy] = useState(false);
@@ -8568,10 +8573,11 @@ export default function PostStudio({
       height: cut.box.h * at.height,
     };
   };
-  const showCut = (cut: Cut): void => {
+  /** Where a cut-out sits over the photo on the screen, as a sticker waiting. */
+  const peelOf = (cut: Cut): (typeof peels)[number] | null => {
     const on = canvas.current;
     const room = stage.current;
-    if (!picture || !on || !room) return;
+    if (!picture || !on || !room) return null;
     const frame = boxOnFrame(cut);
     const box = on.getBoundingClientRect();
     const roomBox = room.getBoundingClientRect();
@@ -8579,11 +8585,12 @@ export default function PostStudio({
     /* The sticker is bigger than the thing by its white edge. */
     const w = (frame.width * per) / (1 - cut.edge.x * 2);
     const h = (frame.height * per) / (1 - cut.edge.y * 2);
-    setLastCut(cut);
+    peelSeq.current += 1;
     /* Shown on the photo while it waits to be peeled, and nothing else: it
        leaves the device only as a layer, through the paid export. */
     const peelFace = cut.sticker;
-    setPeel({
+    return {
+      id: peelSeq.current,
       cut,
       src: peelFace.toDataURL('image/png'),
       rect: {
@@ -8592,14 +8599,30 @@ export default function PostStudio({
         width: w,
         height: h,
       },
-    });
+    };
+  };
+
+  const showCut = (cut: Cut): void => {
+    const one = peelOf(cut);
+    if (!one) return;
+    setLastCut(cut);
+    setPeels((was) => [...was, one]);
+  };
+
+  /* Everything found at once: they replace whatever was waiting. */
+  const showCuts = (cuts: readonly Cut[]): void => {
+    const all = cuts.flatMap((cut) => { const one = peelOf(cut); return one ? [one] : []; });
+    if (cuts.length) setLastCut(cuts[0]);
+    setPeels(all);
   };
 
   /* Peeled: the sticker becomes a layer of its own, a little up and to the
      side of where it was, and the suggestion offers what it can become. */
-  const peeled = (): void => {
-    const now = peel;
-    if (!now || !picture) { setPeel(null); return; }
+  const peeled = (which: number): void => {
+    const now = peels.find((one) => one.id === which);
+    const gone = (): void => setPeels((was) => was.filter((one) => one.id !== which));
+    if (!now || !picture) { gone(); return; }
+    setLastCut(now.cut);
     asPicture(now.cut.sticker, (img) => {
       const frame = boxOnFrame(now.cut);
       const w = frame.width / (1 - now.cut.edge.x * 2);
@@ -8616,9 +8639,9 @@ export default function PostStudio({
         z: frontZ(marks, words, was),
       }]);
       setCellOn(id);
-      setPeel(null);
+      gone();
       if (offerIf('stickerPeeled')) setNudge('stickerPeeled');
-    }, () => setPeel(null));
+    }, gone);
   };
 
   const pickNudge = (id: BecomeId, moment: IdeaMoment): void => {
@@ -8670,6 +8693,7 @@ export default function PostStudio({
       onStarted={() => setBecomeStart(null)}
       lastCut={lastCut}
       onCut={showCut}
+      onCuts={showCuts}
       onBusy={setBecomeBusy}
       onSay={setPhotoSay}
     />
@@ -10314,16 +10338,29 @@ export default function PostStudio({
       {/* ── Bring to life, over the photograph ──────────────────────────
           The sticker waiting to be peeled, and the suggestion of what the
           photo or the sticker can become next (`BecomeBench.tsx`). */}
-      {peel && (
+      {peels.map((one) => (
         <PeelOverlay
-          src={peel.src}
-          rect={peel.rect}
+          key={one.id}
+          src={one.src}
+          rect={one.rect}
           t={t}
-          onPeeled={peeled}
-          onDismiss={() => setPeel(null)}
+          hint={peels.length === 1}
+          onPeeled={() => peeled(one.id)}
+          onDismiss={() => setPeels([])}
         />
+      ))}
+      {/* Several waiting: one line for all of them, and one way to leave them. */}
+      {peels.length > 1 && (
+        <div className="absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-peelhint data-peelmany>
+          <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 px-4 py-2 text-xs font-bold text-emerald-100 shadow-lg">
+            {t('become.peelMany', 'Tap the ones you want to peel off')}
+            <button type="button" onClick={() => setPeels([])} aria-label={t('become.peelLeaveAll', 'Leave the rest')} className="grid h-6 w-6 place-items-center rounded-full text-zinc-400">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </p>
+        </div>
       )}
-      {nudge && !peel && !becomeBusy && (
+      {nudge && !peels.length && !becomeBusy && (
         <BecomeNudge
           ids={IDEAS[nudge].offers}
           bottom={overStrip}
@@ -10341,7 +10378,7 @@ export default function PostStudio({
           </p>
         </div>
       )}
-      {(photoSay || pulling) && !peel && !nudge && (
+      {(photoSay || pulling) && !peels.length && !nudge && (
         <div className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-4" style={{ bottom: overStrip }} data-becomephotosay>
           <p role="status" className="fb-nudge pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 py-1.5 pl-4 pr-1.5 text-center text-xs font-bold text-emerald-100 shadow-lg">
             {becomeBusy && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />}

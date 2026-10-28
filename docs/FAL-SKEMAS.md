@@ -25,6 +25,16 @@ None of these pages carried "Pending Enterprise Ready".
   `{ x, y, label: 1 }`, rounded. fal.ai support, 28 October 2026: a tap
   with no words sends `"prompt": ""`; leaving it out means "wheel".
 
+- **Everything at once (28 October 2026):** the owner asked for one press
+  that finds everything peelable. Sent: `prompt: ""`, a 4×4 grid of
+  `point_prompts` over the picture, each point its own `object_id`, with
+  `include_boxes`, `include_scores` and `max_masks: 16`. One request, so
+  the same $0.005 and the same 2 credits. The phone keeps each thing once
+  (`keepDistinct`), drops the background and specks, and shows them all to
+  pick from. **To confirm on the first real call:** that fal.ai answers one
+  mask per `object_id`. If it answers a single merged mask, the phone shows
+  one sticker and the tap-to-pull still works.
+
 ## `fal-ai/birefnet/v2`: clean edges on a cut-out
 
 > **Pending Enterprise Ready (fal.ai, 27 October 2026): may not be called.** fal.ai may train on what is sent to a model marked this way. `check:falwire` refuses it anywhere in the app until fal.ai says it is ready.

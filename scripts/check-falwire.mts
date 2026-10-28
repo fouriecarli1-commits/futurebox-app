@@ -9,7 +9,8 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
-import { BECOMES, becomeInput, wakeMoves } from '../app/lib/becomes.ts';
+import { BECOMES, becomeInput, everyThing, wakeMoves } from '../app/lib/becomes.ts';
+import { keepDistinct } from '../app/lib/stickerize.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -77,6 +78,26 @@ const chose = becomeInput('alive', 'data:image/jpeg;base64,AA', { moves: wakeMov
 ok('wake-up choices become the engine\u2019s own phrases, known ones only, at most three, with the member\u2019s words after',
   /^A soft breeze moves hair, clothes and leaves; the camera slowly pushes in; snow falls gently; the dog jumps\. /.test(String(chose.prompt))
   && !/nonsense|rain/.test(String(chose.prompt)) && wakeMoves('breeze').length === 0);
+/* Everything at once (the owner, 28 October 2026): one call, points over
+   the whole picture each its own object, no words, and the answer kept to
+   one of each thing, never the background. */
+const all = becomeInput('sticker', 'data:image/jpeg;base64,AA', { all: { w: 400, h: 300 } });
+const grid = all.point_prompts as { x: number; y: number; label: number; object_id: number }[];
+ok('finding everything sends a grid of points, each its own thing, with no words',
+  all.prompt === '' && grid.length === 16 && new Set(grid.map((one) => one.object_id)).size === 16
+  && grid.every((one) => one.label === 1 && one.x > 0 && one.x < 400 && one.y > 0 && one.y < 300)
+  && everyThing({ w: 400, h: 300 }).length === 16);
+ok('  and keeps each thing once, never the whole photo or a speck',
+  JSON.stringify(keepDistinct([
+    { x: 0.3, y: 0.3, w: 0.4, h: 0.4 },
+    { x: 0, y: 0, w: 1, h: 1 },
+    { x: 0.31, y: 0.3, w: 0.4, h: 0.4 },
+    { x: 0.05, y: 0.05, w: 0.2, h: 0.2 },
+    { x: 0.9, y: 0.9, w: 0.01, h: 0.01 },
+  ])) === '[0,3]');
+const becomeRoute = readFileSync(new URL('../app/api/become/route.ts', import.meta.url), 'utf8');
+ok('  and the route answers with every mask, at the one sticker price',
+  /if \(all\) \{[\s\S]*?maskUrlsOf\(ran\.data\)[\s\S]*?urls, credits: spec\.credits/.test(becomeRoute));
 const tapOnly = becomeInput('sticker', 'data:image/jpeg;base64,AA', { tap: { x: 10.4, y: 20.6 } });
 ok('a tap with no words sends an EMPTY prompt, never none (none means "wheel", fal.ai support, 28 October 2026)',
   tapOnly.prompt === '' && JSON.stringify(tapOnly.point_prompts) === '[{"x":10,"y":21,"label":1}]');

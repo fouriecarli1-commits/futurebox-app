@@ -28,7 +28,7 @@ import { Box as BoxIcon, Hand, Loader2, Sparkles, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { creditsSaid } from '../lib/credits';
 import { BECOMES, BECOME_SIDE, WAKE_MOST, WAKE_MOVES, type BecomeId, type WakeMove } from '../lib/becomes';
-import { cutOut, loadPicture, sendable, type Cut } from '../lib/stickerize';
+import { cutOut, keepDistinct, loadPicture, sendable, type Cut } from '../lib/stickerize';
 import { IDEAS, type IdeaMoment } from '../lib/ideas';
 import ModelView from './ModelView';
 import { aboveBar } from './TabBar';
@@ -93,6 +93,8 @@ function YesSheet({ t, onYes, onNo }: { readonly t: Say; readonly onYes: () => v
 interface Answer {
   readonly state?: string;
   readonly url?: string;
+  /** Every mask, when everything in the photo was asked for. */
+  readonly urls?: readonly string[];
   readonly ticket?: string;
   readonly message?: string;
 }
@@ -157,7 +159,7 @@ async function slowOne(body: Record<string, unknown>, t: Say): Promise<{ readonl
 const ICONS: Readonly<Record<BecomeId, React.ComponentType<{ className?: string }>>> = { sticker: Hand, alive: Sparkles, model3d: BoxIcon };
 
 const WHAT: Readonly<Record<BecomeId, readonly [string, string]>> = {
-  sticker: ['become.stickerWhat', 'Tap a thing in the photo. It peels off as a sticker.'],
+  sticker: ['become.stickerWhat', 'Finds everything in the photo you can peel off. Tap the ones you want as stickers.'],
   alive: ['become.aliveWhat', 'Six seconds of movement, with its own sound.'],
   model3d: ['become.model3dWhat', 'The thing you pulled out, as a model you can spin.'],
 };
@@ -222,6 +224,7 @@ export default function BecomeBench({
   start,
   lastCut,
   onCut,
+  onCuts,
   onBusy,
   onSay,
   onStarted,
@@ -239,6 +242,8 @@ export default function BecomeBench({
   readonly lastCut: Cut | null;
   /** A thing has been cut out: the room shows it ready to peel. */
   readonly onCut: (cut: Cut) => void;
+  /** Everything found at once: the room shows them all, ready to pick. */
+  readonly onCuts?: (cuts: readonly Cut[]) => void;
   readonly onBusy: (busy: boolean) => void;
   /** What the bench just said, so the room can show it over the photo too:
       on a phone the bench is often below the fold. */
@@ -305,6 +310,48 @@ export default function BecomeBench({
     }
   }, [picture, onCut, onPulling, t]);
 
+  /* Everything in the photo that could be peeled, in one press, then she
+     picks. The owner, 28 October 2026: *"die sticker opsie moes alles
+     search wat los kon maak en alles op een slag los maak, en dan kies mens
+     net dit wat 'n mens wil peel."* One call, one price (`everyThing`). */
+  const findAll = useCallback(async (): Promise<void> => {
+    if (!picture) return;
+    let sent: ReturnType<typeof sendable> = null;
+    try { sent = sendable(picture, BECOME_SIDE); } catch { sent = null; }
+    if (!sent) { setSaid(t('become.noPicture', 'This picture could not be read. Nothing was charged.')); return; }
+    setBusy('sticker');
+    setSaid(t('become.findingAll', 'Looking for everything you can peel…'));
+    let paid = false;
+    try {
+      const got = await ask({ become: 'sticker', picture: sent.data, all: { w: sent.width, h: sent.height } });
+      if (!got.ok || !got.urls?.length) { setSaid(got.message ?? t('become.failed', 'That did not work this time. Your credits are back.')); return; }
+      paid = true;
+      const masks = await Promise.all(got.urls.map((url) => loadPicture(url).catch(() => null)));
+      const cuts = masks.flatMap((mask) => {
+        const cut = mask ? cutOut(picture, mask) : null;
+        return cut ? [cut] : [];
+      });
+      const kept = keepDistinct(cuts.map((one) => one.box)).map((i) => cuts[i]);
+      /* Said to the room before the bench is put away for the photo: once
+         it is gone, its own words would never reach the screen. */
+      const words = !kept.length
+        ? t('become.nothingAll', 'Nothing stood out to peel. Tap a thing in the photo to pull it out.')
+        : kept.length === 1
+          ? t('become.foundOne', 'Found one thing. Tap it to peel it off.')
+          : t('become.foundAll', 'Found {n} things. Tap the ones you want to peel.').replace('{n}', String(kept.length));
+      setSaid(words);
+      onSay?.(words);
+      if (kept.length) onCuts?.(kept);
+      onPulling(true);
+    } catch {
+      setSaid(paid
+        ? t('become.noFetchSticker', 'It was found, but could not be brought onto this phone. Check your connection and tap it again.')
+        : t('become.failed', 'That did not work this time. Your credits are back.'));
+    } finally {
+      setBusy(null);
+    }
+  }, [picture, onCuts, onPulling, onSay, t]);
+
   const wake = useCallback(async (): Promise<void> => {
     if (!picture) return;
     let sent: ReturnType<typeof sendable> = null;
@@ -344,10 +391,14 @@ export default function BecomeBench({
   /* Every press first checks the two yeses, and asks them once if needed. */
   const go = useCallback((id: BecomeId): void => {
     if (!yes) { setAsking(id); return; }
-    if (id === 'sticker') { onPulling(!pulling); setSaid(pulling ? '' : t('become.tapThing', 'Tap the thing you want to pull out.')); return; }
+    if (id === 'sticker') {
+      if (pulling) { onPulling(false); setSaid(''); return; }
+      void findAll();
+      return;
+    }
     if (id === 'alive') void wake();
     else void make3d();
-  }, [yes, pulling, onPulling, wake, make3d, t]);
+  }, [yes, pulling, onPulling, findAll, wake, make3d]);
 
   useEffect(() => {
     if (!tap || tap.n === seenTap.current || busy) return;
@@ -421,8 +472,10 @@ export default function BecomeBench({
  * up and to the side, where it becomes a layer of its own (`onPeeled`).
  * The animation is `fb-peel` and `fb-peel-sheen` in `globals.css`.
  */
-export function PeelOverlay({ src, rect, t, onPeeled, onDismiss }: {
+export function PeelOverlay({ src, rect, t, onPeeled, onDismiss, hint = true }: {
   readonly src: string;
+  /** Its own "tap to peel" line; off when several wait and the room says it once for all. */
+  readonly hint?: boolean;
   /** Where the sticker sits over the photo, in pixels inside the stage. */
   readonly rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number };
   readonly t: Say;
@@ -464,7 +517,7 @@ export function PeelOverlay({ src, rect, t, onPeeled, onDismiss }: {
           style={{ WebkitMaskImage: `url(${src})`, maskImage: `url(${src})`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center' }}
         />
       </div>
-      {!peeling && (
+      {!peeling && hint && (
         <div className="absolute inset-x-0 bottom-3 z-40 flex justify-center px-4" data-peelhint>
           <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/60 bg-zinc-950/90 px-4 py-2 text-xs font-bold text-emerald-100 shadow-lg">
             {t('become.peelHint', 'Tap the sticker to peel it off')}

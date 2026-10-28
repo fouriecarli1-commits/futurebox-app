@@ -136,8 +136,46 @@ function aliveAsked(said: string, moves: readonly WakeMove[]): string {
  * (`docs/FAL-SKEMAS.md`); this is the one place they live, so a field fal.ai
  * renames is a one-line change.
  */
-export function becomeInput(id: BecomeId, picture: string, opts: { readonly tap?: Tap; readonly words?: string; readonly moves?: readonly WakeMove[] } = {}): Record<string, unknown> {
+/**
+ * Points over the whole picture, each its own object: how one call finds
+ * everything in a photo that could be peeled. The owner, 28 October 2026:
+ * *"die sticker opsie moes alles search wat los kon maak en alles op een slag
+ * los maak, en dan kies mens net dit wat 'n mens wil peel."* SAM 3 groups
+ * points by `object_id` (fal.ai, 27 October 2026), so a grid with one id per
+ * point answers with a mask per thing, at the price of one call.
+ */
+export const FIND_ALL_GRID = 4;
+export function everyThing(size: { readonly w: number; readonly h: number }): { x: number; y: number; label: 1; object_id: number }[] {
+  const out: { x: number; y: number; label: 1; object_id: number }[] = [];
+  for (let row = 0; row < FIND_ALL_GRID; row += 1) {
+    for (let col = 0; col < FIND_ALL_GRID; col += 1) {
+      out.push({
+        x: Math.round(((col + 0.5) / FIND_ALL_GRID) * size.w),
+        y: Math.round(((row + 0.5) / FIND_ALL_GRID) * size.h),
+        label: 1,
+        object_id: row * FIND_ALL_GRID + col + 1,
+      });
+    }
+  }
+  return out;
+}
+
+export function becomeInput(id: BecomeId, picture: string, opts: { readonly tap?: Tap; readonly words?: string; readonly moves?: readonly WakeMove[]; readonly all?: { readonly w: number; readonly h: number } } = {}): Record<string, unknown> {
   const said = (opts.words ?? '').trim();
+  if (id === 'sticker' && opts.all) {
+    return {
+      image_url: picture,
+      /* No words: "everything" is the points, and an absent prompt means "wheel". */
+      prompt: '',
+      point_prompts: everyThing(opts.all),
+      apply_mask: false,
+      sync_mode: true,
+      output_format: 'png',
+      include_boxes: true,
+      include_scores: true,
+      max_masks: FIND_ALL_GRID * FIND_ALL_GRID,
+    };
+  }
   if (id === 'sticker') {
     return {
       image_url: picture,

@@ -44,6 +44,36 @@ export interface Box {
   readonly h: number;
 }
 
+/** How much two boxes cover the same ground: shared area over joined area. */
+function sameGround(a: Box, b: Box): number {
+  const w = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+  const h = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const shared = w * h;
+  const joined = a.w * a.h + b.w * b.h - shared;
+  return joined > 0 ? shared / joined : 0;
+}
+
+/**
+ * Of everything found in a photo, the things worth offering to peel: not the
+ * whole photo (the background), not a speck, and each thing once even when
+ * two points found it. Largest first, so the smaller ones are drawn on top
+ * and can still be tapped. Returns the indices kept.
+ */
+export function keepDistinct(boxes: readonly Box[], most = 10): number[] {
+  const area = (one: Box): number => one.w * one.h;
+  const order = boxes
+    .map((_, i) => i)
+    .filter((i) => area(boxes[i]) <= 0.9 && area(boxes[i]) >= 0.004)
+    .sort((a, b) => area(boxes[b]) - area(boxes[a]));
+  const kept: number[] = [];
+  for (const i of order) {
+    if (kept.some((k) => sameGround(boxes[k], boxes[i]) > 0.8)) continue;
+    kept.push(i);
+    if (kept.length >= most) break;
+  }
+  return kept;
+}
+
 export interface Cut {
   /** The thing alone, see-through around it: what a 3D model is made from. */
   readonly bare: HTMLCanvasElement;
