@@ -4014,36 +4014,45 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
    the 44-pixel floor a thumb needs. */
 [data-postunder] [data-desk] > header { padding-top: 0 !important; padding-bottom: 2px !important; min-height: 0 !important; }
 [data-postunder] [data-desk] > header :is(h2, h3) { font-size: 15px !important; }
-[data-postunder] [data-desk] p[data-open] { font-size: 12px !important; line-height: 1.35 !important; }
-[data-postunder] [data-desk] p:not([role]):not([data-open]) {
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 [data-postunder] [data-desk] :is(button, label, input, select) { font-size: 13px !important; }
 [data-postunder] [data-desk] :is(h4, legend) { font-size: 11px !important; margin-bottom: 2px !important; }
 
-/* ── The Video Editor says less (27 October 2026) ─────────────────────────
-   The owner: *"Die video editor het way te veel descriptions onder elke
-   funksie."* On a phone every explanation in the room is two lines at a
-   smaller size; the full sentence is a tap away in the bench's ? and in the
-   line that comes up when a bench is opened (`CutDock`). Status lines and
-   alerts keep their size: those are answers, not descriptions. */
-/* The booths too (their front door is long sentences under long
-   sentences), and a tap on a shortened line opens it (`IconTips`). */
-@media (max-width: 767.98px) {
-  :is([data-cutroom], [data-booth]) p:not([role]):not([data-keep]):not([data-open]) {
-    font-size: 12px !important;
-    line-height: 1.35 !important;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  :is([data-cutroom], [data-booth]) p[data-open] { font-size: 12px !important; line-height: 1.35 !important; }
+/* ── Descriptions are pop-ups, in every room (28 October 2026) ──────────
+   The owner: *"elke kamer se function buttons moet strictly neat clean,
+   semetries wees, en die descriptions moet net pop up wees."* Earlier the
+   Video Editor (27 October: "way te veel descriptions") and the Photo
+   Editor's strip were cut to two lines. Now every room says a description
+   as one quiet line with an ⓘ, and a tap opens it as a small card over the
+   tools; a second tap shuts it (`IconTips`). Status lines, alerts and
+   prices (`role`, `data-keep`) are answers, not descriptions, and keep their
+   size; a line with a button or a link in it is left whole. */
+:is([data-cutroom], [data-booth], [data-postunder]) p:not([role]):not([data-keep]):not(:has(button, a, input, select)):not([data-open]) {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.78;
+  cursor: pointer;
+}
+:is([data-cutroom], [data-booth], [data-postunder]) p:not([role]):not([data-keep]):not(:has(button, a, input, select))::before {
+  content: "ⓘ ";
+  color: #34d399;
+  font-weight: 700;
+}
+:is([data-cutroom], [data-booth], [data-postunder]) p[data-open] {
+  position: relative;
+  z-index: 20;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  opacity: 1;
+  background: rgba(9, 9, 11, 0.96);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 12px;
+  padding: 8px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 
 /* The name over an icon button (`IconTips`): fades only, because its place

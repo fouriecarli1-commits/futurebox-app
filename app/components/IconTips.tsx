@@ -31,12 +31,17 @@ export default function IconTips(): React.ReactElement | null {
   useEffect(() => {
     const pressed = (event: Event): void => {
       const target = event.target instanceof Element ? event.target : null;
-      /* A description shortened to two lines on a phone (globals.css,
-         "says less") opens at a tap, and closes at the next. */
-      const line = target?.closest(':is([data-cutroom], [data-booth], [data-postunder]) p:not([role])');
+      /* A description, one line with an ⓘ in every room (globals.css,
+         "Descriptions are pop-ups"), opens as a card at a tap and closes at
+         the next. */
+      const line = target?.closest(':is([data-cutroom], [data-booth], [data-postunder]) p:not([role]):not([data-keep])');
       if (line instanceof HTMLElement && !target?.closest('button, a, input, label')) {
+        /* One open at a time: a second card over the tools is clutter. */
         if (line.hasAttribute('data-open')) line.removeAttribute('data-open');
-        else if (line.scrollHeight > line.clientHeight + 2) line.setAttribute('data-open', '');
+        else {
+          document.querySelectorAll('p[data-open]').forEach((one) => one.removeAttribute('data-open'));
+          line.setAttribute('data-open', '');
+        }
         return;
       }
       const button = target?.closest('button, [role="button"]');
