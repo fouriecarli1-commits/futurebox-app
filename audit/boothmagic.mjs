@@ -62,6 +62,10 @@ try {
     p.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
     await p.addInitScript(() => { try { localStorage.setItem('futurebox.lang.v1', 'en'); } catch { /* */ } });
     await p.route('**/api/voice/clean', (route) => route.fulfill({ status: 200, contentType: 'audio/wav', body: toneWav() }));
+    /* The booth's own tools charge first (the owner, 28 October 2026:
+       "Niks 1 credit nie. Altyd 2"); answered here and counted. */
+    let charged = 0;
+    await p.route('**/api/boothtool', (route) => { charged += 1; return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, credits: 2 }) }); });
     await p.goto(`http://localhost:${PORT}/proboothprobe`, { waitUntil: 'networkidle' });
     await p.waitForTimeout(2000);
 
@@ -97,6 +101,10 @@ try {
     const did = undoOn || lanesAfter !== lanesBefore || panel || said;
     check(`${action.what}: does something, or says why not`, did,
       `undo "${undoSays}" ${undoOn}, lanes ${lanesBefore}→${lanesAfter}`);
+    /* The hum is charged only once notes were heard; "Nothing was heard" is said for free. */
+    if (action.what === 'smooth' || (action.what === 'hum' && !said)) {
+      check(`  ${action.what}: is charged before it is done`, charged === 1, String(charged));
+    }
     check(`  ${action.what}: no page errors`, errors.length === 0, errors.join(' | '));
     await room.close();
     await b.close();

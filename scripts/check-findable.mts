@@ -200,6 +200,17 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   sticker: ['sticker'],
   alive: ['come alive'],
   model3d: ['3D model'],
+  /* The Pro Booth's own tools, 28 October 2026: found under the room
+     directory's words for the booth. */
+  stemsZip: ['stems'],
+  laneWav: ['stems'],
+  laneMidi: ['MIDI'],
+  humPart: ['hum'],
+  /* Steps on a lane or a marked piece, met where the work already is;
+     nobody goes looking for them by name. */
+  findMarks: null,
+  smoothJoin: null,
+  whatsIn: null,
 };
 
 const priced = Object.keys(CREDITS);

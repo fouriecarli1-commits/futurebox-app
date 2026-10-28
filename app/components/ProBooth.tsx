@@ -50,7 +50,7 @@ import { accessToken } from '../lib/cloud';
 import AmpCatalogue from './AmpCatalogue';
 import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
-import { CREDITS, perMinute } from '../lib/credits';
+import { CREDITS, creditsSaid, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
 import { takenLoop, waitingLoop } from '../lib/jamhandover';
@@ -1324,10 +1324,11 @@ export default function ProBooth({
    * outside it — both of which fall out for free from measuring the audio
    * rather than the arrangement.
    *
-   * It costs nothing and calls nothing: `lib/transitions.ts` runs here, in the
-   * browser, on the samples this room already has.
+   * It calls nothing: `lib/transitions.ts` runs here, in the browser, on the
+   * samples this room already has. The first press costs `CREDITS.findMarks`
+   * (the owner, 28 October 2026: *"Niks 1 credit nie. Altyd 2"*).
    */
-  const findMarks = (id: string): void => {
+  const findMarks = async (id: string): Promise<void> => {
     const lane = lanes.find((one) => one.id === id);
     if (!lane) return;
     if (lane.marks) {
@@ -1337,6 +1338,8 @@ export default function ProBooth({
       change(id, { marksOn: !lane.marksOn });
       return;
     }
+    /* Paid once, the first time; showing and hiding them after is a switch. */
+    if (!(await payTool('marks', `${lane.id}|${lane.amped ? 'amped' : 'dry'}`))) return;
     const source = lane.amped?.audio ?? lane.audio;
     const marks = transitionsIn(source.getChannelData(0), source.sampleRate);
     /* An empty array rather than leaving it absent: "asked, and there is
@@ -1493,6 +1496,38 @@ export default function ProBooth({
   );
 
   /** Every lane in one .zip, at the chosen quality — one download, not one per lane. */
+  /**
+   * Charges for one of the booth's own tools, and answers whether to go on.
+   *
+   * The owner, 28 October 2026: *"Funksies wat sinvol is moet altyd 'n paar
+   * krediete kos"* — and *"Niks 1 credit nie. Altyd 2."* The work is done in
+   * this browser; `/api/boothtool` only takes the credits, by the price in
+   * `CREDITS`, once per `what` (the same file saved twice is one charge).
+   * A refusal is said in the route's own words, as `payFor` does.
+   */
+  const payTool = useCallback(async (tool: 'zip' | 'wav' | 'midi' | 'hum' | 'marks' | 'smooth' | 'heard', what: string): Promise<boolean> => {
+    let sign = 0x811c9dc5;
+    for (let i = 0; i < what.length; i += 1) sign = Math.imul(sign ^ what.charCodeAt(i), 0x01000193) >>> 0;
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/boothtool', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ tool, ref: `${what.length}-${sign.toString(36)}` }),
+      });
+      if (answer.ok) return true;
+      const said = (await answer.json().catch(() => null)) as { message?: string } | null;
+      setProblem(said?.message ?? t('pro.notPaid', 'That could not be paid for just now.'));
+      return false;
+    } catch {
+      setProblem(t('pro.notPaid', 'That could not be paid for just now.'));
+      return false;
+    }
+  }, [t]);
+
   const saveAll = async (): Promise<void> => {
     const ctx = context();
     if (!ctx) {
@@ -1510,6 +1545,7 @@ export default function ProBooth({
       entries.push({ name: file, data: written.blob });
     }
     const zip = await zipOf(entries);
+    if (!(await payTool('zip', `${title}|${soundKind}|${depth}|${lanes.map((lane) => `${lane.id}:${lane.from ?? 0}:${lane.to ?? ''}:${lane.repeat ?? 1}`).join(',')}`))) return;
     downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${soundKind === 'mp3' ? 'mp3' : `${depth}-bit`}`, 'zip'));
   };
 
@@ -1521,8 +1557,10 @@ export default function ProBooth({
     }
     const piece = pieceOf(lane, ctx);
     const named = lane.name.trim() || t('pro.laneOne', 'Lane');
+    const which = `${lane.id}|${lane.from ?? 0}|${lane.to ?? ''}|${lane.repeat ?? 1}|${soundKind}|${depth}`;
     if (what === 'wav') {
       const written = await writeSound(piece);
+      if (!(await payTool('wav', which))) return;
       downloadBlob(written.blob, safeFilename(named, written.ext));
       return;
     }
@@ -1538,6 +1576,7 @@ export default function ProBooth({
       ));
       return;
     }
+    if (!(await payTool('midi', which))) return;
     downloadBlob(midiBlob(written), safeFilename(named, 'mid'));
   };
 
@@ -2729,18 +2768,26 @@ export default function ProBooth({
      would have been a button that could not. */
   const [region, setRegion] = useState<{ readonly from: number; readonly to: number } | null>(null);
   const [regionOpen, setRegionOpen] = useState(false);
-  /* What the marked piece sounds like, read when the sheet opens (`whatsIn`).
-     The owner, 28 October 2026: "hum and instrument or vocal in this part". */
+  /* What the marked piece sounds like (`whatsIn`). The owner, 28 October
+     2026: "hum and instrument or vocal in this part". Read on a press, for
+     `CREDITS.whatsIn` — *"Niks 1 credit nie. Altyd 2"* — and forgotten when
+     the sheet closes or the mark moves, so an answer is never about a
+     different piece. */
   const [pieceHeard, setPieceHeard] = useState<readonly PieceHeard[] | null>(null);
-  useEffect(() => {
-    if (!regionOpen || !region) { setPieceHeard(null); return; }
+  useEffect(() => { setPieceHeard(null); }, [regionOpen, region, picked]);
+  const askPiece = useCallback(async (): Promise<void> => {
+    if (!region) return;
     const lane = lanes.find((one) => one.id === picked);
     const ctx = context();
     const carved = lane ? carveLane(lane, region.from, region.to) : null;
-    if (!carved || !ctx) { setPieceHeard(null); return; }
+    if (!lane || !carved || !ctx) {
+      setProblem(t('hum.noLane', 'Nothing could be read from that piece. Open a lane with a hum or a tapped rhythm on it, and mark a part of it.'));
+      return;
+    }
+    if (!(await payTool('heard', `${lane.id}|${region.from}|${region.to}`))) return;
     const sound = playsOf(carved.inside, ctx);
     setPieceHeard(whatsIn(sound.getChannelData(0), sound.sampleRate));
-  }, [regionOpen, region, lanes, picked, context]);
+  }, [region, lanes, picked, context, payTool, t]);
   /* ── Loop the marked piece ─────────────────────────────────────────────
      The owner, 18 October 2026: play a marked piece round and round, and sing
      over it until one is right. The clock reads `loopSpan`; a piece shorter
@@ -2958,15 +3005,16 @@ export default function ProBooth({
 
   /**
    * The transition across the mark, smoothed: the level glides from the
-   * front of the mark to its end instead of jumping. Free, and written into
-   * the sound like a fade, so the export has it too. `smoothedCopy` in
+   * front of the mark to its end instead of jumping, for `CREDITS.smoothJoin`,
+   * and written into the sound like a fade, so the export has it too. `smoothedCopy` in
    * lib/session.ts does the measuring.
    */
-  const regionSmooth = useCallback(() => {
+  const regionSmooth = useCallback(async () => {
     const ctx = context();
     if (!ctx) return;
     const got = carveHere();
     if (!got) return;
+    if (!(await payTool('smooth', `${got.lane.id}|${region?.from}|${region?.to}|${Date.now()}`))) return;
     const { before, inside, after } = got.carved;
     commit(t('undo.smooth', 'die gladde oorgang'), got.lane.id, [
       before,
@@ -2975,7 +3023,7 @@ export default function ProBooth({
     ]);
     setPicked(inside.id);
     setRegionOpen(false);
-  }, [carveHere, commit, context]);
+  }, [carveHere, commit, context, payTool, region]);
 
   /* The keyboard. The owner, 14 October 2026: "Die keyboard shortcuts vir sekere
      goed moet ook kan werk". The same keys the video editor answers: Ctrl+Z
@@ -4254,6 +4302,18 @@ export default function ProBooth({
                   Each one cuts the mark onto a piece of its own first, so
                   what changes is what she drew and what is billed is its
                   length. */}
+              {!pieceHeard && (
+                <button
+                  type="button"
+                  data-pieceheardask
+                  onClick={() => { void askPiece(); }}
+                  disabled={busy || humming}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-3 text-sm font-bold text-sky-200 disabled:opacity-50"
+                >
+                  <Waves className="h-4 w-4 shrink-0" />
+                  {t('pro.heardAsk', 'What is in this piece?')} · {creditsSaid(CREDITS.whatsIn, t)}
+                </button>
+              )}
               {pieceHeard && pieceHeard.length > 0 && (
                 <p role="status" data-pieceheard className="rounded-xl bg-sky-500/10 px-3 py-2 text-[13px] text-sky-100">
                   <span className="font-black">{t('pro.heardTitle', 'In this piece:')}</span>{' '}
@@ -4275,9 +4335,9 @@ export default function ProBooth({
                   id: 'smooth',
                   icon: <Waves className="h-4 w-4" />,
                   title: t('pro.magicSmooth', 'Smooth the transition'),
-                  says: t('pro.magicSmoothWhat', 'The loudness glides from the front of the mark to its end instead of jumping. No credits, and written into the sound.'),
-                  price: t('pro.free', 'No credits'),
-                  run: regionSmooth,
+                  says: t('pro.magicSmoothWhat', 'The loudness glides from the front of the mark to its end instead of jumping, written into the sound.'),
+                  price: creditsSaid(CREDITS.smoothJoin, t),
+                  run: () => { void regionSmooth(); },
                 },
                 {
                   id: 'clean',
@@ -4300,7 +4360,7 @@ export default function ProBooth({
                   icon: <Music2 className="h-4 w-4" />,
                   title: t('pro.magicHum', 'Play it as instruments'),
                   says: `${t('pro.magicHumWhat', 'The tune in this piece, played by')} ${humVoices.map((id) => { const v = voiceById(id); return v ? t(v.says[0], v.says[1]) : id; }).join(', ')} — ${t('pro.magicHumEach', 'a stem each.')}`,
-                  price: t('pro.free', 'No credits'),
+                  price: creditsSaid(CREDITS.humPart, t),
                   run: () => regionSend('hum'),
                 },
               ] as const).map((one) => (
@@ -5005,6 +5065,7 @@ export default function ProBooth({
         setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
         return;
       }
+      if (!(await payTool('hum', `${at}|${voices.map((one) => one.id).join(',')}|${notes.length}|${Date.now()}`))) return;
       const made: Lane[] = voices.map((voice, n) => {
       const played = renderHum(
         notes,
@@ -5043,7 +5104,7 @@ export default function ProBooth({
     } finally {
       setHumming(false);
     }
-  }, [humHeard, humVoices, humTweak, humming, hushHum, context, t]);
+  }, [humHeard, humVoices, humTweak, humming, hushHum, context, payTool, t]);
   humRef.current = humIt;
 
   const stemDesk = (
@@ -5078,7 +5139,7 @@ export default function ProBooth({
             className="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 text-sm font-bold text-sky-300 disabled:opacity-50"
           >
             <Layers className="h-4 w-4" />
-            {t('pro.saveAllZip', 'Every lane in one .zip')} ({lanes.length})
+            {t('pro.saveAllZip', 'Every lane in one .zip')} ({lanes.length}) · {creditsSaid(CREDITS.stemsZip, t)}
           </button>
           <div className="mt-2">{depthPicker}</div>
           <ul className="mt-2 space-y-1.5">
@@ -5102,10 +5163,10 @@ export default function ProBooth({
                     type="button"
                     data-prosaveone={lane.id}
                     onClick={() => void saveLane(lane, 'wav')}
-                    aria-label={`${t('pro.saveOne', 'Download')} ${lane.name}`}
+                    aria-label={`${t('pro.saveOne', 'Download')} ${lane.name} · ${creditsSaid(CREDITS.laneWav, t)}`}
                     className="inline-flex h-[44px] min-w-0 items-center justify-center rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200"
                   >
-                    {soundKind === 'mp3' ? 'MP3' : 'WAV'}
+                    {soundKind === 'mp3' ? 'MP3' : 'WAV'} · {CREDITS.laneWav}
                   </button>
                 </div>
               </li>
@@ -5560,9 +5621,9 @@ export default function ProBooth({
               <Check className="h-4 w-4 shrink-0" />
               {humming
                 ? t('hum.working', 'Listening to it\u2026')
-                : humVoices.length > 1
+                : `${humVoices.length > 1
                   ? `${t('hum.keepMany', 'Put them on')} ${humVoices.length} ${t('hum.lanes', 'lanes')}`
-                  : t('hum.keep', 'Put it on a lane')}
+                  : t('hum.keep', 'Put it on a lane')} · ${creditsSaid(CREDITS.humPart, t)}`}
             </button>
             {/* Or the same notes, played by an instrument model trained on a
                 real player. That one costs credits, and says how many here
@@ -6377,7 +6438,7 @@ export default function ProBooth({
           <BoothTimeline
             view={laneView}
             markers={markers}
-            onMarks={findMarks}
+            onMarks={(id) => { void findMarks(id); }}
             lanes={lanes}
             total={canvas}
             at={at}
@@ -7121,7 +7182,7 @@ function LaneRow({
                 className="w-full rounded-xl px-2.5 py-2 text-left hover:bg-zinc-900"
               >
                 <span className="block text-sm font-bold text-zinc-200">
-                  {t('pro.saveWav', 'Download WAV')}
+                  {t('pro.saveWav', 'Download WAV')} · {creditsSaid(CREDITS.laneWav, t)}
                 </span>
                 <span className="block text-xs leading-snug text-zinc-500">
                   {t(
@@ -7137,7 +7198,7 @@ function LaneRow({
                 className="w-full rounded-xl px-2.5 py-2 text-left hover:bg-zinc-900"
               >
                 <span className="block text-sm font-bold text-zinc-200">
-                  {t('pro.saveMidi', 'Download MIDI')}
+                  {t('pro.saveMidi', 'Download MIDI')} · {creditsSaid(CREDITS.laneMidi, t)}
                 </span>
                 {/* Which of the two this would be, said before the press.
                     A lane the booth BUILT from notes carries them; anything

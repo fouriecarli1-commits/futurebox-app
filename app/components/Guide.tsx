@@ -71,6 +71,13 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
     { key: 'guide.p.stems', en: 'Splitting the stems, per minute', credits: CREDITS.stems },
     { key: 'guide.p.sing', en: 'Singing a lane in another voice, per minute', credits: CREDITS.sing },
     { key: 'guide.p.mixOut', en: 'Bouncing the mix out', credits: CREDITS.mixOut },
+    { key: 'guide.p.stemsZip', en: 'Every lane in one .zip', credits: CREDITS.stemsZip },
+    { key: 'guide.p.laneWav', en: 'One lane as a sound file', credits: CREDITS.laneWav },
+    { key: 'guide.p.laneMidi', en: 'One lane as MIDI notes', credits: CREDITS.laneMidi },
+    { key: 'guide.p.humPart', en: 'A hum played as instruments', credits: CREDITS.humPart },
+    { key: 'guide.p.findMarks', en: 'Marking where a lane changes', credits: CREDITS.findMarks },
+    { key: 'guide.p.smoothJoin', en: 'Smoothing a transition', credits: CREDITS.smoothJoin },
+    { key: 'guide.p.whatsIn', en: 'What is in a marked piece', credits: CREDITS.whatsIn },
   ],
   voice_studio: [
     { key: 'guide.p.clone', en: 'Cloning your voice, once', credits: CREDITS.clone },

@@ -4,7 +4,7 @@
  * The owner, 28 October 2026, with a piece marked in the Pro Booth: *"Hierdie
  * marker se AI magic moet dalk ook 'n gedeelte hê wat sê hum and instrument
  * or vocal in this part."* Heard on the device, from the samples the booth
- * already holds: nothing is sent and nothing is charged. It is a reading of
+ * already holds: nothing is sent (the press costs `CREDITS.whatsIn`). It is a reading of
  * the sound's shape, not a model that knows what a voice is, so the screen
  * says "sounds like" and never more.
  *

@@ -1943,6 +1943,8 @@ jobs:
         run: npm run check:spectrogram
       - name: A marked piece says voice, instruments, hum or quiet
         run: npm run check:whatsin
+      - name: The booth tools are priced, said and charged first
+        run: npm run check:boothprices
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.

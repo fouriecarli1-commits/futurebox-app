@@ -65,6 +65,7 @@ import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
 import { Pencil } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { CREDITS, creditsSaid } from '../lib/credits';
 import { SpectrumButton } from './SpectrumLook';
 import type { LiveClock } from '../lib/liveclock';
 
@@ -1531,11 +1532,13 @@ export default function BoothTimeline({
                     data-lanemarks={lane.marksOn ? 'on' : 'off'}
                     onClick={() => onMarks(lane.id)}
                     aria-pressed={Boolean(lane.marksOn)}
-                    aria-label={t('pro.marks', 'Where this lane changes')}
-                    title={t(
+                    aria-label={lane.marks
+                      ? t('pro.marks', 'Where this lane changes')
+                      : `${t('pro.marks', 'Where this lane changes')} · ${creditsSaid(CREDITS.findMarks, t)}`}
+                    title={`${t(
                       'pro.marksWhat',
-                      'Listen to this lane and mark where it changes — a section, a key, a new instrument coming in. The marks sit along the bottom of the clip. It uses no credits and nothing is sent anywhere.',
-                    )}
+                      'Listen to this lane and mark where it changes — a section, a key, a new instrument coming in. The marks sit along the bottom of the clip, and nothing is sent anywhere.',
+                    )}${lane.marks ? '' : ` ${creditsSaid(CREDITS.findMarks, t)}, ${t('pro.marksOnce', 'the first time; after that this shows and hides them.')}`}`}
                     className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center"
                   >
                     <span

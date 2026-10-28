@@ -437,6 +437,28 @@ export const CREDITS = {
   /* The owner, 11 October 2026: *"Bouncing a mix out, R5"*. Three credits is
      R4.47, up from one. Bounced in the browser, so all of it is margin. */
   mixOut: 3,
+  /* ── The Pro Booth's own tools, priced ────────────────────────────────
+     The owner, 28 October 2026: *"Funksies wat sinvol is moet altyd 'n paar
+     krediete kos."* And on the proposal, the same day: *"Niks 1 credit nie.
+     Altyd 2."* So two is the floor. Each runs in the browser and calls no
+     supplier, so all of it is margin; charged through `/api/boothtool`,
+     once per reference, so the same file saved twice is one charge. The
+     basics stay without credits: playing, recording, cutting, moving,
+     muting, fading, the effects and the mixer. */
+  /** Every lane in one .zip. */
+  stemsZip: 5,
+  /** One lane out as a sound file. */
+  laneWav: 2,
+  /** One lane out as MIDI notes. */
+  laneMidi: 2,
+  /** A hum or a marked piece played by the picked instruments, as lanes. */
+  humPart: 3,
+  /** Where a lane changes, marked along its clip. */
+  findMarks: 2,
+  /** A marked piece's transition smoothed. */
+  smoothJoin: 2,
+  /** What is in a marked piece: a voice, instruments, a hum, or quiet. */
+  whatsIn: 2,
   /**
    * Taking a finished post off the device: one picture, one credit.
    *

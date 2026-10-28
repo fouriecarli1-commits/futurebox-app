@@ -37,12 +37,15 @@ try {
     const p = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
     const errors = [];
     p.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
-    /* Every engine refuses, in words: the room has to pass that on. */
+    /* Every engine refuses, in words: the room has to pass that on. Numbered,
+       so a second refusal is a new sentence rather than the last one again. */
+    let refused = 0;
     await p.route('**/api/**', (route) => {
       const url = route.request().url();
       if (route.request().method() === 'GET') return route.continue();
       if (/\/api\/(version|events|stats|watch)/.test(url)) return route.continue();
-      return route.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ message: 'ENGINE SAID NO (probe)' }) });
+      refused += 1;
+      return route.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ message: `ENGINE SAID NO (probe ${refused})` }) });
     });
     await p.goto(`http://localhost:${PORT}/proboothprobe`, { waitUntil: 'networkidle' });
     await p.waitForTimeout(1500);
@@ -97,7 +100,7 @@ try {
     check(`${desk}: no press throws`, !dead.some((one) => /THREW/.test(one)), dead.filter((one) => /THREW/.test(one)).join(' || '));
     check(`${desk}: every press does something, or says why not`, !dead.some((one) => !/THREW/.test(one)), dead.filter((one) => !/THREW/.test(one)).join(' || '));
     const text = await p.locator('body').innerText();
-    check(`${desk}: a refused engine is said in words, not swallowed`, !/ENGINE SAID NO/.test(text) || /ENGINE SAID NO \(probe\)/.test(text));
+    check(`${desk}: a refused engine is said in words, not swallowed`, !/ENGINE SAID NO/.test(text) || /ENGINE SAID NO \(probe \d+\)/.test(text));
     await b.close();
   }
 } finally {

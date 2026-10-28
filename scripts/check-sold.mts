@@ -172,6 +172,16 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   sticker: 'on its own button in the Photo Editor, before the press',
   alive: 'on its own button in the Photo Editor, before the press',
   model3d: 'on its own button in the Photo Editor, before the press',
+  /* The Pro Booth's own tools, 28 October 2026 (*"Niks 1 credit nie. Altyd
+     2"*): each on its own button in the booth, with its price, before the
+     press. Too small and too many for a plan card. */
+  stemsZip: 'on its own button in the Pro Booth, before the press',
+  laneWav: 'on its own button in the Pro Booth, before the press',
+  laneMidi: 'on its own button in the Pro Booth, before the press',
+  humPart: 'on its own button in the Pro Booth, before the press',
+  findMarks: 'on its own button in the Pro Booth, before the press',
+  smoothJoin: 'on its own button in the Pro Booth, before the press',
+  whatsIn: 'on its own button in the Pro Booth, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a

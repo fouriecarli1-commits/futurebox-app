@@ -41,6 +41,8 @@ try {
 
   const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
   const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
+  /* The booth's own tools charge first; answered here, so nothing is spent. */
+  await p.route('**/api/boothtool', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, credits: 2 }) }));
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 160)));
   await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
 

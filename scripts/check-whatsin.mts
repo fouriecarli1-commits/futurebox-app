@@ -56,6 +56,8 @@ ok('a voice over a beat is both', JSON.stringify(whatsIn(band, rate)) === '["voi
 ok('nothing is quiet', JSON.stringify(whatsIn(new Float32Array(rate * 2), rate)) === '["quiet"]');
 const booth = readFileSync('app/components/ProBooth.tsx', 'utf8');
 ok('the AI magic sheet says what the marked piece sounds like', /setPieceHeard\(whatsIn\(/.test(booth) && /data-pieceheard/.test(booth));
+ok('  on a press that says its price, and is charged first', /data-pieceheardask/.test(booth) && /CREDITS\.whatsIn/.test(booth)
+  && /payTool\('heard'[\s\S]{0,200}setPieceHeard\(whatsIn\(/.test(booth));
 
 console.log(bad === 0 ? '\ncheck:whatsin — a hum, a voice, instruments and quiet are told apart, and the booth says which.' : `\ncheck:whatsin — ${bad} wrong.`);
 process.exit(bad === 0 ? 0 : 1);

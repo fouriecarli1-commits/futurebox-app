@@ -94,6 +94,8 @@ try {
        saved — the room keeps its lanes on the device by design. */
     const context = await browser.newContext({ viewport: { width, height: width > 600 ? 900 : 780 } });
     const p = await context.newPage();
+    /* The booth's own tools charge first; answered here, so nothing is spent. */
+    await p.route('**/api/boothtool', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, credits: 2 }) }));
     /** Open a lane's controls, whether or not it was open already. */
     const pickFirst = async () => {
       const name = p.locator('[data-lanename]').first();
