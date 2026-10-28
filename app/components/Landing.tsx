@@ -47,6 +47,8 @@ import {
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { KIDS_PACKS } from '../lib/kidspacks';
 import { useLang } from '../lib/i18n';
+import { priceShown, usePlayPrices } from '../lib/playbilling';
+import { planLineKey } from '../lib/playproducts';
 import LanguagePicker from './LanguagePicker';
 import ThemeSwitch from './ThemeSwitch';
 import KidsBanner from './KidsBanner';
@@ -81,6 +83,8 @@ export default function Landing({
   readonly door: React.ReactNode;
 }) {
   const { t, lang } = useLang();
+  /* Play's own prices and credits in the Play app (`lib/playbilling.ts`). */
+  const playShop = usePlayPrices();
   const [region, setRegion] = useState<Region>(REGIONS[0]);
   /* The kids pack chosen on the welcome page, carried to the kids page so the
      next stop is the payment (The owner, 15 October 2026). */
@@ -434,7 +438,7 @@ export default function Landing({
                     <span className={`text-xs font-bold uppercase tracking-wider ${lead ? 'text-emerald-400' : 'text-zinc-400'}`}>{spec.name}</span>
                     <div className="my-4">
                       <span className="text-3xl font-black text-white tabular-nums">
-                        {spec.rand === 0 ? t('welcome.free', 'Free') : price.display}
+                        {spec.rand === 0 ? t('welcome.free', 'Free') : priceShown(playShop.prices, { kind: 'plan', tier }, price.display)}
                       </span>
                       {spec.rand > 0 && (
                         <span className="text-xs text-zinc-400"> / {t('welcome.month', 'month')}</span>
@@ -448,7 +452,7 @@ export default function Landing({
                       {spec.includes.map((line, i) => (
                         <li key={line} className="flex items-start gap-2 leading-snug">
                           <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
-                          {t(`plan.${spec.id}.inc.${i}`, line)}
+                          {t(planLineKey(spec.id, i, playShop.play), line)}
                         </li>
                       ))}
                     </ul>
@@ -515,7 +519,7 @@ export default function Landing({
                     </span>
                   </span>
                   <span className="my-2">
-                    <span className="text-2xl font-black text-white tabular-nums">R{pack.rand}</span>
+                    <span className="text-2xl font-black text-white tabular-nums">{priceShown(playShop.prices, { kind: 'kids', pack: pack.id }, `R${pack.rand}`)}</span>
                     <span className="text-xs text-zinc-400"> {pack.monthly ? `/ ${t('welcome.month', 'month')}` : t('landing.kidsOnce', 'once')}</span>
                   </span>
                   <span className="text-xs font-bold text-amber-200">{pack.credits} {t('landing.kidsCredits', 'kids credits')}</span>
@@ -532,7 +536,7 @@ export default function Landing({
               className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-linear-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
             >
               {t('landing.kidsBuy', 'Get kids credits')}
-              {' \u00b7 R'}{(KIDS_PACKS.find((one) => one.id === kidsPick) ?? KIDS_PACKS[0]).rand}
+              {' \u00b7 '}{priceShown(playShop.prices, { kind: 'kids', pack: kidsPick }, `R${(KIDS_PACKS.find((one) => one.id === kidsPick) ?? KIDS_PACKS[0]).rand}`)}
             </a>
           </div>
 

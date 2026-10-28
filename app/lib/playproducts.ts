@@ -76,3 +76,27 @@ export function skuFor(want: CheckoutWant): string | null {
 export function playManageUrl(sku: string, pkg: string): string {
   return `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(sku)}&package=${encodeURIComponent(pkg)}`;
 }
+
+/**
+ * The monthly credits a plan carries when it was bought through Play, where
+ * it differs from the website. The owner, 28 October 2026: Label stays R899
+ * in the Play Store, and its credits come down instead. Google keeps the VAT
+ * it pays SARS and its 15% (`docs/PLAY-STORE.md`), so R899 brings in about
+ * R664 rather than the website's R866, and 450 credits keeps each one worth
+ * the same R1.45 the website's 599 are. Maker and Studio are priced higher
+ * in Play instead and keep their credits.
+ */
+export const PLAY_TIER_CREDITS: Readonly<Partial<Record<Exclude<Tier, 'free'>, number>>> = { label: 450 };
+
+/** The plan lines that change in the Play app, by tier and line. */
+const PLAY_LINES: Readonly<Record<string, readonly number[]>> = { label: [0, 7] };
+
+/** The words key for one of a plan's lines, as the Play app or the website says it. */
+export function planLineKey(tier: string, line: number, play: boolean): string {
+  return play && PLAY_LINES[tier]?.includes(line) ? `plan.${tier}.play.${line}` : `plan.${tier}.inc.${line}`;
+}
+
+/** A membership granted from a Play purchase: its reference says so. */
+export function viaPlay(reference: unknown): boolean {
+  return typeof reference === 'string' && reference.startsWith('play:');
+}

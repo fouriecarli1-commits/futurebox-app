@@ -42,6 +42,8 @@ import OwnerCubed from './OwnerCubed';
 import OwnerReports from './OwnerReports';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
+import { priceShown, usePlayPrices } from '../lib/playbilling';
+import { planLineKey } from '../lib/playproducts';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
 import type { Region } from '../lib/pricing';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
@@ -91,6 +93,8 @@ export default function Account({
   readonly onGoToVoices?: () => void;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
+  /* Play's own prices and credits in the Play app (`lib/playbilling.ts`). */
+  const playShop = usePlayPrices();
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
   /** Null until the first answer, so a real balance never flashes as zero. */
   const [asked, setAsked] = useState(false);
@@ -184,7 +188,7 @@ export default function Account({
   if (!open) return null;
 
   const spec = TIER_SPECS[plan];
-  const price = tierPrice(plan, region);
+  const price = { display: priceShown(playShop.prices, { kind: 'plan', tier: plan }, tierPrice(plan, region).display) };
   const pct = wallet.monthly > 0 ? Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100))) : 0;
   const spaceShare = space?.ready && space.cap ? Math.min(100, Math.round(((space.used ?? 0) / space.cap) * 100)) : 0;
   const gig = (bytes: number): string => (bytes >= 1024 ** 3 ? `${(bytes / 1024 ** 3).toFixed(1)} GB` : `${Math.round(bytes / 1024 ** 2)} MB`);
@@ -192,7 +196,7 @@ export default function Account({
   const well: React.CSSProperties = { background: PHOTO.surfaceLight, border: `1px solid ${PHOTO.edge}` };
   const chip: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
   /* The plan's lines, in Google's three columns rather than one list. */
-  const lines = spec.includes.map((one, i) => t(`plan.${spec.id}.inc.${i}`, one));
+  const lines = spec.includes.map((one, i) => t(planLineKey(spec.id, i, playShop.play), one));
   const per = Math.max(1, Math.ceil(lines.length / 3));
   const columns = [
     { icon: '🎵', says: t('account.planCol1', 'Credits & feed'), rows: lines.slice(0, per) },

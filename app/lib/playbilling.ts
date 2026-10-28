@@ -26,13 +26,15 @@
  */
 
 import { accessToken } from './cloud';
-import { skuFor, type CheckoutWant } from './playproducts';
+import { useEffect, useState } from 'react';
+import { PLAY_PRODUCTS, skuFor, type CheckoutWant } from './playproducts';
 
 const PLAY = 'https://play.google.com/billing';
 const MARK = 'fb-play-app';
 
 interface DigitalGoodsService {
   listPurchases(): Promise<{ itemId: string; purchaseToken: string }[]>;
+  getDetails?(itemIds: string[]): Promise<{ itemId: string; price: { currency: string; value: string } }[]>;
 }
 
 type WithGoods = Window & { getDigitalGoodsService?: (method: string) => Promise<DigitalGoodsService> };
@@ -168,4 +170,57 @@ export async function playAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/* ── Play's own prices, shown in the Play app ──────────────────────────────
+   The owner sets them in the Play Console, higher than the website's because
+   Google keeps VAT and its fee (`PLAY_TIER_CREDITS`). A card that says R149
+   above a payment sheet that says R199 is a price that changed at the till,
+   so in the Play app every card shows what Play will charge. */
+function shown(price: { currency: string; value: string }): string {
+  const amount = Number(price.value);
+  if (!Number.isFinite(amount)) return `${price.currency} ${price.value}`;
+  if (price.currency === 'ZAR') return `R${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: price.currency }).format(amount);
+  } catch {
+    return `${price.currency} ${amount}`;
+  }
+}
+
+let pricesAsked: Promise<ReadonlyMap<string, string>> | null = null;
+
+/** What Play charges for each product, by its id; empty outside the Play app. */
+export function playPrices(): Promise<ReadonlyMap<string, string>> {
+  if (!inPlayApp()) return Promise.resolve(new Map());
+  pricesAsked ??= (async () => {
+    const goods = await service();
+    if (!goods?.getDetails) return new Map();
+    try {
+      const got = await goods.getDetails(PLAY_PRODUCTS.map((one) => one.sku));
+      return new Map(got.map((one) => [one.itemId, shown(one.price)]));
+    } catch {
+      return new Map();
+    }
+  })();
+  return pricesAsked;
+}
+
+/** Play's prices, once known, and whether this is the Play app at all. */
+export function usePlayPrices(): { readonly play: boolean; readonly prices: ReadonlyMap<string, string> } {
+  const [said, setSaid] = useState<{ play: boolean; prices: ReadonlyMap<string, string> }>({ play: false, prices: new Map() });
+  useEffect(() => {
+    if (!inPlayApp()) return undefined;
+    let alive = true;
+    setSaid({ play: true, prices: new Map() });
+    void playPrices().then((prices) => { if (alive) setSaid({ play: true, prices }); });
+    return () => { alive = false; };
+  }, []);
+  return said;
+}
+
+/** The price to show for something sold: Play's own in the Play app, the website's otherwise. */
+export function priceShown(prices: ReadonlyMap<string, string>, want: CheckoutWant, website: string): string {
+  const sku = skuFor(want);
+  return (sku && prices.get(sku)) || website;
 }

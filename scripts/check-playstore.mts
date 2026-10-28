@@ -126,6 +126,22 @@ if (existsSync(TWA)) {
     /android\/\*\.keystore/.test(readFileSync('.gitignore', 'utf8')));
 }
 
+/* ── Label in the Play app: R899 and 450 credits (the owner, 28 October 2026)
+   Google keeps VAT and its fee, so the same price carries fewer credits, and
+   every card in the Play app shows Play's own price. */
+{
+  const { PLAY_TIER_CREDITS, planLineKey, viaPlay } = await import('../app/lib/playproducts.ts');
+  const server = readFileSync('app/lib/server/credits.ts', 'utf8');
+  ok('a Label bought in Play carries 450 credits a month, and the website’s stays as it is',
+    PLAY_TIER_CREDITS.label === 450 && PLAY_TIER_CREDITS.maker === undefined && PLAY_TIER_CREDITS.studio === undefined
+    && viaPlay('play:GPA.1') && !viaPlay('paystack:abc'));
+  ok('  and the monthly grant reads where the plan was bought',
+    /export async function monthlyOf/.test(server) && /p_amount: monthlyAmount/.test(server) && /viaPlay\(/.test(server));
+  ok('  and the Play app’s cards say 450 and show Play’s own price',
+    planLineKey('label', 0, true) === 'plan.label.play.0' && planLineKey('label', 0, false) === 'plan.label.inc.0'
+    && ['app/page.tsx', 'app/components/Landing.tsx', 'app/components/Account.tsx'].every((f) => /usePlayPrices\(\)/.test(readFileSync(f, 'utf8')) && /priceShown\(/.test(readFileSync(f, 'utf8'))));
+}
+
 if (bad) {
   console.error(`\ncheck:playstore — ${bad} assertion(s) failed.\n`);
   process.exit(1);

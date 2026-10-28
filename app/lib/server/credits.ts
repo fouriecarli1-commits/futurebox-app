@@ -23,6 +23,7 @@ import { wrote } from './wrote';
 import { budgetFor, capFor, monthKey, TIER_CREDITS, WELCOME_CREDITS } from '@/app/lib/credits';
 import { kidsRelease, kidsSpend, kidsWalletReturn, kidsWalletTake } from './kidsmode';
 import { splitOf, type Share } from '@/app/lib/paysplit';
+import { PLAY_TIER_CREDITS, viaPlay } from '@/app/lib/playproducts';
 
 export type { Share } from '@/app/lib/paysplit';
 
@@ -138,6 +139,22 @@ export async function topUp(owner: string, credits: number, reference: string): 
 }
 
 /**
+ * The credits a month this account's plan carries. A plan bought in the Play
+ * app may carry fewer than the same plan on the website (`PLAY_TIER_CREDITS`:
+ * Label, 450 rather than 599), because Google keeps VAT and its fee from the
+ * same price. The membership's reference says where it was bought.
+ */
+export async function monthlyOf(caller: Caller): Promise<number> {
+  const base = TIER_CREDITS[caller.tier];
+  if (caller.tier === 'free') return base;
+  const play = PLAY_TIER_CREDITS[caller.tier];
+  const client = admin();
+  if (play === undefined || !client) return base;
+  const { data } = await client.from('memberships').select('reference').eq('owner', caller.id).maybeSingle();
+  return viaPlay((data as { reference?: unknown } | null)?.reference) ? play : base;
+}
+
+/**
  * Hand over whatever this account is owed, then say what it has.
  *
  * One grant, once a month, on every tier. The budget makes calling it twice
@@ -151,7 +168,8 @@ export async function settle(caller: Caller): Promise<number | null> {
   const cap = capFor(caller.tier);
   // What may be handed over this month across every grant, so that calling
   // this on every visit cannot become a second month's worth.
-  const budget = budgetFor(caller.tier);
+  const monthlyAmount = await monthlyOf(caller);
+  const budget = Math.min(budgetFor(caller.tier), monthlyAmount);
 
   /* The once-off welcome, before the month: see `WELCOME_CREDITS`. The period
      key is what makes it once; the cap is set out of the way, because a
@@ -170,7 +188,7 @@ export async function settle(caller: Caller): Promise<number | null> {
 
   const monthly = await client.rpc('grant_credits', {
     p_owner: caller.id,
-    p_amount: TIER_CREDITS[caller.tier],
+    p_amount: monthlyAmount,
     p_reason: 'monthly',
     p_period: monthKey(caller.tier),
     p_cap: cap,

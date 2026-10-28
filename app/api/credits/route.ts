@@ -7,8 +7,8 @@
  */
 
 import { callerFrom, metered } from '@/app/lib/server/account';
-import { settle } from '@/app/lib/server/credits';
-import { capFor, mayTopUp, PACKS, TIER_CREDITS } from '@/app/lib/credits';
+import { settle, monthlyOf } from '@/app/lib/server/credits';
+import { capFor, mayTopUp, PACKS } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,7 +36,7 @@ export async function GET(request: Request): Promise<Response> {
     ready: balance !== null,
     balance: balance ?? 0,
     tier: caller.tier,
-    monthly: TIER_CREDITS[caller.tier],
+    monthly: await monthlyOf(caller),
     cap: capFor(caller.tier),
     /* The shelf, only for somebody who is already paying. A free member who
        runs out is shown the plans instead — see `mayTopUp` for why selling

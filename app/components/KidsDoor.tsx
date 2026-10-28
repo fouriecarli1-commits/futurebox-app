@@ -53,7 +53,7 @@ import {
 import StoryShelf from './StoryShelf';
 import KidsSignIn from './KidsSignIn';
 import SongShelf from './SongShelf';
-import { inPlayApp } from '../lib/playbilling';
+import { inPlayApp, priceShown, usePlayPrices } from '../lib/playbilling';
 import { hasCode } from '../lib/kidslock';
 import ReportSheet from './ReportSheet';
 
@@ -97,6 +97,8 @@ export default function KidsDoor({
   readonly onIn?: (state: KidsState) => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* Play's own prices and credits in the Play app (`lib/playbilling.ts`). */
+  const playShop = usePlayPrices();
   const [state, setState] = useState<KidsState | null>(null);
   const [busy, setBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -331,7 +333,7 @@ export default function KidsDoor({
           {wantedPack && (
             <p data-kidswantedpack className="text-sm font-bold leading-relaxed text-surface-950">
               {t('kids.thenPay', 'Then it goes straight on to paying for {pack}.')
-                .replace('{pack}', `${lang === 'af' ? wantedPack.name[1] : wantedPack.name[0]} \u00b7 R${wantedPack.rand}`)}
+                .replace('{pack}', `${lang === 'af' ? wantedPack.name[1] : wantedPack.name[0]} \u00b7 ${priceShown(playShop.prices, { kind: 'kids', pack: wantedPack.id }, `R${wantedPack.rand}`)}`)}
             </p>
           )}
           <KidsSignIn onIn={() => { void kidsNow().then(setState); }} />
@@ -524,7 +526,7 @@ export default function KidsDoor({
                 {lang === 'af' ? pack.name[1] : pack.name[0]}
               </span>
               <span className="block text-base font-black text-surface-950">
-                R{pack.rand} {pack.monthly ? t('kids.packMonth', 'a month') : t('kids.packOnce', 'once')}
+                {priceShown(playShop.prices, { kind: 'kids', pack: pack.id }, `R${pack.rand}`)} {pack.monthly ? t('kids.packMonth', 'a month') : t('kids.packOnce', 'once')}
                 {' · '}{pack.credits} {t('kids.credits', 'credits')}
               </span>
               <span className="block text-xs font-bold text-surface-800">{lang === 'af' ? pack.buys[1] : pack.buys[0]}</span>

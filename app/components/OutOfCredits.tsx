@@ -28,6 +28,7 @@ import { startCheckout } from '../lib/purchases';
 import { buys, type Pack } from '../lib/credits';
 import type { Short } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
+import { priceShown, usePlayPrices } from '../lib/playbilling';
 import Note from './Note';
 
 export default function OutOfCredits({
@@ -53,6 +54,8 @@ export default function OutOfCredits({
   onPlans?: () => void;
 }): React.ReactElement | null {
   const { t } = useLang();
+  /* Play's own prices and credits in the Play app (`lib/playbilling.ts`). */
+  const playShop = usePlayPrices();
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -186,7 +189,7 @@ export default function OutOfCredits({
                   <span className="block text-sm text-zinc-500 leading-snug">{buys(pack.credits)}</span>
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
-                  <span className="text-lg font-black text-white tabular-nums">R{pack.rand}</span>
+                  <span className="text-lg font-black text-white tabular-nums">{priceShown(playShop.prices, { kind: 'credits', pack: pack.id }, `R${pack.rand}`)}</span>
                   {busy === pack.id && <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />}
                 </span>
               </button>

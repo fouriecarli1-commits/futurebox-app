@@ -21,6 +21,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { CREDITS, TIER_CREDITS } from '../app/lib/credits.ts';
+import { PLAY_TIER_CREDITS } from '../app/lib/playproducts.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -75,7 +76,9 @@ for (const entry of entries) {
   let want = claim.is();
   if (claim.name === 'a plan\'s month') {
     const tier = entry.key.split('.')[1] as keyof typeof TIER_CREDITS;
-    want = [TIER_CREDITS[tier]];
+    /* A plan's Play line says the Play month (`PLAY_TIER_CREDITS`, 28 October 2026). */
+    const play = entry.key.split('.')[2] === 'play' ? PLAY_TIER_CREDITS[tier as keyof typeof PLAY_TIER_CREDITS] : undefined;
+    want = [play ?? TIER_CREDITS[tier]];
   }
   /* A sentence may name fewer of a claim's prices (the free card names only the first). */
   const expected = want.slice(0, en.length);

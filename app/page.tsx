@@ -52,6 +52,7 @@ import { probeAudio } from './lib/engines';
 import Booth from './components/Booth';
 import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
+import { planLineKey } from './lib/playproducts';
 import FutureInsightsHub from './components/FutureInsightsHub';
 import { Counters, Views, useBoard } from './components/Counters';
 import PodcastStudio from './components/PodcastStudio';
@@ -120,7 +121,7 @@ import { SEE_PLANS_EVENT } from './lib/space';
 import { TIER_SPECS, TIERS, tierPrice } from './lib/plans';
 import { SponsorForm, SponsorRates } from './components/Sponsor';
 import { startCheckout, loadOwned } from './lib/purchases';
-import { inPlayApp, playAvailable, resumePlayPurchases } from './lib/playbilling';
+import { inPlayApp, playAvailable, priceShown, resumePlayPurchases, usePlayPrices } from './lib/playbilling';
 import DeskStage from './components/DeskStage';
 
 interface Blueprint {
@@ -469,6 +470,8 @@ export default function FutureBoxHome() {
   // The header and the locked cards advertise the cheapest paid tier, since
   // that is the smallest step someone is actually being asked to take.
   const entryPrice = tierPrice('maker', region);
+  /* In the Play app the cards show Play's own prices and Play's credits (`lib/playbilling.ts`). */
+  const playShop = usePlayPrices();
 
   // Appearance. The saved theme is read after mount — reading localStorage
   // during render would disagree with the server-rendered HTML.
@@ -3953,7 +3956,7 @@ export default function FutureBoxHome() {
                           </span>
                         )}
                       </div>
-                      <p className="text-3xl font-black text-white pt-1">{tierPrice(id, region).display}</p>
+                      <p className="text-3xl font-black text-white pt-1">{priceShown(playShop.prices, { kind: 'plan', tier: id }, tierPrice(id, region).display)}</p>
                       {spec.rand > 0 && <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>}
                       <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{t(`plan.${spec.id}.who`, spec.who)}</p>
                     </div>
@@ -3963,7 +3966,7 @@ export default function FutureBoxHome() {
                           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-1" />
                           {/* In the app's language, as the welcome page and
                               the account screen already draw them. */}
-                          <span>{t(`plan.${spec.id}.inc.${i}`, line)}</span>
+                          <span>{t(planLineKey(spec.id, i, playShop.play), line)}</span>
                         </li>
                       ))}
                     </ul>

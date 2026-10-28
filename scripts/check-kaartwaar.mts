@@ -48,7 +48,7 @@ ok('a boost request reaches FutureBox, not only this phone',
 /* ── 3. The cards in the app speak its language ───────────────────────── */
 const page = readFileSync('app/page.tsx', 'utf8');
 ok('the in-app plan list is translated like the welcome page’s',
-  /t\(`plan\.\$\{spec\.id\}\.inc\.\$\{i\}`, line\)/.test(page));
+  /t\(`plan\.\$\{spec\.id\}\.inc\.\$\{i\}`, line\)|t\(planLineKey\(spec\.id, i, playShop\.play\), line\)/.test(page));
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

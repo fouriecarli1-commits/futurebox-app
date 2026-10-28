@@ -265,8 +265,28 @@ to pay. The app says so and links nowhere.
 ### The products to create in the Play Console
 
 **Monetise → Products.** The id must be exactly as written; the price is
-yours to set (Play adds its fee on top of what you receive, so you may want
-these a little higher than the website's).
+yours to set in the Console. **The owner's prices, 28 October 2026:** Google
+adds 15% VAT inside the Play price (it pays SARS itself, whether or not
+FutureBox is VAT-registered) and keeps its 15% fee from the rest, so R100 in
+Play brings in about R74 against about R94.50 on the website. Maker and
+Studio are priced higher in Play; Label stays R899 and carries **450 credits**
+instead of 599 (`PLAY_TIER_CREDITS`). Enrol in the **15% service fee tier**
+in the Console, or one-off packs pay 30%.
+
+| Product id | Website | Play price |
+|---|---|---|
+| `maker_monthly` | R149 | R199 |
+| `studio_monthly` | R349 | R459 |
+| `label_monthly` | R899 | R899 (450 credits) |
+| `credits_small` | R100 | R129 |
+| `credits_mid` | R250 | R329 |
+| `credits_large` | R500 | R659 |
+| `kids_try` | R59 | R79 |
+| `kids_month` | R119 | R159 |
+| `kids_plus` | R229 | R299 |
+
+In the Android app every card shows Play's own price, read from Play
+(`usePlayPrices`), so the card and the payment sheet always agree.
 
 | Product id | Kind | What it grants |
 |---|---|---|
