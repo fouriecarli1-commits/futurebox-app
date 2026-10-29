@@ -137,6 +137,38 @@ try {
   await page.waitForTimeout(300);
   check('  and a send can be turned up', (await send.inputValue()) === '60');
   await page.screenshot({ path: shot('dawmeters-mixer.png') });
+  /* ── Automation: a volume line drawn down to nothing silences the lane ── */
+  await mix.click();
+  await page.waitForTimeout(500);
+  if ((await page.getByRole('button', { name: /^Pause$/ }).count())) await page.getByRole('button', { name: /^Pause$/ }).first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-boothautomode="gain"]').first().click();
+  await page.waitForTimeout(400);
+  const row = await page.locator('[data-lanerow="0"]').first().boundingBox();
+  check('the volume line lies over the lanes', (await page.locator('[data-autoline="gain"]').count()) > 0);
+  await page.mouse.click(row.x + row.width * 0.02, row.y + row.height - 4);
+  await page.waitForTimeout(250);
+  await page.mouse.click(row.x + row.width * 0.6, row.y + row.height - 4);
+  await page.waitForTimeout(400);
+  const placed = Number(await page.locator('[data-autoline="gain"]').first().getAttribute('data-autopoints'));
+  check('  and a tap puts a point down, two taps two points', placed === 2, String(placed));
+  await page.locator('[data-boothautomode="gain"]').first().click();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: /^Back to the start$/ }).first().click().catch(() => undefined);
+  await page.getByRole('button', { name: /^Play$/ }).first().click();
+  const ridden = await loudest('[data-lanename] ~ [data-lanemeter] [data-level]', 2000);
+  check('  and a line drawn down to nothing silences the lane as it plays', ridden < 8, String(ridden));
+  check('  without being reported as a broken speaker', !(await page.getByText(/nothing is reaching your speakers/).count()));
+  await page.getByRole('button', { name: /^Pause$/ }).first().click().catch(() => undefined);
+  await page.locator('[data-boothautomode="gain"]').first().click();
+  await page.waitForTimeout(300);
+  for (let n = 0; n < 2; n += 1) {
+    await page.locator('[data-autopoint="0"]').first().dblclick();
+    await page.waitForTimeout(250);
+  }
+  await page.waitForTimeout(300);
+  check('  and a point tapped twice is taken away', Number(await page.locator('[data-autoline="gain"]').first().getAttribute('data-autopoints')) === 0);
+  await page.screenshot({ path: shot('dawmeters-automation.png') });
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

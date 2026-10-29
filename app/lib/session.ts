@@ -20,7 +20,38 @@ import type { HumNote } from './humnotes';
  * the arithmetic.
  */
 
+/** One point on an automation line: a second on the session's clock, and a value there. */
+export interface AutoPoint {
+  readonly t: number;
+  readonly v: number;
+}
+
+/**
+ * The value of an automation line at a moment: straight lines between the
+ * points, flat before the first and after the last. No points is `fallback`.
+ */
+export function valueAt(points: readonly AutoPoint[] | undefined, t: number, fallback: number): number {
+  if (!points?.length) return fallback;
+  const sorted = [...points].sort((a, b) => a.t - b.t);
+  if (t <= sorted[0].t) return sorted[0].v;
+  const last = sorted[sorted.length - 1];
+  if (t >= last.t) return last.v;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const a = sorted[i - 1];
+    const b = sorted[i];
+    if (t <= b.t) return b.t === a.t ? b.v : a.v + ((b.v - a.v) * (t - a.t)) / (b.t - a.t);
+  }
+  return last.v;
+}
+
 export interface Lane {
+  /**
+   * Volume and pan that change over the song, drawn on the timeline.
+   * `gain` is 0–1 and rides UNDER the fader (1 is the fader as set), so the
+   * fader still turns the whole lane up and down; `pan` is -1 to 1 and takes
+   * the place of the pan knob while it has points. Session seconds.
+   */
+  readonly auto?: { readonly gain?: readonly AutoPoint[]; readonly pan?: readonly AutoPoint[] };
   /**
    * How much of the lane goes to the session's shared room and echo
    * (`wireReturns`), 0 to 1 each. A send, as on every desk: several lanes in
@@ -587,6 +618,23 @@ export function fadedApart(carved: Carved): Carved {
  */
 /** The fade stage of a wired lane, found again when the lane is started. */
 const FADES = new WeakMap<AudioBufferSourceNode, GainNode>();
+/** A wired lane's level and pan, for its automation, scheduled in `startLane`. */
+const RIDES = new WeakMap<AudioBufferSourceNode, { readonly level: GainNode; readonly base: number; readonly place: StereoPannerNode | null }>();
+
+/**
+ * Lay an automation line onto a parameter: its value where playback joins,
+ * then a straight ramp to each later point, at the audio clock's time for
+ * that session second. The same call for playback and for every render.
+ */
+function ride(param: AudioParam, points: readonly AutoPoint[], scale: number, playFrom: number, when: number, lo: number, hi: number): void {
+  const at = (t: number): number => when + (t - playFrom);
+  const clamp = (v: number): number => Math.max(lo, Math.min(hi, v)) * scale;
+  param.setValueAtTime(clamp(valueAt(points, playFrom, 1)), Math.max(0, when));
+  for (const point of [...points].sort((a, b) => a.t - b.t)) {
+    if (point.t <= playFrom) continue;
+    param.linearRampToValueAtTime(clamp(point.v), at(point.t));
+  }
+}
 
 /** A lane's fades, kept inside what it plays and never longer than half of it each. */
 export function fadesOf(lane: Lane): { readonly fadeIn: number; readonly fadeOut: number } {
@@ -643,6 +691,9 @@ export function startLane(
   if (into >= length) return; // Already finished before this moment.
   const fade = FADES.get(source);
   if (fade) scheduleFade(fade, lane, into, into >= 0 ? when : when - into, length);
+  const rides = RIDES.get(source);
+  if (rides && lane.auto?.gain?.length) ride(rides.level.gain, lane.auto.gain, rides.base, playFrom, when, 0, 1);
+  if (rides?.place && lane.auto?.pan?.length) ride(rides.place.pan, lane.auto.pan, 1, playFrom, when, -1, 1);
 
   if (times === 1) {
     if (into >= 0) source.start(when, window.from + into, length - into);
@@ -761,6 +812,8 @@ export function wireLane(
     FADES.set(source, fade);
     entry = fade;
   }
+  /* For the automation, laid on when the lane is started (`startLane`). */
+  RIDES.set(source, { level, base: lane.gain, place });
   let out: AudioNode = level;
   if (place) {
     place.pan.value = Math.max(-1, Math.min(1, lane.pan ?? 0));

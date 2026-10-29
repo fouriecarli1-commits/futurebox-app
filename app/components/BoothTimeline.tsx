@@ -57,6 +57,7 @@
  */
 
 import LaneMeter from './LaneMeter';
+import BoothAuto, { type AutoMode } from './BoothAuto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
@@ -224,6 +225,7 @@ export default function BoothTimeline({
   snap,
   spans,
   earOf,
+  autoMode = null,
   onSeek,
   onChange,
   onSlide,
@@ -237,6 +239,8 @@ export default function BoothTimeline({
   readonly lanes: readonly Lane[];
   /** Each playing lane's analyser, for the meter on its header (`LaneMeter`). */
   readonly earOf?: (id: string) => AnalyserNode | undefined;
+  /** Which automation line is drawn over every lane, if any (`BoothAuto`). */
+  readonly autoMode?: AutoMode | null;
   /** Every lane as a wave, or as a spectrogram. The owner, 26 October 2026. */
   readonly view?: 'wave' | 'spectrum';
   /** The length of the whole session, in seconds. The axis is this wide. */
@@ -2107,6 +2111,16 @@ export default function BoothTimeline({
                         </span>
                       )}
                     </span>
+                  )}
+                  {autoMode && (
+                    <BoothAuto
+                      lane={lane}
+                      mode={autoMode}
+                      percent={percent}
+                      secondsAt={secondsAt}
+                      label={`${autoMode === 'gain' ? t('pro.autoGain', 'Volume line') : t('pro.autoPan', 'Pan line')} · ${lane.name}`}
+                      onPoints={(points) => onChange(lane.id, { auto: { ...lane.auto, [autoMode]: points } })}
+                    />
                   )}
                 </div>
               </React.Fragment>

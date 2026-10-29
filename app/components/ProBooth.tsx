@@ -31,7 +31,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  anySends, playsOf, readInto, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
+  anySends, playsOf, readInto, valueAt, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, soundOf as plainSound, type Finished } from '../lib/mastering';
@@ -63,6 +63,7 @@ import FileSize from './FileSize';
 import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
 import LaneMeter from './LaneMeter';
+import type { AutoMode } from './BoothAuto';
 import { whatsIn, type Heard as PieceHeard } from '../lib/whatsin';
 import { transitionsIn } from '../lib/transitions';
 import { midiBlob, midiFor, type Source } from '../lib/midi';
@@ -579,6 +580,8 @@ export default function ProBooth({
   const scopeRef = useRef<AnalyserNode | null>(null);
   /** Each playing lane's ear, after its own chain, for its meter. */
   const laneEars = useRef(new Map<string, AnalyserNode>());
+  /* Which automation line is being drawn over the lanes, if any. */
+  const [autoMode, setAutoMode] = useState<AutoMode | null>(null);
   const earOf = useCallback((id: string): AnalyserNode | undefined => laneEars.current.get(id), []);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
@@ -699,6 +702,7 @@ export default function ProBooth({
           ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
           ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
           ...(lane.sends ? { sends: lane.sends } : {}),
+          ...(lane.auto ? { auto: lane.auto } : {}),
           ...(lane.notes?.length ? { notes: lane.notes } : {}),
           ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
         });
@@ -938,6 +942,9 @@ export default function ProBooth({
       const somethingThere = playable.some((one) => {
         const into = from - one.at;
         if (into < -1) return false;
+        /* A volume line drawn down to nothing here is silence on purpose,
+           not a broken speaker. */
+        if (one.auto?.gain?.length && valueAt(one.auto.gain, from, 1) <= 0.001 && valueAt(one.auto.gain, from + 1.2, 1) <= 0.001) return false;
         const data = one.audio.getChannelData(0);
         const rate = one.audio.sampleRate;
         const start = Math.max(0, Math.floor(((one.from ?? 0) + Math.max(0, into)) * rate));
@@ -1622,12 +1629,12 @@ export default function ProBooth({
       taken.add(file);
       entries.push({ name: file, data: written.blob });
     }
-    } finally {
-      setBusy(false);
-    }
     const zip = await zipOf(entries);
     if (!(await payTool('zip', `${title}|${soundKind}|${depth}|${signature(span(lanes))}|${lanes.map((lane) => `${lane.id}:${lane.from ?? 0}:${lane.to ?? ''}:${lane.repeat ?? 1}`).join(',')}`))) return;
     downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${soundKind === 'mp3' ? 'mp3' : `${depth}-bit`}`, 'zip'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const saveLane = async (lane: Lane, what: 'wav' | 'midi'): Promise<void> => {
@@ -1640,11 +1647,17 @@ export default function ProBooth({
     const named = lane.name.trim() || t('pro.laneOne', 'Lane');
     const which = `${lane.id}|${lane.from ?? 0}|${lane.to ?? ''}|${lane.repeat ?? 1}|${soundKind}|${depth}`;
     if (what === 'wav') {
+      /* Busy from the press to the file: rendering, writing and paying
+         each take a moment, and a press that shows nothing reads as dead. */
       setBusy(true);
-      const stem = await stemOf(lane, lanes, rate, meter.bpm).finally(() => setBusy(false));
-      const written = await writeSound(stem ?? piece);
-      if (!(await payTool('wav', which))) return;
-      downloadBlob(written.blob, safeFilename(named, written.ext));
+      try {
+        const stem = await stemOf(lane, lanes, rate, meter.bpm);
+        const written = await writeSound(stem ?? piece);
+        if (!(await payTool('wav', which))) return;
+        downloadBlob(written.blob, safeFilename(named, written.ext));
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     const source: Source = lane.notes?.length ? 'exact' : 'heard';
@@ -2405,7 +2418,7 @@ export default function ProBooth({
       one.from ?? '', one.to ?? '',
       one.pan ?? 0, one.repeat ?? 1, one.fadeIn ?? 0, one.fadeOut ?? 0,
       JSON.stringify(one.fx ?? null), JSON.stringify(one.tone ?? null), JSON.stringify(one.clean ?? null),
-      JSON.stringify(one.sends ?? null),
+      JSON.stringify(one.sends ?? null), JSON.stringify(one.auto ?? null),
       one.amped ? `${one.amped.name}#${soundTag(one.amped.audio)}` : '',
       soundTag(one.audio),
     ].join(':'));
@@ -6650,6 +6663,7 @@ export default function ProBooth({
               </span>
             </div>
           )}
+          <div className="flex flex-wrap items-center gap-2 self-start">
           <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
             {(['wave', 'spectrum'] as const).map((one) => (
               <button
@@ -6666,8 +6680,29 @@ export default function ProBooth({
               </button>
             ))}
           </div>
+          {/* Automation: draw how a lane's volume or pan changes over the song
+              (`BoothAuto`). Pressed again, the lines go away and the lanes
+              take presses as before. */}
+          <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothauto role="group" aria-label={t('pro.autoWhat', 'Draw how a lane changes over the song: tap to add a point, drag it, tap it twice to take it away.')}>
+            {(['gain', 'pan'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-boothautomode={one}
+                aria-pressed={autoMode === one}
+                title={t('pro.autoWhat', 'Draw how a lane changes over the song: tap to add a point, drag it, tap it twice to take it away.')}
+                onClick={() => setAutoMode((was) => (was === one ? null : one))}
+                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold ${autoMode === one ? (one === 'gain' ? 'border-yellow-400/60 bg-yellow-500/15 text-yellow-200' : 'border-purple-400/60 bg-purple-500/15 text-purple-200') : 'border-white/10 text-zinc-400 hover:text-white'}`}
+              >
+                <Activity className="h-3.5 w-3.5" />
+                {one === 'gain' ? t('pro.autoGain', 'Volume line') : t('pro.autoPan', 'Pan line')}
+              </button>
+            ))}
+          </div>
+          </div>
           <BoothTimeline
             earOf={earOf}
+            autoMode={autoMode}
             view={laneView}
             markers={markers}
             onMarks={(id) => { void findMarks(id); }}

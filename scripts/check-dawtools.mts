@@ -6,7 +6,8 @@
  * meter that reads real sound.
  */
 import { readFileSync } from 'node:fs';
-import { NORMAL_PEAK, normalisedCopy, reversedCopy } from '../app/lib/session.ts';
+import { NORMAL_PEAK, normalisedCopy, reversedCopy, valueAt } from '../app/lib/session.ts';
+import { valueOfY, yOfValue } from '../app/components/BoothAuto.tsx';
 import { withoutComments } from './prose.mts';
 
 let bad = 0;
@@ -41,6 +42,15 @@ ok('  and keeps the shape: every sample scaled by the same number', Math.abs(qui
 const silent = normalisedCopy(bufferOf([[0, 0, 0]]), ctx);
 ok('  and leaves silence silent rather than turning up nothing', Array.from(silent.getChannelData(0)).every((v) => v === 0));
 
+/* Automation: straight lines between points, flat beyond them. */
+const line = [{ t: 2, v: 0 }, { t: 4, v: 1 }];
+ok('an automation line is flat before its first point and after its last', valueAt(line, 0, 1) === 0 && valueAt(line, 9, 1) === 1);
+ok('  and runs straight between them', Math.abs(valueAt(line, 3, 1) - 0.5) < 1e-9 && Math.abs(valueAt([...line].reverse(), 3.5, 1) - 0.75) < 1e-9);
+ok('  and no points is the fader as set', valueAt([], 3, 0.7) === 0.7 && valueAt(undefined, 3, 0.7) === 0.7);
+ok('a point near the foot of a volume line is silence, near the top the fader', valueOfY('gain', 0.97) === 0 && valueOfY('gain', 0.03) === 1 && Math.abs(valueOfY('gain', 0.5) - 0.5) < 1e-9);
+ok('  and near the middle of a pan line is the centre, left at the top', valueOfY('pan', 0.52) === 0 && valueOfY('pan', 0) === -1 && valueOfY('pan', 1) === 1);
+ok('  and drawing puts every value back where it was read from', [0, 0.25, 0.5, 1].every((v) => Math.abs(valueOfY('gain', yOfValue('gain', v)) - v) < 0.09));
+
 const session = withoutComments(readFileSync('app/lib/session.ts', 'utf8'));
 const booth = withoutComments(readFileSync('app/components/ProBooth.tsx', 'utf8'));
 const timeline = withoutComments(readFileSync('app/components/BoothTimeline.tsx', 'utf8'));
@@ -55,6 +65,14 @@ ok('every playing lane has an ear for its meter, on the lane after its own chain
 ok('  shown on its header in the timeline and on its mixer strip', /<LaneMeter[\s\S]{0,80}earOf\(lane\.id\)/.test(timeline) && /<LaneMeter[\s\S]{0,120}earOf\(lane\.id\)/.test(booth));
 ok('  and the master has one, reading the sound as it leaves', /<LaneMeter[\s\S]{0,80}scopeRef\.current/.test(booth));
 ok('reverse and normalise are region tools that go on the undo stack', /id: 'reverse'/.test(booth) && /id: 'normalise'/.test(booth) && /const regionBake[\s\S]{0,400}commit\(/.test(booth));
+
+ok('the automation is laid onto the lane where it starts, so playback and every render follow it',
+  /RIDES\.set\(source, \{ level, base: lane\.gain, place \}\)/.test(session)
+    && /const rides = RIDES\.get\(source\);[\s\S]{0,200}ride\(rides\.level\.gain, lane\.auto\.gain, rides\.base/.test(session)
+    && /ride\(rides\.place\.pan, lane\.auto\.pan, 1/.test(session));
+ok('  and is saved with the lane, read back, and part of the mix signature',
+  /auto: \{ gain: lane\.auto\.gain\?\.map/.test(readFileSync('app/lib/keepsession.ts', 'utf8')) && /\{ auto: lane\.auto \}/.test(booth) && /JSON\.stringify\(one\.auto \?\? null\)/.test(booth));
+ok('  and a lane drawn down to silence is not reported as a broken speaker', /valueAt\(one\.auto\.gain, from, 1\) <= 0\.001/.test(booth));
 
 if (bad) {
   console.error(`\ncheck:dawtools — ${bad} assertion(s) failed.`);
