@@ -976,6 +976,11 @@ export const CREDITS = {
      seconds (it works on no more). Five credits on a five-second clip was
      R7.50, 75%; under the owner's 80% of 27 October. Seven is R10.51, 82%. */
   erase: 7,
+  /* Sound for a silent shot in the Video Editor (`fal-ai/mmaudio-v2`):
+     $0.001 a second, so thirty seconds is $0.03 (R0.56). One price a clip
+     of up to thirty seconds: three credits is R4.50 at the cheapest tier,
+     88%, and never under two (*"Niks 1 credit nie. Altyd 2."*). */
+  clipSound: 3,
   /* ── The makes (`lib/makes.ts`), 27 October 2026 ─────────────────────
      Priced off each model's own fal.ai page (`docs/FAL-SKEMAS.md`) at
      R18.50 to the dollar, against the cheapest credit (R1.50 on Label),

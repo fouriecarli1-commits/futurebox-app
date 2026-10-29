@@ -746,6 +746,9 @@ words into fields the table reads (`hasWords`, `person`, `look`, `shape`,
    no sound, 12 credits; kept beside the cover and played in the cover
    panel and on Live room posts.
 2. **Sound for my clip** in the Video Editor (`mmaudio-v2`, then Sonilo).
+   **Built 29 October 2026**: a third choice beside the background and the
+   item in `FootageEngine.tsx`, through `/api/footage` (job `sound`), up to
+   30 seconds, 3 credits a clip. Sonilo waits for its licence terms.
 3. **Make my photo good / fix an old photo** in the Photo Editor.
 4. **Lyric video**: words timed to the song (`forced-alignment`), drawn by
    our own editor, Afrikaans heard by `wizper`.

@@ -185,6 +185,9 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   /* A song's cover, moving (29 October 2026): on its own button under the
      cover, with its price, before the press. */
   coverLoop: 'on its own button under a song\'s cover, before the press',
+  /* Sound for a silent shot (29 October 2026): on its own button in the
+     Video Editor, with its price, before the press. */
+  clipSound: 'on its own button in the Video Editor, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a

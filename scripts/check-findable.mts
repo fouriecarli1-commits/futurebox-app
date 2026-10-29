@@ -213,6 +213,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   whatsIn: null,
   /* A song's cover, moving: found where covers are. */
   coverLoop: ['cover'],
+  /* Sound for a silent shot, found where the Video Editor is. */
+  clipSound: ['sound'],
 };
 
 const priced = Object.keys(CREDITS);

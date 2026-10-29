@@ -46,14 +46,14 @@ export const dynamic = 'force-dynamic';
 const BUCKET = 'videos';
 /** How long a clip each job takes. An item out works on about eight
     seconds at most (`ERASE_FRAMES`), so a longer one would come back cut. */
-const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8 };
+const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8, sound: 30 };
 /** The background remover bills by the megapixel, so it is sent 720p:
     `lib/shrinkclip.ts` makes it so on the phone. A little over is allowed
     for a phone's own rounding. */
 const MOST_PIXELS = 1280 * 720 * 1.05;
 const LINK_SECONDS = 15 * 60;
 const TYPES: Readonly<Record<string, string>> = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' };
-const JOBS: readonly FalJob[] = ['cutout', 'erase'];
+const JOBS: readonly FalJob[] = ['cutout', 'erase', 'sound'];
 
 interface Ticket {
   readonly id: string;
@@ -136,7 +136,8 @@ export async function POST(request: Request): Promise<Response> {
     if (!screened.ok) return screened.response;
   }
 
-  const credits = filterCost(seconds, CREDITS[job]);
+  /* Sound is one price a clip: it costs fal.ai a tenth of a cent a second. */
+  const credits = job === 'sound' ? CREDITS.clipSound : filterCost(seconds, CREDITS[job]);
   const paid = await charge(request, credits, `footage:${job}`);
   if (!paid.ok) return paid.response;
 
@@ -146,7 +147,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'The clip did not arrive. Bring it in again and try once more.' }, { status: 404 });
   }
 
-  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words));
+  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words, seconds));
   if ('error' in sent) {
     await paid.refund();
     console.error(`[footage] ${FAL_MODELS[job]} would not take the job: ${sent.error}`);

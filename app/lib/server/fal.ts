@@ -30,12 +30,15 @@
  * one-line change.
  */
 
-export type FalJob = 'cutout' | 'erase';
+export type FalJob = 'cutout' | 'erase' | 'sound';
 
 /** fal.ai's own models only. See the note above on partner models. */
 export const FAL_MODELS: Readonly<Record<FalJob, string>> = {
   cutout: 'fal-ai/ben/v2/video',
   erase: 'fal-ai/void-video-inpainting',
+  /* Sound for a silent shot (step 2 of `docs/FAL-MODELLE.md`): fal.ai's
+     MMAudio, $0.001 a second; the clip comes back with its sound on it. */
+  sound: 'fal-ai/mmaudio-v2',
 };
 
 /** How long fal.ai may keep the finished clip on its CDN. */
@@ -69,8 +72,16 @@ function headers(): Record<string, string> {
   };
 }
 
-/** What each model is sent. `words` is what the member typed to take out. */
-export function inputFor(job: FalJob, videoUrl: string, words: string): Record<string, unknown> {
+/** What each model is sent. `words` is what the member typed to take out, or what it should sound like. */
+export function inputFor(job: FalJob, videoUrl: string, words: string, seconds = 8): Record<string, unknown> {
+  if (job === 'sound') {
+    return {
+      video_url: videoUrl,
+      prompt: words || 'The natural sound of what is happening in this clip.',
+      negative_prompt: 'music, speech, distortion',
+      duration: Math.max(1, Math.min(30, Math.ceil(seconds))),
+    };
+  }
   /* webm, because an mp4 has no see-through and the background comes back
      black (docs/FAL-SKEMAS.md). */
   if (job === 'cutout') return { video_url: videoUrl, output_format: 'webm' };

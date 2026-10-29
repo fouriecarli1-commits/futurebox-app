@@ -99,6 +99,7 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
     { key: 'guide.p.filmJoin', en: 'A join between two shots', credits: CREDITS.filmJoin },
     { key: 'guide.p.filmUnder', en: 'A song laid under the film', credits: CREDITS.filmUnder },
     { key: 'guide.p.filmMark', en: 'Your mark on the film', credits: CREDITS.filmMark },
+    { key: 'guide.p.clipSound', en: 'Sound for a silent shot', credits: CREDITS.clipSound },
   ],
   photo: [
     { key: 'guide.p.postOut', en: 'Taking the finished picture off the device', credits: CREDITS.postOut },

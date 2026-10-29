@@ -8,7 +8,8 @@
  * server, and the two yeses the route will not go without.
  */
 import { readFileSync, readdirSync } from 'node:fs';
-import { FAL_MODELS, FAL_KEEP_SECONDS, maskUrlOf } from '../app/lib/server/fal.ts';
+import { FAL_MODELS, FAL_KEEP_SECONDS, inputFor, maskUrlOf } from '../app/lib/server/fal.ts';
+import { CREDITS } from '../app/lib/credits.ts';
 import { BECOMES, becomeInput, everyThing, wakeMoves } from '../app/lib/becomes.ts';
 import { keepDistinct } from '../app/lib/stickerize.ts';
 
@@ -42,6 +43,17 @@ ok('and the screen asks both before the button is live',
 ok('what to take out is screened as footage', /guard\(request, words, 'footage', caller\)/.test(route));
 ok('our copy of the clip is deleted when the job ends', /storage\.from\(BUCKET\)\.remove\(\[path\]\)/.test(route));
 ok('a failed job gives the credits back once', /reason', 'refund'\)/.test(route) && /await refund\(/.test(route));
+
+/* Sound for a silent shot (29 October 2026): fal.ai's own MMAudio, the
+   clip's own length up to thirty seconds, one price a clip. */
+const sound = inputFor('sound', 'https://example.test/clip.mp4', '', 12.2);
+ok('sound for a shot is fal.ai\'s own model', FAL_MODELS.sound === 'fal-ai/mmaudio-v2');
+ok('  made for the clip\'s own length, and something to hear when nothing was said',
+  sound.duration === 13 && typeof sound.prompt === 'string' && (sound.prompt as string).length > 0
+  && inputFor('sound', 'x', '', 99).duration === 30);
+ok('  one price a clip, said on the button, never under two', CREDITS.clipSound >= 2
+  && /job === 'sound' \? CREDITS\.clipSound/.test(route) && /job === 'sound' \? CREDITS\.clipSound/.test(screen));
+ok('  and what it should sound like is screened like any other words', /if \(words\) \{\s*const screened = await guard\(request, words, 'footage', caller\)/.test(route));
 
 /* ── Bring to life (`lib/becomes.ts`, `app/api/become`), 27 October 2026 ── */
 const become = readFileSync('app/api/become/route.ts', 'utf8');
