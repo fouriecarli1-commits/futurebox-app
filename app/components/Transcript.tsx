@@ -33,8 +33,9 @@
  * as everywhere else here.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { FileText, Loader2, Copy, Check, Users } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FileText, Loader2, Copy, Check, Scissors, Users } from 'lucide-react';
+import { fillerCuts, joinKept, keptSpans, secondsCut, type TimedWord } from '../lib/fillers';
 import { accessToken } from '../lib/cloud';
 import { attach } from '../lib/workfile';
 import { CREDITS, perMinute } from '../lib/credits';
@@ -84,6 +85,7 @@ export default function Transcript({
   seconds,
   audioUrl,
   onClose,
+  onCleaned,
 }: {
   showId: string;
   episodeId: string;
@@ -91,6 +93,8 @@ export default function Transcript({
   seconds: number;
   audioUrl: string;
   onClose: () => void;
+  /** The episode with its ums cut out, handed back as a new draft. */
+  onCleaned?: (audio: Blob) => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [turns, setTurns] = useState<Turn[] | null>(null);
@@ -98,6 +102,11 @@ export default function Transcript({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [words, setWords] = useState<TimedWord[]>([]);
+  const [cutting, setCutting] = useState(false);
+  /* The episode as it was fetched to be read, kept so cutting the ums does
+     not fetch it a second time. */
+  const heard = useRef<Blob | null>(null);
 
   useEffect(() => setNames(loadNames(showId)), [showId]);
 
@@ -118,6 +127,7 @@ export default function Transcript({
       const audio = await fetch(audioUrl);
       if (!audio.ok) throw new Error('audio');
       const blob = await audio.blob();
+      heard.current = blob;
 
       const body = new FormData();
       /* ── Through storage, because an episode is long ──────────────────
@@ -130,10 +140,6 @@ export default function Transcript({
          working. `/api/transcribe` has taken a storage key since it was
          written. */
       const put = await attach(body, blob, 'file', 'episode.mp3');
-      /* Said here and not thrown. The catch below answers every throw with
-         "could not fetch the episode", which is a different cause: the
-         episode was fetched, and storage refused it on size. A reason that
-         reaches a `catch` is a reason nobody reads. */
       /* Said here and not thrown. The catch below answers every throw with
          "could not fetch the episode", which is a different cause: the
          episode was fetched, and storage refused it on size. A reason that
@@ -153,6 +159,7 @@ export default function Transcript({
       });
       const data = (await response.json().catch(() => ({}))) as {
         turns?: Turn[];
+        words?: TimedWord[];
         message?: string;
       };
       if (!response.ok || !data.turns?.length) {
@@ -160,10 +167,40 @@ export default function Transcript({
         return;
       }
       setTurns(data.turns);
+      setWords(data.words ?? []);
     } catch {
       setProblem(t('script.unreachable', 'Could not fetch the episode to read it.'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const cuts = fillerCuts(words);
+
+  /* On the device: the episode decoded, the ums taken out of every channel,
+     folded to one voice channel and written as an MP3 small enough to
+     publish. Nothing is sent anywhere and nothing is charged. */
+  const cut = async () => {
+    if (!onCleaned || !cuts.length) return;
+    setCutting(true);
+    setProblem(null);
+    try {
+      const blob = heard.current ?? (await (await fetch(audioUrl)).blob());
+      const rate = 32000;
+      const decoded = await new OfflineAudioContext(1, 1, rate).decodeAudioData(await blob.arrayBuffer());
+      const kept = keptSpans(cuts, decoded.duration);
+      const channels = Array.from({ length: decoded.numberOfChannels }, (_, c) => joinKept(decoded.getChannelData(c), rate, kept));
+      const length = channels[0]?.length ?? 0;
+      const voice = new Float32Array(length);
+      for (const one of channels) for (let i = 0; i < length; i += 1) voice[i] += one[i] / channels.length;
+      const out = new AudioBuffer({ length: Math.max(1, length), numberOfChannels: 1, sampleRate: rate });
+      out.copyToChannel(voice, 0);
+      const { encodeMp3 } = await import('../lib/mp3');
+      onCleaned(await encodeMp3(out, 96, 'mono'));
+    } catch {
+      setProblem(t('script.cutFailed', 'The ums could not be cut from this episode.'));
+    } finally {
+      setCutting(false);
     }
   };
 
@@ -244,6 +281,26 @@ export default function Transcript({
               </li>
             ))}
           </ul>
+
+          {onCleaned && cuts.length > 0 && (
+            <div data-fillers className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 space-y-2">
+              <p data-keep className="text-xs text-zinc-400">
+                {t('script.umsFound', '{n} ums and uhs heard, {s} seconds in all. Cut on your device, and the episode stays as it was until you publish the new one.')
+                  .replace('{n}', String(cuts.length))
+                  .replace('{s}', secondsCut(cuts).toFixed(1))}
+              </p>
+              <button
+                type="button"
+                data-fillerscut
+                onClick={() => void cut()}
+                disabled={cutting}
+                className="min-h-[44px] w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-onAccent disabled:opacity-50"
+              >
+                {cutting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scissors className="w-4 h-4" />}
+                {t('script.cutUms', 'Cut the ums')} · {t('script.noCredits', 'no credits')}
+              </button>
+            </div>
+          )}
 
           <button
             type="button"

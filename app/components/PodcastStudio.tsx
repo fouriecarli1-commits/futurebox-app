@@ -138,6 +138,21 @@ export default function PodcastStudio({
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const episode = useOpenCard();
+  /* A draft handed over from another tab (two hosts, the voice lab, a dub,
+     the ums cut) lands in "An episode", which mounts shut with the tab. The
+     card opens on a bump it did not mount with, so the bump waits for the
+     tab to be there: without this the new draft sat in a folded card and
+     looked as if nothing had happened. */
+  const openDraft = useRef(false);
+  const toDraft = useCallback(() => {
+    openDraft.current = true;
+    setActiveTab('broadcast');
+  }, []);
+  useEffect(() => {
+    if (activeTab !== 'broadcast' || !openDraft.current) return;
+    openDraft.current = false;
+    episode.arrived();
+  }, [activeTab, episode]);
   useCopilotOps('podcast', {
     set_title: (value) => {
       setTitle(value);
@@ -818,7 +833,7 @@ export default function PodcastStudio({
           voices={voices}
           onAudio={(audio) => {
             setDraft({ audio, how: 'spoken' });
-            setActiveTab('broadcast');
+            toDraft();
             studioAudio.playAudioEffect('success');
           }}
           onUpgrade={onUpgrade}
@@ -832,7 +847,7 @@ export default function PodcastStudio({
           onChanged={load}
           onAudio={(audio) => {
             setDraft({ audio, how: 'spoken' });
-            setActiveTab('broadcast');
+            toDraft();
             studioAudio.playAudioEffect('success');
           }}
           onUpgrade={onUpgrade}
@@ -1053,6 +1068,13 @@ export default function PodcastStudio({
                       seconds={ep.seconds}
                       audioUrl={episodeAudioUrl(ep.audio_path)}
                       onClose={() => setReading(null)}
+                      onCleaned={(audio) => {
+                        setDraft({ audio, how: ep.made });
+                        setTitle(ep.title);
+                        setNotes(ep.notes);
+                        setReading(null);
+                        toDraft();
+                      }}
                     />
                   )}
 
@@ -1067,7 +1089,7 @@ export default function PodcastStudio({
                         setTitle(`${ep.title} (${language})`);
                         setNotes(ep.notes);
                         setDubbing(null);
-                        setActiveTab('broadcast');
+                        toDraft();
                       }}
                       onClose={() => setDubbing(null)}
                     />
