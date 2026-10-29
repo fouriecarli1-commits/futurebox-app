@@ -183,7 +183,7 @@ export default function SungWords({
   if (lines.length === 0) {
     return (
       <div className="flex min-h-[7rem] flex-col items-center justify-center gap-3 px-6 py-4 text-center">
-        <p className="max-w-md text-base leading-relaxed text-zinc-500">
+        <p data-keep className="max-w-md text-base leading-relaxed text-zinc-500">
           {t(
             'booth.noWords',
             'This song has no words on it, so there is nothing to follow. Sing anyway — the waveform and the note still work.',
@@ -208,6 +208,10 @@ export default function SungWords({
   /* The bar keeps its row whether or not it has anything to say. */
   const runUp = untilNext < 4 ? Math.max(0, Math.min(100, (1 - untilNext / 4) * 100)) : 0;
 
+  /* Every line here is the song's words, never a note to fold behind an ⓘ,
+     so each one carries `data-keep` past the booth's one-line rule in
+     `globals.css`. Found 29 October 2026: every lyric line, and every blank
+     one, had an ⓘ in front of it. */
   return (
     <div
       data-words
@@ -215,13 +219,13 @@ export default function SungWords({
       style={{ ['--sung' as string]: full ? SUNG_SIZE_FULL : SUNG_SIZE }}
     >
       {full && (
-        <p data-slot="earlier" className="h-10 w-full max-w-3xl line-clamp-2 break-words text-sm leading-5 text-zinc-700">
+        <p data-keep data-slot="earlier" className="h-10 w-full max-w-3xl line-clamp-2 break-words text-sm leading-5 text-zinc-700">
           {earlier}
         </p>
       )}
       {/* The line before. One line, always — two on the full screen, where
           there is room to read the whole of it. */}
-      <p data-slot="before" className={`w-full max-w-3xl text-zinc-600 ${full ? 'h-12 line-clamp-2 break-words text-base leading-6' : 'h-6 truncate text-base leading-6'}`}>
+      <p data-keep data-slot="before" className={`w-full max-w-3xl text-zinc-600 ${full ? 'h-12 line-clamp-2 break-words text-base leading-6' : 'h-6 truncate text-base leading-6'}`}>
         {before}
       </p>
 
@@ -234,18 +238,18 @@ export default function SungWords({
         {counting ? (
           <span className="text-5xl font-black leading-none text-emerald-400 tabular-nums">{count}</span>
         ) : (
-          <p className={`${full ? 'line-clamp-3' : 'line-clamp-2'} break-words font-black leading-tight text-white`} style={{ fontSize: 'var(--sung)' }}>
+          <p data-keep className={`${full ? 'line-clamp-3' : 'line-clamp-2'} break-words font-black leading-tight text-white`} style={{ fontSize: 'var(--sung)' }}>
             {at !== undefined && sungLine ? <Swept line={sungLine} at={at} /> : sung}
           </p>
         )}
       </div>
 
       {/* The line after. One line, always — two on the full screen. */}
-      <p data-slot="after" className={`w-full max-w-3xl text-zinc-400 ${full ? 'h-14 line-clamp-2 break-words text-lg font-bold leading-7' : 'h-7 truncate text-lg leading-7'}`}>
+      <p data-keep data-slot="after" className={`w-full max-w-3xl text-zinc-400 ${full ? 'h-14 line-clamp-2 break-words text-lg font-bold leading-7' : 'h-7 truncate text-lg leading-7'}`}>
         {after}
       </p>
       {later.map((text, index) => (
-        <p
+        <p data-keep
           key={index}
           data-slot="later"
           className={`w-full max-w-3xl ${index ? 'text-zinc-700' : 'text-zinc-600'} ${full ? 'h-12 line-clamp-2 break-words text-base leading-6' : 'h-6 truncate text-base leading-6'}`}
@@ -283,7 +287,7 @@ export default function SungWords({
           shoved the first line down. It is a fact about the backing, not
           about the phase, so it now says so throughout. */}
       {!split && !full && (
-        <p className="flex max-w-md items-center gap-1 text-sm leading-snug text-emerald-400/80">
+        <p data-keep className="flex max-w-md items-center gap-1 text-sm leading-snug text-emerald-400/80">
           {t('booth.withAi', 'The AI singer is on this backing — sing along with it.')}
           <Hint>
             {t(

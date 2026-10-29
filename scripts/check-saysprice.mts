@@ -141,7 +141,8 @@ ok('  and shows it on the button that bounces',
   'everything in that room is free except this press, which makes it the easiest place to meet a charge nobody expected — and a typed number is right only on the day it is typed');
 
 ok('  and charges after the mix exists, not before',
-  /mixSession\([\s\S]{0,400}?payFor\(/.test(booth),
+  /* `finishMix` renders and finishes the mix (`lib/mastering.ts`). */
+  /(mixSession|finishMix)\([\s\S]{0,400}?payFor\(/.test(booth),
   'charging first needs a refund path, and a refund path needs an amount the browser would have to be trusted for');
 
 /* The Booth has TWO doors — the Library and the phone — and they are one

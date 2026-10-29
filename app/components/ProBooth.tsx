@@ -31,9 +31,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
+  playsOf, readInto, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
+import { TARGETS, bufferOf, finish, soundOf as plainSound, type Finished } from '../lib/mastering';
 import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
@@ -329,6 +330,31 @@ export default function ProBooth({
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [recording, setRecording] = useState(false);
+  /* The microphone's level while a take is being recorded, 0–1, and whether
+     it hit the top (a take that clipped is a take to sing again). Read off an
+     analyser on the microphone itself, not the mix. */
+  const micEar = useRef<AnalyserNode | null>(null);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micClipped, setMicClipped] = useState(false);
+  useEffect(() => {
+    if (!recording) {
+      setMicLevel(0);
+      return;
+    }
+    const scratch = new Float32Array(1024);
+    const timer = window.setInterval(() => {
+      const ear = micEar.current;
+      if (!ear) return;
+      ear.getFloatTimeDomainData(scratch);
+      let top = 0;
+      for (let i = 0; i < scratch.length; i += 1) top = Math.max(top, Math.abs(scratch[i]));
+      /* -60 to 0 dBFS across the bar; the last sliver is the top. */
+      const db = 20 * Math.log10(Math.max(top, 1e-6));
+      setMicLevel(Math.min(1, Math.max(0, (db + 60) / 60)));
+      if (top >= 0.99) setMicClipped(true);
+    }, 70);
+    return () => window.clearInterval(timer);
+  }, [recording]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -514,6 +540,9 @@ export default function ProBooth({
   const [master, setMaster] = useState<Master>(FLAT_MASTER);
   const [reading, setReading] = useState<Reading | null>(null);
   const [staleSaid, setStale] = useState(false);
+  /* What finishing does to the mix (`lib/mastering.ts`), from the last
+     measurement or export, said on the master desk in LUFS. */
+  const [finishedSaid, setFinishedSaid] = useState<Finished | null>(null);
   /**
    * The lanes the reading was taken of.
    *
@@ -760,6 +789,8 @@ export default function ProBooth({
       const audio = await soundOf(sent.wav, ctx);
       if (!audio || gone) return;
       await takenLoop(sent.id);
+      /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+      remember(t('undo.add', 'the new lane'));
       setLanes((was) => [
         ...was,
         {
@@ -1040,6 +1071,20 @@ export default function ProBooth({
       setProblem(t('pro.noMic', 'No microphone could be opened.'));
       return;
     }
+    /* An ear on the microphone for the input meter; never sent to the
+       speaker, which would howl. */
+    try {
+      const ctx = context();
+      if (ctx && streamRef.current) {
+        const ear = ctx.createAnalyser();
+        ear.fftSize = 1024;
+        ctx.createMediaStreamSource(streamRef.current).connect(ear);
+        micEar.current = ear;
+        setMicClipped(false);
+      }
+    } catch {
+      micEar.current = null;
+    }
     chunksRef.current = [];
     let recorder: MediaRecorder;
     try {
@@ -1075,7 +1120,7 @@ export default function ProBooth({
     recorder.start(1000);
     play(from, lead);
     setRecording(true);
-  }, [at, countBars, meter, play, t]);
+  }, [at, context, countBars, meter, play, t]);
 
   /* Returns the lane it made, so a way out of the room can write the take
      down before the room is gone — see `leave`. */
@@ -1130,6 +1175,8 @@ export default function ProBooth({
             muted: k !== passes.length - 1,
             soloed: false,
           }));
+          /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+          remember(t('undo.add', 'the new lane'));
           setLanes((was) => [...was, ...made]);
           return made[made.length - 1];
         }
@@ -1150,6 +1197,8 @@ export default function ProBooth({
         muted: false,
         soloed: false,
       };
+      /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+      remember(t('undo.add', 'the new lane'));
       setLanes((was) => [
         ...was,
         lane,
@@ -1253,6 +1302,8 @@ export default function ProBooth({
       }
       /* At the playhead, like a file brought in, and named for what it is —
          "Synth pad · 8 bars" is what a mixer's channel would be called. */
+      /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+      remember(t('undo.add', 'the new lane'));
       setLanes((was) => [
         ...was,
         {
@@ -1286,6 +1337,8 @@ export default function ProBooth({
             setProblem(t('pro.badFile', 'That file could not be read as audio.'));
             continue;
           }
+          /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+          remember(t('undo.add', 'the new lane'));
           setLanes((was) => [
             ...was,
             {
@@ -1536,16 +1589,25 @@ export default function ProBooth({
     }
     const taken = new Set<string>();
     const entries: { name: string; data: Blob }[] = [];
+    /* Busy while every lane is rendered as it sounds: on a long session that
+       is seconds, and a press that shows nothing reads as broken. */
+    setBusy(true);
+    try {
     for (const lane of lanes) {
       const named = lane.name.trim() || t('pro.laneOne', 'Lane');
-      const written = await writeSound(pieceOf(lane, ctx));
+      /* As it sounds, and lined up: see `stemOf`. */
+      const stem = await stemOf(lane, lanes, rate);
+      const written = await writeSound(stem ?? pieceOf(lane, ctx));
       let file = safeFilename(named, written.ext);
       for (let n = 2; taken.has(file); n += 1) file = safeFilename(`${named} ${n}`, written.ext);
       taken.add(file);
       entries.push({ name: file, data: written.blob });
     }
+    } finally {
+      setBusy(false);
+    }
     const zip = await zipOf(entries);
-    if (!(await payTool('zip', `${title}|${soundKind}|${depth}|${lanes.map((lane) => `${lane.id}:${lane.from ?? 0}:${lane.to ?? ''}:${lane.repeat ?? 1}`).join(',')}`))) return;
+    if (!(await payTool('zip', `${title}|${soundKind}|${depth}|${signature(span(lanes))}|${lanes.map((lane) => `${lane.id}:${lane.from ?? 0}:${lane.to ?? ''}:${lane.repeat ?? 1}`).join(',')}`))) return;
     downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${soundKind === 'mp3' ? 'mp3' : `${depth}-bit`}`, 'zip'));
   };
 
@@ -1559,7 +1621,9 @@ export default function ProBooth({
     const named = lane.name.trim() || t('pro.laneOne', 'Lane');
     const which = `${lane.id}|${lane.from ?? 0}|${lane.to ?? ''}|${lane.repeat ?? 1}|${soundKind}|${depth}`;
     if (what === 'wav') {
-      const written = await writeSound(piece);
+      setBusy(true);
+      const stem = await stemOf(lane, lanes, rate).finally(() => setBusy(false));
+      const written = await writeSound(stem ?? piece);
       if (!(await payTool('wav', which))) return;
       downloadBlob(written.blob, safeFilename(named, written.ext));
       return;
@@ -1748,7 +1812,19 @@ export default function ProBooth({
     setBusy(true);
     try {
       const got = await readSession(lanes, rate, master);
-      setReading(got);
+      /* The live trim follows the same loudness the file will get: the
+         finishing gain, held so the speaker never clips (the file is
+         limited instead, which a live path cannot do without delay). */
+      const mixed = await mixSession(lanes, rate, master, 1);
+      if (got && mixed) {
+        const done = finish(plainSound(mixed), master);
+        setFinishedSaid(done);
+        const ceiling = 10 ** (master.ceilingDb / 20);
+        const up = 10 ** (done.gainDb / 20);
+        setReading({ ...got, trim: got.peak > 0 ? Math.min(up, ceiling / got.peak) : 1 });
+      } else {
+        setReading(got);
+      }
       setReadOf(lanes);
       setStale(false);
     } finally {
@@ -1793,6 +1869,8 @@ export default function ProBooth({
           return;
         }
         setStale(true);
+        /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+        remember(t('undo.add', 'the new lane'));
         setLanes((was) => [
           ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
           {
@@ -1891,6 +1969,8 @@ export default function ProBooth({
         setStale(true);
         setChanging(null);
         setAsInstrument(false);
+        /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+        remember(t('undo.add', 'the new lane'));
         setLanes((was) => [
           ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
           {
@@ -1910,7 +1990,9 @@ export default function ProBooth({
         setBusy(false);
       }
     },
-    [canSing, context, engine, modelId, rate, t, voiceId],
+    /* `desk` is here so the voice desk's dials as they are now are what is
+       sent, not the ones from when the voice was picked. */
+    [canSing, context, desk, engine, modelId, rate, t, voiceId],
   );
   const instruments = voices?.singing?.instruments ?? [];
   const playAs = (lane: Lane): void => {
@@ -2067,7 +2149,7 @@ export default function ProBooth({
         }
         /* The cut is spent: what comes back is already the piece that played,
            so `from` and `to` would trim it a second time. */
-        remember(t('undo.clean', 'die skoonmaak'));
+        remember(t('undo.clean', 'the clean-up'));
         setLanes((was) => was.map((one) => (
           one.id === lane.id
             ? { ...one, audio: cleaned, from: undefined, to: undefined, amped: undefined }
@@ -2168,6 +2250,8 @@ export default function ProBooth({
           }
           if (kitsLanes.length > 0) {
             setStale(true);
+            /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+            remember(t('undo.add', 'the new lane'));
             setLanes((was) => [
               ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
               ...kitsLanes,
@@ -2227,6 +2311,8 @@ export default function ProBooth({
           return;
         }
         setStale(true);
+        /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+        remember(t('undo.add', 'the new lane'));
         setLanes((was) => [
           ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
           ...made,
@@ -2305,7 +2391,7 @@ export default function ProBooth({
     ].join(':'));
     const shape = [
       layout, rate, Math.round(length * 100),
-      master.gain, master.ceilingDb, master.matchLoudness ? 1 : 0,
+      master.gain, master.ceilingDb, master.matchLoudness ? 1 : 0, master.target ?? '',
       master.rumbleHz ?? '', master.hissDb ?? '',
       Math.round(trim * 10_000), ...parts,
     ].join('|');
@@ -2358,20 +2444,32 @@ export default function ProBooth({
     }
   }, [signature, t]);
 
+  /**
+   * The mix as a file gets it: rendered, then finished (`lib/mastering.ts`),
+   * to the loudness target when matching is on and under the ceiling always.
+   * Measured on the way out every time, so there is no reading to go stale.
+   */
+  const finishMix = useCallback(async (): Promise<AudioBuffer | null> => {
+    const mixed = await mixSession(lanes, rate, master, 1);
+    if (!mixed) return null;
+    const done = finish(plainSound(mixed), master);
+    setFinishedSaid(done);
+    return bufferOf(done.sound, (channels, length, sampleRate) => new AudioBuffer({ numberOfChannels: channels, length, sampleRate }));
+  }, [lanes, master, rate]);
+
   const keep = useCallback(async (): Promise<boolean> => {
     setBusy(true);
     setProblem(null);
     try {
-      /* The same master, and the same trim the mixer was listening through.
-         A render that worked out its own number would be a file that is not
-         the mix somebody approved. */
-      const mixed = await mixSession(lanes, rate, master, trim);
+      /* The same master, finished on the way out (`finishMix`). */
+      const mixed = await finishMix();
       if (!mixed) {
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
       }
       if (!(await payFor(mixed.duration))) return false;
-      const file = encodeWav(mixed, layout);
+      /* At the bit depth picked on the same card, as the phone copy is. */
+      const file = encodeWav(mixed, layout, depth);
       /* Not doubled: "AI voice, kept under yours" is The Booth's guide
          voice, which this room never plays. And the take filed beside the
          mix is the mix — a session of lanes has no one take, and handing
@@ -2385,7 +2483,7 @@ export default function ProBooth({
     } finally {
       setBusy(false);
     }
-  }, [lanes, layout, master, onKeep, payFor, rate, t, trim]);
+  }, [depth, finishMix, layout, onKeep, payFor, t]);
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
@@ -2540,7 +2638,7 @@ export default function ProBooth({
     setSaving(true);
     setProblem(null);
     try {
-      const mixed = await mixSession(lanes, rate, master, trim);
+      const mixed = await finishMix();
       if (!mixed) {
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
@@ -2575,7 +2673,7 @@ export default function ProBooth({
        made — 16-bit, for anybody who picked 24 or 32 after opening the room
        — and charged against a signature of the mix as it was then. Found on
        15 October 2026. */
-  }, [lanes, layout, master, payFor, rate, t, title, trim, writeSound, depth]);
+  }, [finishMix, layout, payFor, t, title, writeSound]);
 
   /* ── The desks ────────────────────────────────────────────────────
 
@@ -3293,7 +3391,7 @@ export default function ProBooth({
       >
         <button
           type="button"
-          onClick={() => setClicking((was) => !was)}
+          onClick={clickToggle}
           aria-pressed={clicking}
           /* The visible word is the state — "Clicking" or "Silent" — because
              a toggle that reads the same whichever way it is set tells you
@@ -3894,7 +3992,7 @@ export default function ProBooth({
         title={t('pro.ceiling', 'Ceiling')}
         what={t(
           'pro.ceilingWhat',
-          'The loudest the file is allowed to get. Nothing goes above it, so nothing clips — and a shade under zero is the convention, because some players add a little of their own on the way out.',
+          'The loudest the file is allowed to get. A limiter holds every saved file under it, between the samples too, so nothing clips — and a shade under zero is the convention, because some players add a little of their own on the way out.',
         )}
       >
         <select
@@ -3917,7 +4015,7 @@ export default function ProBooth({
         title={t('pro.measure', 'Measure the mix')}
         what={t(
           'pro.measureWhat',
-          'Plays the whole song through silently and reads its peak and its average. Everything else on this desk is worked out from that reading, which is why the master does nothing until it has one.',
+          'Plays the whole song through silently and reads its loudness in LUFS, the way streaming services read it, and its true peak. Saving always measures again by itself; this is so you can hear and see it first.',
         )}
       >
         <button
@@ -3928,19 +4026,21 @@ export default function ProBooth({
         >
           {t('pro.measure', 'Measure the mix')}
         </button>
-        {reading ? (
+        {finishedSaid && Number.isFinite(finishedSaid.lufsBefore) ? (
+          <p data-keep data-prolufs className={`text-sm tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-300'}`}>
+            {t('pro.nowLufs', 'Now')} {finishedSaid.lufsBefore.toFixed(1)} LUFS ·{' '}
+            {t('pro.savedLufs', 'saved')} {finishedSaid.lufsAfter.toFixed(1)} LUFS ·{' '}
+            {t('pro.truePeak', 'true peak')} {finishedSaid.truePeakDb.toFixed(1)} dB
+          </p>
+        ) : reading ? (
           <p className={`text-sm tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
-            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
-            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
-            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
-            {dbOf(reading.trim).toFixed(1)} dB
+            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB
           </p>
         ) : (
           /* Not behind a mark: this one is the state of the desk, not an
-             explanation of it. A master that is doing nothing has to say so
-             where the eye already is. */
-          <p className="text-sm leading-snug text-zinc-500">
-            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
+             explanation of it. */
+          <p data-keep className="text-sm leading-snug text-zinc-500">
+            {t('pro.unmeasured', 'Saving finishes the mix by itself. Measure it to hear and see the loudness first.')}
           </p>
         )}
         {/* A reading about a mix that no longer exists is worse than none. */}
@@ -4012,25 +4112,27 @@ export default function ProBooth({
         title={t('pro.matchLoudness', 'Match the loudness')}
         what={t(
           'pro.matchWhat',
-          'Brings the finished song to the loudness streaming services play everything at, so yours is not the quiet one in somebody\u2019s playlist. It needs a measurement first.',
+          'Brings the finished song to the loudness the place you are sending it to plays everything at, so yours is not the quiet one in somebody\u2019s playlist, and not the one they turn down.',
         )}
       >
-        <button
-          type="button"
-          onClick={() => {
-            setMaster((was) => ({ ...was, matchLoudness: !was.matchLoudness }));
+        <select
+          data-promatch
+          value={master.matchLoudness ? master.target ?? 'stream' : 'off'}
+          onChange={(event) => {
+            const value = event.target.value;
+            setMaster((was) => (value === 'off'
+              ? { ...was, matchLoudness: false }
+              : { ...was, matchLoudness: true, target: value as 'stream' | 'apple' | 'loud' }));
             setStale(true);
           }}
-          aria-pressed={master.matchLoudness}
           aria-label={t('pro.matchLoudness', 'Match the loudness')}
-          className={`min-h-[44px] w-full rounded-xl border px-3 text-sm font-semibold ${
-            master.matchLoudness
-              ? 'border-sky-500 bg-sky-500/15 text-sky-300'
-              : 'border-zinc-700 bg-zinc-950 text-zinc-500'
-          }`}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
         >
-          {master.matchLoudness ? t('pro.matchOn', 'Matching') : t('pro.matchOff', 'Not matching')}
-        </button>
+          <option value="off">{t('pro.matchOff', 'Not matching')}</option>
+          {TARGETS.map((one) => (
+            <option key={one.id} value={one.id}>{t(one.name[0], one.name[1])} · {one.lufs} LUFS</option>
+          ))}
+        </select>
       </Card>
     </>
   );
@@ -5099,6 +5201,8 @@ export default function ProBooth({
           notes,
         };
       });
+      /* On the stack: Ctrl+Z takes a new lane back off, as in any studio. */
+      remember(t('undo.add', 'the new lane'));
       setLanes((was) => [...was, ...made]);
       setStale(true);
     } finally {
@@ -5854,7 +5958,7 @@ export default function ProBooth({
         <button
           type="button"
           data-click
-          onClick={() => setClicking((was) => !was)}
+          onClick={clickToggle}
           aria-pressed={clicking}
           disabled={busy}
           title={t(
@@ -5914,7 +6018,9 @@ export default function ProBooth({
         {!recording && (
           <button
             type="button"
-            onClick={onClose}
+            /* Through `leave`, like Back, so a change from the last two
+               seconds is saved before the room closes. */
+            onClick={() => void leave()}
             disabled={busy}
             className={`${BAR} col-span-2 border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
           >
@@ -6039,7 +6145,7 @@ export default function ProBooth({
             mark, which is the shape the rest of the app uses: enough on
             the screen to decide with, the rest for whoever wants it. */}
         <p className="col-span-2 text-[11px] leading-snug" style={{ color: INK_DIM }}>
-          {t('pro.wordsWhereShort', 'The words and the AI voice are in ProBooth. Your lanes are saved.')}
+          {t('pro.wordsWhereShort', 'The words and the AI voice are in the singing room. Your lanes are saved.')}
           <Hint className="ml-1">
           {t(
             'pro.wordsWhere',
@@ -6251,8 +6357,8 @@ export default function ProBooth({
               data-undo
               onClick={stepBack}
               disabled={undoWhat === null}
-              aria-label={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
-              title={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
+              aria-label={undoWhat === null ? t('undo.nothing', 'Nothing to undo') : `${t('undo.does', 'Undo')}: ${undoWhat}`}
+              title={undoWhat === null ? t('undo.nothing', 'Nothing to undo') : `${t('undo.does', 'Undo')}: ${undoWhat}`}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
             >
               <Undo2 className="h-3.5 w-3.5" />
@@ -6419,6 +6525,23 @@ export default function ProBooth({
           {/* Only while there is sound to draw: still, it was an empty strip
               above the lanes. */}
           {!sideways && (playing || recording) && <BoothScope ear={scopeRef} playing={playing} />}
+          {recording && (
+            <div data-promicmeter className="flex items-center gap-2" role="meter" aria-label={t('pro.micLevel', 'Microphone level')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(micLevel * 100)}>
+              <Mic2 className={`h-4 w-4 ${micClipped ? 'text-red-400' : 'text-emerald-400'}`} />
+              <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-75"
+                  style={{
+                    width: `${Math.round(micLevel * 100)}%`,
+                    background: 'linear-gradient(90deg, #10b981 0%, #10b981 70%, #fbbf24 85%, #ef4444 100%)',
+                  }}
+                />
+              </div>
+              <span data-keep className={`w-24 text-right text-[11px] font-semibold ${micClipped ? 'text-red-400' : 'text-zinc-500'}`}>
+                {micClipped ? t('pro.micClipped', 'Too loud — clipped') : t('pro.micOk', 'Microphone')}
+              </span>
+            </div>
+          )}
           <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
             {(['wave', 'spectrum'] as const).map((one) => (
               <button

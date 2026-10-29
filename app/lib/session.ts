@@ -198,6 +198,8 @@ export interface Master {
   readonly ceilingDb: number;
   /** Bring the mix up towards the level streaming services play things at. */
   readonly matchLoudness: boolean;
+  /** Which loudness to match, `TARGETS` in `lib/mastering.ts`. Absent is streaming, -14 LUFS. */
+  readonly target?: 'stream' | 'apple' | 'loud';
   /**
    * Take the rumble off: everything below this many hertz, in dB per octave
    * of roll-off that a single biquad gives. 0 is off.
@@ -805,6 +807,32 @@ export async function mixSession(
 
   try {
     return applyTrim(await offline.startRendering(), trim);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * One lane as a stem: through its own chain (level, pan, effects, tone,
+ * fades, repeats) but not the master, from the session's first second to its
+ * last, so every stem of a session is the same length and starts at the same
+ * place. Dropped into another studio at bar one, they line up.
+ *
+ * Found 29 October 2026: the zip of lanes was each lane's cut audio only,
+ * dry and starting at its own first sample, so nothing lined up and none of
+ * the sound that had been dialled in came with it.
+ */
+export async function stemOf(lane: Lane, lanes: readonly Lane[], rate: number): Promise<AudioBuffer | null> {
+  const Ctx = (window as unknown as { OfflineAudioContext?: typeof OfflineAudioContext }).OfflineAudioContext;
+  if (!Ctx) return null;
+  const seconds = span(lanes);
+  if (!(seconds > 0)) return null;
+  const offline = new Ctx(2, Math.ceil(seconds * rate), rate);
+  const bus = offline.createGain();
+  bus.connect(offline.destination);
+  startLane(wireLane(offline, { ...lane, muted: false, soloed: false }, bus), lane);
+  try {
+    return await offline.startRendering();
   } catch {
     return null;
   }

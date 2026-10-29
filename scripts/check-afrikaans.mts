@@ -82,6 +82,8 @@ const SAME_IN_BOTH = new Set([
   'Rap', 'Reggae', 'Disco',
   /* The jam room's looper: a musician says "looper" and "pads" in Afrikaans too. */
   'Looper', 'Pads',
+  /* ProBooth's loudness target: the names of the places, the same everywhere. */
+  'Spotify, YouTube, TikTok',
   /* The jam room's characters: a robot is a robot in Afrikaans too. */
   'Robot',
   /* A singer says "vibrato" in Afrikaans too: the hum dials. */

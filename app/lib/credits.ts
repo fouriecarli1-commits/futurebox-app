@@ -686,8 +686,16 @@ export const CREDITS = {
   /* Raised with the stems, 14 October 2026: the read is the heavier job and
      must never cost less than a split (`check:kredietkoste`). */
   read: 8,
-  /** Splitting a song into named parts rather than two. Per minute. */
-  parts: 8,
+  /**
+   * Splitting a song into named parts rather than two. Per minute.
+   *
+   * Sixteen, 29 October 2026: the first engine asked (`/api/stems` with
+   * `parts=four`) has always charged twice a two-way split, which is 16 a
+   * minute, while the button said 8. The button is now the price, and the
+   * fallback (`/api/analyse`) charges the same, so it is one number whichever
+   * engine answers.
+   */
+  parts: 16,
   /**
    * A sound effect from words, up to ten seconds: a door slamming, rain on a
    * roof, a stadium crowd. The owner, 14 October 2026: "Generate a sound" must

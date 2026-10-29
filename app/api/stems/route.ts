@@ -190,8 +190,10 @@ export async function POST(request: Request): Promise<Response> {
   /* Four parts costs twice what two costs, because it *is* twice the work
      downstream: Kits' minutes burn on download and four files of a song are
      four times its length against two. Not a markup — the same margin on
-     twice the upstream. See `downloadSeconds` in `kitsminutes.ts`. */
-  const ourPrice = perMinute(billed, CREDITS.stems) * (wantsFour ? 2 : 1);
+     twice the upstream. See `downloadSeconds` in `kitsminutes.ts`. That
+     doubled price is `CREDITS.parts`, the number the named-parts button
+     shows. */
+  const ourPrice = wantsFour ? perMinute(billed, CREDITS.parts) : perMinute(billed, CREDITS.stems);
   const paid = await charge(request, ourPrice, 'stems');
   if (!paid.ok) return paid.response;
 

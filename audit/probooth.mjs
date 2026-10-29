@@ -309,16 +309,18 @@ try {
      transport — so the icon is pressed first. Track controls closes as this
      opens, which is the room's own rule and not something to work around. */
   await openDesk('Mix & master', 'Meng & meester');
-  check('before it is measured the master says it is doing nothing',
-    af ? /doen die meester niks nie/.test(await words()) : /the master does nothing at all/.test(await words()));
+  /* Since 29 October 2026 a saved file is finished by itself
+     (`lib/mastering.ts`); before a measurement the desk says so. */
+  check('before it is measured the master says saving finishes the mix',
+    af ? /Stoor maak die mengsel self klaar/.test(await words()) : /Saving finishes the mix by itself/.test(await words()));
 
   await p.locator(`button:has-text("${af ? 'Meet die mengsel' : 'Measure the mix'}")`).first().click();
   await p.waitForTimeout(2500);
   const measured = await words();
-  check('measuring gives a peak and an average in decibels',
-    /-?\d+\.\d dB/.test(measured), (measured.match(/-?\d+\.\d dB/g) || ['none']).join(' | '));
+  check('measuring gives the loudness in LUFS and the true peak',
+    /-?\d+\.\d LUFS/.test(measured) && /-?\d+\.\d dB/.test(measured), (measured.match(/-?\d+\.\d (LUFS|dB)/g) || ['none']).join(' | '));
   check('and the "not measured yet" line is gone',
-    !(af ? /doen die meester niks nie/ : /the master does nothing at all/).test(measured));
+    !(af ? /Stoor maak die mengsel self klaar/ : /Saving finishes the mix by itself/).test(measured));
 
   /* ── Open a lane before reaching for its controls ──────────────────
 
@@ -1338,7 +1340,7 @@ try {
        nobody reads before pressing — which is exactly what this assertion
        is for, so it looks at what is on the screen. */
     check('and says the AI voice is there too',
-      /AI voice are in ProBooth|KI-stem is in ProBooth/.test(said), said.slice(0, 160));
+      /AI voice are in the singing room|KI-stem is in die singkamer/.test(said), said.slice(0, 160));
     /* Nobody presses a button that leaves a room holding four takes unless
        they are told the takes survive it. Since they now do, saying so is
        what makes the button usable rather than frightening. */

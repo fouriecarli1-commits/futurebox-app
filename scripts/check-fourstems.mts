@@ -26,6 +26,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { downloadSeconds } from '../app/lib/server/kitsminutes';
+import { CREDITS } from '../app/lib/credits';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -46,9 +47,12 @@ ok('and four of a three-minute song is twelve minutes',
   downloadSeconds(180, 4) === 720, String(downloadSeconds(180, 4)));
 
 /* ── 2. And charged as four ────────────────────────────────────────────── */
+/* Since 29 October 2026 the four-part price is `CREDITS.parts`, the number
+   the named-parts button shows, held here at no less than twice a split. */
 ok('the member pays twice for twice the work',
-  /perMinute\(billed, CREDITS\.stems\) \* \(wantsFour \? 2 : 1\)/.test(route),
-  'four parts is sold at the two-part price');
+  /wantsFour \? perMinute\(billed, CREDITS\.parts\) : perMinute\(billed, CREDITS\.stems\)/.test(route)
+    && CREDITS.parts >= 2 * CREDITS.stems,
+  `four parts is sold at ${CREDITS.parts} a minute against ${CREDITS.stems} for two`);
 
 /* ── 3. Four is Kits or nothing ────────────────────────────────────────── */
 /* The refusal must come before the ElevenLabs call, or the fallback happens

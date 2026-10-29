@@ -87,7 +87,9 @@ const FREE: { readonly says: string; readonly why: string }[] = [
   { says: 'history.current.redo(', why: 'the history\'s own hand going forward, for the same reason' },
   { says: 'setLanes(back)', why: 'reading the kept session off the device at startup: there is nothing yet to go back TO' },
   { says: 'was.some((lane) => lane.backing)', why: 'seeding the song as the first lane on mount, which makes the session rather than changing one' },
-  { says: 'setLanes((was) => [', why: 'a lane ADDED — recorded, uploaded, generated or brought in. Nothing is lost, and the remove button beside it is the way back' },
+  /* A lane ADDED (recorded, brought in, generated) was here until 29 October
+     2026, with the remove button as the way back. Every studio takes a new
+     recording back off with Ctrl+Z, so adding a lane remembers now too. */
   { says: 'const change = (id: string, how: Partial<Lane>)', why: 'a name, a level, a pan, a mute, a solo, a start time, the tone stack, the rack or the amp: every one of them a number or a switch the same control puts back, which is the room\'s whole doctrine. Putting each nudge of a fader on the stack would fill the history with twenty of them and push the fade off the end' },
   /* Locking lanes, moving a lane up or down, and the copilot's moves were
      here until 15 October 2026. None of them is put back by the control that
