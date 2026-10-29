@@ -289,6 +289,7 @@
     "check:restorewalk": "node audit/restore.mjs 3494",
     "check:picturemakewalk": "node audit/picturemake.mjs 3495",
     "check:cutums": "node audit/cutums.mjs 3496",
+    "check:poddesk": "node audit/poddesk.mjs 3497",
     "check:sayassheet": "node audit/sayassheet.mjs 3301",
     "check:songscreen": "node audit/songscreen.mjs",
     "check:hookfile": "node audit/hookfile.mjs",

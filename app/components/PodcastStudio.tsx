@@ -3,9 +3,13 @@
 /**
  * A show, not a demo of one.
  *
- * Broadcast-grade Podcast Studio featuring dual-mic live VU metering,
- * on-air teleprompter script viewer, instant soundboard effects,
- * RSS distribution, voice cloning, and AI dialogue generation.
+ * The desk at the top is the signal path itself (`lib/podmixer.ts`): the
+ * meters read the microphone, the gain sliders change what is recorded, a
+ * second microphone appears only when the device has one, and the sound pads
+ * (`lib/sounddrops.ts`) go into the recording as well as out of the speaker.
+ * Below it: the teleprompter, the episode, two hosts, the voice lab, the
+ * channel and its feed, and the published episodes with their transcripts
+ * and dubs.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,6 +36,8 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import { attach } from '../lib/workfile';
 import { studioAudio } from '../lib/demoaudio';
+import { PodMixer, gainOf, levelOf, microphones, type MicChannel } from '../lib/podmixer';
+import { PADS, PAD_NAMES, forgetMade, keepMade, padSound, type PadId } from '../lib/sounddrops';
 
 interface Show {
   id: string;
@@ -55,11 +61,20 @@ interface Episode {
 
 const SOCIALS = ['website', 'x', 'instagram', 'youtube', 'tiktok', 'facebook', 'linkedin', 'spotify', 'apple'] as const;
 
-const MADE_LABEL: Record<Episode['made'], string> = {
-  recorded: 'Recorded',
-  cleaned: 'Recorded, room removed',
-  spoken: 'Read by a cloned voice',
+const MADE_LABEL: Record<Episode['made'], readonly [string, string]> = {
+  recorded: ['pod.madeRecorded', 'Recorded'],
+  cleaned: ['pod.madeCleaned', 'Recorded, room removed'],
+  spoken: ['pod.madeSpoken', 'Read by a cloned voice'],
 };
+
+/** An episode's length as a podcast app shows it: 21:00, or 1:04:30. */
+function lengthOf(seconds: number): string {
+  const whole = Math.max(0, Math.round(seconds || 0));
+  const h = Math.floor(whole / 3600);
+  const m = Math.floor((whole % 3600) / 60);
+  const s = String(whole % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
 
 type PodStudioTab = 'broadcast' | 'twohosts' | 'voicelab' | 'channel' | 'episodes';
 
@@ -67,7 +82,7 @@ function VuMeter({ level, muted }: { level: number; muted: boolean }) {
   const segments = 12;
   const activeCount = muted ? 0 : Math.round(level * segments);
   return (
-    <div className="flex items-center gap-1 h-3 w-full bg-zinc-950/90 rounded p-0.5 border border-zinc-800">
+    <div data-vu={activeCount} className="flex items-center gap-1 h-3 w-full bg-zinc-950/90 rounded p-0.5 border border-zinc-800">
       {Array.from({ length: segments }).map((_, i) => {
         const isActive = i < activeCount;
         const isRed = i >= 10;
@@ -126,13 +141,21 @@ export default function PodcastStudio({
     : 'Welcome to today\u2019s episode!\n\n1. Introduction & the week\u2019s main news\n2. Interview with our special guest\n3. Listener questions & feedback\n4. Wrap-up & what\u2019s next'));
   const prompterBoxRef = useRef<HTMLDivElement>(null);
 
-  // Dual-Mic VU Meters & Gain
+  // The desk: real meters, real gain, and a second microphone only when there is one.
   const [mic1Level, setMic1Level] = useState(0);
   const [mic2Level, setMic2Level] = useState(0);
   const [mic1Muted, setMic1Muted] = useState(false);
   const [mic2Muted, setMic2Muted] = useState(false);
-  const [mic1Gain, setMic1Gain] = useState(85);
-  const [mic2Gain, setMic2Gain] = useState(80);
+  const [mic1Gain, setMic1Gain] = useState(75);
+  const [mic2Gain, setMic2Gain] = useState(75);
+  const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
+  const [secondMic, setSecondMic] = useState('');
+  const mixerRef = useRef<PodMixer | null>(null);
+  const channelsRef = useRef<MicChannel[]>([]);
+  const [padMade, setPadMade] = useState<Partial<Record<PadId, boolean>>>({});
+  const [padWriting, setPadWriting] = useState<PadId | null>(null);
+  const [padWords, setPadWords] = useState('');
+  const [padBusy, setPadBusy] = useState(false);
 
   // Broadcast Recording Timer
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -170,7 +193,6 @@ export default function PodcastStudio({
 
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
   const load = useCallback(async () => {
@@ -208,7 +230,71 @@ export default function PodcastStudio({
     void load();
   }, [load]);
 
-  useEffect(() => () => streamRef.current?.getTracks().forEach((one) => one.stop()), []);
+  useEffect(() => () => {
+    void mixerRef.current?.close();
+  }, []);
+
+  /* Which microphones this device has, and whether a pad has been made the
+     member's own. Asked once; the names fill in once a microphone is allowed. */
+  useEffect(() => {
+    void microphones().then(setInputs).catch(() => undefined);
+    void (async () => {
+      const probe = new OfflineAudioContext(1, 1, 44100);
+      const made: Partial<Record<PadId, boolean>> = {};
+      for (const pad of PADS) made[pad] = (await padSound(probe, pad).catch(() => ({ made: false }))).made;
+      setPadMade(made);
+    })();
+  }, []);
+
+  const mixer = useCallback((): PodMixer => {
+    if (!mixerRef.current) mixerRef.current = new PodMixer();
+    return mixerRef.current;
+  }, []);
+
+  const playPad = useCallback(async (pad: PadId) => {
+    const desk = mixer();
+    const { buffer } = await padSound(desk.context, pad);
+    desk.play(buffer);
+  }, [mixer]);
+
+  /* A pad made from words, through the same sound-effect engine as the
+     video editor, at its price, and kept on the device under the pad. */
+  const makePad = useCallback(async (pad: PadId) => {
+    const words = padWords.trim();
+    if (!words) return;
+    setPadBusy(true);
+    setProblem(null);
+    try {
+      const token = await accessToken();
+      const response = await fetch('/api/voice/effect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ text: words, seconds: 4 }),
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { message?: string; needsPlan?: boolean };
+        setProblem(data.message ?? t('pod.padFailed', 'That sound could not be made.'));
+        if (data.needsPlan) onUpgrade();
+        return;
+      }
+      await keepMade(pad, await response.blob());
+      setPadMade((now) => ({ ...now, [pad]: true }));
+      setPadWriting(null);
+      setPadWords('');
+      void playPad(pad);
+    } catch {
+      setProblem(t('pod.padFailed', 'That sound could not be made.'));
+    } finally {
+      setPadBusy(false);
+    }
+  }, [padWords, playPad, onUpgrade, t]);
+
+  /* The sliders and the mute buttons are the gain on the line. */
+  useEffect(() => {
+    const [one, two] = channelsRef.current;
+    if (one) one.gain.gain.value = gainOf(mic1Gain, mic1Muted);
+    if (two) two.gain.gain.value = gainOf(mic2Gain, mic2Muted);
+  }, [mic1Gain, mic2Gain, mic1Muted, mic2Muted, recording]);
 
   // Broadcast timer
   useEffect(() => {
@@ -222,29 +308,21 @@ export default function PodcastStudio({
     return () => clearInterval(timer);
   }, [recording]);
 
-  // Dual-Mic simulation / reactive activity
+  /* The meters read the line after its gain, a few times a second. */
   useEffect(() => {
     if (!recording) {
       setMic1Level(0);
       setMic2Level(0);
       return;
     }
-    const interval = setInterval(() => {
-      if (!mic1Muted) {
-        const base = (mic1Gain / 100) * 0.7;
-        setMic1Level(Math.min(1, Math.max(0.08, base + (Math.random() * 0.35 - 0.15))));
-      } else {
-        setMic1Level(0);
-      }
-      if (!mic2Muted) {
-        const base2 = (mic2Gain / 100) * 0.65;
-        setMic2Level(Math.min(1, Math.max(0.08, base2 + (Math.random() * 0.35 - 0.15))));
-      } else {
-        setMic2Level(0);
-      }
-    }, 120);
-    return () => clearInterval(interval);
-  }, [recording, mic1Muted, mic2Muted, mic1Gain, mic2Gain]);
+    const scratch = new Float32Array(1024);
+    const timer = setInterval(() => {
+      const [one, two] = channelsRef.current;
+      setMic1Level(one ? levelOf(one.meter, scratch) : 0);
+      setMic2Level(two ? levelOf(two.meter, scratch) : 0);
+    }, 80);
+    return () => clearInterval(timer);
+  }, [recording]);
 
   // Auto-scrolling teleprompter
   useEffect(() => {
@@ -303,10 +381,17 @@ export default function PodcastStudio({
   const startRecording = useCallback(async () => {
     setProblem(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
-      streamRef.current = stream;
+      const desk = mixer();
+      await desk.context.resume();
+      const channels = [await desk.addMic()];
+      if (secondMic) channels.push(await desk.addMic(secondMic));
+      channelsRef.current = channels;
+      channels[0].gain.gain.value = gainOf(mic1Gain, mic1Muted);
+      if (channels[1]) channels[1].gain.gain.value = gainOf(mic2Gain, mic2Muted);
+      /* Now a microphone is allowed, the device will say what each one is called. */
+      void microphones().then(setInputs).catch(() => undefined);
       chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(desk.stream);
       recorder.ondataavailable = (event) => {
         if (event.data.size) chunksRef.current.push(event.data);
       };
@@ -315,9 +400,11 @@ export default function PodcastStudio({
       setRecording(true);
       studioAudio.playAudioEffect('tap');
     } catch {
+      mixerRef.current?.dropMics();
+      channelsRef.current = [];
       setProblem(t('take.denied', 'The microphone was not allowed. Turn it on for this site and try again.'));
     }
-  }, [t]);
+  }, [t, mixer, secondMic, mic1Gain, mic2Gain, mic1Muted, mic2Muted]);
 
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -326,8 +413,8 @@ export default function PodcastStudio({
       recorder.onstop = () => resolve(new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' }));
     });
     recorder.stop();
-    streamRef.current?.getTracks().forEach((one) => one.stop());
-    streamRef.current = null;
+    mixerRef.current?.dropMics();
+    channelsRef.current = [];
     setRecording(false);
     studioAudio.playAudioEffect('success');
     const audioBlob = await finished;
@@ -479,11 +566,13 @@ export default function PodcastStudio({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
                 <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{t('pod.host1', 'Host 1 (main mic)')}</span>
+                <span>{t('pod.host1', 'Microphone')}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setMic1Muted(!mic1Muted)}
+                aria-label={mic1Muted ? t('pod.unmute', 'Unmute') : t('pod.mute', 'Mute')}
+                aria-pressed={mic1Muted}
                 className={`p-1 rounded-lg text-xs font-semibold ${mic1Muted ? 'text-red-400 bg-red-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                 title={t('pod.mute', 'Mute')}
               >
@@ -499,28 +588,41 @@ export default function PodcastStudio({
                 max={100}
                 value={mic1Gain}
                 onChange={(e) => setMic1Gain(Number(e.target.value))}
+                aria-label={t('pod.gain', 'Gain')}
                 className="w-24 accent-emerald-500 h-1 cursor-pointer"
               />
             </div>
           </div>
 
-          {/* Channel 2: Co-Host / Guest */}
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-                <Mic className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{t('pod.host2', 'Host 2 (co-host)')}</span>
+          {/* Channel 2: a second microphone, shown only when the device has one */}
+          {inputs.length > 1 && (
+          <div data-podmic2 className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5 min-w-0">
+                <Mic className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <select
+                  value={secondMic}
+                  onChange={(event) => setSecondMic(event.target.value)}
+                  disabled={recording}
+                  aria-label={t('pod.secondMic', 'Second microphone')}
+                  className="min-w-0 max-w-[11rem] truncate bg-transparent text-xs font-bold text-zinc-200 focus:outline-hidden"
+                >
+                  <option value="">{t('pod.secondMicNone', 'No second microphone')}</option>
+                  {inputs.map((one) => <option key={one.id} value={one.id}>{one.name}</option>)}
+                </select>
               </span>
               <button
                 type="button"
                 onClick={() => setMic2Muted(!mic2Muted)}
+                aria-label={mic2Muted ? t('pod.unmute', 'Unmute') : t('pod.mute', 'Mute')}
+                aria-pressed={mic2Muted}
                 className={`p-1 rounded-lg text-xs font-semibold ${mic2Muted ? 'text-red-400 bg-red-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                 title={t('pod.mute', 'Mute')}
               >
                 {mic2Muted ? <MicOff className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <VuMeter level={mic2Level} muted={mic2Muted} />
+            <VuMeter level={mic2Level} muted={mic2Muted || !secondMic} />
             <div className="flex items-center justify-between text-[11px] text-zinc-500">
               <span>{t('pod.gain', 'Gain')}: {mic2Gain}%</span>
               <input
@@ -529,54 +631,95 @@ export default function PodcastStudio({
                 max={100}
                 value={mic2Gain}
                 onChange={(e) => setMic2Gain(Number(e.target.value))}
+                aria-label={`${t('pod.gain', 'Gain')} 2`}
                 className="w-24 accent-cyan-500 h-1 cursor-pointer"
               />
             </div>
           </div>
+          )}
         </div>
 
-        {/* Live Soundboard Drops Bar */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-800/60">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mr-1 flex items-center gap-1">
-            <Bell className="w-3 h-3 text-amber-400" />
-            {t('pod.soundboard', 'Soundboard')}:
-          </span>
-          <button
-            type="button"
-            onClick={() => studioAudio.playStudioDemoTrack()}
-            className="min-h-[36px] rounded-lg border border-purple-500/40 bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-200 hover:bg-purple-900/40 transition-all"
-          >
-            🎵 {t('pod.intro', 'Intro theme')}
-          </button>
-          <button
-            type="button"
-            onClick={() => studioAudio.playAudioEffect('sparkle')}
-            className="min-h-[36px] rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-900/40 transition-all"
-          >
-            👏 {t('pod.applause', 'Applause')}
-          </button>
-          <button
-            type="button"
-            onClick={() => studioAudio.playAudioEffect('magic')}
-            className="min-h-[36px] rounded-lg border border-amber-500/40 bg-amber-950/40 px-2.5 py-1 text-xs font-semibold text-amber-200 hover:bg-amber-900/40 transition-all"
-          >
-            ✨ {t('pod.stinger', 'Stinger')}
-          </button>
-          <button
-            type="button"
-            onClick={() => studioAudio.playAudioEffect('radar')}
-            className="min-h-[36px] rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-900/40 transition-all"
-          >
-            📡 {t('pod.sonar', 'Sonar')}
-          </button>
-          <button
-            type="button"
-            onClick={() => studioAudio.stopStudioDemoTrack()}
-            className="min-h-[36px] rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs font-semibold text-zinc-400 hover:text-white transition-all ml-auto"
-            title={t('pod.stopSound', 'Stop the sound')}
-          >
-            <Square className="w-3.5 h-3.5 fill-current" />
-          </button>
+        {/* Sound pads: into the recording while it runs, and each one can be
+            made the member's own from a sentence. */}
+        <div data-podpads className="space-y-2 pt-1 border-t border-zinc-800/60">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mr-1 flex items-center gap-1">
+              <Bell className="w-3 h-3 text-amber-400" />
+              {t('pod.soundboard', 'Soundboard')}
+            </span>
+            {PADS.map((pad) => (
+              <span key={pad} className="inline-flex items-stretch gap-px">
+                <button
+                  type="button"
+                  data-podpad={pad}
+                  onClick={() => void playPad(pad)}
+                  className="min-h-[36px] rounded-l-lg border border-zinc-700 bg-zinc-900/80 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
+                >
+                  {padMade[pad] ? '★ ' : ''}{t(PAD_NAMES[pad][0], PAD_NAMES[pad][1])}
+                </button>
+                <button
+                  type="button"
+                  data-podpadmake={pad}
+                  onClick={() => { setPadWriting(padWriting === pad ? null : pad); setPadWords(''); }}
+                  aria-label={`${t('pod.padMake', 'Make this pad with AI')}: ${t(PAD_NAMES[pad][0], PAD_NAMES[pad][1])}`}
+                  aria-expanded={padWriting === pad}
+                  className="min-h-[36px] rounded-r-lg border border-zinc-700 bg-zinc-900/80 px-2 text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => mixerRef.current?.stopPads()}
+              className="min-h-[36px] rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs font-semibold text-zinc-400 hover:text-white transition-all ml-auto"
+              title={t('pod.stopSound', 'Stop the sound')}
+              aria-label={t('pod.stopSound', 'Stop the sound')}
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+            </button>
+          </div>
+          {recording && <p data-keep className="text-[11px] text-emerald-300/80">{t('pod.padsOnAir', 'On air: a pad you press now is in the recording.')}</p>}
+          {padWriting && (
+            <div data-podpadwrite className="rounded-xl border border-emerald-500/30 bg-zinc-950/70 p-2.5 space-y-2">
+              <p data-keep className="text-xs text-zinc-400">
+                {t('pod.padSay', 'Say the sound for {pad}, and it is made for this pad and kept on this device.').replace('{pad}', t(PAD_NAMES[padWriting][0], PAD_NAMES[padWriting][1]))}
+              </p>
+              <input
+                value={padWords}
+                onChange={(event) => setPadWords(event.target.value.slice(0, 200))}
+                placeholder={t('pod.padIdea', 'A small club crowd cheering, then quiet')}
+                aria-label={t('pod.padSayLabel', 'The sound, in words')}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-podpadgo
+                  onClick={() => void makePad(padWriting)}
+                  disabled={padBusy || !padWords.trim()}
+                  className="min-h-[40px] inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-onAccent disabled:opacity-50"
+                >
+                  {padBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  {t('pod.padGo', 'Make the sound')} · {CREDITS.sfx} {t('credits.credits', 'credits')}
+                </button>
+                {padMade[padWriting] && (
+                  <button
+                    type="button"
+                    data-podpadreset
+                    onClick={() => {
+                      const pad = padWriting;
+                      void forgetMade(pad).then(() => setPadMade((now) => ({ ...now, [pad]: false })));
+                      setPadWriting(null);
+                    }}
+                    className="min-h-[40px] rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300"
+                  >
+                    {t('pod.padReset', 'Back to the built-in sound')}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Collapsible Teleprompter Drawer */}
@@ -778,11 +921,11 @@ export default function PodcastStudio({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-emerald-300 font-bold flex items-center gap-2">
                     <Check className="w-4 h-4" />
-                    {MADE_LABEL[draft.how]}
+                    {t(...MADE_LABEL[draft.how])}
                   </span>
                   {draftSeconds && (
                     <span className="text-xs text-zinc-400 font-mono">
-                      {Math.round(draftSeconds)}s geregistreer
+                      {lengthOf(draftSeconds)}
                     </span>
                   )}
                 </div>
@@ -1003,7 +1146,7 @@ export default function PodcastStudio({
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{ep.title}</p>
-                      <p className="text-xs text-zinc-500">{MADE_LABEL[ep.made]} · {ep.seconds}s</p>
+                      <p className="text-xs text-zinc-500">{t(...MADE_LABEL[ep.made])} · {lengthOf(ep.seconds)}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                       <button

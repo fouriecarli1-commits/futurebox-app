@@ -41,11 +41,11 @@ import type { VoiceState } from './VoiceLab';
 import Note from './Note';
 import Card from './Card';
 
-const EXAMPLE = `Aanbieder 1: So what actually changed this year?
-Aanbieder 2: Everything, and none of it at once.
+const EXAMPLE = `Host 1: So what actually changed this year?
+Host 2: Everything, and none of it at once.
   The tools got good enough that the hard part moved.
-Aanbieder 1: Moved where?
-Aanbieder 2: To knowing what is worth making.`;
+Host 1: Moved where?
+Host 2: To knowing what is worth making.`;
 
 export default function TwoHosts({
   voices,
@@ -61,22 +61,24 @@ export default function TwoHosts({
   const all = useMemo(() => [...voices.mine, ...voices.stock], [voices]);
 
   const [script, setScript] = useState('');
-  const [cast, setCast] = useState<Speaker[]>([
-    { name: 'Aanbieder 1', voiceId: '' },
-    { name: 'Aanbieder 2', voiceId: '' },
+  /* Named in the app's language; the member renames them to themselves. */
+  const [cast, setCast] = useState<Speaker[]>(() => [
+    { name: t('hosts.host1', 'Host 1'), voiceId: '' },
+    { name: t('hosts.host2', 'Host 2'), voiceId: '' },
   ]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<string | null>(null);
 
-  // Gemini dialogue generator state
+  // The script writer
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
-  const [aiTone, setAiTone] = useState<'visionary' | 'casual' | 'debate'>('visionary');
+  const [aiTone, setAiTone] = useState<'casual' | 'visionary' | 'debate'>('casual');
+  const [aiLength, setAiLength] = useState<6 | 10 | 16>(10);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState('');
 
-  const generateWithGemini = async () => {
+  const writeScript = async () => {
     if (!aiTopic.trim()) return;
     setAiBusy(true);
     setAiError('');
@@ -89,14 +91,17 @@ export default function TwoHosts({
           topic: aiTopic.trim(),
           language: lang,
           tone: aiTone,
-          host1Name: cast[0]?.name || 'Aanbieder 1',
-          host2Name: cast[1]?.name || 'Aanbieder 2',
-          turns: 6,
+          host1Name: cast[0]?.name || t('hosts.host1', 'Host 1'),
+          host2Name: cast[1]?.name || t('hosts.host2', 'Host 2'),
+          turns: aiLength,
+          /* Written to fit what the plan reads in one go, so the script it
+             hands back can be made without cutting. */
+          ...(allowed > 0 ? { maxChars: allowed } : {}),
         }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setAiError(data?.message || 'Could not generate dialogue from Gemini.');
+        setAiError(data?.message || t('hosts.writeFailed', 'The script could not be written. Try again.'));
         return;
       }
       if (data?.script) {
@@ -105,7 +110,7 @@ export default function TwoHosts({
         setAiTopic('');
       }
     } catch {
-      setAiError('Network error connecting to Gemini.');
+      setAiError(t('hosts.writeUnreachable', 'The script writer could not be reached. Try again.'));
     } finally {
       setAiBusy(false);
     }
@@ -113,15 +118,9 @@ export default function TwoHosts({
 
   const named = useMemo(() => {
     const list: Speaker[] = [];
-    cast.forEach((one, idx) => {
+    cast.forEach((one) => {
       if (one.voiceId) {
         if (one.name.trim()) list.push(one);
-        // Also support probe test conventions transparently if the default placeholder is untouched
-        if (idx === 0 && one.name === 'Aanbieder 1') {
-          list.push({ name: 'Sipho', voiceId: one.voiceId });
-        } else if (idx === 1 && one.name === 'Aanbieder 2') {
-          list.push({ name: 'Lerato', voiceId: one.voiceId });
-        }
       }
     });
     return list;
@@ -201,93 +200,121 @@ export default function TwoHosts({
         ))}
       </div>
 
-      {/* ── The script header & Gemini Generator ──────────────────────── */}
+      {/* ── The script, and the writer that drafts one ──────────────────── */}
       <div className="flex items-center justify-between gap-2 pt-1">
         <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
           {t('hosts.scriptLabel', 'Dialogue Script')}
         </label>
         <button
           type="button"
+          data-hostswrite
           onClick={() => setIsAiModalOpen(true)}
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 px-3 py-1 text-xs font-bold text-emerald-300 transition-all shadow-xs"
         >
           <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-          <span>{lang === 'af' ? 'Skep met Gemini' : 'Generate with Gemini'}</span>
+          <span>{t('hosts.writeForMe', 'Write it for me')}</span>
         </button>
       </div>
 
-      {/* ── Gemini Generator Modal / Drawer ─────────────────────────────── */}
       {isAiModalOpen && (
-        <div className="rounded-xl border border-emerald-500/40 bg-zinc-950/95 p-4 space-y-3.5 shadow-xl duration-200">
+        <div data-hostswriter className="rounded-xl border border-emerald-500/40 bg-zinc-950/95 p-4 space-y-3.5 shadow-xl duration-200">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
-              <h4 className="text-sm font-black text-white">
-                {lang === 'af' ? 'Google Gemini Gesprek-skrywer' : 'Google Gemini Podcast Scriptwriter'}
-              </h4>
+              <h4 className="text-sm font-black text-white">{t('hosts.writerTitle', 'The script writer')}</h4>
             </div>
             <button
               type="button"
               onClick={() => setIsAiModalOpen(false)}
               className="p-1 rounded-lg text-zinc-500 hover:text-white"
-              aria-label="Close"
+              aria-label={t('share.close', 'Close')}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-medium text-zinc-400">
-              {lang === 'af' ? 'Waaroor gaan die episode?' : 'What is the conversation about?'}
+            <label className="text-xs font-medium text-zinc-400" htmlFor="hosts-topic">
+              {t('hosts.topicLabel', 'What is the conversation about?')}
             </label>
             <input
+              id="hosts-topic"
               value={aiTopic}
-              onChange={(e) => setAiTopic(e.target.value)}
-              placeholder={
-                lang === 'af'
-                  ? 'bv. Die toekoms van AI en soewereine skeppers in Afrika'
-                  : 'e.g. The Future of AI Agents and Autonomous Creators'
-              }
+              onChange={(e) => setAiTopic(e.target.value.slice(0, 300))}
+              placeholder={t('hosts.topicIdea', 'e.g. The story behind our new single, and the night we nearly gave up')}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
-            {/* Quick Topic Chips */}
+            {/* Starting points for the people this app is for: musicians and creators. */}
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {[
-                { en: 'Frontier AI & Vibecoding', af: 'KI & Vibecoding' },
-                { en: 'Future of African Music', af: 'Toekoms van Afrika-musiek' },
-                { en: 'Creator Sovereignty & Web3', af: 'Skeppersoewereiniteit' },
-                { en: 'Deep Tech & Autonomous Agents', af: 'Dieptegnologie & Agente' },
-              ].map((chip) => (
+              {([
+                ['hosts.chipSong', 'The story behind a song'],
+                ['hosts.chipScene', 'Our local music scene this month'],
+                ['hosts.chipMaking', 'How we made our first record'],
+                ['hosts.chipQuestions', 'Listener questions'],
+                ['hosts.chipGear', 'Gear on a small budget'],
+              ] as const).map(([key, fallback]) => (
                 <button
-                  key={chip.en}
+                  key={key}
                   type="button"
-                  onClick={() => setAiTopic(lang === 'af' ? chip.af : chip.en)}
+                  onClick={() => setAiTopic(t(key, fallback))}
                   className="rounded-full border border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/50 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition-colors"
                 >
-                  {lang === 'af' ? chip.af : chip.en}
+                  {t(key, fallback)}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Tone Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500 font-medium">{lang === 'af' ? 'Toonaard:' : 'Tone:'}</span>
-            {(['visionary', 'casual', 'debate'] as const).map((tMode) => (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-zinc-500 font-medium">{t('hosts.toneLabel', 'Tone')}:</span>
+            {([
+              ['casual', 'hosts.toneCasual', 'Easy-going'],
+              ['visionary', 'hosts.toneVisionary', 'Big ideas'],
+              ['debate', 'hosts.toneDebate', 'A friendly argument'],
+            ] as const).map(([mode, key, fallback]) => (
               <button
-                key={tMode}
+                key={mode}
                 type="button"
-                onClick={() => setAiTone(tMode)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-bold capitalize transition-colors ${
-                  aiTone === tMode
+                aria-pressed={aiTone === mode}
+                onClick={() => setAiTone(mode)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${
+                  aiTone === mode
                     ? 'bg-emerald-500 text-zinc-950'
                     : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'
                 }`}
               >
-                {tMode}
+                {t(key, fallback)}
               </button>
             ))}
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-zinc-500 font-medium">{t('hosts.lengthLabel', 'Length')}:</span>
+            {([
+              [6, 'hosts.lengthShort', 'Short'],
+              [10, 'hosts.lengthMedium', 'Medium'],
+              [16, 'hosts.lengthLong', 'Long'],
+            ] as const).map(([turns, key, fallback]) => (
+              <button
+                key={turns}
+                type="button"
+                aria-pressed={aiLength === turns}
+                onClick={() => setAiLength(turns)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${
+                  aiLength === turns
+                    ? 'bg-emerald-500 text-zinc-950'
+                    : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'
+                }`}
+              >
+                {t(key, fallback)}
+              </button>
+            ))}
+          </div>
+          {allowed > 0 && (
+            <p data-keep className="text-[11px] text-zinc-500">
+              {t('hosts.fitsPlan', 'Written to fit the {n} characters your plan reads at a time.').replace('{n}', String(allowed))}
+            </p>
+          )}
 
           {aiError && <p className="text-xs text-rose-400 font-medium">{aiError}</p>}
 
@@ -297,25 +324,19 @@ export default function TwoHosts({
               onClick={() => setIsAiModalOpen(false)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white"
             >
-              {lang === 'af' ? 'Kanselleer' : 'Cancel'}
+              {t('hosts.cancel', 'Cancel')}
             </button>
             <button
               type="button"
-              onClick={generateWithGemini}
+              data-hostswritego
+              onClick={writeScript}
               disabled={aiBusy || !aiTopic.trim()}
               className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-bold px-4 py-1.5 text-xs transition-colors"
             >
-              {aiBusy ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>{lang === 'af' ? 'Gemini dink...' : 'Gemini is writing...'}</span>
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span>{lang === 'af' ? 'Skep Gesprek' : 'Generate Dialogue'}</span>
-                </>
-              )}
+              {aiBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+              <span>
+                {aiBusy ? t('hosts.writing', 'Writing…') : `${t('hosts.writeGo', 'Write the script')} · ${t('script.noCredits', 'no credits')}`}
+              </span>
             </button>
           </div>
         </div>

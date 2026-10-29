@@ -1,13 +1,11 @@
 /**
- * Podcast Dual-Host Script Generator powered by Google Gemini.
+ * The two-hosts script writer.
  *
- * ── What this is for ─────────────────────────────────────────────────────
- *
- * Automatically generates natural, engaging dialogue between two hosts
- * (e.g., 'Aanbieder 1' and 'Aanbieder 2') on any selected theme or user prompt,
- * formatted cleanly for TwoHosts and ElevenLabs dialogue synthesis.
- *
- * Handles both Afrikaans and English with authentic conversational pacing.
+ * Writes a conversation between the member's two named hosts on the topic
+ * they give, in the tone and length they pick, laid out the way
+ * `TwoHosts.tsx` reads a script ("Name: line"). When the plan reads a
+ * limited number of characters at a time, the script is asked to fit it, so
+ * what comes back can be made as it stands. Afrikaans and English.
  */
 
 import { callerFrom } from '@/app/lib/server/account';
@@ -26,6 +24,7 @@ interface ScriptRequestBody {
   language?: 'af' | 'en';
   tone?: 'visionary' | 'casual' | 'debate' | 'deeptech';
   turns?: number;
+  maxChars?: number;
   host1Name?: string;
   host2Name?: string;
 }
@@ -40,7 +39,7 @@ export async function POST(request: Request): Promise<Response> {
 
   if (!isGeminiConfigured()) {
     return Response.json(
-      { error: 'no_key', message: 'Google Gemini API is not configured on this server.' },
+      { error: 'no_key', message: 'The script writer is not switched on yet.' },
       { status: 503 },
     );
   }
@@ -62,10 +61,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const lang = body.language === 'af' ? 'af' : 'en';
-  const h1 = (body.host1Name || 'Aanbieder 1').trim();
-  const h2 = (body.host2Name || 'Aanbieder 2').trim();
-  const turnsCount = Math.min(10, Math.max(4, body.turns || 6));
-  const tone = body.tone || 'visionary';
+  const h1 = (body.host1Name || 'Host 1').trim().slice(0, 40);
+  const h2 = (body.host2Name || 'Host 2').trim().slice(0, 40);
+  const turnsCount = Math.min(16, Math.max(4, body.turns || 10));
+  const tone = (['visionary', 'casual', 'debate', 'deeptech'] as const).find((one) => one === body.tone) ?? 'casual';
+  const fit = Number.isFinite(body.maxChars) && (body.maxChars as number) > 0 ? Math.round(body.maxChars as number) : 0;
 
   const systemPrompt = `You are a world-class podcast producer and scriptwriter for FutureBox.
 You write realistic, dynamic, thoughtful conversation between two co-hosts.
@@ -77,7 +77,8 @@ Rules:
 3. No stage directions, no sound effects, no parentheticals (like [laughs] or (excited)). Only the spoken dialogue.
 4. Language: ${lang === 'af' ? 'Afrikaans (authentic South African Afrikaans, natural flow, correct kappies/deeltekens)' : 'English'}.
 5. Tone: ${tone} (insightful, forward-looking, conversational).
-6. Generate exactly ${turnsCount} alternating dialogue turns.`;
+6. Generate exactly ${turnsCount} alternating dialogue turns.${fit ? `
+7. The whole spoken dialogue, not counting the names, must stay under ${Math.round(fit * 0.9)} characters. Shorter turns rather than fewer.` : ''}`;
 
   const userPrompt = `Write a dual-host podcast dialogue script about: "${topic}".
 Speakers: ${h1} and ${h2}.
@@ -92,7 +93,7 @@ Output only the script.`;
 
   if (!geminiRes.ok) {
     return Response.json(
-      { error: 'gemini_error', message: geminiRes.error || 'Failed to generate dialogue from Gemini.' },
+      { error: 'writer_error', message: 'The script could not be written. Try again.' },
       { status: geminiRes.status || 500 },
     );
   }
