@@ -73,6 +73,7 @@ import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '../lib/credits';
 import { pagesPdf, type DrawnPage } from '../lib/postpdf';
 import RestoreBench from './RestoreBench';
+import MakeStudio from './MakeStudio';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
@@ -1625,6 +1626,10 @@ export default function PostStudio({
      seperately on their device."* Each page is still drawn as a PNG or JPG
      (`kind`) and charged as one; `lib/postpdf.ts` lays them in one file. */
   const [asPdf, setAsPdf] = useState(false);
+  /* Make a picture (`MakeStudio.tsx`), the first room of the Make anything
+     studio: open over the editor, and what it makes comes in as if it had
+     been brought in, so sizing and Put back work as they always do. */
+  const [making, setMaking] = useState(false);
   const [scale, setScale] = useState<Scale>(1);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [showSizeModal, setShowSizeModal] = useState(false);
@@ -6611,6 +6616,10 @@ export default function PostStudio({
     <div className="space-y-4">
     {/* ── The picture ───────────────────────────────────────────────── */}
     <div className={RY}>
+      <button type="button" data-postmakebench onClick={() => setMaking(true)} className={`${LEEG} col-span-2 inline-flex items-center gap-1.5`}>
+        <Sparkles className="h-3.5 w-3.5" />
+        {`${t('make.open', 'Make one with AI')} · ${t('make.from', 'from')} ${creditsSaid(CREDITS.pictureDraft, t)}`}
+      </button>
       <label className={`${LEEG} cursor-pointer inline-flex items-center gap-1.5`}>
         <ImageIcon className="h-3.5 w-3.5" />
         {t('post.bringIn', 'Bring a picture in')}
@@ -11367,6 +11376,16 @@ export default function PostStudio({
                 <ImageIcon className="h-3.5 w-3.5" />
                 {t('post.bringIn', 'Bring a picture in')}
               </button>
+              <button
+                type="button"
+                data-postmakeopen
+                onClick={() => setMaking(true)}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold"
+                style={chipStyle}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {`${t('make.open', 'Make one with AI')} · ${t('make.from', 'from')} ${creditsSaid(CREDITS.pictureDraft, t)}`}
+              </button>
             </div>
           </div>
         </div>
@@ -11918,6 +11937,29 @@ export default function PostStudio({
         </div>
       )}
       {socialModal}
+      {making && (
+        <MakeStudio
+          t={t}
+          onClose={() => setMaking(false)}
+          onPicture={(url) => {
+            setMaking(false);
+            /* Decoded here rather than fetched: the room's own security rules
+               refuse a fetch of a `data:` address, and the engine answers in
+               one (`sync_mode`). An address on the web is fetched as usual. */
+            const asFile = async (): Promise<File> => {
+              if (!url.startsWith('data:')) {
+                const blob = await (await fetch(url)).blob();
+                return new File([blob], 'made.png', { type: blob.type || 'image/png' });
+              }
+              const [head, body] = url.split(',');
+              const type = /data:([^;]+)/.exec(head)?.[1] ?? 'image/png';
+              const bytes = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+              return new File([bytes], 'made.png', { type });
+            };
+            void asFile().then((file) => bringIn(file)).catch(() => setSaid(t('make.failed', 'That did not work this time. Your credits are back.')));
+          }}
+        />
+      )}
       {showTemplatesModal && (
         <StudioTemplatesModal
           onClose={() => setShowTemplatesModal(false)}

@@ -241,6 +241,9 @@ const KNOWN: readonly string[] = [
   'app/components/ReportSheet.tsx',
   /* Clothes on a model, 17 October 2026, over the photo editor. */
   'app/components/TryOn.tsx',
+  /* Make a picture, 29 October 2026: the first room of the Make anything
+     studio, over the photo editor. */
+  'app/components/MakeStudio.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',

@@ -63,7 +63,7 @@ export default function RestoreBench({ picture, t, onFixed }: {
 
   return (
     <div className="col-span-2 space-y-2" data-restore>
-      <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">{t('restore.title', 'Fix an old photo')}</p>
+      <p data-keep className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">{t('restore.title', 'Fix an old photo')}</p>
       {asking && (
         <YesSheet t={t} onYes={() => { giveYes(); const id = asking; setAsking(null); void go(id, true); }} onNo={() => setAsking(null)} />
       )}

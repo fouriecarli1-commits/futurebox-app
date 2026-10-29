@@ -219,6 +219,9 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   photoRepair: ['old photo'],
   photoFaces: ['old photo'],
   photoColour: ['old photo'],
+  /* Make a picture, found where the Photo Editor is. */
+  pictureDraft: ['make a picture'],
+  pictureFinal: ['make a picture'],
 };
 
 const priced = Object.keys(CREDITS);

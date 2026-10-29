@@ -990,6 +990,13 @@ export const CREDITS = {
   photoRepair: 3,
   photoFaces: 2,
   photoColour: 2,
+  /* Make a picture (`lib/picturemake.ts`), off fal.ai's pages, 29 October
+     2026, by the owner's rule (at least 80%, never under two): four drafts
+     from `fal-ai/flux/schnell`, about $0.012 (R0.22), two credits; the
+     chosen one finished by `fal-ai/flux-2/edit`, about $0.036 (R0.67),
+     three credits (R4.50, 85%). */
+  pictureDraft: 2,
+  pictureFinal: 3,
   /* ── The makes (`lib/makes.ts`), 27 October 2026 ─────────────────────
      Priced off each model's own fal.ai page (`docs/FAL-SKEMAS.md`) at
      R18.50 to the dollar, against the cheapest credit (R1.50 on Label),

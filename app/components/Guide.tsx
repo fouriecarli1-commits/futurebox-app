@@ -111,6 +111,8 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
     { key: 'guide.p.photoRepair', en: 'An old photo repaired', credits: CREDITS.photoRepair },
     { key: 'guide.p.photoFaces', en: 'Faces in an old photo brought back', credits: CREDITS.photoFaces },
     { key: 'guide.p.photoColour', en: 'A black-and-white photo coloured', credits: CREDITS.photoColour },
+    { key: 'guide.p.pictureDraft', en: 'Four drafts of a picture', credits: CREDITS.pictureDraft },
+    { key: 'guide.p.pictureFinal', en: 'A picture made final', credits: CREDITS.pictureFinal },
   ],
   podcast: [
     { key: 'guide.p.transcribe', en: 'Transcribing, per minute', credits: CREDITS.transcribe },

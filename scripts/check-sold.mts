@@ -194,6 +194,10 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   photoRepair: 'on its own button in the Photo Editor, before the press',
   photoFaces: 'on its own button in the Photo Editor, before the press',
   photoColour: 'on its own button in the Photo Editor, before the press',
+  /* Make a picture (29 October 2026): the drafts and the final, each on its
+     own button in the studio, with its price, before the press. */
+  pictureDraft: 'on its own button in the Make a picture studio, before the press',
+  pictureFinal: 'on its own button in the Make a picture studio, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a
