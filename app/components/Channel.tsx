@@ -482,11 +482,14 @@ export default function Channel({
       setCreator(updated);
       const failed = await saveCreator(updated);
       // Put it back the way it was rather than leaving the screen claiming
-      // something the row does not say.
+      // something the row does not say, and say why: a picture the screen
+      // turned away (`lib/server/picturescreen.ts`) is not a silent undo.
+      setPhotoSaid(failed);
       if (failed) setCreator(creator);
     },
     [creator],
   );
+  const [photoSaid, setPhotoSaid] = useState<string | null>(null);
 
   return (
     <div className="space-y-4" data-channelroom>
@@ -539,6 +542,9 @@ export default function Channel({
             path={creator?.avatar_path ?? null}
             onChanged={keepPhoto}
           />
+          {photoSaid && (
+            <p role="alert" data-photosaid className="mt-2 text-[13px] leading-snug text-amber-300">{photoSaid}</p>
+          )}
         </div>
       )}
 

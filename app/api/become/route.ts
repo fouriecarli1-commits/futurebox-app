@@ -29,6 +29,7 @@ import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
 import { falNow, falProgress, falQueue, falReady, fileUrlOf, maskUrlOf, maskUrlsOf } from '@/app/lib/server/fal';
 import { seal, unseal } from '@/app/lib/server/falticket';
+import { screenPicture, SCREEN_REFUSED } from '@/app/lib/server/picturescreen';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -119,6 +120,14 @@ export async function POST(request: Request): Promise<Response> {
   if (words) {
     const screened = await guard(request, words, 'footage', caller);
     if (!screened.ok) return screened.response;
+  }
+
+  /* The photo is looked at before a credit is spent on it: what comes back
+     can be posted (`lib/server/picturescreen.ts`). */
+  const seen = await screenPicture(picture, `become:${id}`);
+  if (seen.state === 'refused') {
+    await noteRefusal(caller.id);
+    return Response.json({ message: SCREEN_REFUSED }, { status: 422 });
   }
 
   const paid = await charge(request, spec.credits, `become:${id}`);

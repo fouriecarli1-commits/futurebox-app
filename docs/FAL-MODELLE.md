@@ -732,8 +732,13 @@ words into fields the table reads (`hasWords`, `person`, `look`, `shape`,
 
 ### 4. What to build, in order
 
-0. **Before launch:** the picture screen on Live room posts
-   (`imageutils/nsfw`), and alt text. Safety first, cheap, fal.ai's own.
+0. **Before launch:** the picture screen (`imageutils/nsfw`), and alt text.
+   Safety first, cheap, fal.ai's own. **Built 29 October 2026**
+   (`lib/server/picturescreen.ts`, `check:picturescreen`): a work before it
+   hangs on the art wall, a new profile picture, and a photo before an
+   engine works on it, refused at 0.7. Live room posts carry only made or
+   bought pictures, so the members' own pictures are the ones looked at.
+   Alt text waits: `florence-2-large/caption` is Pending Enterprise Ready.
 1. **Moving cover** (a still cover as a short loop). Small, and every
    release in the Music room wants one.
 2. **Sound for my clip** in the Video Editor (`mmaudio-v2`, then Sonilo).

@@ -443,6 +443,7 @@
     "check:spectrogram": "tsx scripts/check-spectrogram.mts",
     "check:whatsin": "tsx scripts/check-whatsin.mts",
     "check:boothprices": "tsx scripts/check-boothprices.mts",
+    "check:picturescreen": "tsx scripts/check-picturescreen.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",
     "check:cloudcopy": "tsx scripts/check-cloudcopy.mts",
     "check:kidsplaylists": "tsx scripts/check-kidsplaylists.mts",

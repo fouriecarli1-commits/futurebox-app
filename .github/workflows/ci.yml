@@ -1945,6 +1945,8 @@ jobs:
         run: npm run check:whatsin
       - name: The booth tools are priced, said and charged first
         run: npm run check:boothprices
+      - name: A member's own picture is looked at before strangers see it
+        run: npm run check:picturescreen
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.

@@ -11,6 +11,8 @@ import { guard } from '@/app/lib/server/safety';
 import { ownedPath } from '@/app/lib/server/ownedpath';
 import { isOwnerEmail, ownerEmails } from '@/app/lib/server/owners';
 import { RESERVED_REASON, isReserved } from '@/app/lib/reserved';
+import { screenPicture, SCREEN_REFUSED } from '@/app/lib/server/picturescreen';
+
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -110,6 +112,19 @@ export async function POST(request: Request): Promise<Response> {
   let avatar: string | null = null;
   if ('avatar_path' in body) {
     avatar = cleanAvatar(body.avatar_path, caller.id);
+    /* A new face beside every post in the Live room is looked at first
+       (`lib/server/picturescreen.ts`). Refused, the file is taken away
+       too, so nothing is left in the bucket under their name. */
+    if (avatar) {
+      const { data: looked } = await client.storage.from('avatars').createSignedUrl(avatar, 300);
+      if (looked?.signedUrl) {
+        const seen = await screenPicture(looked.signedUrl, 'profile picture');
+        if (seen.state === 'refused') {
+          await client.storage.from('avatars').remove([avatar]);
+          return Response.json({ error: 'screened', message: SCREEN_REFUSED }, { status: 422 });
+        }
+      }
+    }
   } else {
     const { data: existing } = await client
       .from('creators')

@@ -43,6 +43,7 @@ import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import { guard } from '@/app/lib/server/safety';
 import { storageId } from '@/app/lib/server/ownedpath';
+import { screenPicture, SCREEN_REFUSED } from '@/app/lib/server/picturescreen';
 import {
   ART_MAX_BYTES, ART_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '@/app/data/artmarket';
@@ -742,6 +743,17 @@ export async function POST(request: Request): Promise<Response> {
       const preview = String(body.preview ?? '');
       if (preview && !preview.startsWith(`${artist.id}/`)) {
         return Response.json({ error: 'not_yours', message: 'That is not a file you uploaded.' }, { status: 403 });
+      }
+      /* Looked at before it hangs where everybody walks past it
+         (`lib/server/picturescreen.ts`): the picture the wall shows. */
+      {
+        const { data: looked } = await client.storage.from(BUCKET).createSignedUrl(preview || path, 300);
+        if (looked?.signedUrl) {
+          const seen = await screenPicture(looked.signedUrl, 'art wall');
+          if (seen.state === 'refused') {
+            return Response.json({ error: 'screened', message: SCREEN_REFUSED }, { status: 422 });
+          }
+        }
       }
       /* `ends_at` stays null, and stays null for ever now. It was when
          the bidding on this piece would stop, written by the first bid
