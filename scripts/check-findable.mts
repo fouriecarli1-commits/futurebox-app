@@ -215,6 +215,10 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   coverLoop: ['cover'],
   /* Sound for a silent shot, found where the Video Editor is. */
   clipSound: ['sound'],
+  /* Make my photo good, found where the Photo Editor is. */
+  photoRepair: ['old photo'],
+  photoFaces: ['old photo'],
+  photoColour: ['old photo'],
 };
 
 const priced = Object.keys(CREDITS);

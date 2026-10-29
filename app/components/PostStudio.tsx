@@ -72,6 +72,7 @@ import {
 import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '../lib/credits';
 import { pagesPdf, type DrawnPage } from '../lib/postpdf';
+import RestoreBench from './RestoreBench';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
@@ -6753,6 +6754,12 @@ export default function PostStudio({
           {t('post.subjectsGo', 'Cut out every main thing \u00b7 {n} credits').replace('{n}', String(CREDITS.grab))}
         </button>
       )}
+      {/* Make my photo good (`lib/restore.ts`): drawn once it is switched on. */}
+      <RestoreBench
+        picture={picture}
+        t={t}
+        onFixed={(made, what) => insteadOf(what, made, t('restore.failed', 'That did not work this time. Your credits are back.'), t('restore.done', 'Done. Put back takes you to the photo as it was.'))}
+      />
       {back === null && (
         <p data-postcheckernote className="col-span-2 text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
           {t('post.checkerOnlyHere', 'The squares only show you it is see-through. They are not in the picture you save.')}

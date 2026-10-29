@@ -188,6 +188,12 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   /* Sound for a silent shot (29 October 2026): on its own button in the
      Video Editor, with its price, before the press. */
   clipSound: 'on its own button in the Video Editor, before the press',
+  /* Make my photo good (29 October 2026): each on its own button in the
+     Photo Editor, with its price, before the press; switched off until the
+     owner has read fal.ai's Enterprise Ready label for the three models. */
+  photoRepair: 'on its own button in the Photo Editor, before the press',
+  photoFaces: 'on its own button in the Photo Editor, before the press',
+  photoColour: 'on its own button in the Photo Editor, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a

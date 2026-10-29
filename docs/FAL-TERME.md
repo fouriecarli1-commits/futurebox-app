@@ -90,6 +90,10 @@ The owner pasted these too. Five points bind how the app is built:
    VEED's. If its page marks it as a partner API, VEED is a new processor:
    a name on the privacy page and a row in `check:verwerkers`, or a
    fal-hosted model instead. Prefer models fal.ai runs itself.
+   **29 October 2026:** each model page carries `is_partner_api`; of the
+   models in use, `ltx-2.3/image-to-video/fast` (Wake it up, the moving
+   cover) is one, so Lightricks is named on the privacy page and
+   `check:falwire` holds that every partner in use is named there.
 3. **The key never reaches a phone.** Section 2: "Client will not expose any
    of the Services APIs directly to any End Users." Every call goes through
    our server with `FAL_KEY` held there, which is how every other engine in

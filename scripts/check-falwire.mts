@@ -44,6 +44,19 @@ ok('what to take out is screened as footage', /guard\(request, words, 'footage',
 ok('our copy of the clip is deleted when the job ends', /storage\.from\(BUCKET\)\.remove\(\[path\]\)/.test(route));
 ok('a failed job gives the credits back once', /reason', 'refund'\)/.test(route) && /await refund\(/.test(route));
 
+/* ── Partner models: another company behind fal.ai ─────────────────────
+   fal.ai's model pages say which models run through the maker's own API
+   (`is_partner_api`, read 29 October 2026). The member's picture then goes
+   to that company too, so each one in use is named on the privacy page
+   (`docs/FAL-TERME.md`, rule 2). */
+const PARTNERS: Readonly<Record<string, string>> = { 'fal-ai/ltx-2.3/image-to-video/fast': 'Lightricks' };
+const privacy = readFileSync('app/privacy/page.tsx', 'utf8');
+const usedModels = [...Object.values(FAL_MODELS), ...Object.values(BECOMES).map((one) => one.model),
+  readFileSync('app/lib/coverloop.ts', 'utf8').match(/LOOP_MODEL = '([^']+)'/)?.[1] ?? ''];
+ok('every partner model in use is named on the privacy page',
+  usedModels.filter((id) => id in PARTNERS).every((id) => privacy.includes(PARTNERS[id])),
+  usedModels.filter((id) => id in PARTNERS && !privacy.includes(PARTNERS[id])).join(', '));
+
 /* Sound for a silent shot (29 October 2026): fal.ai's own MMAudio, the
    clip's own length up to thirty seconds, one price a clip. */
 const sound = inputFor('sound', 'https://example.test/clip.mp4', '', 12.2);

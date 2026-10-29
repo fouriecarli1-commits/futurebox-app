@@ -108,6 +108,9 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
     { key: 'guide.p.cutout', en: 'The background taken out, per five seconds of work', credits: CREDITS.cutout },
     { key: 'guide.p.erase', en: 'An item taken out, per five seconds of work', credits: CREDITS.erase },
     { key: 'guide.p.grab', en: 'Grabbing the words out of a picture', credits: CREDITS.grab },
+    { key: 'guide.p.photoRepair', en: 'An old photo repaired', credits: CREDITS.photoRepair },
+    { key: 'guide.p.photoFaces', en: 'Faces in an old photo brought back', credits: CREDITS.photoFaces },
+    { key: 'guide.p.photoColour', en: 'A black-and-white photo coloured', credits: CREDITS.photoColour },
   ],
   podcast: [
     { key: 'guide.p.transcribe', en: 'Transcribing, per minute', credits: CREDITS.transcribe },

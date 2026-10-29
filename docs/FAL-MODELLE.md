@@ -750,6 +750,11 @@ words into fields the table reads (`hasWords`, `person`, `look`, `shape`,
    item in `FootageEngine.tsx`, through `/api/footage` (job `sound`), up to
    30 seconds, 3 credits a clip. Sonilo waits for its licence terms.
 3. **Make my photo good / fix an old photo** in the Photo Editor.
+   **Built 29 October 2026, switched off** (`lib/restore.ts`,
+   `/api/restore`, `RestoreBench.tsx`, `check:restore`): repair
+   (`image-editing/photo-restoration`, 3 credits), faces (`codeformer`, 2)
+   and colour (`ddcolor`, 2) in the picture bench. `RESTORE_CLEARED` opens it
+   once the owner has read the Enterprise Ready label on all three pages.
 4. **Lyric video**: words timed to the song (`forced-alignment`), drawn by
    our own editor, Afrikaans heard by `wizper`.
 5. **Podcast with two hosts** from a script, and filler words cut out.

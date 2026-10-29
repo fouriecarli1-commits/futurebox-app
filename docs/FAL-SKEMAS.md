@@ -207,3 +207,34 @@ None of these pages carried "Pending Enterprise Ready".
   otherwise, which is about three seconds. The app now asks for the most
   it takes (197, about eight seconds) and says so before the press:
   clips for this one are eight seconds at most.
+
+## `fal-ai/image-editing/photo-restoration`: an old photo repaired (Make my photo good)
+
+- **Price:** $0.04 a photo (the owner, from its page, 29 October 2026).
+- **Sync:** yes, with `sync_mode` (the answer carries the picture).
+- **In:** `image_url` (required; a data URI is accepted), `guidance_scale`
+  (3.5), `num_inference_steps` (30), `safety_tolerance` ("1" to "6",
+  default "2", left there), `output_format` (jpeg | png), `aspect_ratio`,
+  `seed`, `sync_mode`.
+- **Out:** `images` (a list of `{ url, content_type, file_name, file_size,
+  width, height }`), `seed`.
+- **Chosen:** PNG, `sync_mode`, safety at its default.
+
+## `fal-ai/codeformer`: faces brought back (Make my photo good)
+
+- **Price:** $0.0021 a megapixel of output; it doubles the picture.
+- **In:** `image_url` (required), `fidelity` (0 to 1, default 0.5),
+  `upscale_factor` (default 2), `aligned`, `only_center_face`,
+  `face_upscale` (default true), `seed`.
+- **Out:** `image` (`{ url, content_type, file_name, file_size, width,
+  height }`), `seed`.
+- **Chosen:** fidelity 0.7 (closer to the person than to a made-up clean
+  face), every face (old photos are family groups).
+
+## `fal-ai/ddcolor`: a black-and-white photo coloured (Make my photo good)
+
+- **Price:** $0.001 a megapixel.
+- **In:** `image_url` (required), `seed`.
+- **Out:** `image` (`{ url, content_type, file_name, file_size, width,
+  height }`).
+

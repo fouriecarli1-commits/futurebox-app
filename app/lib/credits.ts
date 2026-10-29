@@ -981,6 +981,15 @@ export const CREDITS = {
      of up to thirty seconds: three credits is R4.50 at the cheapest tier,
      88%, and never under two (*"Niks 1 credit nie. Altyd 2."*). */
   clipSound: 3,
+  /* Make my photo good (`lib/restore.ts`), priced off the fal.ai pages the
+     owner read on 29 October 2026, at R18.50 to the dollar against the
+     cheapest credit (R1.50), by her 80% rule and never under two:
+     repair, $0.04 a photo (R0.74): three credits is R4.50, 84%;
+     faces, $0.0021 a megapixel, at most about R0.13 a photo: two credits;
+     colour, $0.001 a megapixel, at most about R0.03: two credits. */
+  photoRepair: 3,
+  photoFaces: 2,
+  photoColour: 2,
   /* ── The makes (`lib/makes.ts`), 27 October 2026 ─────────────────────
      Priced off each model's own fal.ai page (`docs/FAL-SKEMAS.md`) at
      R18.50 to the dollar, against the cheapest credit (R1.50 on Label),
