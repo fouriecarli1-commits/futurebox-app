@@ -173,6 +173,40 @@ try {
   await page.waitForTimeout(300);
   check('  and a point tapped twice is taken away', Number(await page.locator('[data-autoline="gain"]').first().getAttribute('data-autopoints')) === 0);
   await page.screenshot({ path: shot('dawmeters-automation.png') });
+
+  /* ── Punch in: one marked piece of a take, recorded again in place ── */
+  await page.locator('[data-boothautomode="gain"]').first().click();
+  await page.waitForTimeout(300);
+  const names = () => page.locator('[data-lanename]').allInnerTexts();
+  const before = (await names()).length;
+  await page.locator('[data-laneaddhow="record"]').first().click();
+  await page.waitForTimeout(4500);
+  await page.getByRole('button', { name: /^Stop recording$/ }).first().click();
+  await page.waitForTimeout(2500);
+  const afterTake = await names();
+  check('a take recorded from the new-lane strip lands as a lane', afterTake.length === before + 1, afterTake.join(' | '));
+  await page.locator('[data-lanename]').last().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-mark]').first().click();
+  await page.waitForTimeout(250);
+  const ruler = await page.locator('[data-axis]').first().boundingBox();
+  const clip = await page.locator('[aria-label*="Drag this sound"]').last().boundingBox();
+  await page.mouse.move(clip.x + clip.width * 0.55, ruler.y + ruler.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(clip.x + clip.width * 0.8, ruler.y + ruler.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await page.locator('[data-boothpunch]').first().click();
+  await page.waitForTimeout(200);
+  check('  and Punch in says it is armed once a piece is marked', /armed/.test(await page.locator('[data-boothpunch]').first().innerText()));
+  await page.locator('[data-laneaddhow="record"]').first().click();
+  await page.waitForTimeout(5500);
+  await page.getByRole('button', { name: /^Stop recording$/ }).first().click();
+  await page.waitForTimeout(2500);
+  const afterPunch = await names();
+  check('punching in adds the punched piece as its own lane', afterPunch.some((one) => /^Punch/.test(one.trim())), afterPunch.join(' | '));
+  check('  and cuts the marked piece out of the take under it, so the new one replaces it', afterPunch.length === afterTake.length + 2, `${afterTake.length} → ${afterPunch.length}`);
+  await page.screenshot({ path: shot('dawmeters-punch.png') });
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

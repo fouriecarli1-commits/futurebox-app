@@ -74,6 +74,11 @@ ok('  and is saved with the lane, read back, and part of the mix signature',
   /auto: \{ gain: lane\.auto\.gain\?\.map/.test(readFileSync('app/lib/keepsession.ts', 'utf8')) && /\{ auto: lane\.auto \}/.test(booth) && /JSON\.stringify\(one\.auto \?\? null\)/.test(booth));
 ok('  and a lane drawn down to silence is not reported as a broken speaker', /valueAt\(one\.auto\.gain, from, 1\) <= 0\.001/.test(booth));
 
+ok('punch in starts the take before the mark, so the singer hears the run-up', /const from = span \? span\.from : punch \? Math\.max\(0, punch\.from - PUNCH_RUNUP\) : at;/.test(booth) && /const PUNCH_RUNUP = 2;/.test(booth));
+ok('  keeps only the marked piece, with a hair of fade at each join', /from: inFrom,\s*to: inTo,[\s\S]{0,120}fadeIn: PUNCH_FADE,\s*fadeOut: PUNCH_FADE/.test(booth));
+ok('  cuts the marked piece out of the open lane under it, never the song itself', /one\.id === punch\.into && !one\.backing/.test(booth) && /carveLane\(under, punch\.from, punch\.to\)/.test(booth));
+ok('  and is one undoable step', /remember\(t\('undo\.punch'/.test(booth));
+
 if (bad) {
   console.error(`\ncheck:dawtools — ${bad} assertion(s) failed.`);
   process.exit(1);

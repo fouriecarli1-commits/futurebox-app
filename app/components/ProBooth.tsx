@@ -117,6 +117,10 @@ import AmpFace from './AmpFace';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
+/** How long before a punched piece the take starts, so the singer hears the run-up. */
+const PUNCH_RUNUP = 2;
+/** The fade at each end of a punched piece, so the joins do not click. */
+const PUNCH_FADE = 0.012;
 
 /** What a root key may be. Carried, never computed with — see the note by the
  *  meter state below. */
@@ -597,6 +601,16 @@ export default function ProBooth({
   const loopTakeRef = useRef<{ readonly from: number; readonly to: number } | null>(null);
   /** How much count-in went onto the front of the take being recorded. */
   const leadRef = useRef(0);
+  /* ── Punch in ───────────────────────────────────────────────────────
+     Every studio's way to fix one line: with Punch on and a piece marked,
+     the take starts a little before the mark so the singer hears the run-up,
+     and only the marked piece is kept, with a hair of fade at each join. The
+     open lane's take under the mark is cut out, so the new one replaces it. */
+  const [punching, setPunching] = useState(false);
+  const punchRef = useRef<{ readonly from: number; readonly to: number; readonly into: string | null } | null>(null);
+  /* The mark and the open lane as they are now, for `record`, which is
+     declared above them. Written on every render, below. */
+  const markNow = useRef<{ readonly region: { readonly from: number; readonly to: number } | null; readonly picked: string | null }>({ region: null, picked: null });
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const rate = backing?.sampleRate ?? 48_000;
@@ -1130,7 +1144,10 @@ export default function ProBooth({
        pass round is kept — see `stopRecording`. */
     const span = loopSpan.current;
     loopTakeRef.current = span;
-    const from = span ? span.from : at;
+    const { region: marked, picked: open } = markNow.current;
+    const punch = !span && punching && marked && marked.to - marked.from >= 0.1 ? marked : null;
+    punchRef.current = punch ? { from: punch.from, to: punch.to, into: open } : null;
+    const from = span ? span.from : punch ? Math.max(0, punch.from - PUNCH_RUNUP) : at;
     if (span) setAt(span.from);
     recordFromRef.current = from;
     /* The count-in is not trimmed off the front of the take. The recorder
@@ -1146,7 +1163,7 @@ export default function ProBooth({
     recorder.start(1000);
     play(from, lead);
     setRecording(true);
-  }, [at, context, countBars, meter, play, t]);
+  }, [at, context, countBars, meter, play, punching, t]);
 
   /* Returns the lane it made, so a way out of the room can write the take
      down before the room is gone — see `leave`. */
@@ -1209,6 +1226,41 @@ export default function ProBooth({
       }
       /* Named from the lanes as they are now, outside the setter, so the
          lane handed back is the same object that lands in the session. */
+      const punch = punchRef.current;
+      punchRef.current = null;
+      if (punch) {
+        /* Where the file starts on the session clock, as for any take, and
+           the marked piece read out of it. */
+        const start = recordFromRef.current - leadRef.current - knownLatency();
+        const inFrom = Math.max(0, punch.from - start);
+        const inTo = Math.min(piece.duration, punch.to - start);
+        if (inTo - inFrom >= 0.1) {
+          const take: Lane = {
+            id: `lane-${Date.now()}-punch`,
+            name: `${t('pro.punchName', 'Punch')} ${lanesNow.current.filter((one) => !one.backing).length + 1}`,
+            audio: piece,
+            at: start + inFrom,
+            from: inFrom,
+            to: inTo,
+            gain: 1,
+            muted: false,
+            soloed: false,
+            fadeIn: PUNCH_FADE,
+            fadeOut: PUNCH_FADE,
+          };
+          remember(t('undo.punch', 'the punch-in'));
+          setLanes((was) => {
+            const under = was.find((one) => one.id === punch.into && !one.backing);
+            const carved = under ? carveLane(under, punch.from, punch.to) : null;
+            const kept = carved
+              ? was.flatMap((one) => (one.id !== under?.id ? [one] : [carved.before, carved.after].filter((piece2): piece2 is Lane => Boolean(piece2))))
+              : was;
+            return [...kept, take];
+          });
+          setStale(true);
+          return take;
+        }
+      }
       const lane: Lane = {
         id: `lane-${Date.now()}`,
         name: `${t('pro.take', 'Take')} ${lanesNow.current.filter((one) => !one.backing).length + 1}`,
@@ -2898,6 +2950,7 @@ export default function ProBooth({
      that lane's own card, and a button here promising to "make it better"
      would have been a button that could not. */
   const [region, setRegion] = useState<{ readonly from: number; readonly to: number } | null>(null);
+  markNow.current = { region, picked };
   const [regionOpen, setRegionOpen] = useState(false);
   /* What the marked piece sounds like (`whatsIn`). The owner, 28 October
      2026: "hum and instrument or vocal in this part". Read on a press, for
@@ -6699,6 +6752,21 @@ export default function ProBooth({
               </button>
             ))}
           </div>
+          {/* Punch in: record over the marked piece only (see `punchRef`). */}
+          <button
+            type="button"
+            data-boothpunch
+            aria-pressed={punching}
+            disabled={recording}
+            onClick={() => setPunching((was) => !was)}
+            title={t('pro.punchWhat', 'Mark the piece to fix, open the lane it is on, and press Record: the take starts two seconds early so you hear the run-up, and only the marked piece is kept, in place of what was there.')}
+            className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50 ${punching ? 'border-red-400/60 bg-red-500/15 text-red-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+          >
+            <Circle className="h-3 w-3 fill-current" />
+            {punching
+              ? (region ? t('pro.punchArmed', 'Punch in: armed') : t('pro.punchMark', 'Punch in: mark a piece'))
+              : t('pro.punch', 'Punch in')}
+          </button>
           </div>
           <BoothTimeline
             earOf={earOf}
