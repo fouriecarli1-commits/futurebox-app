@@ -3943,12 +3943,22 @@ export default function PostStudio({
   /* The stack of pages on the screen, and the wait for its scroll to settle. */
   const pageScroll = useRef<HTMLDivElement | null>(null);
   const pageSettle = useRef<number | null>(null);
+  /* Where the room is scrolling itself to, and since when: while it is on
+     its way, the scroll is not somebody choosing a page. Found in CI on
+     29 October 2026 — a settle from mid-journey sent "Copy this page" back
+     a page, and it did so through a press made with the room as it was a
+     render ago. */
+  const pageGoal = useRef<{ top: number; since: number } | null>(null);
+  const pageLatest = useRef<{ at: number; count: number; go: (to: number) => void }>({ at: 0, count: 0, go: () => {} });
   /* A page added or chosen is scrolled to; one scrolled to is already there. */
   useEffect(() => {
     const el = pageScroll.current;
     if (!el || pages.length < 2) return;
     const want = pageAt * el.clientHeight;
-    if (Math.abs(el.scrollTop - want) > 4) el.scrollTo({ top: want, behavior: 'smooth' });
+    if (Math.abs(el.scrollTop - want) > 4) {
+      pageGoal.current = { top: want, since: Date.now() };
+      el.scrollTo({ top: want, behavior: 'smooth' });
+    }
   }, [pageAt, pages.length]);
 
   /** A small copy of the canvas as it is now, for the page row. */
@@ -10775,6 +10785,7 @@ export default function PostStudio({
      page never makes a new canvas), the others are their pictures, and
      scrolling to one makes it the page being worked on. The plus at the
      foot adds a page after this one and scrolls to it. */
+  pageLatest.current = { at: pageAt, count: pages.length, go: goPage };
   const stacked = (live: React.ReactNode): React.ReactElement => {
     const list = pages.length > 1 ? pages : [null];
     return (
@@ -10786,9 +10797,17 @@ export default function PostStudio({
             if (pageSettle.current) window.clearTimeout(pageSettle.current);
             pageSettle.current = window.setTimeout(() => {
               const el = pageScroll.current;
-              if (!el || pages.length < 2 || !el.clientHeight) return;
+              if (!el || !el.clientHeight) return;
+              const goal = pageGoal.current;
+              if (goal) {
+                const there = Math.abs(el.scrollTop - goal.top) <= 4;
+                if (there || Date.now() - goal.since > 1500) pageGoal.current = null;
+                if (there || Date.now() - goal.since <= 1500) return;
+              }
+              /* The room as it is now, not as it was when this was set. */
+              const now = pageLatest.current;
               const at = Math.round(el.scrollTop / el.clientHeight);
-              if (at !== pageAt && at >= 0 && at < pages.length) goPage(at);
+              if (now.count > 1 && at !== now.at && at >= 0 && at < now.count) now.go(at);
             }, 180);
           }}
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${pages.length > 1 ? 'snap-y snap-mandatory overflow-y-auto' : 'overflow-hidden'}`}
