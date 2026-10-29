@@ -714,7 +714,7 @@ try {
      and the drag is aimed at the middle of that. Measured, not allowed for. */
   const onGlass = await page.evaluate(() => {
     const glass = document.querySelector('[data-postcanvas]');
-    const dock = document.querySelector('[data-cutdock]');
+    const dock = [...document.querySelectorAll('[data-cutdock]')].find((one) => one.getBoundingClientRect().width > window.innerWidth / 2); /* a bar along the foot only: the side rails cover nothing below */
     if (!glass) return null;
     const r = glass.getBoundingClientRect();
     const floor = dock ? dock.getBoundingClientRect().top : window.innerHeight;
@@ -825,7 +825,7 @@ try {
   const smallBox = await page.locator('[data-postcanvas]').first().boundingBox();
   const smallBand = await page.evaluate(() => {
     const glass = document.querySelector('[data-postcanvas]');
-    const dock = document.querySelector('[data-cutdock]');
+    const dock = [...document.querySelectorAll('[data-cutdock]')].find((one) => one.getBoundingClientRect().width > window.innerWidth / 2); /* a bar along the foot only: the side rails cover nothing below */
     if (!glass) return null;
     const r = glass.getBoundingClientRect();
     const floor = dock ? dock.getBoundingClientRect().top : window.innerHeight;
@@ -2118,7 +2118,10 @@ try {
        question of every room, in both states, and this one defers to it
        rather than reporting a room doing the right thing as broken. */
     if (!bar) {
-      const dock = document.querySelector('[data-cutdock]');
+      const dock = [...document.querySelectorAll('[data-cutdock]')].find((one) => one.getBoundingClientRect().width > window.innerWidth / 2); /* a bar along the foot only: the side rails cover nothing below */
+      /* The tools down the sides (28 October 2026): no bar along the foot,
+         so nothing can be under one. */
+      if (!dock && document.querySelector('[data-postside]')) return [];
       if (!dock) return ['no app bar AND no bar of the room’s own'];
       const r = dock.getBoundingClientRect();
       return r.bottom >= window.innerHeight - 1

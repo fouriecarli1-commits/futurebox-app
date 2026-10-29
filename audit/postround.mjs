@@ -108,8 +108,9 @@ try {
     const room = document.querySelector('[data-postsavefull]')?.parentElement?.getBoundingClientRect();
     return sheet && bar && room ? { gapTop: sheet.top - bar.bottom, gapFoot: room.bottom - sheet.bottom, wide: sheet.width, roomWide: room.width } : null;
   });
-  check('Take it out opens over the whole screen under the bar, the side tools too',
-    cover !== null && Math.abs(cover.gapTop) <= 2 && Math.abs(cover.gapFoot) <= 2 && cover.wide >= cover.roomWide - 2,
+  check('Take it out opens over the whole photo, under the bar, with the side tools still there',
+    cover !== null && Math.abs(cover.gapTop) <= 2 && Math.abs(cover.gapFoot) <= 2
+      && (await page.locator('[data-postside] [data-cutbench="pic"]').isVisible()),
     JSON.stringify(cover));
   check('  with its price on it', (await page.locator('[data-postsavefull] [data-postexport]').count()) > 0);
   await page.locator('[data-postexportopen]').click();

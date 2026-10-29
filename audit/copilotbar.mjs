@@ -137,8 +137,14 @@ try {
          The question the probe asks is unchanged and still the right one: can
          she see the whole box she types into, clear of whatever bar is pinned
          to the bottom of this screen. Only which element that is changes. */
+      /* A bar along the foot, that is: the Photo Editor's tools run down the
+         sides of the photo on a phone since 28 October 2026, and a side rail
+         is not a bar anything can be hidden behind. With none, the foot of
+         the screen is the line. */
       const bar = document.querySelector('nav[aria-label]')
-        ?? document.querySelector('[data-cutdock], [data-boothdock]');
+        ?? [...document.querySelectorAll('[data-cutdock], [data-boothdock]')]
+          .find((one) => one.getBoundingClientRect().width > window.innerWidth / 2)
+        ?? { getBoundingClientRect: () => ({ top: window.innerHeight, bottom: window.innerHeight }) };
       /* The copilot's own box: the one text input inside the pane that holds
          the conversation. Matched on the placeholder rather than a class, so
          restyling it does not quietly stop this looking. */

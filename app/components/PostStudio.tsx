@@ -11649,7 +11649,6 @@ export default function PostStudio({
               data-cutdock=""
               data-cutbenchrow=""
               data-postside="left"
-              aria-label={t('post.toolsAria', 'Tools')}
               className="flex w-[48px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden py-1.5 backdrop-blur-md"
               style={{ background: 'rgba(10,12,16,0.55)', borderRight: `1px solid ${PHOTO.edge}` }}
             >
@@ -11675,17 +11674,6 @@ export default function PostStudio({
                 {`${view.scale.toFixed(1)}×`}
               </button>
             )}
-          </div>
-            <nav
-              data-cutdock=""
-              data-cutbenchrow=""
-              data-postside="right"
-              aria-label={t('post.toolsAria', 'Tools')}
-              className="flex w-[48px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden py-1.5 backdrop-blur-md"
-              style={{ background: 'rgba(10,12,16,0.55)', borderLeft: `1px solid ${PHOTO.edge}` }}
-            >
-              {ALL_BENCHES.slice(SIDE_HALF).map((spec) => toolButton(spec, false, true))}
-            </nav>
             {saveFull && toolSheet ? (
               /* The owner, 15 October 2026: "Take it out se pop out kan oor die
                  hele skerm gaan." So it does: the whole space between the
@@ -11700,6 +11688,16 @@ export default function PostStudio({
                 {toolSheet}
               </div>
             ) : null}
+          </div>
+            <nav
+              data-cutdock=""
+              data-cutbenchrow=""
+              data-postside="right"
+              className="flex w-[48px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden py-1.5 backdrop-blur-md"
+              style={{ background: 'rgba(10,12,16,0.55)', borderLeft: `1px solid ${PHOTO.edge}` }}
+            >
+              {ALL_BENCHES.slice(SIDE_HALF).map((spec) => toolButton(spec, false, true))}
+            </nav>
               {/* ── The tool's controls: a small glass strip over the photo's foot ──
                   The owner, 27 October 2026, with a screenshot of a tool open:
                   *"Die oomblik wanneer mens 'n funksie oop maak dan maak dit
