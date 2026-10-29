@@ -26,7 +26,11 @@
  *     really vector artwork; a post made of a photograph and some words is
  *     not one, whatever it is saved as.
  *   · **PDF** is a real answer for printing and a separate piece of work.
- *     Left out until somebody needs it.
+ *     Left out until somebody needs it — and on 29 October 2026 the owner
+ *     did, for pages: *"Say they want to download it in a pdf, then the
+ *     screens must all be on the one document."* So it is not a format of
+ *     one picture here; it is the export's way of laying the ticked pages
+ *     in one file (`lib/postpdf.ts`), each page drawn as a PNG or JPG.
  *   · **MP4 and GIF** are not formats of this picture at all. Turning a still
  *     into something that moves is a different tool with a supplier behind
  *     it and a price of its own.

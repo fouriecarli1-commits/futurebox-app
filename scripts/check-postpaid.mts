@@ -242,6 +242,9 @@ ok('  and asks to be charged before it draws it',
 const ROADS = [
   { what: 'saved to the device', in: 'const take = ', by: 'handOut(' },
   { what: 'saved to the device, page by page', in: 'const takePages', by: 'handOut(' },
+  /* The ticked pages as one PDF (29 October 2026): the same pages, each
+     through the same charge, laid in one file before it is handed out. */
+  { what: 'saved to the device as one PDF', in: 'const takePages', by: 'handOut(await pagesPdf(' },
   { what: "handed to the film's cover", in: 'const intoFilm', by: 'onIntoFilm(' },
 ] as const;
 

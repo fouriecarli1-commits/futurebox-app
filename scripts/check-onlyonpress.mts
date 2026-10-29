@@ -140,8 +140,9 @@ ok('the photo room has exactly one way to put a file on a phone',
 ok('  and it is behind the paid picture',
   /const handOut = [\s\S]{0,300}\.download\s*=/.test(photo)
   && /const take = async[\s\S]{0,400}await paidPicture\(\)[\s\S]{0,200}handOut\(/.test(photo)
-  && /const takePages = async[\s\S]{0,1200}await paidNow\.current\(\)[\s\S]{0,200}handOut\(/.test(photo)
-  && (photo.match(/\bhandOut\(/g) ?? []).length === 2,
+  && /const takePages = async[\s\S]{0,1200}await paidNow\.current\(\)[\s\S]{0,600}handOut\(/.test(photo)
+  && /const takePages = async[\s\S]{0,2500}await paidNow\.current\(\)[\s\S]{0,900}handOut\(await pagesPdf\(/.test(photo)
+  && (photo.match(/\bhandOut\(/g) ?? []).length === 3,
   'the export charge and the file have to be the same press, or one of them'
   + ' happens without the other');
 

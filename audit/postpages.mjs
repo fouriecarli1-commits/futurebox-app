@@ -120,6 +120,41 @@ try {
   JSON.stringify(saved));
   check('  each through the one charge', charged === 2, String(charged));
   check('  and the room is back on the page it was on', (await now()) === '3/3', await now());
+
+  /* ── As one PDF: every ticked page in one document ──
+     The owner, 29 October 2026: "Say they want to download it in a pdf, then
+     the screens must all be on the one document. If it is png then they will
+     land seperately on their device." */
+  await page.locator('[data-postkind="pdf"]').click();
+  await page.waitForTimeout(200);
+  const pdfLabel = await page.locator('[data-postexport]').first().innerText();
+  check('PDF is offered, and the button says it is one PDF', /one PDF/.test(pdfLabel) && /10/.test(pdfLabel), pdfLabel);
+  const before = saved.length;
+  const pdfFile = page.waitForEvent('download', { timeout: 20000 }).catch(() => null);
+  await page.locator('[data-postexport]').first().click();
+  const got = await pdfFile;
+  await page.waitForTimeout(3000);
+  const pdfPath = got ? await got.path().catch(() => null) : null;
+  const { readFileSync } = await import('node:fs');
+  const bytes = pdfPath ? readFileSync(pdfPath) : Buffer.alloc(0);
+  const sheets = (bytes.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+  check('  and the two ticked pages land as one file, a PDF of two pages', saved.length === before + 1
+    && /\.pdf$/.test(saved[saved.length - 1] ?? '') && bytes.slice(0, 4).toString() === '%PDF' && sheets === 2,
+  `${JSON.stringify(saved.slice(before))}, ${bytes.length} bytes, ${sheets} pages`);
+  await page.locator('[data-postexportopen]').click();
+  await page.waitForTimeout(400);
+
+  /* ── The pages one under the other, and a plus at the foot ──
+     The owner, 29 October 2026: "At the bottom of the photo editor screen
+     there must be a plus or add a window ... and then the screen must be
+     able to scroll down to the next window." */
+  check('every page is on the screen, one under the other', (await page.locator('[data-postpagesheet]').count()) === 3);
+  await page.locator('[data-postpageplus]').click();
+  await page.waitForTimeout(1200);
+  check('  the plus adds a page and goes to it', (await now()) === '4/4' && (await page.locator('[data-postpagesheet]').count()) === 4, await now());
+  await page.locator('[data-postpagestack]').evaluate((el) => el.scrollTo({ top: 0 }));
+  await page.waitForTimeout(1200);
+  check('  and scrolling up to the first makes it the page being worked on', (await now()) === '1/4', await now());
 } finally {
   await browser.close();
   await server.stop();

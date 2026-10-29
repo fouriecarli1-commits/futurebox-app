@@ -71,6 +71,7 @@ import {
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '../lib/credits';
+import { pagesPdf, type DrawnPage } from '../lib/postpdf';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
@@ -1617,6 +1618,12 @@ export default function PostStudio({
   const setPlain = useSetPlain();
 
   const [kind, setKind] = useState<FileKind>('png');
+  /* The ticked pages as one PDF rather than a file each. The owner, 29
+     October 2026: *"Say they want to download it in a pdf, then the screens
+     must all be on the one document. If it is png then they will land
+     seperately on their device."* Each page is still drawn as a PNG or JPG
+     (`kind`) and charged as one; `lib/postpdf.ts` lays them in one file. */
+  const [asPdf, setAsPdf] = useState(false);
   const [scale, setScale] = useState<Scale>(1);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [showSizeModal, setShowSizeModal] = useState(false);
@@ -3933,12 +3940,22 @@ export default function PostStudio({
   /* Pages left out of the next save; every page is ticked until untapped. */
   const [pagesSkipped, setPagesSkipped] = useState<ReadonlySet<string>>(new Set());
   const [pageDropping, setPageDropping] = useState(false);
+  /* The stack of pages on the screen, and the wait for its scroll to settle. */
+  const pageScroll = useRef<HTMLDivElement | null>(null);
+  const pageSettle = useRef<number | null>(null);
+  /* A page added or chosen is scrolled to; one scrolled to is already there. */
+  useEffect(() => {
+    const el = pageScroll.current;
+    if (!el || pages.length < 2) return;
+    const want = pageAt * el.clientHeight;
+    if (Math.abs(el.scrollTop - want) > 4) el.scrollTo({ top: want, behavior: 'smooth' });
+  }, [pageAt, pages.length]);
 
   /** A small copy of the canvas as it is now, for the page row. */
   const pageThumb = (): HTMLCanvasElement | null => {
     const on = canvas.current;
     if (!on || !on.width || !on.height) return null;
-    const k = 120 / Math.max(on.width, on.height);
+    const k = Math.min(1, 720 / Math.max(on.width, on.height));
     const small = document.createElement('canvas');
     small.width = Math.max(1, Math.round(on.width * k));
     small.height = Math.max(1, Math.round(on.height * k));
@@ -4083,7 +4100,7 @@ export default function PostStudio({
     requestAnimationFrame(() => requestAnimationFrame(() => { window.setTimeout(done, 150); }));
   });
 
-  /** Every ticked page, each as its own file, each through the one charge. */
+  /** Every ticked page, each as its own file — or all in one PDF — each through the one charge. */
   const takePages = async (): Promise<void> => {
     const list = pagesNow();
     const chosen = list.map((one, j) => ({ one, j })).filter(({ one }) => !pagesSkipped.has(one.key));
@@ -4093,6 +4110,7 @@ export default function PostStudio({
     setSaid('');
     setPages(list);
     let saved = 0;
+    const drawn: DrawnPage[] = [];
     try {
       for (const { one, j } of chosen) {
         setPageAt(j);
@@ -4100,8 +4118,17 @@ export default function PostStudio({
         await drawnYet();
         const blob = await paidNow.current();
         if (!blob) break;
-        handOut(blob, nameNow.current().replace(/(\.[a-z0-9]+)$/i, `-page-${j + 1}$1`));
+        if (asPdf) {
+          const seen = await createImageBitmap(blob);
+          drawn.push({ blob, width: seen.width, height: seen.height });
+          seen.close();
+        } else {
+          handOut(blob, nameNow.current().replace(/(\.[a-z0-9]+)$/i, `-page-${j + 1}$1`));
+        }
         saved += 1;
+      }
+      if (asPdf && drawn.length === chosen.length) {
+        handOut(await pagesPdf(drawn), nameNow.current().replace(/\.[a-z0-9]+$/i, '.pdf'));
       }
     } catch {
       setSaid(t('post.noExport', 'That could not be exported.'));
@@ -4111,7 +4138,9 @@ export default function PostStudio({
       setBusy(false);
     }
     if (saved === chosen.length) {
-      setSaid(t('post.pagesSaved', '{n} pages saved to your device.').replace('{n}', String(saved)));
+      setSaid(asPdf
+        ? t('post.pdfSaved', 'Saved to your device as one PDF of {n} pages.').replace('{n}', String(saved))
+        : t('post.pagesSaved', '{n} pages saved to your device.').replace('{n}', String(saved)));
     }
   };
 
@@ -9252,16 +9281,29 @@ export default function PostStudio({
             key={one.id}
             type="button"
             data-postkind={one.id}
-            aria-pressed={kind === one.id}
-            onClick={() => setKind(one.id)}
-            className={`${LEEG} ${kind === one.id ? GEKIES : ''}`}
+            aria-pressed={kind === one.id && !asPdf}
+            onClick={() => { setKind(one.id); setAsPdf(false); }}
+            className={`${LEEG} ${kind === one.id && !asPdf ? GEKIES : ''}`}
           >
             {t(one.name[0], one.name[1])}
           </button>
         ))}
+        {/* Every ticked page in one document. A WebP cannot go into a PDF,
+            so the pages are drawn as PNG for it. */}
+        <button
+          type="button"
+          data-postkind="pdf"
+          aria-pressed={asPdf}
+          onClick={() => { setAsPdf(true); if (kind === 'webp') setKind('png'); }}
+          className={`${LEEG} ${asPdf ? GEKIES : ''}`}
+        >
+          PDF
+        </button>
       </div>
       <p className="text-[12px] leading-relaxed text-zinc-500">
-        {t(formatOf(kind).what[0], formatOf(kind).what[1])}
+        {asPdf
+          ? t('post.kindPdfWhat', 'Every ticked page in one document, one page to a sheet, in order. For printing and sending.')
+          : t(formatOf(kind).what[0], formatOf(kind).what[1])}
       </p>
       {/* ── The one that catches people ────────────────────────────────
  
@@ -9402,12 +9444,12 @@ export default function PostStudio({
             {busy
               ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
               : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
-                  {t('post.savePages', 'Save {n} pages').replace('{n}', String(n))} · {creditsSaid(CREDITS.postOut * n, t)}
+                  {(asPdf ? t('post.savePdf', 'Save {n} pages as one PDF') : t('post.savePages', 'Save {n} pages')).replace('{n}', String(n))} · {creditsSaid(CREDITS.postOut * n, t)}
                 </span>}
           </button>
         );
       })() : (
-        <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
+        <button type="button" onClick={() => void (asPdf ? takePages() : take())} disabled={busy} data-postexport className={VUL}>
           {busy
             ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
             : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
@@ -10724,6 +10766,72 @@ export default function PostStudio({
     ? 'long'
     : working;
 
+  /* ── The pages, one under the other ───────────────────────────────────
+     The owner, 29 October 2026: *"At the bottom of the photo editor screen
+     there must be a plus or add a window, for more editing windows, and
+     then the screen must be able to scroll down to the next window."* Each
+     page fills the space the photograph has; the one being worked on is
+     the live canvas (always under the key `live`, so moving to another
+     page never makes a new canvas), the others are their pictures, and
+     scrolling to one makes it the page being worked on. The plus at the
+     foot adds a page after this one and scrolls to it. */
+  const stacked = (live: React.ReactNode): React.ReactElement => {
+    const list = pages.length > 1 ? pages : [null];
+    return (
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div
+          ref={pageScroll}
+          data-postpagestack
+          onScroll={() => {
+            if (pageSettle.current) window.clearTimeout(pageSettle.current);
+            pageSettle.current = window.setTimeout(() => {
+              const el = pageScroll.current;
+              if (!el || pages.length < 2 || !el.clientHeight) return;
+              const at = Math.round(el.scrollTop / el.clientHeight);
+              if (at !== pageAt && at >= 0 && at < pages.length) goPage(at);
+            }, 180);
+          }}
+          className={`flex min-h-0 min-w-0 flex-1 flex-col ${pages.length > 1 ? 'snap-y snap-mandatory overflow-y-auto' : 'overflow-hidden'}`}
+        >
+          {list.map((one, j) => (j === pageAt || !one ? (
+            <div key="live" data-postpagesheet={j + 1} className="relative flex min-h-0 min-w-0 shrink-0 snap-start flex-col" style={{ flex: '0 0 100%' }}>
+              {live}
+            </div>
+          ) : (
+            <button
+              key={one.key}
+              type="button"
+              data-postpagesheet={j + 1}
+              onClick={() => goPage(j)}
+              aria-label={t('post.pageOpen', 'Work on page {n}').replace('{n}', String(j + 1))}
+              className="relative flex min-h-0 shrink-0 snap-start items-center justify-center p-3"
+              style={{ flex: '0 0 100%' }}
+            >
+              <span className="block h-full w-full overflow-hidden rounded-md opacity-90" style={{ boxShadow: `0 0 0 1px ${PHOTO.accentDim}` }}>
+                <PageThumb from={one.thumb} />
+              </span>
+              <span className="absolute left-4 top-4 rounded-full bg-zinc-950/80 px-2.5 py-1 text-[11px] font-bold text-zinc-100">
+                {t('post.pageN', 'Page {n}').replace('{n}', String(j + 1))}
+              </span>
+            </button>
+          )))}
+        </div>
+        <button
+          type="button"
+          data-postpageplus
+          onClick={() => addPage(false)}
+          aria-label={t('post.pageAdd', 'Add a page')}
+          title={t('post.pageAdd', 'Add a page')}
+          className="absolute bottom-3 right-3 z-30 inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-[12px] font-bold shadow-lg"
+          style={{ background: PHOTO.accent, color: PHOTO.floor }}
+        >
+          <Plus className="h-4 w-4" />
+          {t('post.pagePlus', 'Page')}
+        </button>
+      </div>
+    );
+  };
+
   /* ── The photograph, as big as the space allows ───────────────────── */
   const photo = (
     <div
@@ -10735,6 +10843,9 @@ export default function PostStudio({
          the strip; tucked or shut, it sits in the middle. */
       className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp && !tucked && !saveFull ? 'items-start pt-2' : 'items-center'}`}
       onWheel={(event) => {
+        /* With pages, the wheel goes from page to page; a pinch (or Ctrl)
+           still zooms. */
+        if (pages.length > 1 && !event.ctrlKey && !event.metaKey) return;
         const box = event.currentTarget.getBoundingClientRect();
         viewTo(view.scale * (event.deltaY < 0 ? 1.15 : 1 / 1.15), {
           x: event.clientX - (box.left + box.width / 2),
@@ -11655,6 +11766,7 @@ export default function PostStudio({
               {ALL_BENCHES.slice(0, SIDE_HALF).map((spec) => toolButton(spec, false, true))}
             </nav>
           <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+            {stacked(<>
             {photo}
             {/* Undo and redo ride on the photograph's corner on a phone: in
                 the bar they pushed "Take it out" off the right edge of a
@@ -11674,6 +11786,7 @@ export default function PostStudio({
                 {`${view.scale.toFixed(1)}×`}
               </button>
             )}
+            </>)}
             {saveFull && toolSheet ? (
               /* The owner, 15 October 2026: "Take it out se pop out kan oor die
                  hele skerm gaan." So it does: the whole space between the
@@ -11766,7 +11879,7 @@ export default function PostStudio({
             >
               {ALL_BENCHES.map((spec) => toolButton(spec, true))}
             </nav>
-            {photo}
+            {stacked(photo)}
             <aside
               data-postinspector
               className="flex w-[340px] shrink-0 min-h-0 flex-col overflow-y-auto 2xl:w-[400px]"
