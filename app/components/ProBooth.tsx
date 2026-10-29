@@ -6703,6 +6703,13 @@ export default function ProBooth({
           <BoothTimeline
             earOf={earOf}
             autoMode={autoMode}
+            addOff={busy || recording}
+            onAdd={(how) => {
+              if (how === 'record') void record();
+              else if (how === 'file') fileRef.current?.click();
+              else if (how === 'stems') setDeskOpen('stems');
+              else setPartOpen(true);
+            }}
             view={laneView}
             markers={markers}
             onMarks={(id) => { void findMarks(id); }}
@@ -6723,67 +6730,11 @@ export default function ProBooth({
             onRegion={setRegion}
           />
 
-          {/* Not on a phone held sideways: there the room is under three
-              hundred pixels tall, these three wrap into rows, and the
-              timeline above was left two pixels (`check:probooth`). The rail
-              beside it opens the same three desks. */}
-          {lanes.length <= 2 && !sideways && (
-            /* One row that slides sideways, not three that wrap.
-               The owner, 21 October 2026, from her phone: functions sat
-               behind the button bar. The room is a column that does not
-               scroll; the timeline keeps a floor of 40vh, and these three
-               wrapped onto three rows a card's height under it — so on a
-               phone the card was cut off at the dock with two buttons out
-               of reach. As one row it is 70 pixels and always whole. */
-            <div data-quickslots className="fb-fx-booth-panel mx-3 my-2 shrink-0 rounded-2xl border px-3 pb-2 pt-2">
-              <span className="block text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300/80">
-                {t('pro.quickSlots', 'Studio Track Slots')}
-              </span>
-              <div className="-mx-1 mt-1.5 flex items-center gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&>button]:shrink-0 [&>button]:whitespace-nowrap">
-                <button
-                  type="button"
-                  onClick={() => setDeskOpen('stems')}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
-                >
-                  <Layers className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
-                </button>
-                {/* ── Each one does what it says ─────────────────────────
-
-                    Found on 15 October 2026 going through every function in
-                    the booth: "Add Vocal / Harmony Track" opened the Voice
-                    desk, which sings an EXISTING lane in another voice and
-                    adds nothing, and "Add Instrument / Neural Part" opened
-                    Tempo & Tracks, which has no generator on it at all. Two
-                    buttons whose words and whose deeds disagreed.
-
-                    The vocal one records a new lane, against the click and
-                    count-in already set — the dock's middle button and this
-                    one both stop it. The instrument one opens the part sheet
-                    itself, which says its price before anything is spent. */}
-                <button
-                  type="button"
-                  data-quickrecord=""
-                  onClick={() => void (recording ? stopRecording() : record())}
-                  disabled={busy || making}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all disabled:opacity-50"
-                >
-                  {recording ? <Square className="h-3.5 w-3.5 fill-current text-red-400" /> : <Mic2 className="h-3.5 w-3.5 text-sky-400" />}
-                  <span>{recording ? t('pro.stopRecording', 'Stop recording') : t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
-                </button>
-                <button
-                  type="button"
-                  data-quickpart=""
-                  onClick={() => setPartOpen(true)}
-                  disabled={busy || recording || making}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all disabled:opacity-50"
-                >
-                  <Music2 className="h-3.5 w-3.5 text-purple-400" />
-                  <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>
-                </button>
-              </div>
-            </div>
-          )}
+          {/* The "Studio Track Slots" bar that sat here offered three of
+              the same things as the new-lane strip under the lanes (record,
+              generate a part) plus splitting stems. On 29 October 2026 the
+              four were put in one place, where the next lane goes
+              (`BoothTimeline`'s `onAdd`). */}
         </div>
       </div>
       </div>

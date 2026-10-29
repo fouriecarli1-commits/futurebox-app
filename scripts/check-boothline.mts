@@ -64,7 +64,8 @@ ok(
      of one column, so they cannot disagree about where a second is. What is
      pinned here is that there are exactly two columns and the second is one
      value shared by all of them. */
-  /gridTemplateColumns: `\$\{GUTTER\}px \$\{axisWide\}px`/.test(line) &&
+  /* `gutter` since 29 October 2026: 96 on a phone, wider on a computer. */
+  /gridTemplateColumns: `\$\{(GUTTER|gutter)\}px \$\{axisWide\}px`/.test(line) &&
     /const axisWide = Math\.max\(1, Math\.round\(room \* zoom\)\)/.test(line),
   'a per-row axis is a per-row pixels-per-second, which is what made a ruler useless',
 );

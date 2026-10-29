@@ -129,6 +129,14 @@ function hueFor(index: number, count: number): number {
 const GUTTER = 96;
 /** A lane is drawn this tall. */
 const ROW = 78;
+/* ── On a computer screen, room for the whole name ───────────────────
+   Her choice of 96 was made on a phone, against the timeline's width there.
+   A laptop has the width to spare: at 1024 pixels and up the header grows to
+   fit a lane's whole name and the lane gets a little taller, and a phone is
+   exactly as it was (found 29 October 2026: "Kar…" for Karoo pad on a
+   1440-pixel screen with most of it empty). */
+const GUTTER_WIDE = 172;
+const WIDE_FROM = 1024;
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -226,6 +234,8 @@ export default function BoothTimeline({
   spans,
   earOf,
   autoMode = null,
+  onAdd,
+  addOff = false,
   onSeek,
   onChange,
   onSlide,
@@ -241,6 +251,10 @@ export default function BoothTimeline({
   readonly earOf?: (id: string) => AnalyserNode | undefined;
   /** Which automation line is drawn over every lane, if any (`BoothAuto`). */
   readonly autoMode?: AutoMode | null;
+  /** The three ways to start a new lane, offered where the next lane will go. */
+  readonly onAdd?: (how: 'record' | 'file' | 'part' | 'stems') => void;
+  /** Whether adding is possible right now (not mid-take, not busy). */
+  readonly addOff?: boolean;
   /** Every lane as a wave, or as a spectrogram. The owner, 26 October 2026. */
   readonly view?: 'wave' | 'spectrum';
   /** The length of the whole session, in seconds. The axis is this wide. */
@@ -478,10 +492,16 @@ export default function BoothTimeline({
   /** The box the axis is drawn inside, which is what the zoom multiplies. */
   const scroller = useRef<HTMLDivElement | null>(null);
   const [room, setRoom] = useState(0);
+  const [roomy, setRoomy] = useState(false);
+  const gutter = roomy ? GUTTER_WIDE : GUTTER;
   useEffect(() => {
     const box = scroller.current;
     if (!box) return;
-    const measure = (): void => setRoom(Math.max(0, box.clientWidth - GUTTER));
+    const measure = (): void => {
+      const wide = box.clientWidth >= WIDE_FROM;
+      setRoomy(wide);
+      setRoom(Math.max(0, box.clientWidth - (wide ? GUTTER_WIDE : GUTTER)));
+    };
     measure();
     const watcher = new ResizeObserver(measure);
     watcher.observe(box);
@@ -503,8 +523,8 @@ export default function BoothTimeline({
   const headRef = useRef<HTMLSpanElement | null>(null);
   const clockRef = useRef<HTMLSpanElement | null>(null);
   const placeRef = useRef<HTMLSpanElement | null>(null);
-  const drawn = useRef({ scaleTotal, axisWide, meter, zoom });
-  drawn.current = { scaleTotal, axisWide, meter, zoom };
+  const drawn = useRef({ scaleTotal, axisWide, meter, zoom, gutter });
+  drawn.current = { scaleTotal, axisWide, meter, zoom, gutter };
   useEffect(() => {
     if (!live || !playing) return undefined;
     let second = -1;
@@ -528,9 +548,9 @@ export default function BoothTimeline({
       }
       const box = scroller.current;
       if (box && now.zoom > 1 && !held.current) {
-        const x = GUTTER + (pct / 100) * now.axisWide;
-        if (x > box.scrollLeft + box.clientWidth - 24 || x < box.scrollLeft + GUTTER) {
-          box.scrollLeft = Math.max(0, x - GUTTER - 24);
+        const x = now.gutter + (pct / 100) * now.axisWide;
+        if (x > box.scrollLeft + box.clientWidth - 24 || x < box.scrollLeft + now.gutter) {
+          box.scrollLeft = Math.max(0, x - now.gutter - 24);
         }
       }
     });
@@ -1126,7 +1146,7 @@ export default function BoothTimeline({
              is left of the box" and the whole point of a zoom is to be
              wider than the box. At zoom 1 it IS what is left of the box, so
              this is the same layout it always was until somebody presses +. */
-          style={{ gridTemplateColumns: `${GUTTER}px ${axisWide}px` }}
+          style={{ gridTemplateColumns: `${gutter}px ${axisWide}px` }}
         >
           {/* ── The ruler ──────────────────────────────────────────────
 
@@ -1490,7 +1510,7 @@ export default function BoothTimeline({
                        that was already truncating in 96 pixels. */
                     className="absolute left-0 right-11 top-0 h-11 px-1.5 pt-1 text-left"
                   >
-                    <span className="block w-full truncate text-[11px] font-extrabold leading-tight tracking-wide" style={{ color: on ? '#38bdf8' : INK }}>
+                    <span className={`block w-full font-extrabold leading-tight tracking-wide ${roomy ? 'line-clamp-2 break-words pl-1.5 text-[12px]' : 'truncate text-[11px]'}`} style={{ color: on ? '#38bdf8' : INK }}>
                       {lane.name}
                     </span>
                   </button>
@@ -1829,7 +1849,7 @@ export default function BoothTimeline({
                       roomy={wide > 0 && (plays / Math.max(0.001, scaleTotal)) * wide >= 84}
                       onRename={(name) => onChange(lane.id, { name })}
                     />
-                    <Wave lane={lane} view={view} />
+                    <Wave lane={lane} view={view} hue={hue} />
                     {/* Tapped open big, with the words to read it by. The
                         owner, 27 October 2026: "Moet mens nie op dit kan
                         kliek en dit word groot". */}
@@ -2127,6 +2147,45 @@ export default function BoothTimeline({
             );
           })}
 
+          {/* ── Where the next lane goes ──────────────────────────────────
+              The rest of the screen under the lanes was empty black (found
+              29 October 2026). It is the natural place to start the next one,
+              so the three ways in are offered right there. */}
+          {onAdd && (
+            <div
+              data-laneadd
+              className="sticky left-0 flex flex-wrap items-center gap-2 px-2 py-3"
+              style={{ gridColumn: '1 / -1', gridRow: lanes.length + 2, width: `min(100%, ${gutter + room}px)` }}
+            >
+              <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: INK_DIM }}>
+                {t('pro.addLane', 'A new lane')}
+              </span>
+              {([
+                ['record', '●', t('pro.addRecord', 'Record')],
+                ['file', '↥', t('pro.addFile', 'Bring a file in')],
+                ['part', '♪', t('pro.addPart', 'Make a part')],
+                ['stems', '≋', t('pro.addStems', 'Split into stems')],
+              ] as const).map(([how, mark, says]) => (
+                <button
+                  key={how}
+                  type="button"
+                  data-laneaddhow={how}
+                  disabled={addOff}
+                  onClick={() => onAdd(how)}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-dashed px-3.5 text-xs font-bold transition-colors disabled:opacity-40"
+                  style={{
+                    borderColor: how === 'record' ? 'rgba(248,113,113,0.55)' : 'rgba(56,189,248,0.45)',
+                    color: how === 'record' ? '#fca5a5' : '#7dd3fc',
+                    background: 'rgba(255,255,255,0.025)',
+                  }}
+                >
+                  <span aria-hidden className="text-sm leading-none">{mark}</span>
+                  {says}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* ── The marked piece ────────────────────────────────────────
 
               Drawn across every lane rather than inside one, because that is
@@ -2259,7 +2318,7 @@ function pictureOf(sound: AudioBuffer, columns: number): Spectrogram {
   return made;
 }
 
-function Wave({ lane, view = 'wave' }: { readonly lane: Lane; readonly view?: 'wave' | 'spectrum' }): React.ReactElement {
+function Wave({ lane, view = 'wave', hue = 190 }: { readonly lane: Lane; readonly view?: 'wave' | 'spectrum'; readonly hue?: number }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const box = canvas.current;
@@ -2316,11 +2375,15 @@ function Wave({ lane, view = 'wave' }: { readonly lane: Lane; readonly view?: 'w
       }
       return;
     }
+    /* In the lane's own colour, brightest at the middle line, with a glow:
+       each lane is recognisable by its colour as well as its name. */
     const grad = paint.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, '#22d3ee');
-    grad.addColorStop(0.5, '#06b6d4');
-    grad.addColorStop(1, '#0891b2');
+    grad.addColorStop(0, `hsl(${hue} 90% 62%)`);
+    grad.addColorStop(0.5, `hsl(${hue} 95% 72%)`);
+    grad.addColorStop(1, `hsl(${hue} 90% 52%)`);
     paint.fillStyle = grad;
+    paint.shadowColor = `hsl(${hue} 95% 60% / 0.7)`;
+    paint.shadowBlur = 6;
     for (let x = 0; x < width; x += 1) {
       const inPass = pass > 0 ? (x % pass) / pass : 0;
       const which = first + Math.floor(inPass * (last - first));

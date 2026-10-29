@@ -109,6 +109,10 @@ try {
   await room.locator('button').filter({ hasText: /Pro DAW Studio/ }).first().dispatchEvent('click');
   await page.waitForTimeout(3000);
 
+  check('under the lanes, the four ways to a new lane are offered where it will go',
+    (await page.locator('[data-laneadd] [data-laneaddhow]').count()) === 4);
+  check('  and a lane header is wide enough for the whole name on a computer',
+    !(await page.locator('[data-lanename] span').first().evaluate((one) => one.scrollWidth > one.clientWidth + 1)));
   check('every lane header has a meter', (await page.locator('[data-lanename]').count()) > 0
     && (await page.locator('[data-lanemeter]').count()) >= (await page.locator('[data-lanename]').count()));
   check('  and it is still before anything plays', (await loudest('[data-lanemeter] [data-level]', 400)) === 0);
