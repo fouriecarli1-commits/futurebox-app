@@ -6745,7 +6745,10 @@ export default function PostStudio({
         aria-pressed={back === null}
         disabled={working === 'long'}
         onClick={() => { if (back === null) setBack(lastColour); else void makeTransparent(); }}
-        className={back === null ? VUL.replace('w-full ', '') : LEEG}
+        /* Without a picture the half-width presses above it come to an odd
+           number, so this one takes the whole row rather than leaving half of
+           it empty (check:tidybars); with one, Take it out evens them. */
+        className={`${back === null ? VUL.replace('w-full ', '') : LEEG}${picture ? '' : ' col-span-2'}`}
       >
         {back === null
           ? t('post.clearOn', 'Transparent \u2014 nothing behind it')
