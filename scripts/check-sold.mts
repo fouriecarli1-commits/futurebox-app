@@ -182,6 +182,9 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   findMarks: 'on its own button in the Pro Booth, before the press',
   smoothJoin: 'on its own button in the Pro Booth, before the press',
   whatsIn: 'on its own button in the Pro Booth, before the press',
+  /* A song's cover, moving (29 October 2026): on its own button under the
+     cover, with its price, before the press. */
+  coverLoop: 'on its own button under a song\'s cover, before the press',
   /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a

@@ -49,6 +49,8 @@ const { browser, page, problems } = await enter({
     await p.route('**/api/cover**', (route) => {
       const request = route.request();
       const url = request.url();
+      /* The moving cover's own address: none, so the still cover draws. */
+      if (/\/api\/cover\/loop/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: '{"url":null}' });
       if (request.method() === 'POST') {
         posted = JSON.parse(request.postData() || '{}');
         made = true;

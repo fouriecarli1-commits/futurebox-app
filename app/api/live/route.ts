@@ -41,6 +41,7 @@ import { storageId } from '@/app/lib/server/ownedpath';
 import { creditFrom } from '@/app/lib/artcredit';
 import { blockedBy, whoOf } from '@/app/lib/server/who';
 import { collabCredit } from '@/app/lib/collabcredit';
+import { loopPath } from '@/app/lib/coverloop';
 
 /** A project where a column this file writes has not been added yet. */
 const NO_COLUMN = /42703|PGRST204|column .* does not exist|could not find .* column/i;
@@ -435,6 +436,21 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
+  /* The covers that move (`lib/coverloop.ts`), in one call: a per-path
+     error is a song whose cover is still, which is most of them. */
+  const loopFor = new Map<string, string>();
+  {
+    const songs = ((posts ?? []) as PostRow[]).filter((one) => one.kind === 'track' && one.source_id);
+    const paths = [...new Set(songs.map((one) => loopPath(one.owner, one.source_id)))];
+    if (paths.length) {
+      const { data: loops, error: loopsUnread } = await client.storage.from('tracks').createSignedUrls(paths, LINK_SECONDS);
+      /* The call failing is not the same as no song having one: said, and
+         the room still opens with its still covers. */
+      if (loopsUnread) console.error(`live: the moving covers could not be read — ${loopsUnread.message}`);
+      for (const row of loops ?? []) if (!row.error && row.path && row.signedUrl) loopFor.set(row.path, row.signedUrl);
+    }
+  }
+
   /* Members this reader has blocked are left out of the room for them —
      posts and links both (`lib/reports.ts`). */
   const hidden = caller ? await blockedBy(client, caller.id) : new Set<string>();
@@ -528,6 +544,9 @@ export async function GET(request: Request): Promise<Response> {
         why,
         /* The real sleeve, when the owner has made one. Null is the ordinary
            case and the room draws its generated picture instead. */
+        coverLoop: post.kind === 'track' && post.source_id
+          ? loopFor.get(loopPath(post.owner, post.source_id)) ?? null
+          : null,
         cover: post.kind === 'track' && post.source_id
           ? coverFor.get(coverPath(post.owner, post.source_id)) ?? null
           : null,

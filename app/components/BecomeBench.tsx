@@ -61,7 +61,7 @@ export function useEngineYes(): readonly [boolean, () => void] {
   return [yes, give];
 }
 
-function YesSheet({ t, onYes, onNo }: { readonly t: Say; readonly onYes: () => void; readonly onNo: () => void }): React.ReactElement {
+export function YesSheet({ t, onYes, onNo }: { readonly t: Say; readonly onYes: () => void; readonly onNo: () => void }): React.ReactElement {
   const [abroad, setAbroad] = useState(false);
   const [adult, setAdult] = useState(false);
   /* Brought into view: the bench can be below the fold on a phone, and two

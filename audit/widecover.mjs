@@ -96,6 +96,8 @@ const { browser, page, problems } = await enter({
          with the panel open. Only the second decides which half of the panel
          draws, which is how `realart.mjs` reaches both. */
       const url = route.request().url();
+      /* The moving cover's own address: none, so the still cover draws. */
+      if (/\/api\/cover\/loop/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: '{"url":null}' });
       const body = /[?&]tracks=/.test(url)
         ? '{"covers":{}}'
         : hasCover

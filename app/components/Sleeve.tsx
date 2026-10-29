@@ -99,16 +99,16 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
-import { CREDITS } from '../lib/credits';
+import { CREDITS, creditsSaid } from '../lib/credits';
 import {
   hasPicture, offersKeep, saysSaved, standingOf, type CoverWord,
 } from '../lib/coverstate';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 import { ArtTag } from './Cover';
-import { IdeaPrompt, WakeSheet } from './BecomeBench';
+import { IdeaPrompt, WakeSheet, YesSheet, useEngineYes } from './BecomeBench';
 import { offerIf, saidNotNow, saidYes } from '../lib/ideas';
 
 export default function Sleeve({
@@ -458,6 +458,95 @@ export default function Sleeve({
 
   /* Written once and used in both states of this panel, so the door cannot
      exist on one of them and be missed on the other. */
+  /* ── The cover, moving ─────────────────────────────────────────────────
+     The owner, 29 October 2026: *"Gaan aan met die moving cover."* Six
+     seconds that start and end on the cover (`lib/coverloop.ts`), kept
+     beside it and played wherever the song shows its cover, without sound:
+     the song is the sound. Only on a made cover — a bought piece is the
+     artist's, and not ours to change. */
+  const [loop, setLoop] = useState<string | null>(null);
+  const [looping, setLooping] = useState(false);
+  const [askYes, setAskYes] = useState(false);
+  const [yes, giveYes] = useEngineYes();
+  useEffect(() => {
+    let on = true;
+    void (async () => {
+      try {
+        const got = await fetch(`/api/cover/loop?track=${encodeURIComponent(trackId)}`, { headers: await headers() });
+        const said = (await got.json().catch(() => ({}))) as { url?: string | null };
+        if (on && said.url) setLoop(said.url);
+      } catch { /* no moving cover is the ordinary case */ }
+    })();
+    return () => { on = false; };
+  }, [trackId, headers]);
+  /* `agreed` is the yes just given: this press's `yes` is still the one
+     from before it, and reading it asked the same two questions again. */
+  const makeLoop = async (agreed = false): Promise<void> => {
+    if (!yes && !agreed) { setAskYes(true); return; }
+    setProblem(null);
+    setLooping(true);
+    onWorking(true);
+    try {
+      const started = await fetch('/api/cover/loop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(await headers()) },
+        body: JSON.stringify({ trackId }),
+      });
+      const begun = (await started.json().catch(() => ({}))) as { ticket?: string; message?: string };
+      if (!started.ok || !begun.ticket) { setProblem(begun.message ?? t('cover.loopNoStart', 'That did not start. Nothing was charged.')); return; }
+      for (let tries = 0; tries < 120; tries += 1) {
+        await new Promise((done) => { window.setTimeout(done, 5000); });
+        const now = await fetch(`/api/cover/loop?ticket=${encodeURIComponent(begun.ticket)}`, { headers: await headers() });
+        const at = (await now.json().catch(() => ({}))) as { state?: string; url?: string; message?: string };
+        if (at.state === 'waiting') continue;
+        if (at.state === 'done' && at.url) { setLoop(at.url); return; }
+        setProblem(at.message ?? t('cover.loopFailed', 'The cover could not be made to move this time. Your credits are back.'));
+        return;
+      }
+      setProblem(t('cover.loopSlow', 'This is taking longer than ten minutes. Open the song again later: it is kept when it arrives.'));
+    } catch {
+      setProblem(t('cover.loopOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setLooping(false);
+      onWorking(false);
+    }
+  };
+  const stillAgain = async (): Promise<void> => {
+    await fetch(`/api/cover/loop?track=${encodeURIComponent(trackId)}`, { method: 'DELETE', headers: await headers() }).catch(() => null);
+    setLoop(null);
+  };
+  const loopRow = kept ? (
+    <div className="space-y-2" data-coverloop>
+      {askYes && (
+        <YesSheet t={t} onYes={() => { giveYes(); setAskYes(false); void makeLoop(true); }} onNo={() => setAskYes(false)} />
+      )}
+      {loop ? (
+        <button
+          type="button"
+          data-coverloopoff
+          onClick={() => void stillAgain()}
+          disabled={busy || looping}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-300 hover:border-emerald-500 disabled:opacity-60"
+        >
+          {t('cover.loopOff', 'Back to the still cover')}
+        </button>
+      ) : (
+        <button
+          type="button"
+          data-coverloopgo
+          onClick={() => void makeLoop()}
+          disabled={busy || looping}
+          className="min-h-[44px] w-full rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3 text-sm font-bold text-emerald-200 flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {looping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {looping
+            ? t('cover.loopMaking', 'Making it move — about a minute')
+            : `${t('cover.loopGo', 'Make the cover move')} · ${creditsSaid(CREDITS.coverLoop, t)}`}
+        </button>
+      )}
+    </div>
+  ) : null;
+
   const realArt = (
     <>
       <button
@@ -500,11 +589,27 @@ export default function Sleeve({
               the artist. */}
           <div className="relative" data-sleevepicture>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url}
-              alt={t('cover.alt', 'Cover art for this song')}
-              className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
-            />
+            {loop ? (
+              /* eslint-disable-next-line jsx-a11y/media-has-caption -- the
+                 cover, moving, with no sound of its own: nothing to caption. */
+              <video
+                src={loop}
+                data-coverloopplays
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster={url}
+                aria-label={t('cover.alt', 'Cover art for this song')}
+                className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
+              />
+            ) : (
+              <img
+                src={url}
+                alt={t('cover.alt', 'Cover art for this song')}
+                className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
+              />
+            )}
             {word.bought === true && <ArtTag credit={word.credit} />}
           </div>
 
@@ -526,6 +631,7 @@ export default function Sleeve({
             />
           )}
           {kept && idea === 'wake' && <WakeSheet src={url} t={t} onClose={() => setIdea(null)} />}
+          {loopRow}
           {saysSaved(standing) ? (
             <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
               <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />

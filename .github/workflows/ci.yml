@@ -1947,6 +1947,8 @@ jobs:
         run: npm run check:boothprices
       - name: A member's own picture is looked at before strangers see it
         run: npm run check:picturescreen
+      - name: A song's cover moves in a loop, priced and kept
+        run: npm run check:coverloop
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.
@@ -2246,7 +2248,7 @@ jobs:
           - group: rooms two
             probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk check:spectrogramwalk
           - group: whole
-            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:copilotsheet check:widecover check:googlecover check:sayassheet check:afrikaansscreen check:spotlight check:photosong check:singview
+            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:copilotsheet check:widecover check:googlecover check:sayassheet check:afrikaansscreen check:spotlight check:photosong check:singview check:coverloopwalk
           - group: whole two
             probes: check:contrastlightphone check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for

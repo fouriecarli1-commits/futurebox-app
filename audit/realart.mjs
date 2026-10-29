@@ -80,6 +80,9 @@ const { browser, page, problems } = await enter({
     );
     await p.route('**/api/cover**', (route) => {
       const url = route.request().url();
+      /* The moving cover's own address answers that there is none: a still
+         cover is what this walk measures. */
+      if (/\/api\/cover\/loop/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: '{"url":null}' });
       /* `tracks=` is the whole grid asking at once; `track=` is the one card
          with the panel open. Only the second decides which half draws. */
       const body = /[?&]tracks=/.test(url)

@@ -740,7 +740,11 @@ words into fields the table reads (`hasWords`, `person`, `look`, `shape`,
    bought pictures, so the members' own pictures are the ones looked at.
    Alt text waits: `florence-2-large/caption` is Pending Enterprise Ready.
 1. **Moving cover** (a still cover as a short loop). Small, and every
-   release in the Music room wants one.
+   release in the Music room wants one. **Built 29 October 2026**
+   (`lib/coverloop.ts`, `/api/cover/loop`, `check:coverloop`): the cover
+   as first and last frame of six seconds of `ltx-2.3/image-to-video/fast`,
+   no sound, 12 credits; kept beside the cover and played in the cover
+   panel and on Live room posts.
 2. **Sound for my clip** in the Video Editor (`mmaudio-v2`, then Sonilo).
 3. **Make my photo good / fix an old photo** in the Photo Editor.
 4. **Lyric video**: words timed to the song (`forced-alignment`), drawn by

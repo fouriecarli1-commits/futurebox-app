@@ -123,6 +123,8 @@ interface Post {
   /** The sleeve its owner made, when there is one. Signed by the server and
    *  good for an hour; `Cover` falls back to the drawing when it expires. */
   cover?: string | null;
+  /** The cover, moving (`lib/coverloop.ts`): played over it without sound. */
+  coverLoop?: string | null;
   /** How many people have hearted it, everybody included. Null where the
    *  server could not read the count — which is not nought. */
   hearts: number | null;
@@ -284,7 +286,7 @@ function RoomPanel({
         onClick={onOpen}
         disabled={!listenable}
         aria-label={post.title}
-        className="block aspect-[3/4] max-h-[70vh] w-full disabled:cursor-default"
+        className="relative block aspect-[3/4] max-h-[70vh] w-full disabled:cursor-default"
       >
         {/* Seeded on the song, not on the post.
 
@@ -301,6 +303,21 @@ function RoomPanel({
           credit={post.kind === 'track' ? post.art : null}
           className="h-full w-full"
         />
+        {post.coverLoop && (
+          /* eslint-disable-next-line jsx-a11y/media-has-caption -- the cover,
+             moving, with no sound of its own. */
+          <video
+            src={post.coverLoop}
+            data-livecoverloop
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={post.cover ?? undefined}
+            aria-hidden
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+        )}
       </button>
 
       {/* Light over the picture, under the words — the owner, 21 October

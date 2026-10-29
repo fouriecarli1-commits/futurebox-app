@@ -990,6 +990,11 @@ export const CREDITS = {
      at 1080p with its own sound, $0.36 (R6.66). Twelve credits is R18.01,
      63%: her 60% for this one. */
   alive: 12,
+  /* A song's cover, moving (`lib/coverloop.ts`): the same engine and the
+     same six seconds as `alive`, without sound, $0.36 (R6.66). Twelve
+     credits is R18.01, 63%: the price she set for a woken photo, for the
+     same work. */
+  coverLoop: 12,
   /* A picture made into a 3D model: `fal-ai/trellis-2` at 512, $0.25
      (R4.63). Sixteen credits is R24.02, 81%. */
   model3d: 16,

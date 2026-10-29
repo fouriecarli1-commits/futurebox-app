@@ -211,6 +211,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   findMarks: null,
   smoothJoin: null,
   whatsIn: null,
+  /* A song's cover, moving: found where covers are. */
+  coverLoop: ['cover'],
 };
 
 const priced = Object.keys(CREDITS);

@@ -61,6 +61,7 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
     { key: 'guide.p.song', en: 'A two-minute song', credits: CREDITS.song },
     { key: 'guide.p.halfSong', en: 'A one-minute half song', credits: CREDITS.halfSong },
     { key: 'guide.p.styleword', en: 'A style word', credits: CREDITS.styleword },
+    { key: 'guide.p.coverLoop', en: 'A song\'s cover, moving', credits: CREDITS.coverLoop },
   ],
   studio: [
     { key: 'guide.p.read', en: 'Reading the chords, key and tempo, per minute', credits: CREDITS.read },
