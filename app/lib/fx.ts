@@ -376,7 +376,7 @@ function eqNodes(ctx: BaseAudioContext, eq: EqSettings): BiquadFilterNode[] {
  * plate, not a cathedral. Written down so nobody measures this against a
  * convolution reverb and calls it broken.
  */
-function roomOf(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+export function roomOf(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   const rate = ctx.sampleRate;
   const frames = Math.max(1, Math.floor(rate * Math.max(0.1, Math.min(8, seconds))));
   const room = ctx.createBuffer(2, frames, rate);

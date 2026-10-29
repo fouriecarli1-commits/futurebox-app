@@ -56,6 +56,7 @@
  * dropping the clip and scrolling the room.
  */
 
+import LaneMeter from './LaneMeter';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
@@ -222,6 +223,7 @@ export default function BoothTimeline({
   meter,
   snap,
   spans,
+  earOf,
   onSeek,
   onChange,
   onSlide,
@@ -233,6 +235,8 @@ export default function BoothTimeline({
   view = 'wave',
 }: {
   readonly lanes: readonly Lane[];
+  /** Each playing lane's analyser, for the meter on its header (`LaneMeter`). */
+  readonly earOf?: (id: string) => AnalyserNode | undefined;
   /** Every lane as a wave, or as a spectrogram. The owner, 26 October 2026. */
   readonly view?: 'wave' | 'spectrum';
   /** The length of the whole session, in seconds. The axis is this wide. */
@@ -1486,6 +1490,16 @@ export default function BoothTimeline({
                       {lane.name}
                     </span>
                   </button>
+
+                  {/* The lane's meter, a glowing line down the left edge of its
+                      header: the sound after its level, pan and effects. */}
+                  {earOf && (
+                    <LaneMeter
+                      ear={() => earOf(lane.id)}
+                      label={`${t('pro.meterOf', 'Level of')} ${lane.name}`}
+                      className="absolute bottom-1 left-0 top-1 w-[4px]"
+                    />
+                  )}
 
                   {/* ── Where this lane changes ─────────────────────
 

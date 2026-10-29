@@ -30,8 +30,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
-  FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  playsOf, readInto, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster,
+  FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
+  anySends, playsOf, readInto, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, soundOf as plainSound, type Finished } from '../lib/mastering';
@@ -62,6 +62,7 @@ import { type Limit } from '../lib/squeeze';
 import FileSize from './FileSize';
 import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
+import LaneMeter from './LaneMeter';
 import { whatsIn, type Heard as PieceHeard } from '../lib/whatsin';
 import { transitionsIn } from '../lib/transitions';
 import { midiBlob, midiFor, type Source } from '../lib/midi';
@@ -366,6 +367,8 @@ export default function ProBooth({
      It is here because a musician setting up a session writes it down, and
      because a lane brought in from elsewhere is easier to place when the
      session says what it is in. */
+  /* The echo send is a beat long, so the master carries the tempo the
+     renders build it from (`wireReturns`). Set in an effect below. */
   const [meter, setMeter] = useState<Meter>(() => sane({
     ...DEFAULT_METER,
     bpm: bpm && Number.isFinite(bpm) ? bpm : DEFAULT_METER.bpm,
@@ -538,6 +541,9 @@ export default function ProBooth({
      moment a lane changes, the reading on screen is about a mix that no longer
      exists, and a number that is quietly out of date is worse than no number. */
   const [master, setMaster] = useState<Master>(FLAT_MASTER);
+  useEffect(() => {
+    setMaster((was) => (was.bpm === meter.bpm ? was : { ...was, bpm: meter.bpm }));
+  }, [meter.bpm]);
   const [reading, setReading] = useState<Reading | null>(null);
   const [staleSaid, setStale] = useState(false);
   /* What finishing does to the mix (`lib/mastering.ts`), from the last
@@ -571,6 +577,9 @@ export default function ProBooth({
   const ctxRef = useRef<AudioContext | null>(null);
   /** The live picture's ear on the master, made with the context. */
   const scopeRef = useRef<AnalyserNode | null>(null);
+  /** Each playing lane's ear, after its own chain, for its meter. */
+  const laneEars = useRef(new Map<string, AnalyserNode>());
+  const earOf = useCallback((id: string): AnalyserNode | undefined => laneEars.current.get(id), []);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
      line and clock follow this every frame; `at` follows it a few times a
@@ -689,6 +698,7 @@ export default function ProBooth({
           /* Written down since 15 October 2026 — see `KeptLane`. */
           ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
           ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
+          ...(lane.sends ? { sends: lane.sends } : {}),
           ...(lane.notes?.length ? { notes: lane.notes } : {}),
           ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
         });
@@ -874,8 +884,17 @@ export default function ProBooth({
       }
       const bus = wireMaster(ctx, master, master.gain * trim, scopeRef.current);
 
-      audible(lanes).forEach((lane) => {
-        const source = wireLane(ctx, lane, bus);
+      laneEars.current.clear();
+      const heard = audible(lanes);
+      const returns = anySends(heard) ? wireReturns(ctx, bus, meter.bpm) : undefined;
+      heard.forEach((lane) => {
+        /* An ear on the lane after its own chain, for its meter: the sound
+           passes straight through it to the master. */
+        const ear = ctx.createAnalyser();
+        ear.fftSize = 512;
+        ear.connect(bus);
+        laneEars.current.set(lane.id, ear);
+        const source = wireLane(ctx, lane, ear, returns);
         /* Joining part-way through, and stopping where the lane is cut — both
            worked out in `startLane`, which the render calls too. This was four
            lines here and four more in `mixSession`, and a cut added to one of
@@ -1596,7 +1615,7 @@ export default function ProBooth({
     for (const lane of lanes) {
       const named = lane.name.trim() || t('pro.laneOne', 'Lane');
       /* As it sounds, and lined up: see `stemOf`. */
-      const stem = await stemOf(lane, lanes, rate);
+      const stem = await stemOf(lane, lanes, rate, meter.bpm);
       const written = await writeSound(stem ?? pieceOf(lane, ctx));
       let file = safeFilename(named, written.ext);
       for (let n = 2; taken.has(file); n += 1) file = safeFilename(`${named} ${n}`, written.ext);
@@ -1622,7 +1641,7 @@ export default function ProBooth({
     const which = `${lane.id}|${lane.from ?? 0}|${lane.to ?? ''}|${lane.repeat ?? 1}|${soundKind}|${depth}`;
     if (what === 'wav') {
       setBusy(true);
-      const stem = await stemOf(lane, lanes, rate).finally(() => setBusy(false));
+      const stem = await stemOf(lane, lanes, rate, meter.bpm).finally(() => setBusy(false));
       const written = await writeSound(stem ?? piece);
       if (!(await payTool('wav', which))) return;
       downloadBlob(written.blob, safeFilename(named, written.ext));
@@ -2386,12 +2405,13 @@ export default function ProBooth({
       one.from ?? '', one.to ?? '',
       one.pan ?? 0, one.repeat ?? 1, one.fadeIn ?? 0, one.fadeOut ?? 0,
       JSON.stringify(one.fx ?? null), JSON.stringify(one.tone ?? null), JSON.stringify(one.clean ?? null),
+      JSON.stringify(one.sends ?? null),
       one.amped ? `${one.amped.name}#${soundTag(one.amped.audio)}` : '',
       soundTag(one.audio),
     ].join(':'));
     const shape = [
       layout, rate, Math.round(length * 100),
-      master.gain, master.ceilingDb, master.matchLoudness ? 1 : 0, master.target ?? '',
+      master.gain, master.ceilingDb, master.matchLoudness ? 1 : 0, master.target ?? '', master.bpm ?? '',
       master.rumbleHz ?? '', master.hissDb ?? '',
       Math.round(trim * 10_000), ...parts,
     ].join('|');
@@ -3032,6 +3052,41 @@ export default function ProBooth({
       setRegionOpen(false);
     },
     [carveHere, commit, context],
+  );
+
+  /**
+   * The marked piece played backwards, or brought up so its loudest moment
+   * sits at -1 dB: the reverse and the normalise every studio has. Written
+   * into the samples like the fade, so what is heard is what is saved, and
+   * undoable like every region tool.
+   */
+  const regionBake = useCallback(
+    (how: 'reverse' | 'normalise') => {
+      const ctx = context();
+      if (!ctx) return;
+      const got = carveHere();
+      if (!got) return;
+      const { before, inside, after } = got.carved;
+      const plays = playsOf(inside, ctx);
+      commit(how === 'reverse' ? t('undo.reverse', 'the reverse') : t('undo.normalise', 'the normalise'), got.lane.id, [
+        before,
+        {
+          ...inside,
+          audio: how === 'reverse' ? reversedCopy(plays, ctx) : normalisedCopy(plays, ctx),
+          /* Baked, as the fade is: the window, repeats and amp are in it now. */
+          amped: undefined,
+          from: undefined,
+          to: undefined,
+          repeat: 1,
+          /* A reverse swaps which end the corner fades belong to. */
+          ...(how === 'reverse' ? { fadeIn: inside.fadeOut, fadeOut: inside.fadeIn } : {}),
+        },
+        after,
+      ]);
+      setPicked(inside.id);
+      setRegionOpen(false);
+    },
+    [carveHere, commit, context, t],
   );
 
   /**
@@ -3867,6 +3922,13 @@ export default function ProBooth({
                 boxShadow: on ? '0 0 0 1px rgba(56,189,248,0.25), 0 0 18px rgba(56,189,248,0.15)' : undefined,
               }}
             >
+              {/* The lane's level as it plays, across the top of its strip. */}
+              <LaneMeter
+                ear={() => (playing ? earOf(lane.id) : null)}
+                vertical={false}
+                label={`${t('pro.meterOf', 'Level of')} ${lane.name}`}
+                className="mb-2 h-1.5 w-full"
+              />
               {/* The name is the strip's label, not a button beside three buttons:
                   touching anywhere on the strip picks the lane, and the three
                   controls are one equal-width set (check:tidybars). */}
@@ -3948,6 +4010,29 @@ export default function ProBooth({
                     ? t('daw.centre', 'centre')
                     : `${(lane.pan ?? 0) < 0 ? 'L' : 'R'} ${Math.round(Math.abs(lane.pan ?? 0) * 100)}`}
                 </span>
+                {/* The sends: how much of this lane goes into the session's
+                    shared room and echo (`wireReturns`). */}
+                {(['space', 'echo'] as const).map((which) => (
+                  <React.Fragment key={which}>
+                    <span className="text-[11px] font-semibold" style={{ color: INK_DIM }}>
+                      {which === 'space' ? t('daw.sendSpace', 'Room') : t('daw.sendEcho', 'Echo')}
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round((lane.sends?.[which] ?? 0) * 100)}
+                      data-stripsend={`${which}:${lane.id}`}
+                      onChange={(event) => change(lane.id, { sends: { ...lane.sends, [which]: Number(event.target.value) / 100 } })}
+                      onDoubleClick={() => change(lane.id, { sends: { ...lane.sends, [which]: 0 } })}
+                      aria-label={`${which === 'space' ? t('daw.sendSpaceName', 'Send to the room') : t('daw.sendEchoName', 'Send to the echo')} · ${lane.name}`}
+                      className={`h-11 w-full min-w-0 touch-manipulation ${which === 'space' ? 'accent-violet-500' : 'accent-fuchsia-500'}`}
+                    />
+                    <span className="text-right text-[11px] tabular-nums" style={{ color: INK }}>
+                      {(lane.sends?.[which] ?? 0) > 0 ? Math.round((lane.sends?.[which] ?? 0) * 100) : t('pro.off', 'off')}
+                    </span>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           );
@@ -4543,6 +4628,20 @@ export default function ProBooth({
                   title: t('pro.regionFadeOut', 'Fade down across it'),
                   says: t('pro.regionFadeOutWhat', 'Full where the mark starts, silent where it ends.'),
                   run: () => regionFade('out'),
+                },
+                {
+                  id: 'reverse',
+                  icon: <RotateCcw className="h-4 w-4" />,
+                  title: t('pro.regionReverse', 'Play it backwards'),
+                  says: t('pro.regionReverseWhat', 'The piece runs in reverse, written into the sound: a reversed cymbal into a chorus, a word sucked back in.'),
+                  run: () => regionBake('reverse'),
+                },
+                {
+                  id: 'normalise',
+                  icon: <Volume2 className="h-4 w-4" />,
+                  title: t('pro.regionNormalise', 'Bring it up to full'),
+                  says: t('pro.regionNormaliseWhat', 'Turns the piece up until its loudest moment sits just under the top (-1 dB), nothing clipped. Silence stays silent.'),
+                  run: () => regionBake('normalise'),
                 },
                 {
                   id: 'part',
@@ -6325,6 +6424,15 @@ export default function ProBooth({
       <div className="relative flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] shrink-0 z-30">
         {/* Subtle neon laser top accent line */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+        {/* The master meter: the whole mix as it leaves, after the master,
+            a glowing line along the foot of the bar so it is in view on every
+            screen without taking a control's place. */}
+        <LaneMeter
+          ear={() => (playing ? scopeRef.current : null)}
+          vertical={false}
+          label={t('pro.masterMeter', 'Master level')}
+          className="absolute bottom-0 left-0 right-0 h-[3px] rounded-none"
+        />
 
         {/* Left section: Back + Logo & Title + Undo/Redo */}
         <div className="flex items-center gap-2.5 min-w-0">
@@ -6559,6 +6667,7 @@ export default function ProBooth({
             ))}
           </div>
           <BoothTimeline
+            earOf={earOf}
             view={laneView}
             markers={markers}
             onMarks={(id) => { void findMarks(id); }}

@@ -56,7 +56,8 @@ ok('the cleaner is built inside wireLane',
 /* Both the live path and the render call `wireLane`; nothing else may wire a
    lane, or the two can drift. */
 ok('and the render goes through the same function',
-  /mixSession[\s\S]*?startLane\(wireLane\(offline, lane, bus\), lane\)/.test(session));
+  /* With the session's returns since 29 October 2026 (the sends). */
+  /mixSession[\s\S]*?startLane\(wireLane\(offline, lane, bus(, returns)?\), lane\)/.test(session));
 
 /* ── 4. Clean first, then shape ────────────────────────────────────────── */
 /* `afterTone` rather than `level`, since 14 September: the effect rack sits

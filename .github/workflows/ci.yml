@@ -1957,6 +1957,8 @@ jobs:
         run: npm run check:fillers
       - name: A finished mix is loud the way streaming services measure it, and never over the ceiling
         run: npm run check:mastering
+      - name: ProBooth's reverse, normalise, sends and meters do what they say
+        run: npm run check:dawtools
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.
@@ -2250,7 +2252,7 @@ jobs:
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:boothstudio check:boothsound check:boothmagic check:boothpress check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
-            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover check:becomebench check:postpages check:notices check:footagesound check:restorewalk check:picturemakewalk check:cutums check:poddesk
+            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk check:videocharacters check:voiceover check:becomebench check:postpages check:notices check:footagesound check:restorewalk check:picturemakewalk check:cutums check:poddesk check:dawmeters
           - group: rooms
             probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:kidsplaylistwalk check:kidstorywalk check:reportwalk check:kidsdrumwalk check:kidseditwalk check:kidsgallerywalk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang
           - group: rooms two

@@ -127,6 +127,8 @@ export interface KeptLane {
      into IndexedDB as they are. */
   readonly fadeIn?: number;
   readonly fadeOut?: number;
+  /* The sends to the shared room and echo (29 October 2026). */
+  readonly sends?: { readonly space?: number; readonly echo?: number };
   readonly notes?: readonly HumNote[];
   /* The amp is kept as the rendered audio, the same way the lane keeps it.
      Re-running the capture would need the .nam file, which is on whichever
@@ -210,6 +212,7 @@ export async function keepSession(
     tone?: Tone;
     fadeIn?: number;
     fadeOut?: number;
+    sends?: { readonly space?: number; readonly echo?: number };
     notes?: readonly HumNote[];
     amped?: { name: string; audio: AudioBuffer };
   }[],
@@ -252,6 +255,7 @@ export async function keepSession(
         ...(lane.tone ? { tone: lane.tone } : {}),
         ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
         ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
+        ...(lane.sends ? { sends: { ...lane.sends } } : {}),
         ...(lane.notes?.length ? { notes: lane.notes.map((one) => ({ ...one })) } : {}),
         ...(lane.amped
           ? { ampedName: lane.amped.name, ampedWav: encodeWav(lane.amped.audio) }

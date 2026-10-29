@@ -26,6 +26,7 @@
  *     click.
  */
 
+import { createPortal } from 'react-dom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { barClearance } from './TabBar';
 import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Lock, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X, FileText } from 'lucide-react';
@@ -1194,7 +1195,11 @@ export default function VocalBooth({
      because the plan is read after mount and the effect runs before it.
      Found on 15 October 2026. */
   if (proOpen && proAllowed) {
-    return (
+    /* Into the page's body, not this room's column: inside the column the
+       studio sat under the page's own "Next" step and its copilot, which
+       drew through it (found 29 October 2026). From the body it is the
+       whole screen, as a studio should be. */
+    return createPortal(
       <ProBooth
         title={track.title}
         songId={track.id}
@@ -1206,7 +1211,8 @@ export default function VocalBooth({
            AI double and last take, which are not in a lanes mix. */
         onKeep={onKeep}
         onClose={() => setProOpen(false)}
-      />
+      />,
+      document.body,
     );
   }
 

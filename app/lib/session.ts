@@ -1,7 +1,7 @@
 'use client';
 
 import { isClean, isUncleaned, wireClean, wireTone, type Clean, type Tone } from './tone';
-import { anyFx, wireFx, type Fx } from './fx';
+import { anyFx, roomOf, wireFx, type Fx } from './fx';
 import type { HumNote } from './humnotes';
 
 /**
@@ -21,6 +21,13 @@ import type { HumNote } from './humnotes';
  */
 
 export interface Lane {
+  /**
+   * How much of the lane goes to the session's shared room and echo
+   * (`wireReturns`), 0 to 1 each. A send, as on every desk: several lanes in
+   * one space sound like one band in one room, which a reverb on each lane
+   * does not.
+   */
+  readonly sends?: { readonly space?: number; readonly echo?: number };
   readonly id: string;
   readonly name: string;
   readonly audio: AudioBuffer;
@@ -200,6 +207,8 @@ export interface Master {
   readonly matchLoudness: boolean;
   /** Which loudness to match, `TARGETS` in `lib/mastering.ts`. Absent is streaming, -14 LUFS. */
   readonly target?: 'stream' | 'apple' | 'loud';
+  /** The session's tempo, for the echo send's beat. Kept in step with the meter by the room. */
+  readonly bpm?: number;
   /**
    * Take the rumble off: everything below this many hertz, in dB per octave
    * of roll-off that a single biquad gives. 0 is off.
@@ -687,6 +696,8 @@ export function wireLane(
   ctx: BaseAudioContext,
   lane: Lane,
   to: AudioNode,
+  /** The session's shared room and echo, when the lane sends to them. */
+  returns?: Returns,
 ): AudioBufferSourceNode {
   const source = ctx.createBufferSource();
   /* The amp first, because it is the amplifier: what the tone stack shapes is
@@ -750,10 +761,12 @@ export function wireLane(
     FADES.set(source, fade);
     entry = fade;
   }
+  let out: AudioNode = level;
   if (place) {
     place.pan.value = Math.max(-1, Math.min(1, lane.pan ?? 0));
     source.connect(entry);
     level.connect(place).connect(to);
+    out = place;
   } else {
     /* Safari long ago, and some embedded browsers. Losing the pan is the right
        failure: the alternative is a hand-rolled panner that sounds different
@@ -761,8 +774,63 @@ export function wireLane(
     source.connect(entry);
     level.connect(to);
   }
+  /* The sends, after the fader and the pan (post-fader, as a desk sends by
+     default): turning a lane down turns its reverb down with it. */
+  if (returns) {
+    for (const which of ['space', 'echo'] as const) {
+      const amount = Math.max(0, Math.min(1, lane.sends?.[which] ?? 0));
+      if (!amount) continue;
+      const send = ctx.createGain();
+      send.gain.value = amount;
+      out.connect(send).connect(returns[which]);
+    }
+  }
   return source;
 }
+
+/** The session's two shared effects, each an input a lane can send to. */
+export interface Returns {
+  readonly space: AudioNode;
+  readonly echo: AudioNode;
+}
+
+/** The room's length in seconds, and the echo's repeats. Fixed, so every export of a session is the same. */
+export const SPACE_SECONDS = 2.4;
+export const ECHO_FEEDBACK = 0.38;
+
+/**
+ * The shared room (a reverb) and echo (a delay a beat long at the session's
+ * tempo, its repeats darkening as they fade), both returning into `to`. Built
+ * by playback and by every render the same way.
+ */
+export function wireReturns(ctx: BaseAudioContext, to: AudioNode, bpm = 120): Returns {
+  const space = ctx.createGain();
+  const room = ctx.createConvolver();
+  room.buffer = roomOf(ctx, SPACE_SECONDS);
+  const spaceBack = ctx.createGain();
+  spaceBack.gain.value = 0.8;
+  space.connect(room).connect(spaceBack).connect(to);
+
+  const echo = ctx.createGain();
+  const beat = Math.max(0.05, Math.min(2, 60 / Math.max(30, Math.min(300, bpm))));
+  const delay = ctx.createDelay(2.1);
+  delay.delayTime.value = beat;
+  const again = ctx.createGain();
+  again.gain.value = ECHO_FEEDBACK;
+  const dark = ctx.createBiquadFilter();
+  dark.type = 'lowpass';
+  dark.frequency.value = 4500;
+  echo.connect(delay);
+  delay.connect(dark).connect(again).connect(delay);
+  const echoBack = ctx.createGain();
+  echoBack.gain.value = 0.8;
+  delay.connect(echoBack).connect(to);
+  return { space, echo };
+}
+
+/** Whether any lane sends anywhere, so a session with no sends builds no returns. */
+export const anySends = (lanes: readonly Lane[]): boolean =>
+  lanes.some((one) => (one.sends?.space ?? 0) > 0 || (one.sends?.echo ?? 0) > 0);
 
 /** Every sample multiplied by one number. What the master actually is. */
 export function applyTrim(buffer: AudioBuffer, trim: number): AudioBuffer {
@@ -800,9 +868,10 @@ export async function mixSession(
 
   /* The same builder the preview uses. See `wireMaster`. */
   const bus = wireMaster(offline, master, master.gain);
+  const returns = anySends(heard) ? wireReturns(offline, bus, master.bpm) : undefined;
 
   heard.forEach((lane) => {
-    startLane(wireLane(offline, lane, bus), lane);
+    startLane(wireLane(offline, lane, bus, returns), lane);
   });
 
   try {
@@ -822,7 +891,7 @@ export async function mixSession(
  * dry and starting at its own first sample, so nothing lined up and none of
  * the sound that had been dialled in came with it.
  */
-export async function stemOf(lane: Lane, lanes: readonly Lane[], rate: number): Promise<AudioBuffer | null> {
+export async function stemOf(lane: Lane, lanes: readonly Lane[], rate: number, bpm = 120): Promise<AudioBuffer | null> {
   const Ctx = (window as unknown as { OfflineAudioContext?: typeof OfflineAudioContext }).OfflineAudioContext;
   if (!Ctx) return null;
   const seconds = span(lanes);
@@ -830,7 +899,9 @@ export async function stemOf(lane: Lane, lanes: readonly Lane[], rate: number): 
   const offline = new Ctx(2, Math.ceil(seconds * rate), rate);
   const bus = offline.createGain();
   bus.connect(offline.destination);
-  startLane(wireLane(offline, { ...lane, muted: false, soloed: false }, bus), lane);
+  /* With its own sends, so the stem carries its share of the room and echo. */
+  const returns = anySends([lane]) ? wireReturns(offline, bus, bpm) : undefined;
+  startLane(wireLane(offline, { ...lane, muted: false, soloed: false }, bus, returns), lane);
   try {
     return await offline.startRendering();
   } catch {
@@ -942,6 +1013,40 @@ export function fadedCopy(
       const part = i / last;
       into[i] = from[i] * (way === 'in' ? part : 1 - part);
     }
+  }
+  return out;
+}
+
+/** A copy of a piece played backwards: the reverse every studio has. */
+export function reversedCopy(buffer: AudioBuffer, ctx: BaseAudioContext): AudioBuffer {
+  const out = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+  for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+    const from = buffer.getChannelData(channel);
+    const into = out.getChannelData(channel);
+    for (let i = 0, j = from.length - 1; i < from.length; i += 1, j -= 1) into[i] = from[j];
+  }
+  return out;
+}
+
+/** How loud a normalised piece's loudest sample is: -1 dBFS, a shade under the top. */
+export const NORMAL_PEAK = 10 ** (-1 / 20);
+
+/**
+ * A copy of a piece turned up (or down) so its loudest sample sits at -1 dBFS.
+ * Silence stays silence rather than being turned up into hiss.
+ */
+export function normalisedCopy(buffer: AudioBuffer, ctx: BaseAudioContext): AudioBuffer {
+  let top = 0;
+  for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+    const data = buffer.getChannelData(channel);
+    for (let i = 0; i < data.length; i += 1) top = Math.max(top, Math.abs(data[i]));
+  }
+  const gain = top > 1e-4 ? NORMAL_PEAK / top : 1;
+  const out = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+  for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+    const from = buffer.getChannelData(channel);
+    const into = out.getChannelData(channel);
+    for (let i = 0; i < from.length; i += 1) into[i] = from[i] * gain;
   }
   return out;
 }
