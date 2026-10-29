@@ -70,7 +70,7 @@ import {
   type At, type Backdrop, type Measure, type PostSize, type SpotId,
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
-import { CREDITS, creditsSaid } from '../lib/credits';
+import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
@@ -1282,6 +1282,8 @@ export default function PostStudio({
   /** When the current wait began, so a stalled job cannot wait for ever. */
   const liveSince = useRef<number>(0);
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
+  /** A made clip playing over the photograph on the stage (see `stageBox`). */
+  const [onStage, setOnStage] = useState<string | null>(null);
   const [liveBusy, setLiveBusy] = useState(false);
   /* ── Which engine can bring a photo to life, asked before the press ────
      The owner, 15 October 2026: *"Give it a little motion werk ook nie."* Two
@@ -6780,7 +6782,7 @@ export default function PostStudio({
           >
             {liveJob
               ? t('post.liveBusy', 'Making it…')
-              : `${t('post.liveGo', 'Bring it to life')} · ${creditsSaid(CREDITS.video * LIVE_SECONDS / 5, t)}`}
+              : `${t('post.liveGo', 'Bring it to life')} · ${creditsSaid(videoCost(liveCan && liveCan !== 'none' && liveCan.grade in VIDEO_GRADES ? liveCan.grade as VideoGrade : 'standard', LIVE_SECONDS), t)}`}
           </button>
           {/* In a tab of its own. The clip lives on another origin, where a
               browser ignores `download` and simply goes there — and as a
@@ -8955,6 +8957,7 @@ export default function PostStudio({
       onCuts={showCuts}
       onBusy={setBecomeBusy}
       onSay={setPhotoSay}
+      onVideo={setOnStage}
     />
   );
 
@@ -10526,6 +10529,27 @@ export default function PostStudio({
      itself (the photo rises to the top while a strip is out). */
   const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(34dvh + 10px)';
 
+  /* ── The moving photo, on the stage itself ────────────────────────
+     The owner, 29 October 2026, with the made clip playing in the bench and
+     the still photo on the big screen: *"Kyk hierdie motion wys nie op die
+     groot screen nie."* A made clip — Give it a little motion, or Wake it
+     up — plays over the photograph, the same size and in the same place,
+     until "Show the still" is pressed or the photo changes. */
+  const [stageBox, setStageBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  useEffect(() => { if (liveUrl) setOnStage(liveUrl); }, [liveUrl]);
+  useEffect(() => { setOnStage(null); }, [picture]);
+  useEffect(() => {
+    const el = canvas.current;
+    if (!onStage || !el) { setStageBox(null); return undefined; }
+    const measure = (): void => setStageBox({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    if (el.parentElement) watch.observe(el.parentElement);
+    return () => watch.disconnect();
+  }, [onStage, panelUp, tucked, saveFull]);
+
   /* The space the photograph has, measured, so the canvas fills it. */
   const stage = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -10754,6 +10778,39 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {onStage && stageBox && (
+        <>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- a
+              photograph with motion in it; nothing is said to caption. */}
+          <video
+            key={onStage}
+            src={onStage}
+            data-poststagevideo
+            autoPlay
+            loop
+            muted={!liveSound}
+            playsInline
+            className="pointer-events-none absolute z-10 rounded-md object-cover"
+            style={{
+              left: stageBox.x,
+              top: stageBox.y,
+              width: stageBox.w,
+              height: stageBox.h,
+              transform: view.scale > 1 ? `translate(${view.x}px, ${view.y}px) scale(${view.scale})` : undefined,
+              transformOrigin: 'center',
+            }}
+          />
+          <button
+            type="button"
+            data-poststagestill
+            onClick={() => setOnStage(null)}
+            className="absolute left-1/2 top-2 z-30 inline-flex h-9 -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-zinc-950/80 px-3 text-[11px] font-bold text-zinc-100 backdrop-blur"
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            {t('post.stageStill', 'Show the still')}
+          </button>
+        </>
+      )}
       {/* ── Bring to life, over the photograph ──────────────────────────
           The sticker waiting to be peeled, and the suggestion of what the
           photo or the sticker can become next (`BecomeBench.tsx`). */}

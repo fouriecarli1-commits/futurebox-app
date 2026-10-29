@@ -228,6 +228,7 @@ export default function BecomeBench({
   onBusy,
   onSay,
   onStarted,
+  onVideo,
 }: {
   readonly picture: HTMLImageElement | null;
   readonly t: Say;
@@ -251,6 +252,8 @@ export default function BecomeBench({
   /** A press asked for from outside has been taken: the room forgets it, so
       the bench opening again later does not press it a second time. */
   readonly onStarted?: () => void;
+  /** A clip has been made from the photo: the room plays it on the big screen. */
+  readonly onVideo?: (url: string) => void;
 }): React.ReactElement {
   const [yes, giveYes] = useEngineYes();
   const [asking, setAsking] = useState<BecomeId | null>(null);
@@ -363,11 +366,12 @@ export default function BecomeBench({
       const got = await slowOne({ become: 'alive', picture: sent.data, words: words.trim(), moves }, t);
       if (!got.file) { setSaid(got.said ?? ''); return; }
       setVideo(got.file);
+      onVideo?.(got.file);
       setSaid(t('become.awake', 'It is alive. Press play for the sound, and Keep it to save it.'));
     } finally {
       setBusy(null);
     }
-  }, [picture, words, moves, t]);
+  }, [picture, words, moves, onVideo, t]);
 
   const make3d = useCallback(async (): Promise<void> => {
     if (!lastCut) {

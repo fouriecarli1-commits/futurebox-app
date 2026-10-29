@@ -38,6 +38,11 @@ try {
     });
     /* Everything at once: the ball, a square in the corner, the whole photo
        (the background, which must not be offered) and the ball again. */
+    /* Wake it up: a ticket, and the clip at the address the ticket gives. */
+    if (route.request().postDataJSON()?.become === 'alive') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ticket: 'probe-alive' }) });
+      return;
+    }
     if (route.request().postDataJSON()?.all) {
       const more = await page.evaluate(() => {
         const draw = (paint) => {
@@ -55,6 +60,8 @@ try {
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url: mask, credits: 2 }) });
   });
+  await page.route('**/api/become?ticket=*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url: `${server.url}/probe-clip.mp4` }) }));
+  await page.route('**/probe-clip.mp4', (r) => r.fulfill({ status: 200, contentType: 'video/mp4', body: Buffer.alloc(64) }));
   await page.route('**/api/post/export', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, left: 42 }) }));
 
   await studio(page);
@@ -190,6 +197,21 @@ try {
     return { coloured: el?.classList.contains('fb-alivetool'), ink: word ? getComputedStyle(word).webkitTextFillColor : '' };
   });
   check('the Alive tool wears colour in the bar', alive.coloured === true && /rgba\(0, 0, 0, 0\)|transparent/.test(alive.ink), JSON.stringify(alive));
+
+  /* ── Woken: the clip plays on the big screen, over the photo ──
+     The owner, 29 October 2026: "Kyk hierdie motion wys nie op die groot
+     screen nie." */
+  await page.locator('[data-become="alive"]').click();
+  await page.waitForTimeout(7500);
+  const onStage = await page.evaluate(() => {
+    const v = document.querySelector('[data-poststagevideo]')?.getBoundingClientRect();
+    const c = document.querySelector('[data-postcanvas]')?.getBoundingClientRect();
+    return v && c ? { dx: Math.abs(v.left - c.left) + Math.abs(v.top - c.top), dw: Math.abs(v.width - c.width) + Math.abs(v.height - c.height) } : null;
+  });
+  check('a woken photo plays on the big screen, exactly over the photo', !!onStage && onStage.dx <= 2 && onStage.dw <= 2, JSON.stringify(onStage));
+  await page.locator('[data-poststagestill]').click();
+  await page.waitForTimeout(300);
+  check('  and "Show the still" puts the photo back', (await page.locator('[data-poststagevideo]').count()) === 0);
 
   /* ── Saved: a card asks whether they want to do more with it ── */
   await page.locator('[data-becomenudge] button[aria-label]').first().click().catch(() => {});

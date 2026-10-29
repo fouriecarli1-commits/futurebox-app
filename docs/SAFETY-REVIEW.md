@@ -96,11 +96,11 @@ true of anything.
   character cost ElevenLabs returns. Named here rather than counted as none,
   because "no console.log" was true in September and stopped being true
   without anybody deciding it had.
-- **85 eslint suppressions**, every one in a category with a reason:
+- **86 eslint suppressions**, every one in a category with a reason:
   50 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
   and Apple Music's chart covers, which it could only take through a remote
   allow-list kept in step with Apple's image hosts,
-  19 × `jsx-a11y/media-has-caption` for generated audio and video,
+  20 × `jsx-a11y/media-has-caption` for generated audio and video,
   12 × `exhaustive-deps` where a re-run would fire a generation, add a thing twice or retake a frame she has moved on from,
   1 × `no-await-in-loop` where three decodes at once is the memory spike the
   code exists to avoid, 1 × a useless fragment. (Was 20; the app grew.)
