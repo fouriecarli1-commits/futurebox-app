@@ -154,6 +154,26 @@ export const FILTERS: readonly VideoFilter[] = [
        for something that is meant to feel like a document rather than a film. */
     css: 'saturate(0.35) contrast(1.3) brightness(1.05)',
   },
+
+  /* ── Bolder, 30 October 2026 ────────────────────────────────────────────
+
+     The owner, of the Photo Editor's duotones and colour pops: *"Hierdie tipe
+     funksies moet ook by video editor wees."* Still one CSS string each, so
+     the preview, the swatch and the render are the same pass. A duotone is
+     the picture taken to grey, toned, and turned to a colour; a canvas has
+     no second ink, so this is the one-colour duotone every phone app shows. */
+  { id: 'pop', en: 'Colour pop', af: 'Kleurknal', css: 'saturate(1.9) contrast(1.18) brightness(1.03)' },
+  { id: 'neon', en: 'Neon night', af: 'Neonnag', css: 'saturate(1.7) contrast(1.25) hue-rotate(-18deg) brightness(0.98)' },
+  { id: 'synth', en: 'Synthwave', af: 'Retro-neon', css: 'sepia(0.35) saturate(2.2) hue-rotate(250deg) contrast(1.12)' },
+  { id: 'golden', en: 'Golden hour', af: 'Goue uur', css: 'sepia(0.45) saturate(1.4) brightness(1.06) contrast(1.05)' },
+  { id: 'pastel', en: 'Pastel', af: 'Pastelkleure', css: 'saturate(0.75) brightness(1.14) contrast(0.86)' },
+  { id: 'ice', en: 'Ice', af: 'Ys', css: 'hue-rotate(-28deg) saturate(0.8) brightness(1.1) contrast(1.05)' },
+  { id: 'moody', en: 'Moody', af: 'Somber', css: 'brightness(0.86) contrast(1.22) saturate(0.82)' },
+  { id: 'duoviolet', en: 'Duotone violet', af: 'Duotoon violet', css: 'grayscale(1) sepia(1) hue-rotate(225deg) saturate(3) contrast(1.1)' },
+  { id: 'duocyan', en: 'Duotone cyan', af: 'Duotoon siaan', css: 'grayscale(1) sepia(1) hue-rotate(140deg) saturate(2.6) contrast(1.1)' },
+  { id: 'duopink', en: 'Duotone pink', af: 'Duotoon pienk', css: 'grayscale(1) sepia(1) hue-rotate(290deg) saturate(3) contrast(1.08)' },
+  { id: 'duogold', en: 'Duotone gold', af: 'Duotoon goud', css: 'grayscale(1) sepia(1) saturate(2.2) brightness(1.05) contrast(1.1)' },
+  { id: 'infrared', en: 'Infrared', af: 'Infrarooi', css: 'hue-rotate(180deg) saturate(1.6) contrast(1.15)' },
 ];
 
 export const NO_FILTER = 'none';
