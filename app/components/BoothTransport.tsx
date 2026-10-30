@@ -152,8 +152,7 @@ export default function BoothTransport({
        again from `sm` up, where there is width for all of it. */
     <div
       data-transport=""
-      data-sideways
-      className="flex shrink-0 flex-nowrap items-center gap-1 overflow-x-auto px-3 py-1.5 sm:flex-wrap sm:gap-1.5"
+      className="flex shrink-0 flex-nowrap items-center gap-1 px-2 py-1"
       style={{ background: PANEL, borderBottom: `1px solid ${EDGE}` }}
     >
       <Key data="start" keys="Home" label={t('daw.toStart', 'Back to the start')} onPress={onStart} disabled={recording}>

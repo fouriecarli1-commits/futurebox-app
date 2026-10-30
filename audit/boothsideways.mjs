@@ -153,28 +153,20 @@ try {
        outside the new left half as often as not; the room then said so in a
        line under the timeline, and that line took the very height this
        measures. */
+    /* A cut stays on its row as two clips since 30 October 2026, so the
+       lanes come off the drum pads instead: each beat placed is a lane of
+       its own, made on the device. */
     for (let round = 0; round < 3; round += 1) {
       await shutDesk();
-      const ruler = p.locator('[data-axis]').first();
-      const rulerBox = await ruler.boundingBox();
-      const clipBox = await p.locator('[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]')
-        .first().boundingBox();
-      if (rulerBox && clipBox) {
-        await p.mouse.click(clipBox.x + clipBox.width / 2, rulerBox.y + rulerBox.height / 2);
-        await p.waitForTimeout(200);
-      }
-      const name = p.locator('[data-lanename]').first();
-      if ((await name.getAttribute('aria-pressed')) !== 'true') {
-        await name.click().catch(() => undefined);
-        await p.waitForTimeout(200);
-      }
-      await openDesk('Track controls', 'Baankontroles');
-      const cut = p.getByRole('button', {
-        name: new RegExp(af ? 'Sny waar die lyn' : 'Cut where the line'),
-      }).first();
-      if ((await cut.count()) === 0) break;
-      await cut.click().catch(() => undefined);
-      await p.waitForTimeout(400);
+      const beat = p.locator('[data-laneaddhow="beat"]').first();
+      if ((await beat.count()) === 0) break;
+      await beat.scrollIntoViewIfNeeded().catch(() => undefined);
+      await beat.click().catch(() => undefined);
+      await p.waitForTimeout(500);
+      const place = p.locator('[data-beatplace]').first();
+      if ((await place.count()) === 0) break;
+      await place.click().catch(() => undefined);
+      await p.waitForTimeout(600);
     }
     await shutDesk();
     await p.waitForTimeout(400);

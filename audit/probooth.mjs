@@ -665,13 +665,16 @@ try {
        leaves two, which is why the lane above is opened first: a cut at a
        lane's own front edge correctly leaves one, and a probe that did not
        say which lane it was marking could not tell those two apart. */
-    const before = await p.locator('[data-lanename]').count();
+    /* Counted in clips: a cut stays on its row as more clips since 30
+       October 2026, so the rows stay three and the clips grow. */
+    const clipsHere = () => p.locator('[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]').count();
+    const before = await clipsHere();
     const namesBefore = await p.locator('[data-lanename]').allInnerTexts();
     await p.locator('button').filter({ hasText: af ? /Sny hierdie stuk uit/ : /Cut this piece out/ }).first().click();
     await p.waitForTimeout(500);
     check('and cutting the piece out changes the session',
-      (await p.locator('[data-lanename]').count()) > before,
-      `lanes before ${before} (${namesBefore.join(' | ')}), after ${await p.locator('[data-lanename]').count()} (${(await p.locator('[data-lanename]').allInnerTexts()).join(' | ')}); bar said ${bar}`);
+      (await clipsHere()) > before,
+      `clips before ${before} (${namesBefore.join(' | ')}), after ${await clipsHere()} (${(await p.locator('[data-lanename]').allInnerTexts()).join(' | ')}); bar said ${bar}`);
     /* The mark is spent, so the bar goes with it. */
     check('and the mark is cleared once it has been used',
       (await p.locator('[data-regiontools]').count()) === 0);
@@ -690,7 +693,7 @@ try {
        It reported a fault that was its own. */
     const undo = p.locator('[data-undo]');
     const redo = p.locator('[data-redo]');
-    const lanesNow = () => p.locator('[data-lanename]').count();
+    const lanesNow = clipsHere;
     const afterCut = await lanesNow();
 
     check('the cut put something on the stack', await undo.isEnabled(),

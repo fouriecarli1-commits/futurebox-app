@@ -150,14 +150,16 @@ const mustBeGuarded: ReadonlyArray<{ what: string; near: RegExp }> = [
     near: /\{track\.source !== 'upload' && <PostToLive track=\{track\} \/>\}/,
   },
   {
-    what: 'and cannot be given cover art on the account',
-    near: /track\.source !== 'upload' && \([\s\S]{0,600}make\.cover/,
-  },
-  {
     what: 'and cannot be opened in the studio to be regenerated',
     near: /onEdit && track\.source !== 'upload' &&/,
   },
 ];
+
+/* A cover is the one thing that changed sides. The owner, 30 October 2026:
+   *"enige liedjie mag 'n AI foto genereer, of 'n album art koop."* Drawn or
+   bought, never one's own picture (that wall is `check:coverwall`). */
+ok('a brought-in song can have a cover drawn or bought, like any song',
+  /data-chancover[\s\S]{0,800}make\.cover/.test(channel) && !/track\.source !== 'upload' && \([\s\S]{0,600}make\.cover/.test(channel));
 
 for (const one of mustBeGuarded) {
   ok(one.what, one.near.test(channel), 'the guard is missing or no longer next to the control');

@@ -345,9 +345,9 @@ export default function CollabRadar({
   };
 
   const tabs: Array<{ id: RadarTab; label: string; icon: typeof Mic }> = [
-    { id: 'podcasts', label: t('radar.tab.podcasts', 'Podcast Match'), icon: Mic },
-    { id: 'live', label: t('radar.tab.live', 'Live Room'), icon: Radio },
-    { id: 'posts', label: t('radar.tab.posts', 'Viral Post Lab'), icon: Flame },
+    { id: 'podcasts', label: t('radar.tab.podcasts', 'Get on a podcast'), icon: Mic },
+    { id: 'live', label: t('radar.tab.live', 'Plan a live'), icon: Radio },
+    { id: 'posts', label: t('radar.tab.posts', 'Posts that travel'), icon: Flame },
   ];
 
   return (
@@ -359,16 +359,16 @@ export default function CollabRadar({
             truncation did nothing and the header pushed the room 840 pixels
             wide. Found by `check:wide` in the same commit that added it. */}
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-extrabold text-white flex items-center space-x-2">
-            <Handshake className="w-4 h-4 text-cyan-400" />
-            <span>{t('radar.heading', "Collab Radar")}</span>
+          <h4 className="flex items-center space-x-2 text-lg font-black">
+            <Handshake className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.9)]" />
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg,#6EE7B7,#22D3EE,#C4B5FD)', filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.5))' }}>{t('radar.heading', 'Get yourself heard')}</span>
           </h4>
           {/* How the room works, on the same terms as every other explanation
               in this app: one clipped line and a mark on a phone. It was four
               lines of grey above the first match, in the room whose whole job
               is the matches. */}
           <Note className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
-            {t('radar.how', 'Matches are worked out from what you have released — {genres} — and scored on tempo, key and shared subjects. Nothing here contacts anybody: every pitch is a draft you read, edit and send yourself.')
+            {t('radar.how', 'Shows and posts that fit your music. Nothing is sent for you: you read it, change it and send it yourself.')
               .replace('{genres}', profile.genres.join(', ') || t('radar.noReleases', 'nothing released yet'))}
           </Note>
         </div>
@@ -382,6 +382,28 @@ export default function CollabRadar({
             : t('radar.followers', 'followers')}
         </div>
       </div>
+
+      {/* Three steps, said before anything else. The owner, 30 October 2026:
+          *"Die collab radar se onderste gedeelte is vir my onverstaanbaar. Die
+          feit dat daar dm's gestuur moet word, ek verstaan nie alles wat daar
+          aan gaan nie."* This part had the same name as the radar above it
+          and spoke in "draft DM"; now it says what happens, in order. */}
+      <ol data-radarsteps className="grid gap-2 sm:grid-cols-3">
+        {([1, 2, 3] as const).map((n) => {
+          const key = `radar.step.${tab}${n}`;
+          const words = ({
+            podcasts: ['Pick a show that fits you', 'The AI writes an email, or a DM: a private message on their Instagram, TikTok or X', 'Copy it and send it yourself. FutureBox never sends anything for you'],
+            live: ['Choose the song you will play', 'The AI plans the live: the opening, what to say, when to play', 'Copy the plan and go live on your own channel'],
+            posts: ['Choose a song and where it goes', 'The AI writes the post, sized for each place', 'Copy it, or open the app and post it yourself'],
+          } as const)[tab][n - 1];
+          return (
+            <li key={key} className="flex items-start gap-2.5 rounded-2xl border border-cyan-400/40 bg-cyan-500/[0.07] p-2.5 shadow-[0_0_14px_rgba(34,211,238,0.15)]">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-300 text-sm font-black text-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.6)]">{n}</span>
+              <span data-keep className="text-[13px] font-semibold leading-snug text-cyan-50" style={{ textShadow: '0 0 8px rgba(34,211,238,0.35)' }}>{t(key, words)}</span>
+            </li>
+          );
+        })}
+      </ol>
 
       <div className="flex flex-wrap gap-2">
         {tabs.map((t) => {
@@ -506,14 +528,14 @@ export default function CollabRadar({
                     className="px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
                   >
                     <Send className="w-3 h-3" />
-                    <span>{t('radar.draftEmail', "Draft email")}</span>
+                    <span>{t('radar.draftEmail', 'Write an email for me')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => openPitch(podcast, 'dm')}
                     className="px-3 py-2.5 min-h-[44px] rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all"
                   >
-                    {t('radar.draftDm', 'Draft DM')}
+                    {t('radar.draftDm', 'Write a message for me')}
                   </button>
                   {podcast.url && (
                     <a
@@ -523,7 +545,7 @@ export default function CollabRadar({
                       className="px-3 py-2.5 min-h-[44px] rounded-lg text-sm text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      <span>{t('radar.findContact', "Find their contact page")}</span>
+                      <span>{t('radar.findContact', 'Where to send it')}</span>
                     </a>
                   )}
                 </div>
@@ -590,8 +612,8 @@ export default function CollabRadar({
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-white">
                     {pitchFormat === 'email'
-                      ? t('radar.headEmail', 'Email draft')
-                      : t('radar.headDm', 'DM draft')} → {selectedPodcast.name}
+                      ? t('radar.headEmail', 'Your email, ready to send')
+                      : t('radar.headDm', 'Your message, ready to send')} → {selectedPodcast.name}
                   </p>
                   <CopyButton
                     text={pitchBody}
@@ -622,7 +644,7 @@ export default function CollabRadar({
             ) : (
               <div className="p-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-center">
                 <Mic className="w-7 h-7 text-zinc-700 mx-auto" />
-                <p className="text-xs text-zinc-500 pt-2">{t('radar.pickShow', "Pick a show to draft a pitch.")}</p>
+                <p className="text-xs text-zinc-500 pt-2">{t('radar.pickShow', 'Pick a show above and the AI writes your pitch.')}</p>
               </div>
             )}
           </div>

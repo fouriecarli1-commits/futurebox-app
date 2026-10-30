@@ -215,6 +215,9 @@ function ClipName({ name, roomy, onRename }: {
         event.stopPropagation();
         setDraft(name);
       }}
+      /* The top band of the clip only, not its middle: 44 tall, on a short
+         clip it covered the place a finger grabs to drag it, and the drag
+         became a rename (found 30 October 2026). */
       className="absolute left-6 top-0 z-10 flex h-11 min-w-11 max-w-[calc(100%-2rem)] items-start pt-1.5"
     >
       {label}
@@ -1860,7 +1863,11 @@ export default function BoothTimeline({
                   >
                     <ClipName
                       name={lane.name}
-                      roomy={wide > 0 && (plays / Math.max(0.001, scaleTotal)) * wide >= 84}
+                      /* Room for the name's press AND for a finger to grab the clip
+                         beside it: at 84 pixels the 44-tall press covered the middle of
+                         a short clip, and a drag there became a rename (30 October
+                         2026). A short clip is renamed from Track controls. */
+                      roomy={wide > 0 && (plays / Math.max(0.001, scaleTotal)) * wide >= 180}
                       onRename={(name) => onChange(lane.id, { name })}
                     />
                     <Wave lane={lane} view={view} hue={hue} />
@@ -2168,11 +2175,14 @@ export default function BoothTimeline({
           {onAdd && (
             <div
               data-laneadd
-              className="sticky left-0 flex flex-wrap items-center gap-2 px-2 py-3"
+              data-sideways
+              /* One row, scrolled sideways, small and quiet (the owner, 30
+                 October 2026: the buttons out of the way of the lanes). */
+              className="sticky left-0 flex flex-nowrap items-center gap-1.5 overflow-x-auto px-2 py-1.5"
               style={{ gridColumn: '1 / -1', gridRow: rows.length + 2, width: `min(100%, ${gutter + room}px)` }}
             >
-              <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: INK_DIM }}>
-                {t('pro.addLane', 'A new lane')}
+              <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
+                + {t('pro.addLane', 'A new lane')}
               </span>
               {([
                 ['record', '●', t('pro.addRecord', 'Record')],
@@ -2188,7 +2198,7 @@ export default function BoothTimeline({
                   data-laneaddhow={how}
                   disabled={addOff}
                   onClick={() => onAdd(how)}
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-dashed px-3.5 text-xs font-bold transition-colors disabled:opacity-40"
+                  className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] font-bold transition-colors disabled:opacity-40"
                   style={{
                     borderColor: how === 'record' ? 'rgba(248,113,113,0.55)' : 'rgba(56,189,248,0.45)',
                     color: how === 'record' ? '#fca5a5' : '#7dd3fc',

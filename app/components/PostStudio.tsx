@@ -6677,11 +6677,25 @@ export default function PostStudio({
         ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
         : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
     >
-      <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
-        {t(
-          'post.cutDownHow',
-          'Drag the corners or the sides of the box to say how much you are keeping. Everything shaded is cut away.',
-        )}
+      {/* A way back at the top, where it is looked for. The owner, 30 October
+          2026: *"Die crop function het nie 'n back button nie."* "Leave it" was
+          at the foot of the strip, under the fold on a phone. */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          data-postcropback
+          onClick={() => { setCropBox(null); if (bench === 'frame') setBench(null); }}
+          aria-label={t('post.cropBack', 'Back, without cutting')}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/60 bg-cyan-500/10 text-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <p className="min-w-0 flex-1 bg-clip-text text-base font-black text-transparent" style={{ backgroundImage: 'linear-gradient(90deg,#6EE7B7,#22D3EE)', filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.5))' }}>
+          {t('post.cropTitle', 'Cut the photo')}
+        </p>
+      </div>
+      <p data-keep className="text-[13px] font-medium leading-snug" style={{ color: '#A5F3FC', textShadow: '0 0 8px rgba(34,211,238,0.4)' }}>
+        {t('post.cutDownHowShort', 'Drag the box. The shaded part is cut away.')}
       </p>
       {/* The three shapes a post actually goes out in, so somebody who knows
           what they are posting does not have to get 9:16 right with a thumb.
@@ -6810,7 +6824,7 @@ export default function PostStudio({
         type="button"
         data-postdarkroom
         onClick={() => setDarkroom(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #f59e0b, #ec4899 55%, #8b5cf6)', boxShadow: '0 0 18px rgba(236,72,153,0.45)' }}
       >
         <Sparkles className="h-3.5 w-3.5" />
@@ -6823,7 +6837,7 @@ export default function PostStudio({
         type="button"
         data-postpdf
         onClick={() => askPdf(null)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
       >
         <FileText className="h-3.5 w-3.5" />
         {t('post.pdfRoom', 'PDF studio')}
@@ -6834,7 +6848,7 @@ export default function PostStudio({
         type="button"
         data-postvector
         onClick={() => setVector({ editing: null })}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
       >
         <PenTool className="h-3.5 w-3.5" />
         {t('post.vectorRoom', 'Vector studio')}
@@ -6845,7 +6859,7 @@ export default function PostStudio({
         type="button"
         data-postposter
         onClick={() => setPoster(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #d946ef, #f43f5e 55%, #f59e0b)', boxShadow: '0 0 18px rgba(217,70,239,0.4)' }}
       >
         <Megaphone className="h-3.5 w-3.5" />
@@ -6857,7 +6871,7 @@ export default function PostStudio({
         type="button"
         data-postproduct
         onClick={() => setProduct(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #f59e0b, #f97316 55%, #e11d48)', boxShadow: '0 0 18px rgba(249,115,22,0.4)' }}
       >
         <ShoppingBag className="h-3.5 w-3.5" />
@@ -6869,7 +6883,7 @@ export default function PostStudio({
         type="button"
         data-posttryon
         onClick={() => setTryOn(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #0ea5e9, #6366f1 55%, #c026d3)', boxShadow: '0 0 18px rgba(99,102,241,0.4)' }}
       >
         <Shirt className="h-3.5 w-3.5" />
@@ -8642,7 +8656,11 @@ export default function PostStudio({
           key={one.id}
           data-postwordcard={one.id}
           data-postwordon={one.id === wordOn ? 'yes' : undefined}
-          onPointerDown={() => { if (wordOn !== one.id) { setWordOn(one.id); setMarkOn(null); } }}
+          /* On the tap, not on the finger going down: the chosen card moves to
+             the top of the list, and moved on the way down it took the button
+             away from under the finger, so the first tap after typing (Mirror,
+             Up the side) did nothing. */
+          onClick={() => { if (wordOn !== one.id) { setWordOn(one.id); setMarkOn(null); } }}
           className={`space-y-2 rounded-xl border p-3 ${one.id === wordOn ? 'border-emerald-400' : 'border-zinc-800'}`}
         >
           <label className="block">

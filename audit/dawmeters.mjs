@@ -229,7 +229,7 @@ try {
   await page.waitForTimeout(300);
   await page.locator('[data-boothpunch]').first().click();
   await page.waitForTimeout(200);
-  check('  and Punch in says it is armed once a piece is marked', /armed/.test(await page.locator('[data-boothpunch]').first().innerText()));
+  check('  and Punch in says it is armed once a piece is marked', /armed/.test(await page.locator('[data-boothpunch]').first().getAttribute('aria-label') ?? ''));
   const clipsBeforePunch = await clips();
   await page.locator('[data-laneaddhow="record"]').first().click();
   await page.waitForTimeout(5500);

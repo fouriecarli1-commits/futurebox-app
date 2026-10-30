@@ -1153,17 +1153,23 @@ export default function Channel({
                         What is left is what she asked for — play it, open it
                         full screen, and sing over it with the words up — plus
                         the playlist, which is only a list of ids. */}
-                    {track.source !== 'upload' && (
-                      <button
-                        type="button"
-                        onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
-                        aria-expanded={sleeveFor === track.id}
-                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        {t('make.cover', 'Cover art')}
-                      </button>
-                    )}
+                    {/* Every song, brought in or made here, may have a cover drawn
+                        or bought. The owner, 30 October 2026: *"enige liedjie mag
+                        'n AI foto genereer, of 'n album art koop. Wat hulle nie
+                        mag doen nie is om hulle eie prente in te bring en dit op
+                        die cover te sit."* So the panel opens for a brought-in
+                        song too, and there is still no way to put one's own
+                        picture on (`check:coverwall`). */}
+                    <button
+                      type="button"
+                      data-chancover
+                      onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
+                      aria-expanded={sleeveFor === track.id}
+                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      {t('make.cover', 'Cover art')}
+                    </button>
                     {/* The file itself.
 
                         Beside the other two rather than hidden behind the

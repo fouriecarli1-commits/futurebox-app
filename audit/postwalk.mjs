@@ -937,7 +937,7 @@ try {
        Since 15 October 2026 pressing a line's card picks it and draws a
        bright ring round it (on screen only); picked in the same press as the
        bar, the ring's green outweighed the bar's dark in the average. */
-    await page.locator('[data-postwordcard]').first().dispatchEvent('pointerdown');
+    await page.locator('[data-postwordcard]').first().dispatchEvent('click');
     await page.waitForTimeout(400);
     const plainText = await mean();
     await page.locator('[data-postbehindwords="bar"]').first().click();

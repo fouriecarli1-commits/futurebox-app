@@ -43,7 +43,7 @@ export default function IdeaChips({
               type="button"
               data-ideachip
               onClick={() => onPick(words)}
-              className="min-h-[40px] max-w-full rounded-2xl px-3 py-1.5 text-left text-[12px] font-semibold leading-snug transition-transform active:scale-95"
+              className="min-h-[44px] max-w-full rounded-2xl px-3 py-1 text-left text-[12px] font-semibold leading-tight transition-transform active:scale-95"
               style={{
                 color: '#ECFEFF',
                 background: `linear-gradient(135deg, ${glow}26, rgba(10,12,16,0.5))`,

@@ -98,13 +98,17 @@ export default function RecordingName({
     if (creator !== undefined) setRow(creator);
   }, [creator]);
 
-  /* Its own fetch, only when nobody handed it a row. */
+  /* Its own fetch: the row only when nobody handed it one, but whether this
+     account may use the app's own name ALWAYS. The channel page hands the row
+     in, and then the question was never asked, so the owner was refused their
+     own handle on the phone while the server would have taken it (the owner,
+     30 October 2026: *"Sê tog net vir die ding dat ek as eienaar die official
+     channel is van die app."*). */
   useEffect(() => {
-    if (creator !== undefined) return;
     let live = true;
     void fetchCreatorState().then((found) => {
       if (!live) return;
-      setRow(found.creator);
+      if (creator === undefined) setRow(found.creator);
       setMayUseReserved(found.mayUseReserved);
       setOwnerSet(found.ownerSet);
     });

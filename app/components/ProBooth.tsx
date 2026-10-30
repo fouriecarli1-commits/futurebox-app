@@ -29,7 +29,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
+import { Activity, MoveHorizontal, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
   anySends, liveOf, playsOf, rowKey, rowMates, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
@@ -355,6 +355,12 @@ export default function ProBooth({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [saveFailed, setSaveFailed] = useState<'unavailable' | 'full' | 'failed' | null>(null);
   const [cameBack, setCameBack] = useState(false);
+  /* "Carried on from where you left off" passes; it does not stay. */
+  useEffect(() => {
+    if (!cameBack) return undefined;
+    const gone = window.setTimeout(() => setCameBack(false), 7000);
+    return () => window.clearTimeout(gone);
+  }, [cameBack]);
   /* A loop sent from the jam room arrived as a lane — see below. */
   const [jamArrived, setJamArrived] = useState(false);
   const [at, setAt] = useState(0);
@@ -1611,8 +1617,11 @@ export default function ProBooth({
             type="button"
             data-exportkind={one}
             aria-pressed={soundKind === one}
+            /* The kind already chosen is not a press: tapping it changed
+               nothing and said nothing. It stays lit, and is not offered. */
+            disabled={soundKind === one}
             onClick={() => setSoundKind(one)}
-            className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold ${
+            className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold disabled:cursor-default disabled:opacity-100 ${
               soundKind === one
                 ? 'border-sky-500/60 bg-sky-500/15 text-sky-300'
                 : 'border-zinc-700 bg-zinc-900 text-zinc-200'
@@ -6895,9 +6904,15 @@ export default function ProBooth({
           the far end of the mark landed seconds from where the finger was.
           While a desk is open the column is hidden and this holds only those
           lines, at their own size. */}
-      <div className={`flex min-w-0 flex-col overflow-hidden ${deskOpen ? 'shrink-0' : 'flex-1'}`}>
+      <div className={`relative flex min-w-0 flex-col overflow-hidden ${deskOpen ? 'shrink-0' : 'flex-1'}`}>
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
-      <div className="relative flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] shrink-0 z-30">
+      <div
+        /* One row, never two. The owner, 30 October 2026: *"Probooth moet baie
+           oop wees om al die tydlyne te sien. Die buttons moet alles onder, klein
+           en uit die pad uit wees."* The header wrapped to a second row of
+           three buttons on a phone; now it is one line, and the lanes start
+           under it. */
+        className="relative flex flex-nowrap items-center justify-between gap-1.5 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-2 py-1 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] shrink-0 z-30">
         {/* Subtle neon laser top accent line */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* The master meter: the whole mix as it leaves, after the master,
@@ -6911,23 +6926,25 @@ export default function ProBooth({
         />
 
         {/* Left section: Back + Logo & Title + Undo/Redo */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           <button
             type="button"
             /* Through `leave`: a running take is stopped and kept first. */
             onClick={() => void leave()}
-            className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+            aria-label={t('booth.back', 'Back')}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/90 text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>{t('booth.back', 'Back')}</span>
+            <span className="sr-only">{t('booth.back', 'Back')}</span>
           </button>
           {/* The same bar as the recorder's, from Google's ProBooth page: the
               mark, the room's badge and the song. */}
-          <div className="flex min-w-0 items-center gap-2 pl-1">
+          {/* The badge only where the row has room for it: on a phone the six buttons come first. */}
+          <div className="hidden min-w-0 items-center gap-2 pl-1 min-[420px]:flex">
             <span className="hidden text-sm font-extrabold text-white sm:inline">
               FUTURE<span className="text-emerald-500">BOX</span>
             </span>
-            <span className="whitespace-nowrap rounded-lg border border-sky-400/45 bg-sky-500/10 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
+            <span className="whitespace-nowrap rounded-lg border border-sky-400/45 bg-sky-500/10 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
               {t('booth.title', 'ProBooth')}
               <span className="hidden sm:inline"> · {t('pro.lanesBadge', 'Lanes')}</span>
             </span>
@@ -6935,7 +6952,7 @@ export default function ProBooth({
           </div>
 
           {/* Undo / Redo */}
-          <div className="flex shrink-0 items-center gap-1 pl-1">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               data-undo
@@ -6962,7 +6979,7 @@ export default function ProBooth({
         </div>
 
         {/* Right utility buttons: Sliders, Help, Settings */}
-        <div className="flex items-center gap-1 text-zinc-400">
+        <div className="flex shrink-0 items-center gap-1 text-zinc-400">
           <button
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'mix' ? null : 'mix'))}
@@ -7019,11 +7036,17 @@ export default function ProBooth({
           </button>
         </div>
       )}
-      {(cameBack || savedAt !== null || saveFailed) && (
+      {/* A plain "saved" is not said at all any more: it sat over the clock
+          held sideways. What is said is a resume, which passes, and a
+          failure, which stays. */}
+      {(cameBack || saveFailed) && (
         /* A plain "saved" is said on a desk only: on a phone it was a whole
            row taken from the lanes to say that nothing is wrong. A failure
            and "Carried on … Start fresh" still show everywhere. */
-        <div className={`${cameBack || saveFailed ? 'flex' : 'hidden sm:flex'} flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs`}>
+        /* Over the lanes and gone again, never a row taken from them (the
+           owner, 30 October 2026: the room had to be open). "Carried on" goes
+           by itself after a few seconds; a failure stays until it is read. */
+        <div data-keptsays className={`flex absolute left-2 right-2 top-[52px] z-40 flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-sky-400/40 px-3 py-1.5 text-xs shadow-[0_0_18px_rgba(56,189,248,0.25)]`} style={{ background: 'rgba(9,12,18,0.82)', backdropFilter: 'blur(8px)' }}>
           {saveFailed ? (
             <span className="font-semibold text-amber-300">
               {saveFailed === 'full'
@@ -7077,35 +7100,6 @@ export default function ProBooth({
           {/* The transport, over the music where a hand reaches for it. Not
               on a phone held sideways, where the rail carries play and the
               timeline needs every pixel of a short screen. */}
-          {!sideways && (
-            <BoothTransport
-              recording={recording}
-              looping={looping}
-              clicking={clicking}
-              countBars={countBars}
-              bpm={meter.bpm}
-              signature={`${meter.beats}/${meter.unit}`}
-              keyName={meter.key}
-              markerHere={markerAt !== undefined}
-              hasMarkers={markers.length > 0}
-              onMarker={markerToggle}
-              onPrevMarker={() => toMarker(-1)}
-              onNextMarker={() => toMarker(1)}
-              onStart={toStart}
-              onStop={stopAll}
-              onRecord={recordToggle}
-              onLoop={loopToggle}
-              onClick={clickToggle}
-              onTempo={() => setDeskOpen('tracks')}
-              onMixer={() => setDeskOpen('mix')}
-              lanePicked={Boolean(picked)}
-              hasClip={hasClip}
-              onCopy={copyLane}
-              onPaste={pasteLane}
-              onDuplicate={duplicateLane}
-              busy={busy || making}
-            />
-          )}
           {/* Only while there is sound to draw: still, it was an empty strip
               above the lanes. */}
           {!sideways && (playing || recording) && <BoothScope ear={scopeRef} playing={playing} />}
@@ -7126,58 +7120,6 @@ export default function ProBooth({
               </span>
             </div>
           )}
-          <div className="flex flex-wrap items-center gap-2 self-start">
-          <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
-            {(['wave', 'spectrum'] as const).map((one) => (
-              <button
-                key={one}
-                type="button"
-                data-boothview={one}
-                aria-pressed={laneView === one}
-                title={one === 'spectrum' ? t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.') : undefined}
-                onClick={() => pickLaneView(one)}
-                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold ${laneView === one ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
-              >
-                {one === 'wave' ? <Waves className="h-3.5 w-3.5" /> : <Grid3x3 className="h-3.5 w-3.5" />}
-                {one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
-              </button>
-            ))}
-          </div>
-          {/* Automation: draw how a lane's volume or pan changes over the song
-              (`BoothAuto`). Pressed again, the lines go away and the lanes
-              take presses as before. */}
-          <div className="inline-grid grid-cols-2 gap-1.5 self-start" data-boothauto role="group" aria-label={t('pro.autoWhat', 'Draw how a lane changes over the song: tap to add a point, drag it, tap it twice to take it away.')}>
-            {(['gain', 'pan'] as const).map((one) => (
-              <button
-                key={one}
-                type="button"
-                data-boothautomode={one}
-                aria-pressed={autoMode === one}
-                title={t('pro.autoWhat', 'Draw how a lane changes over the song: tap to add a point, drag it, tap it twice to take it away.')}
-                onClick={() => setAutoMode((was) => (was === one ? null : one))}
-                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold ${autoMode === one ? (one === 'gain' ? 'border-yellow-400/60 bg-yellow-500/15 text-yellow-200' : 'border-purple-400/60 bg-purple-500/15 text-purple-200') : 'border-white/10 text-zinc-400 hover:text-white'}`}
-              >
-                <Activity className="h-3.5 w-3.5" />
-                {one === 'gain' ? t('pro.autoGain', 'Volume line') : t('pro.autoPan', 'Pan line')}
-              </button>
-            ))}
-          </div>
-          {/* Punch in: record over the marked piece only (see `punchRef`). */}
-          <button
-            type="button"
-            data-boothpunch
-            aria-pressed={punching}
-            disabled={recording}
-            onClick={() => setPunching((was) => !was)}
-            title={t('pro.punchWhat', 'Mark the piece to fix, open the lane it is on, and press Record: the take starts two seconds early so you hear the run-up, and only the marked piece is kept, in place of what was there.')}
-            className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50 ${punching ? 'border-red-400/60 bg-red-500/15 text-red-200' : 'border-white/10 text-zinc-400 hover:text-white'}`}
-          >
-            <Circle className="h-3 w-3 fill-current" />
-            {punching
-              ? (region ? t('pro.punchArmed', 'Punch in: armed') : t('pro.punchMark', 'Punch in: mark a piece'))
-              : t('pro.punch', 'Punch in')}
-          </button>
-          </div>
           <BoothTimeline
             earOf={earOf}
             autoMode={autoMode}
@@ -7209,6 +7151,92 @@ export default function ProBooth({
             region={region}
             onRegion={setRegion}
           />
+          {/* ── Every control under the lanes, small, in one row ─────────────
+              The owner, 30 October 2026: *"Probooth moet baie oop wees om al
+              die tydlyne te sien. Die buttons moet alles onder, klein en uit die
+              pad uit wees."* The transport sat over the lanes and the view,
+              automation and punch chips took two more rows. Now they are one
+              row of icons at the foot, scrolled sideways when it is longer than
+              the screen, each saying what it is when held or read aloud. */}
+          <div data-boothfoot data-sideways className="flex shrink-0 flex-nowrap items-center gap-1 overflow-x-auto border-t border-zinc-800/80 bg-zinc-950/90 pr-2">
+            {!sideways && (
+              <BoothTransport
+                recording={recording}
+                looping={looping}
+                clicking={clicking}
+                countBars={countBars}
+                bpm={meter.bpm}
+                signature={`${meter.beats}/${meter.unit}`}
+                keyName={meter.key}
+                markerHere={markerAt !== undefined}
+                hasMarkers={markers.length > 0}
+                onMarker={markerToggle}
+                onPrevMarker={() => toMarker(-1)}
+                onNextMarker={() => toMarker(1)}
+                onStart={toStart}
+                onStop={stopAll}
+                onRecord={recordToggle}
+                onLoop={loopToggle}
+                onClick={clickToggle}
+                onTempo={() => setDeskOpen('tracks')}
+                onMixer={() => setDeskOpen('mix')}
+                lanePicked={Boolean(picked)}
+                hasClip={hasClip}
+                onCopy={copyLane}
+                onPaste={pasteLane}
+                onDuplicate={duplicateLane}
+                busy={busy || making}
+              />
+            )}
+            <span aria-hidden className="mx-0.5 h-6 w-px shrink-0 bg-zinc-800" />
+            <div className="flex shrink-0 items-center gap-1" data-boothviews role="group" aria-label={t('lane.viewWhat', 'What the sound is made of: time across, pitch up, loudness as colour.')}>
+              {(['wave', 'spectrum'] as const).map((one) => (
+                <button
+                  key={one}
+                  type="button"
+                  data-boothview={one}
+                  aria-pressed={laneView === one}
+                  aria-label={one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
+                  title={one === 'wave' ? t('lane.viewWave', 'Waveform') : t('lane.viewSpectrum', 'Spectrogram')}
+                  onClick={() => pickLaneView(one)}
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors ${laneView === one ? 'border-cyan-400 bg-cyan-500/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.35)]' : 'border-zinc-800 bg-zinc-900/70 text-zinc-400'}`}
+                >
+                  {one === 'wave' ? <Waves className="h-4 w-4" /> : <Grid3x3 className="h-4 w-4" />}
+                </button>
+              ))}
+            </div>
+            {/* Automation: draw how a lane's volume or pan changes over the song
+                (`BoothAuto`). Pressed again, the lines go away. */}
+            {(['gain', 'pan'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-boothautomode={one}
+                aria-pressed={autoMode === one}
+                aria-label={one === 'gain' ? t('pro.autoGain', 'Volume line') : t('pro.autoPan', 'Pan line')}
+                title={t('pro.autoWhat', 'Draw how a lane changes over the song: tap to add a point, drag it, tap it twice to take it away.')}
+                onClick={() => setAutoMode((was) => (was === one ? null : one))}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors ${autoMode === one ? 'border-cyan-400 bg-cyan-500/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.35)]' : 'border-zinc-800 bg-zinc-900/70 text-zinc-400'}`}
+              >
+                {one === 'gain' ? <Activity className="h-4 w-4" /> : <MoveHorizontal className="h-4 w-4" />}
+              </button>
+            ))}
+            {/* Punch in: record over the marked piece only (see `punchRef`). */}
+            <button
+              type="button"
+              data-boothpunch
+              aria-pressed={punching}
+              disabled={recording}
+              aria-label={punching
+                ? (region ? t('pro.punchArmed', 'Punch in: armed') : t('pro.punchMark', 'Punch in: mark a piece'))
+                : t('pro.punch', 'Punch in')}
+              title={t('pro.punch', 'Punch in')}
+              onClick={() => setPunching((was) => !was)}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors disabled:opacity-40 ${punching ? 'border-red-400 bg-red-500/15 text-red-300 shadow-[0_0_12px_rgba(248,113,113,0.4)]' : 'border-zinc-800 bg-zinc-900/70 text-zinc-400'}`}
+            >
+              <Circle className="h-3.5 w-3.5 fill-current" />
+            </button>
+          </div>
 
           {/* The "Studio Track Slots" bar that sat here offered three of
               the same things as the new-lane strip under the lanes (record,
