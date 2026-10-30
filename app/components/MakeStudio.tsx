@@ -9,7 +9,7 @@
  * ideas to start from, the read-back of what will be made, four drafts for
  * the price on the button, and the chosen one finished — or kept as it is.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, ImagePlus, Loader2, RefreshCw, Sparkles, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { creditsSaid } from '../lib/credits';
@@ -19,6 +19,9 @@ import {
 } from '../lib/picturemake';
 import { YesSheet, useEngineYes } from './BecomeBench';
 import { useBackLayer } from '../lib/backstack';
+import { MAKE_IDEAS } from '../lib/promptideas';
+import { deliverTo, lastMade, startMaking, underWay, type Made } from '../lib/madekeep';
+import IdeaChips from './IdeaChips';
 import { barClearance } from './TabBar';
 
 /** A swatch for each look, so the choice is a picture and not a word. */
@@ -31,16 +34,6 @@ const SWATCH: Readonly<Record<LookId, string>> = {
   neon: 'linear-gradient(135deg,#0b0820,#ff2bd6 55%,#21f3ff)',
   film: 'linear-gradient(135deg,#7a5c3a,#d8b98a,#4a3a2a)',
   minimal: 'linear-gradient(90deg,#f4f4f4 60%,#111 60%)',
-};
-
-/** Ideas to start from, per thing being made: tapped, then changed. */
-const IDEAS: Readonly<Record<KindId, readonly [string, string][]>> = {
-  cover: [['make.ideaCover1', 'A lone figure on a rooftop above a city at night'], ['make.ideaCover2', 'A hand holding a glowing cassette tape'], ['make.ideaCover3', 'An old pickup truck on a Karoo road at sunset']],
-  poster: [['make.ideaPoster1', 'A crowd with their hands up at an open-air concert'], ['make.ideaPoster2', 'A microphone on an empty stage under one spotlight']],
-  post: [['make.ideaPost1', 'Headphones on a wooden table with morning coffee'], ['make.ideaPost2', 'A vinyl record melting into a sunset']],
-  story: [['make.ideaStory1', 'A guitarist silhouetted against a huge moon'], ['make.ideaStory2', 'Confetti falling in slow motion']],
-  banner: [['make.ideaBanner1', 'Sound waves rolling across a mountain range'], ['make.ideaBanner2', 'A long studio desk with glowing knobs']],
-  wallpaper: [['make.ideaWallpaper1', 'Soft clouds over the ocean at dawn'], ['make.ideaWallpaper2', 'A field of sunflowers under stars']],
 };
 
 const CARD = 'flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[12px] font-bold';
@@ -69,27 +62,63 @@ export default function MakeStudio({ t, onClose, onPicture }: {
   const choice: Choice = { kind, look, mood, idea: idea.trim() };
   const ready = choice.idea.length > 0;
 
+  /* The finished picture goes to the editor whether this sheet is still open
+     or not (`lib/madekeep.ts`), so the newest hand is always the one set. */
+  deliverTo(onPicture);
+
+  /* What was made last, and a making still under way, as they were. */
+  const restore = (made: Made): void => {
+    if (KINDS.some((one) => one.id === made.kind)) setKind(made.kind as KindId);
+    if (LOOKS.some((one) => one.id === made.look)) setLook(made.look as LookId);
+    if (MOODS.some((one) => one.id === made.mood)) setMood(made.mood as MoodId);
+    setIdea(made.idea);
+    setDrafts([...made.drafts]);
+    setChosen(made.chosen);
+    setFinal(made.final);
+  };
+  useEffect(() => {
+    let live = true;
+    const going = underWay();
+    if (going) {
+      setBusy(going.step);
+      void going.done.then((outcome) => {
+        if (!live) return;
+        if (outcome.made) restore(outcome.made);
+        if (outcome.said) setSaid(outcome.said);
+        setBusy(null);
+      });
+    } else {
+      void lastMade().then((made) => { if (live && made) restore(made); });
+    }
+    return () => { live = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on opening
+  }, []);
+
   const ask = async (step: 'draft' | 'final', agreed = false): Promise<void> => {
     if (!yes && !agreed) { setAsking(step); return; }
     setBusy(step);
     setSaid('');
-    try {
-      const token = await accessToken();
-      const answer = await fetch('/api/picturemake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ step, ...choice, abroad: true, adult: true, ...(step === 'final' && chosen !== null ? { draft: drafts[chosen] } : {}) }),
-      });
-      const got = (await answer.json().catch(() => ({}))) as { urls?: string[]; url?: string; message?: string };
-      if (!answer.ok) { setSaid(got.message ?? t('make.failed', 'That did not work this time. Your credits are back.')); return; }
-      if (step === 'draft' && got.urls?.length) { setDrafts(got.urls); setChosen(0); setFinal(null); return; }
-      if (step === 'final' && got.url) { setFinal(got.url); return; }
-      setSaid(t('make.failed', 'That did not work this time. Your credits are back.'));
-    } catch {
-      setSaid(t('make.offline', 'That could not be sent. Check the connection and try again.'));
-    } finally {
-      setBusy(null);
-    }
+    const was = { kind, look, mood, idea: choice.idea, drafts, chosen };
+    const outcome = await startMaking(step, async () => {
+      try {
+        const token = await accessToken();
+        const answer = await fetch('/api/picturemake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ step, ...choice, abroad: true, adult: true, ...(step === 'final' && chosen !== null ? { draft: drafts[chosen] } : {}) }),
+        });
+        const got = (await answer.json().catch(() => ({}))) as { urls?: string[]; url?: string; message?: string };
+        if (!answer.ok) return { made: null, said: got.message ?? t('make.failed', 'That did not work this time. Your credits are back.') };
+        if (step === 'draft' && got.urls?.length) return { made: { ...was, drafts: got.urls, chosen: 0, final: null, at: Date.now() }, said: '' };
+        if (step === 'final' && got.url) return { made: { ...was, final: got.url, at: Date.now() }, said: '' };
+        return { made: null, said: t('make.failed', 'That did not work this time. Your credits are back.') };
+      } catch {
+        return { made: null, said: t('make.offline', 'That could not be sent. Check the connection and try again.') };
+      }
+    });
+    if (outcome.made) restore(outcome.made);
+    setSaid(outcome.said);
+    setBusy(null);
   };
 
   const heading = (n: string, words: string): React.ReactElement => (
@@ -144,12 +173,8 @@ export default function MakeStudio({ t, onClose, onPicture }: {
           aria-label={t('make.stepIdea', 'Your idea')}
           className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
         />
-        <div className="flex flex-wrap gap-1.5" data-makeideas>
-          {IDEAS[kind].map(([key, words]) => (
-            <button key={key} type="button" onClick={() => setIdea(t(key, words))} className="min-h-[36px] rounded-full border border-zinc-700 px-3 text-[11px] text-zinc-300">
-              {t(key, words)}
-            </button>
-          ))}
+        <div data-makeideas>
+          <IdeaChips t={t} pool={MAKE_IDEAS[kind]} onPick={setIdea} />
         </div>
 
         {ready && (
@@ -226,6 +251,13 @@ export default function MakeStudio({ t, onClose, onPicture }: {
           </div>
         )}
 
+        {busy !== null && (
+          <p data-keep data-makeaway className="text-[13px] font-medium leading-snug text-cyan-200" style={{ textShadow: '0 0 8px rgba(34,211,238,0.45)' }}>
+            {busy === 'final'
+              ? t('make.awayFinal', 'You can close this. The finished picture lands in your editor by itself, and stays here too.')
+              : t('make.awayDraft', 'You can close this. The drafts are kept and wait here for you.')}
+          </p>
+        )}
         {said && <p role="status" className="text-sm text-amber-300" data-makesaid>{said}</p>}
       </div>
     </div>

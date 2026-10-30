@@ -73,7 +73,7 @@ figures below replaced a set that had gone wrong in four places at once — one
 of which said "44 checks, of which 82 are browser probes", which cannot be
 true of anything.
 
-- **545 checks** wired into CI, of which **195 are browser probes** that drive
+- **547 checks** wired into CI, of which **196 are browser probes** that drive
   the real app rather than reading the code. All pass. (Was 44 and 82.)
 
   *This figure went from 264 to 265 while it was being written down, because
@@ -96,7 +96,7 @@ true of anything.
   character cost ElevenLabs returns. Named here rather than counted as none,
   because "no console.log" was true in September and stopped being true
   without anybody deciding it had.
-- **90 eslint suppressions**, every one in a category with a reason:
+- **91 eslint suppressions**, every one in a category with a reason:
   52 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
   and Apple Music's chart covers, which it could only take through a remote
   allow-list kept in step with Apple's image hosts,

@@ -45,6 +45,10 @@ const studio = readFileSync('app/components/MakeStudio.tsx', 'utf8');
 ok('the studio says each price on its button, and asks the yeses first',
   /creditsSaid\(DRAFT_CREDITS/.test(studio) && /creditsSaid\(FINAL_CREDITS/.test(studio) && /if \(!yes && !agreed\) \{ setAsking\(step\)/.test(studio));
 ok('  and reads back what will be made before the press', /data-makereadback/.test(studio));
+const kept = withoutComments(readFileSync('app/lib/madekeep.ts', 'utf8'));
+ok('what was paid for outlives the sheet: the asking runs through startMaking, owned by the page', /await startMaking\(step,/.test(studio));
+ok('  it is kept on the device before it is shown, and a finished picture is handed to the editor', /if \(outcome\.made\) await keepMade\(outcome\.made\);\s*if \(step === 'final' && outcome\.made\?\.final && deliver\) deliver\(outcome\.made\.final\)/.test(kept));
+ok('  opened again, the sheet shows the last drafts and the finished one, or the making still under way', /underWay\(\)/.test(studio) && /lastMade\(\)\.then/.test(studio));
 
 if (bad) {
   console.error(`\ncheck:picturemake — ${bad} problem(s).`);

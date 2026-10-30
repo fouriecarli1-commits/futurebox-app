@@ -37,7 +37,10 @@ try {
       const urls = [await square('#e74c3c'), await square('#3498db'), await square('#2ecc71'), await square('#f1c40f')];
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', urls, credits: 2 }) });
     }
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url: await square('#9b59b6'), credits: 3 }) });
+    /* Slow on purpose: the sheet is shut while this is under way. */
+    const url = await square('#9b59b6');
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: 'done', url, credits: 3 }) });
   });
 
   await studio(page);
@@ -54,7 +57,13 @@ try {
   await page.locator('[data-makelook="neon"]').click();
   await page.locator('[data-makemood="dark"]').click();
   check('  nothing can be made without an idea', await page.locator('[data-makedraft]').isDisabled());
-  await page.locator('[data-makeideas] button').first().click();
+  const firstIdeas = await page.locator('[data-ideachip]').allInnerTexts();
+  await page.locator('[data-idearefresh]').click();
+  await page.waitForTimeout(200);
+  const nextIdeas = await page.locator('[data-ideachip]').allInnerTexts();
+  check('the round button deals new ideas, none of the ones shown before',
+    nextIdeas.length === firstIdeas.length && nextIdeas.every((one) => !firstIdeas.includes(one)), `${firstIdeas} → ${nextIdeas}`);
+  await page.locator('[data-ideachip]').first().click();
   await page.waitForTimeout(200);
   const back = await page.locator('[data-makereadback]').innerText().catch(() => '');
   check('a tapped idea fills the box, and the studio says back what will be made', /Poster/.test(back) && /Neon/.test(back) && /Dark/.test(back), back.replace(/\s+/g, ' '));
@@ -77,16 +86,29 @@ try {
   const finalLabel = await page.locator('[data-makefinal]').innerText();
   check('  picking one offers to make it final, with its price', /final/i.test(finalLabel) && /3 credits/.test(finalLabel), finalLabel);
   await page.locator('[data-makefinal]').click();
-  await page.waitForTimeout(1500);
-  check('the final is made from the chosen draft', asked[1]?.step === 'final' && /^data:image\//.test(asked[1]?.draft ?? '') && (await page.locator('[data-makefinalshown]').count()) === 1);
-  await page.locator('[data-makeuse]').click();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(300);
+  check('  while it is made, the sheet says it can be shut', (await page.locator('[data-makeaway]').count()) === 1);
+  /* The owner's walk: shut the sheet while it is still making. */
+  await page.locator('[data-makestudio] button[aria-label="Close"]').click();
+  await page.waitForTimeout(400);
+  check('  and shutting it is allowed', (await page.locator('[data-makestudio]').count()) === 0);
+  await page.waitForTimeout(3500);
+  check('the final is made from the chosen draft', asked[1]?.step === 'final' && /^data:image\//.test(asked[1]?.draft ?? ''));
   const colour = await page.evaluate(() => {
     const c = document.querySelector('[data-postcanvas]');
     const d = c.getContext('2d').getImageData(Math.round(c.width / 2), Math.round(c.height / 2), 1, 1).data;
     return [d[0], d[1], d[2]];
   });
-  check('  and put in the editor, the studio closed', (await page.locator('[data-makestudio]').count()) === 0 && colour[2] > 150 && colour[0] > 120 && colour[1] < 110, String(colour));
+  check('  and lands in the editor by itself, with the sheet shut', colour[2] > 150 && colour[0] > 120 && colour[1] < 110, String(colour));
+  await snap('make-landed');
+  await page.locator('[data-cutbench="pic"]').first().click();
+  await page.waitForTimeout(400);
+  await page.locator('[data-postmakebench]').click();
+  await page.waitForTimeout(1200);
+  check('opened again, the drafts and the finished picture are still there',
+    (await page.locator('[data-makedraftpick]').count()) === 4 && (await page.locator('[data-makefinalshown]').count()) === 1
+      && /poster/i.test(await page.locator('[data-makekind][aria-pressed="true"]').innerText().catch(() => '')));
+  await snap('make-kept');
   check('no page errors', errors.length === 0, errors.join(' | '));
 } catch (problem) {
   check('the walk itself', false, String(problem).slice(0, 300));

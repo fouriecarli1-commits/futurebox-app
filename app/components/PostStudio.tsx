@@ -74,6 +74,7 @@ import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '
 import { pagesPdf, type DrawnPage } from '../lib/postpdf';
 import RestoreBench from './RestoreBench';
 import MakeStudio from './MakeStudio';
+import { deliverTo } from '../lib/madekeep';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
@@ -3766,6 +3767,9 @@ export default function PostStudio({
   useEffect(() => () => {
     for (const one of refsNow.current) URL.revokeObjectURL(one.url);
   }, []);
+  /* A picture still being made when the room is left has nowhere to land;
+     it is kept on the device and waits in "Make a picture" (`lib/madekeep.ts`). */
+  useEffect(() => () => deliverTo(null), []);
 
   /** Take one back out, and let go of its object URL. */
   const dropRef = (at: number): void => {
@@ -11360,7 +11364,7 @@ export default function PostStudio({
                (the owner, 20 October 2026: the rooms with colours of their
                own get the same look in that colour): a light-line edge from
                the green to the cyan, and a line of light along the top. */
-            className="pointer-events-auto relative flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"
+            className="pointer-events-auto relative flex w-full max-w-[22rem] flex-col items-center gap-3 rounded-3xl p-4 shadow-2xl backdrop-blur-md"
             style={{
               border: '1px solid transparent',
               background: `linear-gradient(${PHOTO.floorGlass}, ${PHOTO.floorGlass}) padding-box, linear-gradient(135deg, rgba(15,157,110,0.8), rgba(34,211,238,0.12) 40%, rgba(15,157,110,0.06) 65%, rgba(34,211,238,0.8)) border-box`,
@@ -11368,37 +11372,80 @@ export default function PostStudio({
             }}
           >
             <span aria-hidden className="pointer-events-none absolute left-6 right-6 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${PHOTO.cyan}, transparent)` }} />
-            <h4 className="text-sm font-bold text-white">{t('stpl.starterTitle', 'Start with a Design or Photo')}</h4>
-            <p className="text-xs text-zinc-400">{t('stpl.starterDesc', 'Choose a starter pack or upload your image to begin creating.')}</p>
-            <div className="flex w-full flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => openBench('starts')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold"
-                style={{ background: PHOTO.accent, color: PHOTO.floor }}
-              >
-                <LayoutTemplate className="h-3.5 w-3.5" />
-                {t('post.benchStarts', 'Templates')}
-              </button>
-              <button
-                type="button"
-                onClick={() => openBench('pic')}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold"
-                style={chipStyle}
-              >
-                <ImageIcon className="h-3.5 w-3.5" />
-                {t('post.bringIn', 'Bring a picture in')}
-              </button>
-              <button
-                type="button"
-                data-postmakeopen
-                onClick={() => setMaking(true)}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold"
-                style={chipStyle}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                {`${t('make.open', 'Make one with AI')} · ${t('make.from', 'from')} ${creditsSaid(CREDITS.pictureDraft, t)}`}
-              </button>
+            {/* The owner, 30 October 2026, of this card: *"daai opening baar se
+                buttons en woorde kan beter lyk … baie cool, mooi en netjies,
+                en future forward."* A glowing heading, one line that is read
+                whole, and three ways in as tiles of one shape, each with its
+                own light. "Bring a picture in" opens the phone's photos
+                itself: *"wanneer ek op daai bring a picture in druk dan gooi
+                hy my net na die photo bar toe in plaas van om mens sommer
+                van daar af na die device se foto's toe te vat."* */}
+            <h4
+              data-poststarthead
+              className="bg-clip-text text-xl font-black leading-tight tracking-tight text-transparent"
+              style={{ backgroundImage: `linear-gradient(90deg, #6EE7B7, ${PHOTO.cyan}, #C4B5FD)`, filter: 'drop-shadow(0 0 10px rgba(34,211,238,0.55))' }}
+            >
+              {t('stpl.starterTitle', 'Start with a Design or Photo')}
+            </h4>
+            <p data-keep data-poststartsays className="text-[13px] font-medium leading-snug" style={{ color: '#A5F3FC', textShadow: '0 0 8px rgba(34,211,238,0.45)' }}>
+              {t('stpl.starterSays', 'Pick a design, bring your own photo, or let AI make one.')}
+            </p>
+            <div className="grid w-full auto-rows-fr grid-cols-1 gap-2.5">
+              {([
+                { id: 'starts', glow: '#34D399', Icon: LayoutTemplate, title: t('post.benchStarts', 'Templates'), hint: t('stpl.startsHint', 'Designs and starter packs') },
+                { id: 'photo', glow: PHOTO.cyan, Icon: ImageIcon, title: t('post.bringIn', 'Bring a picture in'), hint: t('stpl.photoHint', 'Straight from your photos') },
+                { id: 'make', glow: PHOTO.purple, Icon: Sparkles, title: t('make.open', 'Make one with AI'), hint: `${t('make.from', 'from')} ${creditsSaid(CREDITS.pictureDraft, t)}` },
+              ] as const).map(({ id, glow, Icon, title, hint }) => {
+                const face = (
+                  <>
+                    <span
+                      aria-hidden
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                      style={{ background: `${glow}22`, border: `1px solid ${glow}aa`, boxShadow: `0 0 14px ${glow}66, inset 0 0 10px ${glow}33` }}
+                    >
+                      <Icon className="h-5 w-5" style={{ color: glow, filter: `drop-shadow(0 0 6px ${glow})` }} />
+                    </span>
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block text-[15px] font-extrabold leading-tight text-white" style={{ textShadow: `0 0 10px ${glow}88` }}>{title}</span>
+                      <span className="mt-0.5 block text-xs font-medium leading-snug" style={{ color: glow }}>{hint}</span>
+                    </span>
+                  </>
+                );
+                const look = {
+                  background: `linear-gradient(135deg, ${glow}1f, rgba(10,12,16,0.55) 55%, ${glow}14)`,
+                  border: `1px solid ${glow}80`,
+                  boxShadow: `0 0 18px ${glow}33, inset 0 1px 0 ${glow}40`,
+                };
+                const tile = 'flex h-full min-h-[60px] w-full items-center gap-3 rounded-2xl px-3 py-2 transition-transform active:scale-[0.98]';
+                return id === 'photo' ? (
+                  <label key={id} data-poststart={id} className={`${tile} cursor-pointer`} style={look}>
+                    {face}
+                    <input
+                      type="file"
+                      accept={ACCEPTS}
+                      data-poststartpicture
+                      className="sr-only"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        event.target.value = '';
+                        void bringIn(file);
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <button
+                    key={id}
+                    type="button"
+                    data-poststart={id}
+                    {...(id === 'make' ? { 'data-postmakeopen': '' } : {})}
+                    onClick={() => (id === 'make' ? setMaking(true) : openBench('starts'))}
+                    className={tile}
+                    style={look}
+                  >
+                    {face}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
