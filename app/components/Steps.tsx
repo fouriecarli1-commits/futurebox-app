@@ -59,17 +59,19 @@ export default function Steps({
           <li
             key={step.en}
             aria-current={here ? 'step' : undefined}
-            className={`rounded-2xl border transition-all ${
-              here
-                ? 'border-emerald-400 bg-emerald-500/10 shadow-[0_0_16px_rgba(52,211,153,0.35)]'
-                : done
-                  ? 'border-cyan-400/40 bg-cyan-500/[0.06]'
-                  : 'border-zinc-800 bg-zinc-950/60'
-            }`}
+            className="rounded-2xl"
           >
             <Tag
               {...(onPick ? { type: 'button' as const, onClick: () => onPick(index), 'data-steppick': index } : {})}
-              className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${onPick ? 'min-h-[44px] cursor-pointer active:scale-[0.99]' : ''}`}
+              /* The box is the step's own, not the row's around it, so a step
+                 that can be pressed looks like a button (`check:buttonlook`). */
+              className={`flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition-all ${
+                here
+                  ? 'border-emerald-400 bg-emerald-500/10 shadow-[0_0_16px_rgba(52,211,153,0.35)]'
+                  : done
+                    ? 'border-cyan-400/40 bg-cyan-500/[0.06]'
+                    : 'border-zinc-800 bg-zinc-950/60'
+              } ${onPick ? 'min-h-[44px] cursor-pointer active:scale-[0.99]' : ''}`}
             >
               <span
                 className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs font-black tabular-nums ${

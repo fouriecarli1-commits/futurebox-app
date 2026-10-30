@@ -10855,7 +10855,7 @@ export default function PostStudio({
   /* Where the lines and suggestions over the photo's room sit: just above a
      tool's strip when one is out, at the foot otherwise, never on the photo
      itself (the photo rises to the top while a strip is out). */
-  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(50dvh + 10px)';
+  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(34dvh + 10px)';
 
   /* ── The moving photo, on the stage itself ────────────────────────
      The owner, 29 October 2026, with the made clip playing in the bench and
@@ -10900,8 +10900,9 @@ export default function PostStudio({
          found when the panels went to half the screen). */
       const keep = ABOVE_PHOTO + (panelUp && !tucked && !saveFull ? 8 : 0);
       /* A panel floats over the foot of the stage. Measured where it really
-         starts, because it is half the screen now (30 October 2026) and the
-         photo has to end above it. */
+         starts, so the photo ends above it. The panel stays a third of the
+         screen here, not half like the Video Editor's: a tool never shrinks
+         the photograph (`check:postround`). */
       const panel = panelUp && !tucked && !saveFull ? document.querySelector('[data-postunder]')?.getBoundingClientRect() : null;
       const floor = panel && panel.top > box.top ? Math.min(box.bottom, panel.top) : box.bottom;
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, floor - box.top - 16 - keep) };
@@ -12210,7 +12211,7 @@ export default function PostStudio({
                    floor under it. The middle of the photo stays clear. */
                 style={stripsUp
                   ? { height: STRIP_LEAST + 4 }
-                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '50dvh' }}
+                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '34dvh' }}
               >
                 {!stripsUp && (
                   <button

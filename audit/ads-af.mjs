@@ -139,13 +139,16 @@ const text = await room.innerText();
 const WANT = [
   ['heading',        /Adver\u00AD?tensies/],
   ['what it does',   /Sê wat jy verkoop/],
-  ['step 1',         /Sê wat jy verkoop|Sê wat jy verkoop/],
-  ['step 2',         /Dit skryf die advertensies/],
-  ['step 3',         /Verfilm dit|Verfilm/],
-  ['step 4',         /Publiseer dit/],
-  /* `kit.title` — the card is "Jou handelsmerkpak" now; the sentence this
-     asked for was its old heading. */
-  ['brand kit',      /Jou handelsmerkpak/],
+  /* The four steps as they read since 30 October 2026, when the room was
+     laid out in the order a marketer works: what, which kind, where, then
+     write it. */
+  ['step 1',         /Wat jy verkoop/],
+  ['step 2',         /Watter soort advertensie/],
+  ['step 3',         /Waar dit loop/],
+  ['step 4',         /Skryf, verfilm, plaas/],
+  /* `kit.title` — "Jou handelsmerk (opsioneel)" since 30 October 2026: the
+     card can be skipped, and says so. */
+  ['brand kit',      /Jou handelsmerk/],
   ['kit hint',       /Stel dit een keer/],
   ['kit name',       /Wat word dit genoem\?/],
   ['kit voice',      /Hoe klink dit\?/],
