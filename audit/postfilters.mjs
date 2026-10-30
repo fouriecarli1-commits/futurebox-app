@@ -186,6 +186,33 @@ try {
   check('Smart light lifts her dim photo', lit.r + lit.g + lit.b > dim.r + dim.g + dim.b + 30, `${JSON.stringify(dim)} → ${JSON.stringify(lit)}`);
   check('  and brings up the before-and-after line', (await page.locator('[data-postcomparehandle]').count()) === 1);
 
+  /* ── Transparency shows what is behind it ─────────────────────────────
+     Task #40, "the transparency slider shows no change": it faded the photo
+     into the near-black behind every new post, so a dark photo barely moved
+     and "Lighter" made it darker. What shows through is chosen beside it,
+     and white behind a faded photo makes it lighter. */
+  const pixel = () => page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * 0.75), Math.round(el.height * 0.4), 1, 1).data;
+    return d[0] + d[1] + d[2];
+  });
+  const solid = await pixel();
+  await page.locator('[data-postphotoalpha] input[type=range]').evaluate((el) => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '60');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await page.waitForTimeout(400);
+  check('the transparency slider offers what shows through it', (await page.locator('[data-postalphaback]').count()) >= 3);
+  await page.locator('[data-postalphaback="white"]').click();
+  await page.waitForTimeout(500);
+  const overWhite = await pixel();
+  check('  and with white behind it, fading the photo makes it lighter', overWhite > solid + 60, `${solid} solid → ${overWhite} faded over white`);
+  await page.locator('[data-postalphaback="black"]').click();
+  await page.waitForTimeout(500);
+  const overBlack = await pixel();
+  check('  and with black behind it, darker', overBlack < solid - 20, `${solid} solid → ${overBlack} faded over black`);
+
   await page.screenshot({ path: shot('postfilters.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);

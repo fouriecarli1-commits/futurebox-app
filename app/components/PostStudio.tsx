@@ -49,7 +49,7 @@ import {
   ArrowLeft,
   Bookmark,
   Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Files, Replace, ZoomIn, ZoomOut, Frame, X, MoreHorizontal,
-  AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight, FlipVertical,
 } from 'lucide-react';
 import CropSheet from './CropSheet';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -57,8 +57,10 @@ import { probeVideoEngine } from '../lib/videograde';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
 import { TITLE_STYLES } from '../lib/posttitles';
 import {
-  ART_READY, MARK_SPECS, NEON_INKS, drawMark, isFilled, markBox, newMark, type Mark,
+  ART_READY, MARK_SPECS, NEON_INKS, drawMark, hasCorners, isFilled, markBox, newMark, roundOf, type Mark,
 } from '../lib/postshapes';
+import IdeaChips from './IdeaChips';
+import { SHAPE_IDEAS } from '../lib/promptideas';
 import {
   fromFrame, maskFor as maskOfLine, middleOf, ontoFrame, pickAt, picksFrom,
   shareOf as shareOfLine, type Pick,
@@ -1873,6 +1875,9 @@ export default function PostStudio({
   }, [bench, movingWords]);
 
   const [cutShape, setCutShape] = useState<CutShape>('pencil');
+  const [shapeWords, setShapeWords] = useState('');
+  const [shapeBusy, setShapeBusy] = useState(false);
+  const [shapeSaid, setShapeSaid] = useState('');
   const cutFrom = useRef<{ readonly x: number; readonly y: number } | null>(null);
 
   /* Where each block of words landed last time it was drawn, as shares of
@@ -6694,6 +6699,18 @@ export default function PostStudio({
       <p data-keep className="text-[13px] font-medium leading-snug" style={{ color: '#A5F3FC', textShadow: '0 0 8px rgba(34,211,238,0.4)' }}>
         {t('post.cutDownHowShort', 'Drag the box. The shaded part is cut away.')}
       </p>
+      {/* Or by hand, from right here: the owner, 30 October 2026, *"jy kan
+          ook nie self gedeeltes kan uit crop nie"*. The box cuts straight;
+          this cuts round any part, and keeps it or takes it out. */}
+      <button
+        type="button"
+        data-postcropstripfree
+        onClick={() => { setCropBox(null); setCutShape('pencil'); setTraced([]); setBench(null); setSaid(''); }}
+        className={`${LEEG} gap-2 border-cyan-400/60 text-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.3)]`}
+      >
+        <Lasso className="h-4 w-4" />
+        {t('post.cropFreeStrip', 'Or draw round a part yourself')}
+      </button>
       {/* The three shapes a post actually goes out in, so somebody who knows
           what they are posting does not have to get 9:16 right with a thumb.
           Snapped around the middle of the box she has already set, and never
@@ -7921,6 +7938,33 @@ export default function PostStudio({
     )}
 
     {cropStart}
+    {/* ── Cut it out yourself ─────────────────────────────────────────
+        The owner, 30 October 2026: *"Nou voel dit met crop dat jy ook nie
+        self gedeeltes kan uit crop nie. Ek dink do it self kan 'n goeie
+        opsie wees. Want al wat nou stukke uit 'n foto sny is smart crop."*
+        The hand cut was there, but on the Photo bench, where nobody cutting
+        looks. Here it opens on the pencil, because "yourself" is the pencil;
+        the circle, the square and the straight lines are one press away. */}
+    {picture && (
+      <div data-postcropfree className="space-y-2 rounded-2xl border p-3" style={{ borderColor: 'rgba(34,211,238,0.55)', background: 'linear-gradient(135deg, rgba(34,211,238,0.12), rgba(16,185,129,0.06))', boxShadow: '0 0 18px rgba(34,211,238,0.22)' }}>
+        <p className="text-sm font-black text-white" style={{ textShadow: '0 0 10px rgba(34,211,238,0.75)' }}>
+          {t('post.cropFreeTitle', 'Cut it out yourself')}
+        </p>
+        <ul className="list-disc space-y-0.5 pl-4 text-[12px] leading-snug text-cyan-100/80">
+          <li>{t('post.cropFreeOne', 'Draw round any part with your finger')}</li>
+          <li>{t('post.cropFreeTwo', 'Keep it, or take it out')}</li>
+        </ul>
+        <button
+          type="button"
+          data-postcropfreestart
+          onClick={() => { setCutShape('pencil'); setTraced([]); setBench(null); setSaid(''); }}
+          className={`${VUL} gap-2`}
+        >
+          <Lasso className="h-4 w-4" />
+          {t('post.cropFreeGo', 'Draw round it')}
+        </button>
+      </div>
+    )}
     {/* ── Which part of it shows ─────────────────────────────────────
  
         The owner, 7 October 2026, having found the screen: *"Waar edit ek 'n
@@ -8139,7 +8183,7 @@ export default function PostStudio({
         picked — which is two presses from where anybody looks for it. The
         same value, here at the top of Adjust. */}
     {picture && (
-      <label data-postphotoalpha className="block space-y-1.5 rounded-xl border border-zinc-800 p-3">
+      <div data-postphotoalpha className="space-y-1.5 rounded-xl border border-zinc-800 p-3">
         <span className="flex items-center justify-between text-xs font-bold text-zinc-200">
           {t('post.photoAlpha', 'Transparency')}
           <span className="tabular-nums text-zinc-400">
@@ -8158,9 +8202,49 @@ export default function PostStudio({
         />
         <span className="flex justify-between text-[11px] text-zinc-500">
           <span>{t('post.photoSolid', 'Solid')}</span>
-          <span>{t('post.photoLighter', 'Lighter')}</span>
+          <span>{t('post.photoSeeThrough', 'see-through')}</span>
         </span>
-      </label>
+        {/* What the faded photo shows. The owner, of the slider (task list,
+            October 2026): it "shows no change". It did change, but towards
+            the near-black behind every new post, so "Lighter" made a photo
+            darker and a dark photo barely moved. What is behind it is chosen
+            right here now, and white is what makes it lighter. */}
+        <div className="flex flex-wrap items-center gap-2 pt-1" data-postalphabehind>
+          <span className="text-[11px] font-bold text-zinc-300">{t('post.alphaShows', 'Shows through')}</span>
+          {([
+            ['white', '#FFFFFF', t('post.alphaWhite', 'White')],
+            ['black', '#000000', t('post.alphaBlack', 'Black')],
+          ] as const).map(([key, hex, name]) => (
+            <button
+              key={key}
+              type="button"
+              data-postalphaback={key}
+              aria-pressed={back?.toUpperCase() === hex}
+              onClick={() => { setLastColour(hex); setBack(hex); }}
+              className={`${LEEG} !w-auto ${back?.toUpperCase() === hex ? GEKIES : ''}`}
+            >
+              <span aria-hidden className="h-4 w-4 rounded-full border border-white/50" style={{ background: hex }} />
+              {name}
+            </button>
+          ))}
+          <button
+            type="button"
+            data-postalphaback="none"
+            aria-pressed={back === null}
+            onClick={() => setBack(null)}
+            className={`${LEEG} !w-auto ${back === null ? GEKIES : ''}`}
+          >
+            {t('post.alphaNothing', 'Nothing')}
+          </button>
+          <NeonColour
+            t={t}
+            data="postalphacolour"
+            value={back ?? lastColour}
+            label={t('post.behindColour', 'The colour behind')}
+            onChange={(hex) => { setLastColour(hex); setBack(hex); }}
+          />
+        </div>
+      </div>
     )}
     {/* ── How it reads ───────────────────────────────────────────────
  
@@ -9396,8 +9480,69 @@ export default function PostStudio({
     </div>
   );
 
+  /* ── A shape described in words, drawn by the AI ─────────────────────
+     The owner, 30 October 2026: *"Dat photo editor dalk ook 'n ai engine het
+     waar jy sekere shapes vra."* `api/shape` answers an outline; it lands as
+     an ordinary shape, so every slider below works on it. */
+  const makeAiShape = async (): Promise<void> => {
+    const asked = shapeWords.trim();
+    if (!asked || shapeBusy) return;
+    setShapeBusy(true);
+    setShapeSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/shape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ words: asked }),
+      });
+      const body = (await answer.json().catch(() => ({}))) as { path?: string; message?: string };
+      if (!answer.ok || !body.path) {
+        setShapeSaid(body.message ?? t('post.shapeAiNo', 'That shape could not be made. Nothing was charged.'));
+        return;
+      }
+      const id = freshId();
+      const path = body.path;
+      setMarks((was) => [...was, { ...newMark('ai', id), path, z: frontZ(was, words) }]);
+      setMarkOn(id);
+      setShapeSaid(t('post.shapeAiDone', 'There it is. Drag it on the photo, and change it below.'));
+    } catch {
+      setShapeSaid(t('post.shapeAiNo', 'That shape could not be made. Nothing was charged.'));
+    } finally {
+      setShapeBusy(false);
+    }
+  };
+
   const shapesBench = (
     <div className="space-y-3">
+    <div data-postshapeai className="space-y-2 rounded-2xl border p-3" style={{ borderColor: 'rgba(192,132,252,0.6)', background: 'linear-gradient(135deg, rgba(192,132,252,0.14), rgba(34,211,238,0.06))', boxShadow: '0 0 18px rgba(192,132,252,0.25)' }}>
+      <p className="text-sm font-black text-white" style={{ textShadow: '0 0 10px rgba(192,132,252,0.8)' }}>
+        <Sparkles className="mr-1 inline h-4 w-4" />
+        {t('post.shapeAiTitle', 'Describe your shape')}
+      </p>
+      <input
+        type="text"
+        data-postshapeaiwords
+        value={shapeWords}
+        maxLength={300}
+        onChange={(event) => setShapeWords(event.target.value)}
+        onKeyDown={(event) => { if (event.key === 'Enter') void makeAiShape(); }}
+        placeholder={t('post.shapeAiHint', 'A guitar, a crown, a flame…')}
+        className={VELD}
+      />
+      <IdeaChips pool={SHAPE_IDEAS} onPick={(words) => setShapeWords(words)} glow="#C084FC" t={t} />
+      <button
+        type="button"
+        data-postshapeaigo
+        disabled={!shapeWords.trim() || shapeBusy}
+        onClick={() => void makeAiShape()}
+        className={`${VUL} disabled:opacity-40`}
+      >
+        {shapeBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+        {t('post.shapeAiGo', 'Make the shape')} · {creditsSaid(CREDITS.shapeAi, t)}
+      </button>
+      {shapeSaid && <p data-postshapeaisaid className="text-[12px] leading-snug text-violet-100/85">{shapeSaid}</p>}
+    </div>
     {/* ── The shapes ───────────────────────────────────────────────────
         The owner, 13 October 2026: "ons kort amazing … shape templates." The
         four Google's page drew — a cube, a ring, a grid, a frame — as real
@@ -9464,7 +9609,11 @@ export default function PostStudio({
         return (
           <div key={mark.id} data-postmark={mark.kind} className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-bold"><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</span>
+              <span className="text-sm font-bold">
+                {mark.kind === 'ai'
+                  ? <><Sparkles aria-hidden className="mr-1 inline h-3.5 w-3.5" />{t('post.mark.ai', 'Your shape')}</>
+                  : <><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</>}
+              </span>
               <button
                 type="button"
                 onClick={() => dropMark(mark.id)}
@@ -9476,7 +9625,22 @@ export default function PostStudio({
             </div>
             {slider(t('post.markSizeSlide', 'Size'), mark.size, 0.04, 1.6, 0.01, (v) => changeMark(mark.id, { size: v }), 'size')}
             {isFilled(mark.kind) && slider(t('post.markStretch', 'Wide or tall'), mark.stretch ?? 1, 0.2, 5, 0.05, (v) => changeMark(mark.id, { stretch: v }), 'stretch')}
-            {isFilled(mark.kind) && slider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
+            {/* Every setting the words have, on every shape (30 October 2026):
+                round corners where it has them, see-through, how strong the
+                glow is, a shadow, a turn and the two flips. */}
+            {hasCorners(mark.kind) && slider(t('post.markRound', 'Round corners'), roundOf(mark), 0, 1, 0.02, (v) => changeMark(mark.id, { round: v }), 'round')}
+            {slider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
+            {mark.glow !== 'none' && slider(t('post.wordsGlow', 'Glow'), mark.glowPower ?? 1, 0, 2, 0.05, (v) => changeMark(mark.id, { glowPower: v }), 'glow')}
+            {slider(t('post.markShadow', 'Shadow'), mark.shadow ?? 0, 0, 1, 0.05, (v) => changeMark(mark.id, { shadow: v }), 'shadow')}
+            {slider(t('post.markTurn', 'Turn'), mark.turn ?? 0, -180, 180, 1, (v) => changeMark(mark.id, { turn: v }), 'turn')}
+            <div className={RY}>
+              <button type="button" data-postmarkflip="x" aria-pressed={Boolean(mark.flipX)} onClick={() => changeMark(mark.id, { flipX: !mark.flipX })} className={`${LEEG} ${mark.flipX ? GEKIES : ''}`}>
+                <FlipHorizontal className="h-3.5 w-3.5" />{t('post.markFlipX', 'Flip sideways')}
+              </button>
+              <button type="button" data-postmarkflip="y" aria-pressed={Boolean(mark.flipY)} onClick={() => changeMark(mark.id, { flipY: !mark.flipY })} className={`${LEEG} ${mark.flipY ? GEKIES : ''}`}>
+                <FlipVertical className="h-3.5 w-3.5" />{t('post.markFlipY', 'Upside down')}
+              </button>
+            </div>
             <div className="flex flex-wrap items-center gap-2 pb-1" data-postmarkinks>
               {NEON_INKS.map((ink) => (
                 <button
@@ -10855,7 +11019,7 @@ export default function PostStudio({
   /* Where the lines and suggestions over the photo's room sit: just above a
      tool's strip when one is out, at the foot otherwise, never on the photo
      itself (the photo rises to the top while a strip is out). */
-  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(34dvh + 10px)';
+  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(50dvh + 10px)';
 
   /* ── The moving photo, on the stage itself ────────────────────────
      The owner, 29 October 2026, with the made clip playing in the bench and
@@ -10899,11 +11063,14 @@ export default function PostStudio({
          up, or the photo's foot ran under the panel (`check:magicbrush`,
          found when the panels went to half the screen). */
       const keep = ABOVE_PHOTO + (panelUp && !tucked && !saveFull ? 8 : 0);
-      /* A panel floats over the foot of the stage. Measured where it really
-         starts, so the photo ends above it. The panel stays a third of the
-         screen here, not half like the Video Editor's: a tool never shrinks
-         the photograph (`check:postround`). */
-      const panel = panelUp && !tucked && !saveFull ? document.querySelector('[data-postunder]')?.getBoundingClientRect() : null;
+      /* The panel is half the screen, see-through glass over the foot of the
+         photo. The owner, 30 October 2026: *"Die photo editor se bar wat van
+         onder af kom is nog nie die helfte van die bladsy nie."* A tool
+         still never shrinks the photograph (27 October); the glass lies over
+         it and the photo shows through. Magic touch is the one exception:
+         it is painted on, so the photo ends above the panel there and every
+         part of it can be reached (`check:magicbrush`). */
+      const panel = panelUp && !tucked && !saveFull && bench === 'magic' ? document.querySelector('[data-postunder]')?.getBoundingClientRect() : null;
       const floor = panel && panel.top > box.top ? Math.min(box.bottom, panel.top) : box.bottom;
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, floor - box.top - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
@@ -10913,7 +11080,7 @@ export default function PostStudio({
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     return () => watch.disconnect();
-  }, [size.width, size.height, upright, stripsUp, brushUp, panelUp, tucked, saveFull]);
+  }, [size.width, size.height, upright, stripsUp, brushUp, panelUp, tucked, saveFull, bench]);
 
   const undoRedo = (picture !== null || told > 0) ? (
     <>
@@ -12211,7 +12378,7 @@ export default function PostStudio({
                    floor under it. The middle of the photo stays clear. */
                 style={stripsUp
                   ? { height: STRIP_LEAST + 4 }
-                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '34dvh' }}
+                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '50dvh' }}
               >
                 {!stripsUp && (
                   <button

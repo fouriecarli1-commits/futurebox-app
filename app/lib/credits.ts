@@ -1143,6 +1143,13 @@ export const CREDITS = {
      SVG and then as a PNG is one charge, and so is saving it again after a
      change. */
   vectorOut: 5,
+  /* ── A shape drawn by AI from a sentence, 30 October 2026 ───────────
+
+     The owner: *"Dat photo editor dalk ook 'n ai engine het waar jy sekere
+     shapes vra."* One short Flash call that answers an outline, a few
+     hundred bytes — about R0.20 to Google, so two credits keeps well over
+     80% (`api/shape`). Never under two. Hers to change. */
+  shapeAi: 2,
 } as const;
 
 /**

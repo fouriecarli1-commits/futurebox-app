@@ -26,7 +26,15 @@ import { glowOf, haloPasses } from './postglow';
    beweeg groter en kleiner gemaak word, transparent, kan die kleur kies."
    The first five are filled, to sit behind words; the four after them are
    the neon outlines that were here before. */
-export const FILLED_KINDS = ['circle', 'box', 'triangle', 'rect', 'paint'] as const;
+/* The owner, 30 October 2026: *"Ek sien jy het nog nie gewerk aan my ding
+   rondom shapes nie."* Twelve more filled ones, and `ai`, the outline the AI
+   draws from a sentence (`lib/shapeai.ts`), which is not on the list to pick
+   from: it is made from the box above it. */
+export const FILLED_KINDS = [
+  'circle', 'box', 'triangle', 'rect', 'paint',
+  'star', 'heart', 'hexagon', 'diamond', 'pentagon', 'arrow', 'bubble', 'bolt', 'burst', 'cross', 'moon', 'cloud',
+  'ai',
+] as const;
 /* A chart (`postcharts.ts`, 17 October 2026) is a mark too, so it moves,
    sizes, stacks and exports with everything else; it is not on the shapes
    list, it has a bench of its own. */
@@ -48,6 +56,18 @@ export const MARK_SPECS: readonly MarkSpec[] = [
   { id: 'triangle', icon: '▲', name: ['post.mark.triangle', 'Triangle'] },
   { id: 'rect', icon: '▬', name: ['post.mark.rect', 'Rectangle'] },
   { id: 'paint', icon: '🖌️', name: ['post.mark.paint', 'Painted box'] },
+  { id: 'star', icon: '★', name: ['post.mark.star', 'Star'] },
+  { id: 'heart', icon: '♥', name: ['post.mark.heart', 'Heart'] },
+  { id: 'bolt', icon: '⚡', name: ['post.mark.bolt', 'Lightning'] },
+  { id: 'bubble', icon: '💬', name: ['post.mark.bubble', 'Speech bubble'] },
+  { id: 'arrow', icon: '➜', name: ['post.mark.arrow', 'Arrow'] },
+  { id: 'burst', icon: '✸', name: ['post.mark.burst', 'Burst'] },
+  { id: 'hexagon', icon: '⬢', name: ['post.mark.hexagon', 'Hexagon'] },
+  { id: 'diamond', icon: '◆', name: ['post.mark.diamond', 'Diamond'] },
+  { id: 'pentagon', icon: '⬟', name: ['post.mark.pentagon', 'Pentagon'] },
+  { id: 'cross', icon: '✚', name: ['post.mark.cross', 'Plus'] },
+  { id: 'moon', icon: '☾', name: ['post.mark.moon', 'Moon'] },
+  { id: 'cloud', icon: '☁', name: ['post.mark.cloud', 'Cloud'] },
   { id: 'cube', icon: '🧊', name: ['post.mark.cube', 'Isometric cube'] },
   { id: 'ring', icon: '⭕', name: ['post.mark.ring', 'Neon ring'] },
   { id: 'grid', icon: '🌐', name: ['post.mark.grid', 'Cyber grid'] },
@@ -80,6 +100,93 @@ export interface Mark {
   readonly chart?: ChartSpec;
   /** Vector art, for the kind 'art': the SVG drawn, and the studio's drawing to open again. */
   readonly art?: { readonly svg: string; readonly doc: unknown };
+  /** The outline the AI drew, for the kind 'ai': SVG path data in a 100 by 100 box (`lib/shapeai.ts`). */
+  readonly path?: string;
+  /*
+   * The owner, 30 October 2026: *"al die verstellings wat ek vroeer gevra het
+   * moet saam met 'n shape gaan"* — the ones the words got that day: glow,
+   * shadow, turn, and the flips. And round corners, from the same list.
+   */
+  /** How round the corners are, 0 (sharp) to 1 (as round as they go), for the shapes with corners. */
+  readonly round?: number;
+  /** How strong the glow is, 0 to 2; absent is 1. */
+  readonly glowPower?: number;
+  /** How dark the drop shadow is, 0 to 1; absent is none. */
+  readonly shadow?: number;
+  /** Turned, in degrees, -180 to 180. */
+  readonly turn?: number;
+  /** Mirrored left to right. */
+  readonly flipX?: boolean;
+  /** Upside down. */
+  readonly flipY?: boolean;
+}
+
+/* ── The filled shapes' outlines, in a box of 100 by 100 ────────────────
+   Straight-edged ones as corners, so their corners can be rounded; curved
+   ones as path data. */
+const ring = (points: number, outer: number, inner: number, start = -Math.PI / 2): (readonly [number, number])[] =>
+  Array.from({ length: points * (inner === outer ? 1 : 2) }, (_, i) => {
+    const step = inner === outer ? (Math.PI * 2) / points : Math.PI / points;
+    const r = inner === outer || i % 2 === 0 ? outer : inner;
+    return [50 + r * Math.cos(start + i * step), 50 + r * Math.sin(start + i * step)] as const;
+  });
+
+/** The shapes with corners, as their corners. */
+export const CORNERS: Readonly<Partial<Record<MarkKind, readonly (readonly [number, number])[]>>> = {
+  box: [[0, 0], [100, 0], [100, 100], [0, 100]],
+  rect: [[0, 0], [100, 0], [100, 100], [0, 100]],
+  triangle: [[50, 0], [100, 100], [0, 100]],
+  diamond: [[50, 0], [100, 50], [50, 100], [0, 50]],
+  hexagon: ring(6, 50, 50, 0),
+  pentagon: ring(5, 50, 50),
+  star: ring(5, 50, 21),
+  burst: ring(14, 50, 38),
+  arrow: [[0, 34], [58, 34], [58, 8], [100, 50], [58, 92], [58, 66], [0, 66]],
+  cross: [[34, 0], [66, 0], [66, 34], [100, 34], [100, 66], [66, 66], [66, 100], [34, 100], [34, 66], [0, 66], [0, 34], [34, 34]],
+  bolt: [[60, 0], [16, 58], [46, 58], [36, 100], [84, 38], [54, 38], [68, 0]],
+};
+
+/** The curved ones, as path data in the same box. */
+const CURVES: Readonly<Partial<Record<MarkKind, string>>> = {
+  heart: 'M50 92 C20 70 0 52 0 30 C0 13 13 0 29 0 C39 0 46 6 50 14 C54 6 61 0 71 0 C87 0 100 13 100 30 C100 52 80 70 50 92 Z',
+  bubble: 'M12 0 H88 Q100 0 100 12 V60 Q100 72 88 72 H42 L18 98 L24 72 H12 Q0 72 0 60 V12 Q0 0 12 0 Z',
+  moon: 'M64 2 C34 2 10 26 10 56 C10 82 32 100 58 100 C76 100 90 92 98 78 C90 82 82 84 72 84 C46 84 26 64 26 38 C26 22 34 10 46 4 C52 2 58 2 64 2 Z',
+  cloud: 'M24 86 C10 86 0 76 0 63 C0 51 9 42 21 41 C22 25 35 14 51 14 C64 14 75 22 79 34 C91 35 100 45 100 58 C100 73 89 86 74 86 Z',
+};
+
+/** How round a shape's corners are when nobody has said: the box and the rectangle always had a little. */
+export const roundOf = (mark: Pick<Mark, 'kind' | 'round'>): number =>
+  Math.max(0, Math.min(1, mark.round ?? (mark.kind === 'box' ? 0.16 : mark.kind === 'rect' ? 0.24 : 0)));
+
+/** Whether a shape has corners a slider can round. */
+export const hasCorners = (kind: MarkKind): boolean => kind in CORNERS;
+
+/**
+ * A polygon with its corners rounded, centred on 0,0 at w by h. Each corner
+ * takes the radius asked for, or as much as its two edges leave room for —
+ * a star's points round less than a box's corners, and none crosses.
+ */
+function roundedCorners(ctx: CanvasRenderingContext2D, corners: readonly (readonly [number, number])[], w: number, h: number, radius: number): void {
+  const pts = corners.map(([x, y]) => [(x / 100 - 0.5) * w, (y / 100 - 0.5) * h] as const);
+  const n = pts.length;
+  const mid = (a: readonly [number, number], b: readonly [number, number]): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const start = mid(pts[n - 1], pts[0]);
+  ctx.moveTo(start[0], start[1]);
+  for (let i = 0; i < n; i += 1) {
+    const prev = pts[(i + n - 1) % n];
+    const at = pts[i];
+    const next = pts[(i + 1) % n];
+    const a = Math.hypot(prev[0] - at[0], prev[1] - at[1]);
+    const b = Math.hypot(next[0] - at[0], next[1] - at[1]);
+    const cos = ((prev[0] - at[0]) * (next[0] - at[0]) + (prev[1] - at[1]) * (next[1] - at[1])) / Math.max(1e-6, a * b);
+    const angle = Math.acos(Math.max(-1, Math.min(1, cos)));
+    /* The arc meets each edge this far from the corner; half an edge at most. */
+    const room = Math.min(a, b) / 2 * Math.tan(angle / 2);
+    const r = Math.max(0, Math.min(radius, room));
+    if (r < 0.5) ctx.lineTo(at[0], at[1]);
+    else ctx.arcTo(at[0], at[1], next[0], next[1], r);
+  }
+  ctx.closePath();
 }
 
 /* ── Vector art as pictures, loaded once ──────────────────────────────── */
@@ -136,7 +243,7 @@ export const newMark = (kind: MarkKind, id: string): Mark => ({
   size: MARK_SIZES[1].share,
   ink: isFilled(kind) ? NEON_INKS[1] : MARK_INKS[0],
   glow: 'neon',
-  ...(isFilled(kind) ? { opacity: 0.8, stretch: kind === 'rect' || kind === 'paint' ? 2.4 : 1 } : {}),
+  ...(isFilled(kind) ? { opacity: 0.8, stretch: kind === 'rect' || kind === 'paint' ? 2.4 : kind === 'arrow' || kind === 'bubble' ? 1.4 : 1 } : {}),
 });
 
 /** A number from a mark's id, so a painted edge is the same on every draw. */
@@ -155,12 +262,6 @@ function fillShape(ctx: CanvasRenderingContext2D, mark: Mark, w: number, h: numb
   ctx.beginPath();
   if (mark.kind === 'circle') {
     ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (mark.kind === 'triangle') {
-    ctx.moveTo(0, -h / 2);
-    ctx.lineTo(w / 2, h / 2);
-    ctx.lineTo(-w / 2, h / 2);
-    ctx.closePath();
     ctx.fill();
   } else if (mark.kind === 'paint') {
     /* A box laid down with a brush: a few overlapping strokes, each a little
@@ -181,16 +282,19 @@ function fillShape(ctx: CanvasRenderingContext2D, mark: Mark, w: number, h: numb
       ctx.closePath();
       ctx.fill();
     }
-  } else {
-    /* box and rect: a rectangle with a little rounding on the corners. */
-    const r = Math.min(w, h) * (mark.kind === 'box' ? 0.08 : 0.12);
-    ctx.moveTo(-w / 2 + r, -h / 2);
-    ctx.arcTo(w / 2, -h / 2, w / 2, h / 2, r);
-    ctx.arcTo(w / 2, h / 2, -w / 2, h / 2, r);
-    ctx.arcTo(-w / 2, h / 2, -w / 2, -h / 2, r);
-    ctx.arcTo(-w / 2, -h / 2, w / 2, -h / 2, r);
-    ctx.closePath();
+  } else if (CORNERS[mark.kind]) {
+    /* box, rect, and every shape with corners: rounded as far as the slider says. */
+    roundedCorners(ctx, CORNERS[mark.kind] ?? [], w, h, roundOf(mark) * Math.min(w, h) * 0.5);
     ctx.fill();
+  } else {
+    /* The curved ones, and the AI's outline, from path data in a 100 box. */
+    const d = mark.kind === 'ai' ? mark.path : CURVES[mark.kind];
+    if (!d || typeof Path2D === 'undefined') return;
+    ctx.save();
+    ctx.translate(-w / 2, -h / 2);
+    ctx.scale(w / 100, h / 100);
+    ctx.fill(new Path2D(d), 'evenodd');
+    ctx.restore();
   }
 }
 
@@ -277,45 +381,69 @@ export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: numbe
     ctx.restore();
     return;
   }
-  if (isFilled(mark.kind)) {
-    /* ── See-through, faded once ──────────────────────────────────────
-       The owner, 16 October 2026, found while building the layers: the shape is
-       filled once per halo pass and once more on top, and turning the
-       canvas's alpha down for each fill stacks them back up — the slider at
-       ninety per cent see-through drew a shape that was nearly solid. So a
-       see-through shape is drawn whole on a sheet of its own and laid down
-       at its opacity, once. */
-    const seeThrough = Math.max(0.1, Math.min(1, mark.opacity ?? 1));
-    if (seeThrough < 0.999 && typeof document !== 'undefined') {
-      const sheet = document.createElement('canvas');
-      sheet.width = ctx.canvas.width;
-      sheet.height = ctx.canvas.height;
-      const sctx = sheet.getContext('2d');
-      if (sctx) {
-        sctx.setTransform(ctx.getTransform());
-        drawMark(sctx, { ...mark, opacity: 1 }, width, height);
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.globalAlpha *= seeThrough;
-        ctx.drawImage(sheet, 0, 0);
-        ctx.restore();
-        return;
-      }
+  /* ── See-through, faded once ────────────────────────────────────────
+     The owner, 16 October 2026, found while building the layers: the shape is
+     filled once per halo pass and once more on top, and turning the canvas's
+     alpha down for each fill stacks them back up — the slider at ninety per
+     cent see-through drew a shape that was nearly solid. So a see-through
+     shape is drawn whole on a sheet of its own and laid down at its opacity,
+     once. The neon outlines too since 30 October 2026, when every shape got
+     the see-through slider. */
+  const seeThrough = Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+  if (seeThrough < 0.999 && typeof document !== 'undefined') {
+    const sheet = document.createElement('canvas');
+    sheet.width = ctx.canvas.width;
+    sheet.height = ctx.canvas.height;
+    const sctx = sheet.getContext('2d');
+    if (sctx) {
+      sctx.setTransform(ctx.getTransform());
+      drawMark(sctx, { ...mark, opacity: 1 }, width, height, lang);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha *= seeThrough;
+      ctx.drawImage(sheet, 0, 0);
+      ctx.restore();
+      return;
     }
-    const box = markBox(mark, width, height);
-    ctx.save();
-    ctx.translate(box.cx, box.cy);
-    ctx.globalAlpha *= seeThrough;
-    ctx.fillStyle = mark.ink;
-    const glow = glowOf(mark.glow);
-    for (const pass of haloPasses(glow, Math.min(box.w, box.h) * 0.12)) {
-      ctx.shadowColor = pass.colour;
-      ctx.shadowBlur = pass.blur;
-      fillShape(ctx, mark, box.w, box.h);
+  }
+  /* Turned and flipped about its own middle, the way the words are. */
+  const lay = (cx: number, cy: number): void => {
+    ctx.translate(cx, cy);
+    if (mark.turn) ctx.rotate((mark.turn * Math.PI) / 180);
+    if (mark.flipX || mark.flipY) ctx.scale(mark.flipX ? -1 : 1, mark.flipY ? -1 : 1);
+  };
+  /* The drop shadow, then the glow as strong as its slider says, then the
+     shape crisp on top — the same order the words are lit in. */
+  const shade = Math.max(0, Math.min(1, mark.shadow ?? 0));
+  const power = Math.max(0, Math.min(2, mark.glowPower ?? 1));
+  const light = (paint: () => void, size: number, reach: number): void => {
+    if (shade > 0) {
+      ctx.shadowColor = `rgba(0,0,0,${shade.toFixed(2)})`;
+      ctx.shadowBlur = Math.max(2, size * 0.06 * (0.6 + shade));
+      ctx.shadowOffsetX = size * 0.05 * shade;
+      ctx.shadowOffsetY = size * 0.05 * shade;
+      paint();
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    if (power > 0) {
+      for (const pass of haloPasses(glowOf(mark.glow), reach)) {
+        ctx.shadowColor = pass.colour;
+        ctx.shadowBlur = pass.blur * power;
+        paint();
+        if (power > 1.4) paint();
+      }
     }
     ctx.shadowColor = 'rgba(0,0,0,0)';
     ctx.shadowBlur = 0;
-    fillShape(ctx, mark, box.w, box.h);
+    paint();
+  };
+  if (isFilled(mark.kind)) {
+    const box = markBox(mark, width, height);
+    ctx.save();
+    lay(box.cx, box.cy);
+    ctx.fillStyle = mark.ink;
+    light(() => fillShape(ctx, mark, box.w, box.h), Math.min(box.w, box.h), Math.min(box.w, box.h) * 0.12);
     ctx.restore();
     return;
   }
@@ -323,21 +451,11 @@ export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: numbe
   const w = mark.size * short;
   const line = Math.max(2, w * 0.035);
   ctx.save();
-  ctx.translate(mark.x * width, mark.y * height);
+  lay(mark.x * width, mark.y * height);
   ctx.lineWidth = line;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = mark.ink;
-  const glow = glowOf(mark.glow);
-  for (const pass of haloPasses(glow, w * 0.18)) {
-    ctx.shadowColor = pass.colour;
-    ctx.shadowBlur = pass.blur;
-    trace(ctx, mark.kind, w);
-    ctx.stroke();
-  }
-  ctx.shadowColor = 'rgba(0,0,0,0)';
-  ctx.shadowBlur = 0;
-  trace(ctx, mark.kind, w);
-  ctx.stroke();
+  light(() => { trace(ctx, mark.kind, w); ctx.stroke(); }, w, w * 0.18);
   ctx.restore();
 }

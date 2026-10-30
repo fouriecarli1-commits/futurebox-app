@@ -1270,6 +1270,24 @@ export default function VideoEditor({
      to. `check:filmcost` holds both ends against it. */
   /** Which bench is out. `null` is all of them shut — see `CutDock.tsx`. */
   const [bench, setBench] = useState<Bench>(null);
+  /*
+   * The tool last opened, which stays live after its bar is put away.
+   *
+   * The owner, 30 October 2026: *"Wanneer funksies gekies word en mens die
+   * pop up bar wegvat dan moet die funksie lewendig wees, totdat mens dit
+   * weer gaan untick of totdat die funksie uitgevoer is en outomaties
+   * weggaan."* Closing the bar is to see the film; it is not "stop". So a
+   * function switched on from a tool — the before and after line — stays on
+   * the film until another tool is opened or it is switched off. The words'
+   * faint outline does not: it is a help for placing them, and with the bar
+   * away the film shows exactly what will come out (`check:editor`).
+   */
+  const [liveBench, setLiveBench] = useState<Bench>(null);
+  useEffect(() => {
+    if (bench !== null) setLiveBench(bench);
+  }, [bench]);
+  /** The tool whose work is on the film: the open one, or the last one if the bar is away. */
+  const working: Bench = bench ?? liveBench;
   /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
      arriving, and at once when the room is already open. */
   useEffect(() => {
@@ -1547,8 +1565,8 @@ export default function VideoEditor({
      when another tool is opened (it lies over the film, and a line over the
      words would take the drag meant for them). */
   useEffect(() => {
-    if (compare !== null && (!graded || bench !== 'looks')) setCompare(null);
-  }, [compare, graded, bench]);
+    if (compare !== null && (!graded || working !== 'looks')) setCompare(null);
+  }, [compare, graded, working]);
 
   /* ── A generator, recorded and put on the clock ─────────────────────
      At the film's own shape, no more than 1280 across, so it sits in the

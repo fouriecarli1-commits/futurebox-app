@@ -487,6 +487,19 @@ try {
     check('  and Auto enhance lifts the shot and shows the line by itself',
       (await p.locator('[data-editorcomparehandle]').count()) === 1
       && Number(await p.locator('[data-editordialnow="contrast"]').innerText()) > 1.05);
+    /* The owner, 30 October 2026: a function stays live once its bar is put
+       away, until it is switched off or another tool is opened. */
+    const openName = await p.locator('[data-cutbench][aria-pressed="true"]').first().getAttribute('data-cutbench').catch(() => null);
+    const openTool = p.locator(`[data-cutbench="${openName}"]`).first();
+    if (openName) {
+      await openTool.click();
+      await p.waitForTimeout(500);
+      check('  and with the bar put away, the line is still over the film',
+        (await p.locator('[data-cutbench][aria-pressed="true"]').count()) === 0
+        && (await p.locator('[data-editorcomparehandle]').count()) === 1);
+      await openTool.click();
+      await p.waitForTimeout(500);
+    }
 
     /* ── It is a clock, and the clock is what you steer by ─────────
 

@@ -271,19 +271,23 @@ ok('one room cannot spend a credit at all',
    room of the Make anything studio (`app/api/picturemake`): four drafts from
    words, then one final, each priced on its button, after the same two
    yeses. An ELEVENTH paid door reddens this. */
-ok('  and the photo editor spends on exactly the ten things it is meant to',
+/* ── The eleventh, the owner's own words, 30 October 2026 ────────────────
+   *"Dat photo editor dalk ook 'n ai engine het waar jy sekere shapes vra"* —
+   a shape drawn by the AI from a sentence (`app/api/shape`), priced on its
+   button. A TWELFTH paid door reddens this. */
+ok('  and the photo editor spends on exactly the eleven things it is meant to',
   JSON.stringify(spend.get('photo'))
     === JSON.stringify([
-      '/api/become', '/api/google/picture', '/api/picture/objects', '/api/picturemake', '/api/post/chart', '/api/post/export', '/api/restore', '/api/vector/draw', '/api/vector/export', '/api/video',
+      '/api/become', '/api/google/picture', '/api/picture/objects', '/api/picturemake', '/api/post/chart', '/api/post/export', '/api/restore', '/api/shape', '/api/vector/draw', '/api/vector/export', '/api/video',
     ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
   + ' changing what is in it by saying what to change, finding the things in'
   + ' it, setting a chart from words, drawing vector art, saving vector art, giving it a little motion, and'
   + ' bringing it to life (a sticker, a living photo, a 3D model), and fixing'
   + ' an old photo (repair, faces, colour), and making a picture from words'
-  + ' (four drafts, then one final). Every'
+  + ' (four drafts, then one final), and drawing a shape from words. Every'
   + ' other tool in that room runs on the device and takes no credits. A'
-  + ' ELEVENTH paid door is a decision somebody has to make out loud, which is'
+  + ' TWELFTH paid door is a decision somebody has to make out loud, which is'
   + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',

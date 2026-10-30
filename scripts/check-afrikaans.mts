@@ -82,6 +82,8 @@ const SAME_IN_BOTH = new Set([
   'Rap', 'Reggae', 'Disco',
   /* The jam room's looper: a musician says "looper" and "pads" in Afrikaans too. */
   'Looper', 'Pads',
+  /* The Photo Editor's plus shape: "plus" is the Afrikaans word for it too. */
+  'Plus',
   /* ProBooth's loudness target: the names of the places, the same everywhere. */
   'Spotify, YouTube, TikTok',
   /* The drum pads: names of styles and drums a musician says in Afrikaans too. */

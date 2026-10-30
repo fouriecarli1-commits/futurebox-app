@@ -116,6 +116,8 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   /* 17 October 2026: a vector picture drawn by the AI, in the vector studio. */
   vector: 'six credits for the AI to draw a vector picture, inside the vector studio'
     + ' that opens from the photo editor. One press, priced on its own button',
+  /* 30 October 2026: a shape drawn by the AI from a sentence, in the Photo Editor's Shapes. */
+  shapeAi: 'two credits for the AI to draw a shape from a sentence, inside the Photo Editor\u2019s Shapes',
   /* 17 October 2026: the AI that sets a chart's numbers from her words. */
   chart: 'four credits to let the AI set a chart\u2019s numbers from words, inside the'
     + ' photo editor\u2019s Charts. The same case as `grab`: one press inside a'

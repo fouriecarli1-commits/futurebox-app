@@ -176,6 +176,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   /* The vector studio's AI drawing, 17 October 2026. */
   vector: ['vector'],
   vectorOut: ['vector'],
+  /* A shape drawn by the AI, 30 October 2026. */
+  shapeAi: ['shape'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

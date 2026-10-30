@@ -69,7 +69,10 @@ try {
     const bg = panel ? getComputedStyle(document.querySelector('[data-postunder]')).backgroundImage : '';
     return panel && photo ? { tall: panel.height, top: panel.top, photoBottom: photo.bottom, bg } : null;
   });
-  check('  and its strip takes no more than a third of the screen', !!reach && reach.tall >= 170 && reach.tall <= 760 * 0.36, JSON.stringify(reach));
+  /* Half the screen since the owner, 30 October 2026: *"Die photo editor se
+     bar wat van onder af kom is nog nie die helfte van die bladsy nie."* The
+     photo keeps its size under it (above); the glass lies over its foot. */
+  check('  and its strip takes about half the screen, no more', !!reach && reach.tall >= 760 * 0.45 && reach.tall <= 760 * 0.53, JSON.stringify(reach));
   check('  and is see-through glass, clearest at the top where the photo shows through',
     !!reach && /^linear-gradient\(rgba\(10, 12, 16, 0\.[0-3]\d*\)/.test(reach.bg),
     reach?.bg ?? 'no panel');
@@ -212,6 +215,34 @@ try {
   check('  and one press makes the post that shape', made.fit === 'none' && /^\d+x\d+$/.test(canvas ?? '')
     && Math.abs(Number(canvas.split('x')[0]) / Number(canvas.split('x')[1]) - 16 / 9) < 0.02,
   `${canvas}, ${JSON.stringify(made)}`);
+
+  /* ── Cutting a part out by hand, from Crop ─────────────────────────────
+     The owner, 30 October 2026: *"Nou voel dit met crop dat jy ook nie self
+     gedeeltes kan uit crop nie ... al wat nou stukke uit 'n foto sny is
+     smart crop."* Crop offers the hand cut, on the pencil. */
+  if (await page.locator('[data-postsocialclose]').count()) {
+    await page.locator('[data-postsocialclose]').click();
+    await page.waitForTimeout(400);
+  }
+  const frameTool = page.locator('[data-cutbench="frame"]').first();
+  if ((await frameTool.getAttribute('aria-pressed')) !== 'true') {
+    await frameTool.click();
+    await page.waitForTimeout(500);
+  }
+  /* Crop opens on the box when a cut is under way, and on its whole panel
+     otherwise; either way the hand cut is offered. */
+  const free = page.locator('[data-postcropfreestart], [data-postcropstripfree]').first();
+  check('Crop offers cutting a part out yourself', (await free.count()) === 1);
+  if (await free.count()) {
+    await free.scrollIntoViewIfNeeded();
+    await free.click();
+    await page.waitForTimeout(500);
+    check('  and it opens the drawing, on the pencil',
+      (await page.locator('[data-postdrawbar]').count()) === 1
+        && (await page.locator('[data-postcutshapepick="pencil"]').getAttribute('aria-pressed')) === 'true');
+    await page.locator('[data-postdrawstop]').click();
+    await page.waitForTimeout(300);
+  }
   await page.screenshot({ path: shot('postround.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 200)}`);

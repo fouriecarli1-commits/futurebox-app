@@ -242,3 +242,23 @@ export const SHOT_START_IDEAS: readonly PromptIdea[] = [
   ['the camera circles slowly around', 'die kamera draai stadig in ’n sirkel'],
   ['a vinyl record spinning, very close', '’n plaat wat draai, baie naby'],
 ];
+
+/** A shape for the Photo Editor's AI (`api/shape`): plain things with a clear outline. */
+export const SHAPE_IDEAS: readonly PromptIdea[] = [
+  ['an electric guitar', '’n elektriese kitaar'],
+  ['a microphone', '’n mikrofoon'],
+  ['a crown', '’n kroon'],
+  ['a rocket', '’n vuurpyl'],
+  ['a pair of headphones', '’n kopfoon'],
+  ['a palm tree', '’n palmboom'],
+  ['a cassette tape', '’n kassetband'],
+  ['a protea flower', '’n protea'],
+  ['a flame', '’n vlam'],
+  ['a music note', '’n musieknoot'],
+  ['a ticket stub', '’n kaartjie'],
+  ['a sunglasses outline', '’n sonbril'],
+  ['a cat sitting', '’n kat wat sit'],
+  ['a soundwave badge', '’n klankgolf-kenteken'],
+  ['an origami bird', '’n origami-voël'],
+  ['a vinyl record', '’n plaat'],
+];
