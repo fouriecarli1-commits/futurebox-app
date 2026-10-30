@@ -875,18 +875,30 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       read_this:
         "the value is the headline of the advert to record, or empty for the one at the top. It puts that advert's script in the voice studio and opens it. Only offered when an advert with a spoken line exists",
     },
+    /* What a marketer actually asks first (the owner, 30 October 2026: *"Daar
+       moet goeie voorstelle wees om die produk te verkoop. Die copilot moet
+       beter voorstelle gee as wat daar nou is."*). Selling questions, not
+       a sample bakery. */
     seeds: [
       {
-        en: "Write an advert for my bakery",
-        af: "Skryf ’n advertensie vir my bakkery",
+        en: "Write three hooks that stop the scroll for what I sell",
+        af: "Skryf drie hakies wat mense laat ophou blaai vir wat ek verkoop",
       },
       {
-        en: "Who should I be aiming this at?",
-        af: "Op wie moet ek dit mik?",
+        en: "Who buys this, and what makes them buy today?",
+        af: "Wie koop dit, en wat laat hulle vandag koop?",
       },
       {
-        en: "Say this in Afrikaans instead",
-        af: "Sê dit eerder in Afrikaans",
+        en: "What offer would make people act this week?",
+        af: "Watter aanbod sal mense hierdie week laat optree?",
+      },
+      {
+        en: "Turn my best advert into a 15-second video",
+        af: "Maak my beste advertensie ’n video van 15 sekondes",
+      },
+      {
+        en: "Plan my launch week, one post a day",
+        af: "Beplan my bekendstellingsweek, een plasing per dag",
       },
     ],
   },

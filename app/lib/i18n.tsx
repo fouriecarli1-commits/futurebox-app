@@ -754,7 +754,7 @@ export const STRINGS: Dict = {
   "history.open": { en: "Open it", af: "Maak dit oop" },
   "history.close": { en: "Close it", af: "Maak dit toe" },
   "canvas.clip": { en: "Clip", af: "Knipsel" },
-  "ads.whereTitle": { en: "Where is it going?", af: "Waarheen gaan dit?" },
+  "ads.whereTitle": { en: "3 · Where it runs", af: "3 · Waar dit loop" },
   "ads.whereNote": {
     en: "This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.",
     af: "Dit bepaal die vorm, die lengte en hoe vinnig die hook moet land — daarom word dit voor die skryf gevra, nie daarna nie.",
@@ -3043,7 +3043,7 @@ export const STRINGS: Dict = {
      Written rather than translated where the English leans on an idiom:
      "we open at six" is the point of that line, and its Afrikaans has to
      be something somebody would actually say. */
-  "kit.title": { en: "Your brand pack", af: "Jou handelsmerkpak" },
+  "kit.title": { en: "Your brand (optional)", af: "Jou handelsmerk (opsioneel)" },
   "kit.folder": { en: "The brand folder", af: "Die handelsmerkvouer" },
   "kit.folderNote": { en: "The logo, the wordmark, a white version for a dark poster, the shop front. The starred one is what goes in the corner of a clip. Nothing in this folder is ever thrown away to make room for a new picture.", af: "Die logo, die woordmerk, \u2019n wit weergawe vir \u2019n donker plakkaat, die winkel se voorkant. Die een met die sterretjie is wat in die hoek van \u2019n greep gaan. Niks in hierdie vouer word ooit weggegooi om plek te maak vir \u2019n nuwe prent nie." },
   "kit.gone": { en: "This picture is not on this device any more.", af: "Hierdie prent is nie meer op hierdie toestel nie." },
@@ -3158,7 +3158,7 @@ export const STRINGS: Dict = {
   "canvas.songUnderNote": { en: "One of your own, or a file from this device. You choose which part of it plays — the clip is laid against that, not against the intro.", af: "Een van jou eie, of ’n lêer van hierdie toestel af. Jy kies watter deel daarvan speel — die video word daarteen gelê, nie teen die intro nie." },
   "canvas.captionHint": { en: "Taken from the line in quotation marks, or type your own", af: "Geneem uit die lyn tussen aanhalingstekens, of tik jou eie" },
   "canvas.noTranslate": { en: "The subtitle could not be written in that language; the clip was cut with the words as they are.", af: "Die onderskrif kon nie in daardie taal geskryf word nie; die video is met die woorde soos hulle is gesny." },
-  "shape.title": { en: "What should this even be?", af: "Wat moet hierdie eintlik wees?" },
+  "shape.title": { en: "2 · What kind of advert", af: "2 · Watter soort advertensie" },
   "shape.what": { en: "Before anybody writes an advert: an advert may not be the thing to make. This looks at what you sell and says which two or three of the things this studio makes would actually work for it — and names one that would not.", af: "Voordat iemand ’n advertensie skryf: ’n advertensie is dalk nie die ding om te maak nie. Dit kyk na wat jy verkoop en sê watter twee of drie van die dinge wat hierdie ateljee maak, werklik daarvoor sal werk — en noem een wat nie sal nie." },
   "shape.go": { en: "Work out what to make", af: "Werk uit wat om te maak" },
   "shape.again": { en: "Think again", af: "Dink weer" },
@@ -6963,8 +6963,8 @@ export const STRINGS: Dict = {
   "ads.assetReady": { en: "asset ready", af: "stuk gereed" },
   "ads.assetsReady": { en: "assets ready", af: "stukke gereed" },
   "ads.previewEmpty": { en: "Nothing written yet. Fill in what you are selling and press “Write the adverts”; every format lands here with its poster.", af: "Nog niks geskryf nie. Vul in wat jy verkoop en druk “Skryf die advertensies”; elke formaat land hier met sy plakkaat." },
-  "ads.notDeploy": { en: "No “deploy to Meta or Google Ads” button, no sonic logo and no voice talent with faces: the adverts go out through your own share sheet, and the reading goes to the voice studio, where the voices are real.", af: "Geen “plaas op Meta of Google Ads”-knoppie, geen klanklogo en geen stemtalent met gesigte nie: die advertensies gaan uit deur jou eie deelblad, en die voorlees gaan na die stemateljee, waar die stemme eg is." },
-  "ads.aboutTitle": { en: "What the advert is about", af: "Waaroor die advertensie gaan" },
+  "ads.notDeploy": { en: "Your adverts go out from your own accounts, straight from your phone.", af: "Jou advertensies gaan uit van jou eie rekeninge, reguit van jou foon af." },
+  "ads.aboutTitle": { en: "1 · What you sell", af: "1 · Wat jy verkoop" },
   "hooks.fromTitle": { en: "What are we cutting from?", af: "Waaruit sny ons?" },
   "hooks.clipLengthWhy": { en: "The first fifteen seconds decide whether anybody watches the rest, so shorter is usually better.", af: "Die eerste vyftien sekondes besluit of iemand die res kyk, so korter is gewoonlik beter." },
   "video.whichSong": { en: "Which song?", af: "Watter liedjie?" },

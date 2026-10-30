@@ -98,7 +98,7 @@ export default function BrandKit({
         <Palette className="w-4 h-4 text-emerald-400 shrink-0" />
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-zinc-200">
-            {t('kit.title', 'Your brand pack')}
+            {t('kit.title', 'Your brand (optional)')}
           </span>
           <span className={compact ? 'sr-only' : 'block text-xs text-zinc-500 truncate'}>
             {hasBrandKit(kit)

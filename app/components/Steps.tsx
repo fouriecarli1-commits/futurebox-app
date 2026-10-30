@@ -37,8 +37,11 @@ export default function Steps({
   steps,
   at,
   className = '',
+  onPick,
 }: {
   steps: readonly Step[];
+  /** When given, each step is a press that goes to its part of the room. */
+  onPick?: (at: number) => void;
   /** Which step is current, from zero. Out of range marks none, which is right before anything has been done. */
   at: number;
   className?: string;
@@ -51,29 +54,38 @@ export default function Steps({
       {steps.map((step, index) => {
         const here = index === at;
         const done = index < at;
+        const Tag = onPick ? 'button' : 'span';
         return (
           <li
             key={step.en}
             aria-current={here ? 'step' : undefined}
-            className={`rounded-xl border px-3 py-2.5 transition-colors ${
+            className={`rounded-2xl border transition-all ${
               here
-                ? 'border-emerald-500 bg-emerald-500/10'
-                : 'border-zinc-800 bg-zinc-950/60'
+                ? 'border-emerald-400 bg-emerald-500/10 shadow-[0_0_16px_rgba(52,211,153,0.35)]'
+                : done
+                  ? 'border-cyan-400/40 bg-cyan-500/[0.06]'
+                  : 'border-zinc-800 bg-zinc-950/60'
             }`}
           >
-            <span className="flex items-baseline gap-2">
+            <Tag
+              {...(onPick ? { type: 'button' as const, onClick: () => onPick(index), 'data-steppick': index } : {})}
+              className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${onPick ? 'min-h-[44px] cursor-pointer active:scale-[0.99]' : ''}`}
+            >
               <span
-                className={`text-xs font-bold tabular-nums ${
-                  here ? 'text-emerald-300' : done ? 'text-zinc-400' : 'text-zinc-500'
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs font-black tabular-nums ${
+                  here
+                    ? 'border-emerald-300 text-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.7)]'
+                    : done ? 'border-cyan-300/70 text-cyan-200' : 'border-zinc-600 text-zinc-400'
                 }`}
               >
                 {index + 1}
               </span>
               <span className="min-w-0">
                 <span
-                  className={`block text-sm font-semibold leading-tight ${
-                    here ? 'text-emerald-300' : 'text-zinc-200'
+                  className={`block text-sm font-bold leading-tight ${
+                    here ? 'text-emerald-200' : 'text-zinc-100'
                   }`}
+                  style={here ? { textShadow: '0 0 10px rgba(52,211,153,0.6)' } : undefined}
                 >
                   {af ? step.af : step.en}
                 </span>
@@ -83,7 +95,7 @@ export default function Steps({
                   </span>
                 )}
               </span>
-            </span>
+            </Tag>
           </li>
         );
       })}

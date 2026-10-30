@@ -180,7 +180,7 @@ export default function AdFormats({
   };
 
   return (
-    <Card title={t('shape.title', 'What should this even be?')}>
+    <Card title={t('shape.title', '2 · What kind of advert')}>
       <Note className="text-sm text-zinc-500 leading-relaxed">
         {t(
           'shape.what',

@@ -110,41 +110,19 @@ function pickAd(ads: readonly Ad[], value: string): Ad | null {
    will want more from you than you have. These four lines are the whole of it:
    nothing forces the sequence and you can work in any order — it is a map, not
    a wizard. */
+/* Four steps, in the order the room now asks them, and each one a press that
+   takes you there (the owner, 30 October 2026: the adverts laid out step by
+   step, explained short and in points). The price is read off `CREDITS`, so
+   this line and the button that charges cannot disagree. */
 const STEPS: readonly Step[] = [
+  { en: 'What you sell', af: 'Wat jy verkoop', noteEn: 'And who for. One box is enough.', noteAf: 'En vir wie. Een blokkie is genoeg.' },
+  { en: 'What kind of advert', af: 'Watter soort advertensie', noteEn: 'A post, a story, a video, a poster.', noteAf: '\u2019n Plasing, \u2019n storie, \u2019n video, \u2019n plakkaat.' },
+  { en: 'Where it runs', af: 'Waar dit loop', noteEn: 'This sets the shape and the length.', noteAf: 'Dit bepaal die vorm en die lengte.' },
   {
-    en: 'Say what you sell',
-    af: 'Sê wat jy verkoop',
-    noteEn: 'And who for. One box is enough to start.',
-    noteAf: 'En vir wie. Een blokkie is genoeg om te begin.',
-  },
-  {
-    en: 'It writes the adverts',
-    af: 'Dit skryf die advertensies',
-    /* The price, not a word for it, and read off `CREDITS` so this line and
-       the button that charges cannot disagree.
-
-       It said "Free." / "Gratis." — on the same screen as a button reading
-       "40 credits", because `CREDITS.adLines` went from six to forty on 30
-       September and this note was not touched. Two wrongs at once: a paid
-       step described as free, after she said *"Niks is gratis"*, and a
-       sentence contradicted by the button directly below it.
-
-       `check:verniet` was green through all of it. It reads the dictionary,
-       and these four lines are written in the component. */
-    noteEn: `Several, each doing something different. ${CREDITS.adLines} credits.`,
-    noteAf: `Verskeie, elk wat iets anders doen. ${CREDITS.adLines} krediete.`,
-  },
-  {
-    en: 'Film it, and read the line',
-    af: 'Verfilm dit, en lees die lyn',
-    noteEn: 'Handed to the video desk and the voice studio.',
-    noteAf: 'Oorhandig aan die videolessenaar en die stemstudio.',
-  },
-  {
-    en: 'Publish it',
-    af: 'Publiseer dit',
-    noteEn: 'Caption and hashtags ready, one composer per platform.',
-    noteAf: 'Byskrif en hutsmerke gereed, een komponeerder per platform.',
+    en: 'Write, film, post',
+    af: 'Skryf, verfilm, plaas',
+    noteEn: `Several adverts at once, ${CREDITS.adLines} credits.`,
+    noteAf: `Verskeie advertensies op een slag, ${CREDITS.adLines} krediete.`,
   },
 ];
 
@@ -709,7 +687,18 @@ export default function Campaign({
         </Note>
       </div>
 
-      <Steps steps={STEPS} at={ads.length ? 3 : what.trim() ? 1 : 0} />
+      <Steps
+        steps={STEPS}
+        at={ads.length ? 3 : what.trim() ? 1 : 0}
+        /* Each step takes you to its part of the room and opens it. */
+        onPick={(at) => {
+          if (at === 0) aboutCard.arrived();
+          if (at === 2) whereCard.arrived();
+          window.setTimeout(() => {
+            document.querySelector(`[data-adstep="${at + 1}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 60);
+        }}
+      />
 
       {/* Who it is all for. Above the platforms because it is the thing that
           is true of every advert this desk will ever write for this person,
@@ -731,108 +720,12 @@ export default function Campaign({
         <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
           <span>{t('ads.setupTitle', 'Campaign setup')}</span>
         </div>
-      <BrandKit onChange={setKit} />
-
-      {/* Where it is going, before it is written rather than after.
-          The platforms decide the shape, the length and the hook window, and a
-          shape decided after the copy is a rewrite. */}
-      {/* ── What should this even be? ────────────────────────────────────
-
-          Above the platform row and the brief's own fields, because it is
-          the question that comes before both: the platform follows from the
-          format, and half the formats this studio can make are not adverts
-          at all. See `AdFormats.tsx`. */}
-      <AdFormats
-        key={`shape-${openedAt}`}
-        brief={{
-          what,
-          who,
-          offer,
-          tone,
-          market,
-          place: PLACEMENTS.find((one) => one.id === placement)?.en,
-          /* Who they are, when they have said. The one part of a brief that
-             is the same on every advert, which is why it lives in the kit
-             rather than in the boxes. */
-          brand: brandLine(kit) || undefined,
-        }}
-        /* The first advert, once there are any, so a shot can quote a real
-           line instead of describing one. Not a choice made here — the
-           three cards below each have their own buttons; this is the
-           adviser at the top of the room, and it carries what exists. */
-        ad={ads[0] ?? null}
-        going={going}
-        onGoTo={onGoTo}
-        onSetUp={onSetUp}
-      />
-
-      <div ref={whereCard.mine} className="scroll-mt-4">
-      <Card title={t('ads.whereTitle', 'Where is it going?')} openOn={whereCard.openOn}>
-        <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
-        <div className="flex flex-wrap gap-2">
-          {PLATFORMS.map((one) => {
-            const on = going.indexOf(one.id) !== -1;
-            const known = Boolean(handles[one.id]);
-            return (
-              <button
-                key={one.id}
-                type="button"
-                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
-                aria-pressed={on}
-                title={t(`social.format.${one.id}`, one.bestFormat)}
-                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
-                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
-                  {one.name}
-                  {known && <span className="text-xs font-normal text-zinc-500"> · @{handles[one.id]}</span>}
-                </span>
-                <span className="block text-xs text-zinc-500">{t(`social.format.${one.id}`, one.bestFormat)}</span>
-              </button>
-            );
-          })}
-
-          {/* ── And the places that are not an account ──────────────────
-
-              Ticked in the same row, because from where somebody is
-              standing "where is this going" has one answer and it may
-              include their own site. Kept as a separate list underneath in
-              the code for the reason `DESTINATIONS` states: six other
-              screens read PLATFORMS, and none of them can do anything
-              sensible with a website. */}
-          {DESTINATIONS.map((one) => {
-            const on = going.indexOf(one.id) !== -1;
-            return (
-              <button
-                key={one.id}
-                type="button"
-                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
-                aria-pressed={on}
-                title={t(`dest.format.${one.id}`, one.bestFormat)}
-                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
-                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
-                  {lang === 'af' ? one.af : one.en}
-                </span>
-                <span className="block text-xs text-zinc-500">
-                  {t(`dest.format.${one.id}`, one.bestFormat)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </Card>
-      </div>
-
       {/* The brief. Only the first box is required: an ad for "my bakery in
           Bellville" is a worse ad than one with an audience and an offer, but
           it is a real one, and making somebody fill five boxes before they see
           anything is how a room gets abandoned. */}
-      <div ref={aboutCard.mine} className="scroll-mt-4">
-      <Card title={t('ads.aboutTitle', 'What the advert is about')} openOn={aboutCard.openOn}>
+      <div ref={aboutCard.mine} data-adstep="1" className="scroll-mt-4">
+      <Card title={t('ads.aboutTitle', '1 · What you sell')} openOn={aboutCard.openOn}>
         {/* ── Kept, and a way to stop keeping it ──────────────────────
  
             The brief comes back when you come back, which is the whole
@@ -1062,6 +955,113 @@ export default function Campaign({
             'The copy is written in that language, not translated into it. Carried-over English idiom is the clearest sign of an imported advert.',
           )}</Note>
 
+      </Card>
+      </div>
+
+      {/* Where it is going, before it is written rather than after.
+          The platforms decide the shape, the length and the hook window, and a
+          shape decided after the copy is a rewrite. */}
+      {/* ── What should this even be? ────────────────────────────────────
+
+          Above the platform row and the brief's own fields, because it is
+          the question that comes before both: the platform follows from the
+          format, and half the formats this studio can make are not adverts
+          at all. See `AdFormats.tsx`. */}
+      <div data-adstep="2" className="scroll-mt-4">
+      <AdFormats
+        key={`shape-${openedAt}`}
+        brief={{
+          what,
+          who,
+          offer,
+          tone,
+          market,
+          place: PLACEMENTS.find((one) => one.id === placement)?.en,
+          /* Who they are, when they have said. The one part of a brief that
+             is the same on every advert, which is why it lives in the kit
+             rather than in the boxes. */
+          brand: brandLine(kit) || undefined,
+        }}
+        /* The first advert, once there are any, so a shot can quote a real
+           line instead of describing one. Not a choice made here — the
+           three cards below each have their own buttons; this is the
+           adviser at the top of the room, and it carries what exists. */
+        ad={ads[0] ?? null}
+        going={going}
+        onGoTo={onGoTo}
+        onSetUp={onSetUp}
+      />
+      </div>
+
+      <div ref={whereCard.mine} data-adstep="3" className="scroll-mt-4">
+      <Card title={t('ads.whereTitle', '3 · Where it runs')} openOn={whereCard.openOn}>
+        <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
+        <div className="flex flex-wrap gap-2">
+          {PLATFORMS.map((one) => {
+            const on = going.indexOf(one.id) !== -1;
+            const known = Boolean(handles[one.id]);
+            return (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
+                aria-pressed={on}
+                title={t(`social.format.${one.id}`, one.bestFormat)}
+                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
+                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
+                  {one.name}
+                  {known && <span className="text-xs font-normal text-zinc-500"> · @{handles[one.id]}</span>}
+                </span>
+                <span className="block text-xs text-zinc-500">{t(`social.format.${one.id}`, one.bestFormat)}</span>
+              </button>
+            );
+          })}
+
+          {/* ── And the places that are not an account ──────────────────
+
+              Ticked in the same row, because from where somebody is
+              standing "where is this going" has one answer and it may
+              include their own site. Kept as a separate list underneath in
+              the code for the reason `DESTINATIONS` states: six other
+              screens read PLATFORMS, and none of them can do anything
+              sensible with a website. */}
+          {DESTINATIONS.map((one) => {
+            const on = going.indexOf(one.id) !== -1;
+            return (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
+                aria-pressed={on}
+                title={t(`dest.format.${one.id}`, one.bestFormat)}
+                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
+                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
+                  {lang === 'af' ? one.af : one.en}
+                </span>
+                <span className="block text-xs text-zinc-500">
+                  {t(`dest.format.${one.id}`, one.bestFormat)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+      </div>
+
+      {/* Optional, and folded: true of every advert after this one. */}
+      <BrandKit onChange={setKit} />
+
+      {/* ── Write them: the last step, after what, how and where ──────────
+          The owner, 30 October 2026, asked for the adverts laid out step by
+          step. The button sat inside the first card, above the questions it
+          depends on; now it comes after all of them. */}
+      <div data-adswritestep data-adstep="4" className="space-y-2 rounded-2xl border border-emerald-400/50 bg-emerald-500/[0.07] p-3 shadow-[0_0_18px_rgba(52,211,153,0.2)]">
         <div className="flex items-center gap-3 flex-wrap">
           <button
             type="button"
@@ -1105,7 +1105,6 @@ export default function Campaign({
             <span>{problem}</span>
           </p>
         )}
-      </Card>
       </div>
 
       {/* ── Her own logo, once for the whole desk ──────────────────────
@@ -1388,8 +1387,10 @@ export default function Campaign({
           before either exists. */}
       <AdReport />
 
-        <p className="text-[11px] text-zinc-500 leading-snug border-t border-white/10 pt-3">
-          {t('ads.notDeploy', 'No “deploy to Meta or Google Ads” button, no sonic logo and no voice talent with faces: the adverts go out through your own share sheet, and the reading goes to the voice studio, where the voices are real.')}
+        {/* Said the way it works, not the way it does not (the owner, 30
+            October 2026: short, in points, and clear). */}
+        <p data-keep className="border-t border-white/10 pt-3 text-[12px] font-medium leading-snug text-cyan-100/90">
+          {t('ads.notDeploy', 'Your adverts go out from your own accounts, straight from your phone.')}
         </p>
       </main>
       </div>

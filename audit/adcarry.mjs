@@ -176,7 +176,7 @@ try {
      match-by-position fault this file has already been caught by twice. */
   await unfold(p);
   const brief = room.locator('button[aria-expanded]')
-    .filter({ hasText: /What the advert is about|Waaroor die advertensie gaan/ }).first();
+    .filter({ hasText: /What you sell|Wat jy verkoop/ }).first();
   if ((await brief.count()) > 0) {
     await brief.scrollIntoViewIfNeeded().catch(() => undefined);
     check('  and unfolding one opens it', (await brief.getAttribute('aria-expanded')) === 'true');
