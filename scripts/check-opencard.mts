@@ -59,6 +59,9 @@ const LOOSE: Record<string, string> = {
   /* Since 15 October 2026 the song room has one box and the words and the
      sound sit open under it: "dan onder daardie boks kom die woorde uit". */
   'MakeMusic.tsx': 'no folded cards: the name, the words and the sound are always open under the song box',
+  /* 30 October 2026: the one thing its copilot does is a shot into Make a
+     shot, which opens the shot panel and scrolls to it. Held below. */
+  'VideoEditor.tsx': 'a shot opens the shot panel itself and scrolls to it; no folded card holds it',
 };
 
 const dir = 'app/components';
@@ -93,6 +96,13 @@ for (const name of files) {
 ok('there are rooms to check at all', rooms >= 6, `${rooms} found`);
 
 /* ── The exemptions, held to what they claim ───────────────────────────── */
+
+const editor = readFileSync(`${dir}/VideoEditor.tsx`, 'utf8');
+const shotOp = editor.slice(editor.indexOf("useCopilotOps('videoedit'"), editor.indexOf("useCopilotOps('videoedit'") + 1400);
+ok(
+  'the Video Editor really opens the shot panel for a shot it is handed, and scrolls to it',
+  /set_shot:/.test(shotOp) && /setWandOpen\(true\)/.test(shotOp) && /scrollIntoView/.test(shotOp),
+);
 
 const panel = readFileSync(`${dir}/VideoPanel.tsx`, 'utf8');
 ok(

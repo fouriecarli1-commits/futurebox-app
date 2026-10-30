@@ -52,6 +52,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCopilotOps } from '../lib/copilotactions';
 import FileSize from './FileSize';
 import { limitOf } from '../lib/squeeze';
 import {
@@ -2920,6 +2921,29 @@ async function smallerFrame(url: string): Promise<string> {
       (wandRef.current ?? document.querySelector('[data-editorshot]'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [clipAspect, edit.pieces.length, t]);
+
+  /* ── The copilot's one job here: a shot into Make a shot ─────────────
+     The owner, 30 October 2026: *"Die shots moet land in die editor videos
+     se copilot."* An advert carried from the adverts desk (`editThisAd`),
+     or a shot the copilot writes, lands in the shot words and the shot
+     panel opens on it. Nothing is drawn or charged until she presses. */
+  useCopilotOps('videoedit', {
+    set_shot: (value) => {
+      const words = value.trim().slice(0, 500);
+      if (!words) return;
+      setShotWords(words);
+      setShotEnd(null);
+      setDrawInto('start');
+      setShotReady(null);
+      setShotBy('shot');
+      setShotSaid(t('edit.shotLanded', 'The shot is in. Draw the frame, then make it move.'));
+      setBench(null);
+      if (edit.pieces.length > 0) setWandOpen(true);
+      requestAnimationFrame(() => {
+        (wandRef.current ?? document.querySelector('[data-editorshot]'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    },
+  });
 
   /** The frame at the playhead, framed as the film frames it. */
   const grabHere = useCallback(async (): Promise<string | null> => {

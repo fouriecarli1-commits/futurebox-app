@@ -541,12 +541,20 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "videoedit",
     stage: "show",
     purpose:
-      `The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, movement on the picture (a push in, a pan, keyframes of their own), a long shot cut into its best moments by its sound, and put together in the browser. All of the cutting uses no credits and is unlimited, on every plan including the free one, because it runs on their own device. Two things in the room are not free: Make a shot, which draws a frame from a sentence and then makes that frame move (tapping a clip offers an AI wand that puts that frame on it to change), and Generate a sound, which makes a voice reading words, a sound effect, or music to lay under the film. Both say what they cost on their own buttons. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. Two presses use an engine and say their price on the button: taking the background out of a shot (${CREDITS.cutout} credits for each five seconds) and taking an item out of a shot by naming it (${CREDITS.erase} credits for each five seconds, on clips of up to eight seconds). Generating a missing piece is a door that says it is not here yet. Do not offer to write a shot list here; that is the video desk.`,
+      `The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, movement on the picture (a push in, a pan, keyframes of their own), a long shot cut into its best moments by its sound, and put together in the browser. All of the cutting uses no credits and is unlimited, on every plan including the free one, because it runs on their own device. Two things in the room are not free: Make a shot, which draws a frame from a sentence and then makes that frame move (tapping a clip offers an AI wand that puts that frame on it to change), and Generate a sound, which makes a voice reading words, a sound effect, or music to lay under the film. Both say what they cost on their own buttons. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. Change a shot with AI has five presses, each with its price on its button, each working on every frame of the shot: change it in words, keeping how it moves (${CREDITS.clipChange} credits for each five seconds, up to ten seconds); take an item out by naming it (${CREDITS.erase} credits for each five seconds, up to eight seconds); take the background out (${CREDITS.cutout} credits for each five seconds); fill it out to a new shape \u2014 tall, square, portrait or wide \u2014 instead of cropping (${CREDITS.clipReframe} credits for each five seconds); and give a silent shot its sound (${CREDITS.clipSound} credits a shot). Generating a missing piece is a door that says it is not here yet. Write one shot at a time here, into Make a shot; a whole shot list is the video desk.`,
     helps: {
-      en: "I can tell you what each control does, but the cutting is yours \u2014 nothing in this room asks me to do anything.",
-      af: "Ek kan jou s\u00ea wat elke kontrole doen, maar die sny is joune \u2014 niks in hierdie kamer vra my om iets te doen nie.",
+      en: "I can put a shot into Make a shot for you, and tell you what each control does \u2014 the cutting is yours.",
+      af: "Ek kan \u2019n skoot vir jou in Maak \u2019n skoot sit, en jou s\u00ea wat elke kontrole doen \u2014 die sny is joune.",
     },
-    can: [],
+    can: ["put a shot into Make a shot"],
+    ops: {
+      /* The owner, 30 October 2026: *"Die shots moet land in die editor
+         videos se copilot."* The one thing this copilot does: write the
+         shot, which she then draws and makes move, each priced on its
+         own button. */
+      set_shot:
+        "the value is one shot, described the way the video desk wants a shot: who or what is in it, where, the light, the camera, and any line that is SAID in quotation marks. It is put into Make a shot and the shot panel opens; nothing is drawn or charged until they press. Write it fully, in the language they are speaking",
+    },
     seeds: [
       {
         en: "How do I fade the start of my film?",
@@ -874,6 +882,8 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is the headline of the advert to film, or empty for the one at the top of the screen. It sets the video desk up with THAT advert's shot, shape, length and look and opens it. Only offered once an advert has actually been written, so seeing it here means there is one on screen. Prefer it over writing a new shot yourself: the advert she is looking at is the one she means",
       read_this:
         "the value is the headline of the advert to record, or empty for the one at the top. It puts that advert's script in the voice studio and opens it. Only offered when an advert with a spoken line exists",
+      edit_this:
+        "the value is the headline of the advert, or empty for the one at the top. It puts that advert's shot into the Video Editor's Make a shot and opens the Video Editor, to be cut in with their own clips. Use it when they want to edit with their own footage; film_this when they want the video desk to make the whole clip",
     },
     /* What a marketer actually asks first (the owner, 30 October 2026: *"Daar
        moet goeie voorstelle wees om die produk te verkoop. Die copilot moet

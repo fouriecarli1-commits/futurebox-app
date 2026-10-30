@@ -34,7 +34,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { AD_FORMATS } from '../app/lib/adformats';
 import { SURFACES } from '../app/lib/surfaces';
 import { LENGTHS } from '../app/lib/videoscenes';
-import { carryWords, filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
+import { carryWords, editThisAd, filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
 import { before } from './order.mts';
 
 let failures = 0;
@@ -265,6 +265,13 @@ ok('  and the spoken line is inside the shot, in quotation marks',
   film.some((one) => one.op === 'set_prompt' && /“[^”]+”/.test(one.value)),
   'the desk knows a line is SAID only by its quotation marks — without them the engine draws it');
 
+/* Into the Video Editor (30 October 2026): the shot, with its line in
+   quotation marks, into Make a shot. */
+const edited = editThisAd({ ad: AD });
+ok('"into the Video Editor" puts the shot into Make a shot, the spoken line in quotation marks',
+  edited.some((one) => one.room === 'videoedit' && one.op === 'set_shot' && /“[^”]+”/.test(one.value)),
+  edited.map((one) => `${one.room}.${one.op}`).join(', '));
+
 const read = readThisAd({ ad: AD });
 const script = read.find((one) => one.op === 'set_script');
 ok('"read this one" carries the whole advert, not one line',
@@ -287,7 +294,7 @@ ok('"read this one" carries the whole advert, not one line',
    This held `read.length === 1`, which was the old rule written as a
    count — so adding the second wire failed a check that was not about
    counts at all. Named by op now, which is what it was always testing. */
-for (const [what, wires] of [['film', film], ['read', read]] as const) {
+for (const [what, wires] of [['film', film], ['read', read], ['edit', edited]] as const) {
   const brief = wires.find((one) => one.op === 'brief');
   ok(`  and "${what} this one" hands the advert to that room's copilot`,
     Boolean(brief),
@@ -615,7 +622,7 @@ ok(`  and every door that uses it sends the room\u2019s words \u2014 ${USERS.len
     ? `only ${USERS.length} file(s) found calling handoverFor; the card and the weekly plan both do`
     : `${[...new Set(wordless)].join(', ')} hand over with no words, so that copilot opens in English`);
 
-for (const [button, fn] of [['film', 'filmThisAd'], ['read', 'readThisAd']] as const) {
+for (const [button, fn] of [['film', 'filmThisAd'], ['read', 'readThisAd'], ['edit', 'editThisAd']] as const) {
   const calls = [...desk.matchAll(new RegExp(`${fn}\\(\\{[^}]*\\}`, 'g'))].map((one) => one[0]);
   ok(`  and so does \u201C${button} this one\u201D, at every press that leads to it`,
     calls.length >= 2 && calls.every((call) => /[,{]\s*said:\s*t\(/.test(call)),

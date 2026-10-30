@@ -34,7 +34,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X, Image as ImageIcon, CalendarClock } from 'lucide-react';
+import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X, Image as ImageIcon, CalendarClock, Scissors } from 'lucide-react';
 import AdScheduleModal from './AdScheduleModal';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
@@ -46,7 +46,7 @@ import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import type { Errand } from '../lib/errands';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
-import { CARRIED, filmThisAd, readThisAd } from '../lib/adhandover';
+import { CARRIED, editThisAd, filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
 import { clearPicks, loadPicks, putPicks } from '../lib/chosenformat';
 import { posterWords, worthDrawing } from '../lib/adposter';
@@ -532,6 +532,14 @@ export default function Campaign({
               onSetUp(wire.room, wire.op, wire.value);
             }
             onGoTo('canvas', { id: 'advert_video', subject: ad.headline });
+          },
+          edit_this: (value: string) => {
+            const ad = pickAd(ads, value);
+            if (!ad) return;
+            for (const wire of editThisAd({ ad, said: t('carry.edited', CARRIED.edited) })) {
+              onSetUp(wire.room, wire.op, wire.value);
+            }
+            onGoTo('videoedit', { id: 'advert_edit', subject: ad.headline });
           },
         }
       : {}),
@@ -1289,6 +1297,23 @@ export default function Campaign({
             >
               <VideoIcon className="w-3.5 h-3.5 text-emerald-400" />
               {t('ads.film', 'Film this one')}
+            </button>
+            {/* Into the Video Editor: the shot lands in its Make a shot box
+                and the advert in its copilot, to be cut in with her own
+                clips (30 October 2026). */}
+            <button
+              type="button"
+              data-adedit={index}
+              onClick={() => {
+                for (const wire of editThisAd({ ad, said: t('carry.edited', CARRIED.edited) })) {
+                  onSetUp(wire.room, wire.op, wire.value);
+                }
+                onGoTo('videoedit', { id: 'advert_edit', subject: ad.headline });
+              }}
+              className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+            >
+              <Scissors className="w-3.5 h-3.5 text-emerald-400" />
+              {t('ads.edit', 'Into the Video Editor')}
             </button>
             {/* ── The still, with the words in it ───────────────────────
                 Beside "Film this one" because it is the same advert going

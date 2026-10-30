@@ -261,6 +261,35 @@ try {
     'unquoted, a line is drawn at rather than spoken and the subtitle comes out empty');
 
   await p.screenshot({ path: shot('copilotcarry-filmthis.png') });
+
+  /* ── Into the Video Editor (30 October 2026) ──────────────────────────
+     The owner: *"Die shots moet land in die editor videos se copilot."* The
+     advert's own shot goes into the Video Editor's Make a shot, and the
+     advert into its copilot. */
+  await toRoom(p, 'Adverts');
+  await unfold(p);
+  await p.waitForTimeout(800);
+  const intoEditor = p.locator(`${overlay} [data-adedit]`).first();
+  if (!(await intoEditor.count())) {
+    const what2 = p.locator(`${overlay} #ads-what`);
+    await what2.fill('handmade leather bags, cut and stitched by one person');
+    await p.locator(`${overlay} button`).filter({ hasText: /Write the adverts|Skryf die advertensies/ }).first().click({ timeout: 15000 });
+    await p.waitForTimeout(1800);
+  }
+  check('a written advert offers "Into the Video Editor"', (await intoEditor.count()) > 0);
+  await intoEditor.scrollIntoViewIfNeeded().catch(() => undefined);
+  await intoEditor.click({ timeout: 15000 });
+  await p.waitForTimeout(2500);
+  check('  it took her to the Video Editor', (await p.locator('[data-editorask]').count()) > 0);
+  const editorShot = (await p.locator('[data-editorshotwords]').first().inputValue().catch(() => '')) ?? '';
+  check('  and the advert\u2019s own shot is in Make a shot', editorShot.includes('waxed thread'),
+    editorShot.trim() ? `the box holds: ${editorShot.slice(0, 100)}` : 'the box is empty');
+  check('  with its spoken line in quotation marks', /[“"]Elke sak vat twee dae/.test(editorShot));
+  /* Its copilot sits behind Ask; the advert waits on the bus until it opens. */
+  await p.locator('[data-editorask]').first().click();
+  await p.waitForTimeout(1200);
+  const editorTalk = await p.locator('[data-copilot="videoedit"]').first().innerText().catch(() => '');
+  check('  and its copilot, opened, is on the advert', /adverts desk|advertensietafel/i.test(editorTalk), editorTalk.slice(0, 160));
 } catch (error) {
   problems.push(`threw: ${String(error).slice(0, 200)}`);
 } finally {

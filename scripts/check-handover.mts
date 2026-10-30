@@ -123,7 +123,7 @@ for (const found of source.matchAll(/goToRoom\(/g)) {
     briefs:
       /'brief'/.test(body)
       || /goToRoom\([^)]*,\s*\{\s*id:/.test(body)
-      || /videoFromHook\(|videoFromSong\(|filmThisAd\(|readThisAd\(/.test(body),
+      || /videoFromHook\(|videoFromSong\(|filmThisAd\(|readThisAd\(|editThisAd\(/.test(body),
   });
 }
 
@@ -327,7 +327,7 @@ for (const name of readdirSync('app/components').filter((one) => one.endsWith('.
          — `onGoToArt({ id, title })` names the song it is about. */
       carries:
         /onSetUp\(/.test(around)
-        || /handoverFor\(|filmThisAd\(|readThisAd\(|videoFromHook\(|videoFromSong\(/.test(around)
+        || /handoverFor\(|filmThisAd\(|readThisAd\(|editThisAd\(|videoFromHook\(|videoFromSong\(/.test(around)
         || /^onGoTo[A-Za-z]*\(\s*[{'"`]/.test(call),
       /* And the copilot in that room was told why. The three builders are
          each held to including a brief by their own file — `check:adhandover`
@@ -335,7 +335,7 @@ for (const name of readdirSync('app/components').filter((one) => one.endsWith('.
          for it. */
       briefs:
         /'brief'/.test(around)
-        || /handoverFor\(|filmThisAd\(|readThisAd\(|videoFromHook\(|videoFromSong\(/.test(around),
+        || /handoverFor\(|filmThisAd\(|readThisAd\(|editThisAd\(|videoFromHook\(|videoFromSong\(/.test(around),
     });
   }
 }
@@ -379,7 +379,7 @@ const PLAIN_IN_ROOMS: Readonly<Record<string, string>> = {
  */
 const MUST_BRIEF_IN_ROOMS: Readonly<Record<string, string>> = {
   'AdFormats.tsx|onGoTo': 'a recommendation card \u2014 the door she presses first',
-  'Campaign.tsx|onGoTo': 'the two buttons under a written advert, and the copilot\u2019s own pair',
+  'Campaign.tsx|onGoTo': 'the three buttons under a written advert, and the copilot\u2019s own three',
   'MarketPlan.tsx|onGoTo': 'a slot in the week \u2014 "make this one, on Tuesday"',
 };
 

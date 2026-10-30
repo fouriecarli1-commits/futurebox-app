@@ -559,6 +559,9 @@ const FILMED =
 const READ =
   'This is the advert you brought over from the adverts desk. The script is already in '
   + 'the box \u2014 tell me what to change.';
+const EDITED =
+  'This is the advert you brought over from the adverts desk. Its shot is in Make a shot \u2014 '
+  + 'draw the frame, make it move, and cut it in with your own clips. Tell me what to change.';
 
 /**
  * The same two sentences, for the room to translate.
@@ -567,7 +570,7 @@ const READ =
  * from the default is a difference nobody will ever see, because the
  * Afrikaans is what shows and the English is what is tested.
  */
-export const CARRIED = { filmed: FILMED, read: READ } as const;
+export const CARRIED = { filmed: FILMED, read: READ, edited: EDITED } as const;
 
 function briefFor(ad: HandoverAd, did: string): string {
   return joined([
@@ -627,6 +630,24 @@ export function filmThisAd(input: {
     op: 'brief',
     value: briefFor(input.ad, input.said?.trim() || FILMED),
   });
+  return wires;
+}
+
+/**
+ * "Into the Video Editor", from a written advert.
+ *
+ * The owner, 30 October 2026: *"Die shots moet land in die editor videos se
+ * copilot."* The video desk makes a whole clip from a sentence; the Video
+ * Editor is where it is cut in with her own footage. So the same shot, with
+ * its spoken line in quotation marks, goes into the editor's Make a shot box,
+ * and the advert itself into its copilot, so "make it shorter" is a sentence
+ * it can answer.
+ */
+export function editThisAd(input: { readonly ad: HandoverAd; readonly said?: string }): readonly Wire[] {
+  const prompt = withSpoken(input.ad.shot ?? '', input.ad.spoken ?? '');
+  const wires: Wire[] = [];
+  if (prompt.trim()) wires.push({ room: 'videoedit', op: 'set_shot', value: prompt.trim() });
+  wires.push({ room: 'videoedit', op: 'brief', value: briefFor(input.ad, input.said?.trim() || EDITED) });
   return wires;
 }
 

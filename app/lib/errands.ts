@@ -54,7 +54,7 @@ import type { SurfaceId } from './surfaces';
  
    This file was built for exactly that and then used once. */
 export const ERRAND_IDS = [
-  'podcast_video', 'hook_video', 'advert_video', 'advert_read', 'built_on',
+  'podcast_video', 'hook_video', 'advert_video', 'advert_edit', 'advert_read', 'built_on',
 ] as const;
 export type ErrandId = (typeof ERRAND_IDS)[number];
 
@@ -203,6 +203,43 @@ export const ERRANDS: Readonly<Record<ErrandId, ErrandKind>> = {
       {
         en: 'Make it work with the sound off',
         af: 'Laat dit werk met die klank af',
+      },
+    ],
+  },
+
+  /* ── An advert, carried to the Video Editor ──────────────────────────
+     `editThisAd` (30 October 2026): the shot is in Make a shot, to be drawn,
+     made to move and cut in with her own clips. Same job as the video desk,
+     different tool: one shot at a time, on her own clock. */
+  advert_edit: {
+    surface: 'videoedit',
+    brief: [
+      'They have just come here from the adverts desk to cut an advert in with their own clips.',
+      'The advert is "{subject}".',
+      'Its shot is already in Make a shot: drawn as one frame first, then made to move, both priced on their own buttons.',
+      'An advert is a film with a job: the call to action at the end is the point. Their own footage of what they sell is worth more than any drawn shot, so suggest putting it first and the made shot around it.',
+      'The headline and the call to action belong IN the picture as words on the clip — a feed plays silent.',
+    ],
+    helps: {
+      en: 'Your advert\u2019s shot is in Make a shot. Draw the frame, make it move, and cut it in with your own clips — and put the call to action on the last one, as words, because a feed plays silent.',
+      af: 'Jou advertensie se skoot is in Maak ’n skoot. Teken die raam, laat dit beweeg, en sny dit in met jou eie skote — en sit die oproep tot aksie op die laaste een, as woorde, want ’n stroom speel stil.',
+    },
+    seeds: [
+      {
+        en: 'Make the shot shorter and punchier',
+        af: 'Maak die skoot korter en kragtiger',
+      },
+      {
+        en: 'Where should my own clips go around it?',
+        af: 'Waar moet my eie skote rondom dit gaan?',
+      },
+      {
+        en: 'Words for the last frame, so people act',
+        af: 'Woorde vir die laaste raam, sodat mense optree',
+      },
+      {
+        en: 'Write a second shot that shows the product up close',
+        af: 'Skryf ’n tweede skoot wat die produk van naby wys',
       },
     ],
   },
