@@ -3429,7 +3429,7 @@ export const STRINGS: Dict = {
   "pro.cabinet": { en: "Speaker", af: "Luidspreker" },
   "pro.clean": { en: "Straight", af: "Reguit" },
   "pro.toneWhat": { en: "A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.", af: "’n Toonstel wat hier gebou is, nie ’n model van ’n benoemde versterker nie: ’n sagte knip, ’n kanteling, en die band wat ’n kitaarluidspreker deurlaat. Om die dryf op te draai verander die vorm en nie die vlak nie, so dit kan nie opgestoot word bloot omdat harder beter geklink het nie." },
-  "radar.how": { en: "Shows and posts that fit your music. Nothing is sent for you: you read it, change it and send it yourself.", af: "Programme en plasings wat by jou musiek pas. Niks word vir jou gestuur nie: jy lees dit, verander dit en stuur dit self." },
+  "radar.how": { en: "Shows and posts that fit your music: {genres}. Nothing is sent for you: you read it, change it and send it yourself.", af: "Programme en plasings wat by jou musiek pas: {genres}. Niks word vir jou gestuur nie: jy lees dit, verander dit en stuur dit self." },
   "radar.noReleases": { en: "nothing released yet", af: "nog niks uitgereik nie" },
   "radar.follower": { en: "follower", af: "volgeling" },
   "radar.followers": { en: "followers", af: "volgelinge" },

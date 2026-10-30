@@ -370,7 +370,7 @@ export default function CollabRadar({
               lines of grey above the first match, in the room whose whole job
               is the matches. */}
           <Note className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
-            {t('radar.how', 'Shows and posts that fit your music. Nothing is sent for you: you read it, change it and send it yourself.')
+            {t('radar.how', 'Shows and posts that fit your music: {genres}. Nothing is sent for you: you read it, change it and send it yourself.')
               .replace('{genres}', profile.genres.join(', ') || t('radar.noReleases', 'nothing released yet'))}
           </Note>
         </div>

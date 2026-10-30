@@ -10899,7 +10899,12 @@ export default function PostStudio({
          up, or the photo's foot ran under the panel (`check:magicbrush`,
          found when the panels went to half the screen). */
       const keep = ABOVE_PHOTO + (panelUp && !tucked && !saveFull ? 8 : 0);
-      const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16 - keep) };
+      /* A panel floats over the foot of the stage. Measured where it really
+         starts, because it is half the screen now (30 October 2026) and the
+         photo has to end above it. */
+      const panel = panelUp && !tucked && !saveFull ? document.querySelector('[data-postunder]')?.getBoundingClientRect() : null;
+      const floor = panel && panel.top > box.top ? Math.min(box.bottom, panel.top) : box.bottom;
+      const room = { w: Math.max(0, box.width - 16), h: Math.max(0, floor - box.top - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
       setFitted({ w, h: Math.floor(w / ratio), room: box.height });
     };
