@@ -546,6 +546,46 @@ user interaction.
 
 ---
 
+## Google Play policy update, October 2026 — what it means here
+
+Checked against the app on 30 October 2026. The Android app is the website
+in a Trusted Web Activity (`android/twa-manifest.json`): it asks the phone
+for no permissions of its own, notifications are off, and the website uses
+no location, contacts, local network, files, SMS or call log.
+
+**Nothing to change in the app for:**
+
+* Local network, Manage contacts, Location (mandatory 27 January 2027),
+  All files access, SMS and call log, Accessibility: none of these
+  permissions is used.
+* AppFunctions: not used (a web app has none).
+* Subscriptions with eligibility discounts (student plans): there is no
+  such plan. If one is ever added, the page must say who qualifies, how it
+  is checked, and what the price becomes afterwards.
+* Payments through AI or agents: Copilot cannot buy anything. Every
+  purchase is a person pressing a button with the price on it, through
+  Google Play Billing in the Android app.
+* Deceptive behaviour towards app review: the review gets the same app
+  everybody gets.
+
+**Yours, in the Play Console:**
+
+* **Trader status — from November 2026.** Declare it under the account's
+  details. FUTUREBOXSTUDIO sells credits, so it is a trader. Google then
+  shows the business's contact details on the listing: use the business
+  address and the business email, never a personal one.
+* **Japan — by 1 December 2026.** If the app is offered in Japan with
+  payments, the authorisation form must be done or Google holds *all*
+  payments, everywhere. The simplest answer, if Japan is not a market:
+  leave Japan out under **Production → Countries/regions**.
+* **App quality (memory and code size) — February 2027.** The wrapper is
+  small; the website is what is measured. Re-check with the pre-launch
+  report once the first build is up.
+* **Play Age Signals.** An Android API, which a web wrapper cannot call.
+  The app already asks age itself (18+ for the voice features, the kids
+  room behind its own door). Worth revisiting if the app ever gets a
+  native shell.
+
 ## Before you press submit
 
 - [x] A D-U-N-S number for FUTUREBOXSTUDIO — created 15 October 2026
@@ -555,6 +595,8 @@ user interaction.
       `/.well-known/assetlinks.json` shows them
 - [ ] The attorney has answered the Play Billing question
 - [ ] A business contact email, not a personal one
+- [ ] Trader status declared in the Play Console (required from November 2026)
+- [ ] Japan left out of the countries, or its payments authorisation done by 1 December 2026
 - [x] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
       3840 pixels on the long side. **The ones to upload are in
       `docs/play/store/`**: five at 1080 x 1920, each a real screen in a phone
