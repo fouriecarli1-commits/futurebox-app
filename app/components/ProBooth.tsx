@@ -3057,6 +3057,41 @@ export default function ProBooth({
   }, [carveHere, commit]);
 
   /**
+   * Comping: this take, here, and none of its other passes.
+   *
+   * Loop-recording over a marked piece leaves one lane per pass, all cut from
+   * the same recording (`stopRecording`). Every studio builds the best take
+   * out of passes like these, a phrase at a time. Mark a phrase, open the pass
+   * you want for it, and this cuts that phrase out of every other pass of the
+   * same recording and plays it from this one, unmuted. Outside the mark
+   * nothing changes, so phrase by phrase the best of each pass is what plays.
+   * One undoable step.
+   */
+  const regionComp = useCallback(() => {
+    const got = carveHere();
+    if (!got || !region) return;
+    const chosen = got.lane;
+    const siblings = lanes.filter((one) => one.id !== chosen.id && !one.backing && one.audio === chosen.audio);
+    if (!siblings.length) {
+      setProblem(t('pro.compNone', 'There are no other passes of this take to choose between. Loop over a piece while recording and every pass comes back as its own lane.'));
+      return;
+    }
+    remember(t('undo.comp', 'choosing the take'));
+    setLanes((was) => was.flatMap((one) => {
+      if (one.id === chosen.id) {
+        const { before, inside, after } = got.carved;
+        return [before, { ...inside, muted: false }, after].filter((piece): piece is Lane => Boolean(piece));
+      }
+      if (!siblings.some((sib) => sib.id === one.id)) return [one];
+      const cut = carveLane(one, region.from, region.to);
+      return cut ? [cut.before, cut.after].filter((piece): piece is Lane => Boolean(piece)) : [one];
+    }));
+    setStale(true);
+    setPicked(got.carved.inside.id);
+    setRegionOpen(false);
+  }, [carveHere, lanes, region, remember, t]);
+
+  /**
    * Round twice, and everything after it on that lane moves along.
    *
    * Only that lane. A repeat that pushed every other lane along would be a
@@ -4694,6 +4729,13 @@ export default function ProBooth({
                   title: t('pro.regionFadeOut', 'Fade down across it'),
                   says: t('pro.regionFadeOutWhat', 'Full where the mark starts, silent where it ends.'),
                   run: () => regionFade('out'),
+                },
+                {
+                  id: 'comp',
+                  icon: <Check className="h-4 w-4" />,
+                  title: t('pro.regionComp', 'Use this take here'),
+                  says: t('pro.regionCompWhat', 'Of all the passes of this take, this one plays in the marked piece and the others step aside, there only. Go phrase by phrase to build the best take.'),
+                  run: regionComp,
                 },
                 {
                   id: 'reverse',

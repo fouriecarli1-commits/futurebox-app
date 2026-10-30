@@ -88,6 +88,12 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
 
 /** The loudest a meter showed over a stretch, 0–100. */
+/** The mark tool on, whatever it was: pressing it toggles. */
+const markOn = async () => {
+  const tool = page.locator('[data-mark]').first();
+  if ((await tool.getAttribute('aria-pressed')) !== 'true') await tool.click();
+  await page.waitForTimeout(200);
+};
 const loudest = async (selector, ms = 2500) => {
   let top = 0;
   for (let t = 0; t < ms; t += 100) {
@@ -207,6 +213,50 @@ try {
   check('punching in adds the punched piece as its own lane', afterPunch.some((one) => /^Punch/.test(one.trim())), afterPunch.join(' | '));
   check('  and cuts the marked piece out of the take under it, so the new one replaces it', afterPunch.length === afterTake.length + 2, `${afterTake.length} → ${afterPunch.length}`);
   await page.screenshot({ path: shot('dawmeters-punch.png') });
+
+  /* ── Comping: two passes of a looped take, a phrase taken from the first ── */
+  await page.locator('[data-boothpunch]').first().click();
+  await page.waitForTimeout(200);
+  const songClip = await page.locator('[aria-label*="Drag this sound"]').first().boundingBox();
+  await page.locator('[data-lanename]').first().click();
+  await page.waitForTimeout(250);
+  await markOn();
+  const axis = await page.locator('[data-axis]').first().boundingBox();
+  await page.mouse.move(songClip.x + songClip.width * 0.1, axis.y + axis.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(songClip.x + songClip.width * 0.32, axis.y + axis.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: /^Loop it$/ }).first().click();
+  await page.waitForTimeout(300);
+  const beforeLoop = (await names()).length;
+  await page.locator('[data-laneaddhow="record"]').first().click();
+  await page.waitForTimeout(9000);
+  await page.getByRole('button', { name: /^Stop recording$/ }).first().click();
+  await page.waitForTimeout(2500);
+  const passes = (await names()).filter((one) => /pass \d/.test(one));
+  check('loop-recording over a marked piece leaves a lane per pass', passes.length >= 2, (await names()).join(' | '));
+  if ((await page.getByRole('button', { name: /^Looping$/ }).count())) await page.getByRole('button', { name: /^Looping$/ }).first().click();
+  await page.waitForTimeout(200);
+  const firstPass = page.locator('[data-lanename]').filter({ hasText: /pass 1/ }).first();
+  await firstPass.click();
+  await page.waitForTimeout(300);
+  const passClip = await page.locator('[aria-label*="Drag this sound"]').nth(beforeLoop).boundingBox();
+  await markOn();
+  await page.mouse.move(passClip.x + passClip.width * 0.3, axis.y + axis.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(passClip.x + passClip.width * 0.6, axis.y + axis.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await page.locator('[data-regiontools]').first().click();
+  await page.waitForTimeout(400);
+  const lanesBeforeComp = (await names()).length;
+  await page.locator('button').filter({ hasText: /^Use this take here/ }).first().click();
+  await page.waitForTimeout(600);
+  const lanesAfterComp = (await names()).length;
+  check('"Use this take here" plays that pass in the phrase and cuts the phrase from the others',
+    lanesAfterComp === lanesBeforeComp + 2 + (passes.length - 1), `${lanesBeforeComp} → ${lanesAfterComp} with ${passes.length} passes`);
+  await page.screenshot({ path: shot('dawmeters-comp.png') });
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

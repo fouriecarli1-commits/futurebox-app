@@ -79,6 +79,10 @@ ok('  keeps only the marked piece, with a hair of fade at each join', /from: inF
 ok('  cuts the marked piece out of the open lane under it, never the song itself', /one\.id === punch\.into && !one\.backing/.test(booth) && /carveLane\(under, punch\.from, punch\.to\)/.test(booth));
 ok('  and is one undoable step', /remember\(t\('undo\.punch'/.test(booth));
 
+ok('comping takes the phrase from the chosen pass, unmuted', /\[before, \{ \.\.\.inside, muted: false \}, after\]/.test(booth));
+ok('  and cuts the phrase from every other pass of the same recording, never another lane or the song', /one\.id !== chosen\.id && !one\.backing && one\.audio === chosen\.audio/.test(booth) && /carveLane\(one, region\.from, region\.to\)/.test(booth));
+ok('  and is one undoable step, offered as a region tool', /remember\(t\('undo\.comp'/.test(booth) && /id: 'comp'/.test(booth));
+
 if (bad) {
   console.error(`\ncheck:dawtools — ${bad} assertion(s) failed.`);
   process.exit(1);
