@@ -337,6 +337,22 @@ try {
   await page.screenshot({ path: shot('dawmeters-timepitch.png') });
   check('  and changing the lane bakes it in and starts the card again from nothing moved',
     (await names()).length === beforeBend && (await page.locator('[data-timepitchapply]').first().isDisabled()));
+
+  /* ── The mix critic: listens, says, and fixes in one press ── */
+  await page.locator('[data-boothdesk="mix"]').first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-mixcritic]').first().click();
+  await page.waitForFunction(() => document.querySelector('[data-mixfinding], [data-mixclear]') !== null, null, { timeout: 30000 });
+  const findings = await page.locator('[data-mixfinding]').count();
+  const sayings = await page.locator('[data-mixfinding] p').allInnerTexts();
+  check('the mix critic listens and answers', findings > 0 || (await page.locator('[data-mixclear]').count()) > 0, sayings.join(' | '));
+  check('  and every finding is a sentence with its numbers filled in', sayings.every((one) => one.length > 20 && !/\{\w+\}/.test(one)), sayings.join(' | '));
+  await page.screenshot({ path: shot('dawmeters-critic.png') });
+  if (findings > 0) {
+    await page.locator('[data-mixfix]').first().click();
+    await page.waitForTimeout(300);
+    check('  and a fix pressed takes its finding off the list', (await page.locator('[data-mixfinding]').count()) === findings - 1);
+  }
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

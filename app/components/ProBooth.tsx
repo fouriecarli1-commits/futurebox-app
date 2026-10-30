@@ -35,7 +35,9 @@ import {
   anySends, playsOf, readInto, valueAt, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
-import { TARGETS, bufferOf, finish, soundOf as plainSound, type Finished } from '../lib/mastering';
+import { TARGETS, bufferOf, finish, lufsOfTarget, soundOf as plainSound, type Finished } from '../lib/mastering';
+import MixCritic from './MixCritic';
+import { critique, type Finding, type LaneHeard } from '../lib/mixcritic';
 import { failed, separate, separateParts } from '../lib/stems';
 import TimePitch from './TimePitch';
 import { clampSpeed, timeAndPitch } from '../lib/timepitch';
@@ -560,6 +562,9 @@ export default function ProBooth({
   /* What finishing does to the mix (`lib/mastering.ts`), from the last
      measurement or export, said on the master desk in LUFS. */
   const [finishedSaid, setFinishedSaid] = useState<Finished | null>(null);
+  /* What the mix critic heard, and which of it has been fixed since. */
+  const [critic, setCritic] = useState<{ findings: Finding[]; fixed: Set<string> } | null>(null);
+  const [criticListening, setCriticListening] = useState(false);
   /**
    * The lanes the reading was taken of.
    *
@@ -1926,6 +1931,70 @@ export default function ProBooth({
       setBusy(false);
     }
   }, [lanes, master, rate]);
+
+  /**
+   * The mix critic (`lib/mixcritic.ts`): every lane as it plays, at its
+   * fader, and the mix's loudness, read here and judged there.
+   */
+  const hearMix = useCallback(async () => {
+    const ctx = context();
+    if (!ctx) return;
+    setCriticListening(true);
+    try {
+      /* A breath, so the spinner is drawn before the reading holds the page. */
+      await new Promise((done) => window.setTimeout(done, 30));
+      const heard: LaneHeard[] = audible(lanes).map((lane) => {
+        const plays = playsOf(lane, ctx);
+        const samples = new Float32Array(plays.length);
+        for (let c = 0; c < plays.numberOfChannels; c += 1) {
+          const from = plays.getChannelData(c);
+          for (let i = 0; i < from.length; i += 1) samples[i] += (from[i] * lane.gain) / plays.numberOfChannels;
+        }
+        return {
+          id: lane.id,
+          name: lane.name,
+          kind: lane.backing ? 'song' : lane.beat ? 'beat' : lane.notes ? 'keys' : 'take',
+          samples,
+          rate: plays.sampleRate,
+          gain: lane.gain,
+          pan: lane.pan ?? 0,
+          space: lane.sends?.space ?? 0,
+          reverb: Boolean(lane.fx?.reverb && lane.fx.reverb.mix > 0),
+          rumbleOff: Boolean(lane.clean?.rumble),
+        };
+      });
+      const mixed = await mixSession(lanes, rate, master, 1);
+      const lufs = mixed ? finish(plainSound(mixed), master).lufsBefore : NaN;
+      setCritic({
+        findings: critique(heard, { lufs, target: lufsOfTarget(master.target), matching: master.matchLoudness }),
+        fixed: new Set(),
+      });
+    } finally {
+      setCriticListening(false);
+    }
+  }, [context, lanes, master, rate]);
+
+  /** One finding's fix, as one undoable step. The critic only ever proposes. */
+  const applyFix = useCallback((finding: Finding) => {
+    const fix = finding.fix;
+    remember(t('undo.mixfix', 'the mix fix'));
+    if (fix.kind === 'match') {
+      setMaster((was) => ({ ...was, matchLoudness: true }));
+    } else {
+      setLanes((was) => was.map((lane) => {
+        if (fix.kind === 'gain' && lane.id === fix.id) return { ...lane, gain: fix.gain };
+        if (fix.kind === 'rumble' && fix.ids.includes(lane.id)) return { ...lane, clean: { ...(lane.clean ?? NOTHING_OFF), rumble: true } };
+        if (fix.kind === 'space' && lane.id === fix.id) return { ...lane, sends: { ...lane.sends, space: fix.space } };
+        if (fix.kind === 'pan') {
+          const move = fix.moves.find((one) => one.id === lane.id);
+          if (move) return { ...lane, pan: move.pan };
+        }
+        return lane;
+      }));
+    }
+    setStale(true);
+    setCritic((was) => (was ? { ...was, fixed: new Set([...was.fixed, finding.id]) } : was));
+  }, [remember, t]);
 
   /**
    * A lane split into the voice and everything else, as two new lanes.
@@ -4391,6 +4460,26 @@ export default function ProBooth({
             <option key={one.id} value={one.id}>{t(one.name[0], one.name[1])} · {one.lufs} LUFS</option>
           ))}
         </select>
+      </Card>
+
+      {/* ── The mix critic ──────────────────────────────────────────
+          Listens to every lane and the whole mix on the device, and says
+          what an engineer would say first, each with its fix. */}
+      <Card
+        wide
+        icon={<Sparkles className="h-4 w-4" />}
+        title={t('critic.title', 'What does my mix need?')}
+        what={t('critic.what', 'Listens to every lane and to the whole mix, here on your device, and says what stands out: a voice buried under the song, rumble under a take, a mix too quiet for streaming, lanes piled in the middle. Each comes with the one press that fixes it, and Undo takes any of it back.')}
+      >
+        <MixCritic
+          t={t}
+          findings={critic?.findings ?? null}
+          fixed={critic?.fixed ?? new Set()}
+          listening={criticListening}
+          disabled={busy || recording || !heard.length}
+          onListen={() => void hearMix()}
+          onFix={applyFix}
+        />
       </Card>
     </>
   );

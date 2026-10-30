@@ -460,6 +460,7 @@
     "check:beatbox": "tsx scripts/check-beatbox.mts",
     "check:keys": "tsx scripts/check-keys.mts",
     "check:timepitch": "tsx scripts/check-timepitch.mts",
+    "check:mixcritic": "tsx scripts/check-mixcritic.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",
     "check:cloudcopy": "tsx scripts/check-cloudcopy.mts",
     "check:kidsplaylists": "tsx scripts/check-kidsplaylists.mts",

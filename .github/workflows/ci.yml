@@ -1965,6 +1965,8 @@ jobs:
         run: npm run check:keys
       - name: ProBooth's time and pitch reads a clip and moves one without the other
         run: npm run check:timepitch
+      - name: ProBooth's mix critic hears what is there and fixes it in one step
+        run: npm run check:mixcritic
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.
