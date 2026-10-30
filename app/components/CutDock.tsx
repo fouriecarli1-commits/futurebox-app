@@ -316,6 +316,11 @@ const LOWER: readonly BenchSpec[] = [
   },
 ];
 
+/** The cutting room's benches, for a rail of their own beside the picture. */
+export function cutBenches(): readonly BenchSpec[] {
+  return [...UPPER, ...LOWER];
+}
+
 export default function CutDock({
   open,
   onOpen,
@@ -445,7 +450,7 @@ export default function CutDock({
          canvas half the screen wide beside it — "kyk hoe sny alles af op die
          rekenaar se skerm". A wider column is the cheapest honest fix: the
          same controls, a third less scrolling, and nothing moved. */
-      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[34dvh]'} ${
+      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[50dvh]'} ${
         atDesk ? (here.tall ? 'w-[440px] shrink-0 2xl:w-[560px]' : 'w-[400px] shrink-0 2xl:w-[520px]') : ''
       }`}
       style={atDesk
@@ -549,7 +554,7 @@ export default function CutDock({
         background: 'rgba(10,12,16,0.82)',
         color: INK,
         boxShadow: `0 0 0 1px ${EDGE}`,
-        ...(where === 'float' ? { bottom: tucked ? 8 : 'calc(34dvh + 6px)' } : {}),
+        ...(where === 'float' ? { bottom: tucked ? 8 : 'calc(50dvh + 6px)' } : {}),
       }}
     >
       {tucked ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -641,7 +646,7 @@ export default function CutDock({
         <div className="relative shrink-0">
           {/* A third of the screen, not half: the film above it is what
               is being worked on (27 October 2026). */}
-          <div data-cutfloat="" className={`absolute inset-x-0 bottom-0 z-20 h-[34dvh] flex-col ${tucked ? 'hidden' : 'flex'}`}>
+          <div data-cutfloat="" className={`absolute inset-x-0 bottom-0 z-20 h-[50dvh] flex-col ${tucked ? 'hidden' : 'flex'}`}>
             {sheet}
           </div>
           {tuck('float')}

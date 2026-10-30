@@ -1682,15 +1682,12 @@ export default function PostStudio({
      the post's own size, always, with no choice. `lib/postfile.ts` carries
      the two formats, why the other four were left out, and the one thing
      about JPEG that has to be said out loud. */
-  /* ── Simple, or every choice there is ────────────────────────────────
- 
-     The owner's list, 7 October 2026: *"Simple en advances opsies."* Every tool
-     is in both; what simple hides is the rungs. `lib/plainmode.ts` carries
-     why that distinction is the whole design. */
-  /* Every setting, always. The owner, 30 October 2026, of the Everything and
-     Simple switch in the bar: *"Ek dink nie die editor funksies het dit nodig
-     nie. Everything moet maar in 'n editor wees."* The app-wide setting still
-     shapes the other rooms; the editor shows all it has. */
+  /* ── Every setting, always ──────────────────────────────────────────
+     There was a Simple and Everything switch in the bar (the owner, 7 October
+     2026: *"Simple en advances opsies."*). On 30 October 2026: *"Ek dink nie
+     die editor funksies het dit nodig nie. Everything moet maar in 'n editor
+     wees."* So the editor shows all it has; `plain` stays as a constant so
+     the places that once asked it read as they did. */
   const plain = false as boolean;
 
   const [kind, setKind] = useState<FileKind>('png');
@@ -6824,7 +6821,7 @@ export default function PostStudio({
         type="button"
         data-postdarkroom
         onClick={() => setDarkroom(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #f59e0b, #ec4899 55%, #8b5cf6)', boxShadow: '0 0 18px rgba(236,72,153,0.45)' }}
       >
         <Sparkles className="h-3.5 w-3.5" />
@@ -6837,7 +6834,7 @@ export default function PostStudio({
         type="button"
         data-postpdf
         onClick={() => askPdf(null)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
       >
         <FileText className="h-3.5 w-3.5" />
         {t('post.pdfRoom', 'PDF studio')}
@@ -6848,7 +6845,7 @@ export default function PostStudio({
         type="button"
         data-postvector
         onClick={() => setVector({ editing: null })}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
       >
         <PenTool className="h-3.5 w-3.5" />
         {t('post.vectorRoom', 'Vector studio')}
@@ -6859,7 +6856,7 @@ export default function PostStudio({
         type="button"
         data-postposter
         onClick={() => setPoster(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #d946ef, #f43f5e 55%, #f59e0b)', boxShadow: '0 0 18px rgba(217,70,239,0.4)' }}
       >
         <Megaphone className="h-3.5 w-3.5" />
@@ -6871,7 +6868,7 @@ export default function PostStudio({
         type="button"
         data-postproduct
         onClick={() => setProduct(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #f59e0b, #f97316 55%, #e11d48)', boxShadow: '0 0 18px rgba(249,115,22,0.4)' }}
       >
         <ShoppingBag className="h-3.5 w-3.5" />
@@ -6883,7 +6880,7 @@ export default function PostStudio({
         type="button"
         data-posttryon
         onClick={() => setTryOn(true)}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold leading-tight text-white shadow-lg"
+        className="inline-flex h-11 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-[11px] font-extrabold leading-tight text-white shadow-lg"
         style={{ background: 'linear-gradient(120deg, #0ea5e9, #6366f1 55%, #c026d3)', boxShadow: '0 0 18px rgba(99,102,241,0.4)' }}
       >
         <Shirt className="h-3.5 w-3.5" />
@@ -10858,7 +10855,7 @@ export default function PostStudio({
   /* Where the lines and suggestions over the photo's room sit: just above a
      tool's strip when one is out, at the foot otherwise, never on the photo
      itself (the photo rises to the top while a strip is out). */
-  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(34dvh + 10px)';
+  const overStrip = !panelUp || saveFull ? '12px' : tucked ? '52px' : stripsUp ? `${STRIP_LEAST + 16}px` : 'calc(50dvh + 10px)';
 
   /* ── The moving photo, on the stage itself ────────────────────────
      The owner, 29 October 2026, with the made clip playing in the bench and
@@ -12205,7 +12202,7 @@ export default function PostStudio({
                    floor under it. The middle of the photo stays clear. */
                 style={stripsUp
                   ? { height: STRIP_LEAST + 4 }
-                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '34dvh' }}
+                  : tucked ? { height: 40, overflow: 'hidden' } : { height: '50dvh' }}
               >
                 {!stripsUp && (
                   <button

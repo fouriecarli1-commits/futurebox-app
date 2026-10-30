@@ -174,10 +174,11 @@ async function drawOne(
     /* A frame the browser will not let us read. The film is unaffected. */
     return null;
   }
-  /* JPEG at a low quality on purpose: twelve of these per block, a dozen
-     blocks on a strip, held in memory while the room is open. A sharper
-     thumbnail costs megabytes and shows nothing at 48 pixels. */
-  return canvas.toDataURL('image/jpeg', 0.55);
+  /* JPEG, at a quality that stays sharp at the size it is shown: the strip
+     is now drawn at the screen's own density (`FilmStrip`), and a 0.55 JPEG
+     blurred the very detail that says where in the film you are. Held to at
+     most twelve per block and a cache of forty-eight strips. */
+  return canvas.toDataURL('image/jpeg', 0.82);
 }
 
 /**

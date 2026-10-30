@@ -1986,6 +1986,33 @@ try {
         + ' CUT');
     }
 
+    /* ── The sound has a grip of its own ──────────────────────────────
+       The owner, 30 October 2026: *"Ek sien die hoof timeline kan groter
+       gedrag word, maar nie die sound bar timeline nie."* */
+    const soundGrip = p.locator('[data-editorsoundgrip]');
+    check('the sound lanes have a grip for their own height', (await soundGrip.count()) === 1);
+    if (await soundGrip.count()) {
+      const music = p.locator('[data-editormusiclane]').first();
+      const wasTall = (await music.boundingBox())?.height ?? 0;
+      /* A taller window for this one drag: on this desk-sized page the grip
+         sits at the very foot, and a drag downward from there runs off the
+         window, where no pointer is delivered. */
+      const sized = p.viewportSize();
+      if (sized) await p.setViewportSize({ width: sized.width, height: Math.max(sized.height, 1200) });
+      await soundGrip.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await p.waitForTimeout(300);
+      await soundGrip.hover();
+      await p.waitForTimeout(200);
+      const at = await soundGrip.boundingBox();
+      await p.mouse.down();
+      await p.mouse.move((at?.x ?? 0) + (at?.width ?? 0) / 2, (at?.y ?? 0) + 60, { steps: 12 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const nowTall = (await music.boundingBox())?.height ?? 0;
+      if (sized) await p.setViewportSize(sized);
+      check('  and dragging it down makes the sound lanes taller', nowTall > wasTall + 20, `${Math.round(wasTall)}px → ${Math.round(nowTall)}px`);
+    }
+
     /* ── Two sound lanes, each with the sound's real shape in it ────────
 
        The owner, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê,

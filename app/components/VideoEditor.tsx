@@ -71,7 +71,7 @@ import {
   type Patch, type StrengthId,
 } from '../lib/videoblur';
 import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, shows, type Ease, type Key, type Motion, type MoveId } from '../lib/videomotion';
-import CutDock, { type Bench } from './CutDock';
+import CutDock, { cutBenches, type Bench } from './CutDock';
 import FootageEngine from './FootageEngine';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
@@ -724,7 +724,13 @@ export default function VideoEditor({
    * then 43. A lane somebody has to hit and cannot is worse than a lane
    * nobody can press, because the second one at least looks like what it is.
    */
-  const soundTall = Math.max(53, Math.round(laneTall * 0.62));
+  /* And its own height once it is dragged. The owner, 30 October 2026: *"Ek
+     sien die hoof timeline kan groter gedrag word, maar nie die sound bar
+     timeline nie."* Until the sound's own grip is touched it follows the
+     picture lane as above; after that it is theirs. */
+  const [soundOwn, setSoundOwn] = useState<number | null>(null);
+  const TALLEST_SOUND = 180;
+  const soundTall = soundOwn ?? Math.max(53, Math.round(laneTall * 0.62));
 
   /** Whether the copilot's sheet is over the room. */
   const [asking2, setAsking2] = useState(false);
@@ -4329,6 +4335,27 @@ async function smallerFrame(url: string): Promise<string> {
             {/* The stage: the picture, with the magnifier standing beside it
                 rather than a row of its own above it. */}
             <div className="relative" data-editorstage>
+            {/* The functions, opened from beside the picture, as in the Photo
+                Editor: small, glowing, out of the film's way. */}
+            <div data-editorrail className="absolute right-0 top-1 z-10 flex flex-col items-center gap-1">
+              {cutBenches().filter((one) => ['words', 'looks', 'motion', 'sound', 'restyle'].includes(one.id)).map((one) => {
+                const on = bench === one.id;
+                return (
+                  <button
+                    key={one.id}
+                    type="button"
+                    data-editorrailtool={one.id}
+                    aria-pressed={on}
+                    aria-label={t(one.label[0], one.label[1])}
+                    title={t(one.label[0], one.label[1])}
+                    onClick={() => setBench(on ? null : one.id)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors [&_svg]:h-4 [&_svg]:w-4 ${on ? 'border-emerald-400 bg-emerald-500/20 text-emerald-100 shadow-[0_0_12px_rgba(52,211,153,0.5)]' : 'border-white/10 bg-zinc-950/70 text-zinc-300'}`}
+                  >
+                    {one.icon}
+                  </button>
+                );
+              })}
+            </div>
             <div
               ref={setZoomBox}
               data-editorzoombox
@@ -4710,7 +4737,10 @@ async function smallerFrame(url: string): Promise<string> {
                 buttons standing against the picture's edge now, and the
                 gradual slider (14 October: *"'n slider hê dat mens gradually
                 kan zoom"*) comes up from the number when it is tapped. */}
-            <div data-editorzoomtools className="absolute bottom-1 right-0 z-10 flex flex-col items-center gap-0.5 rounded-2xl border border-white/10 bg-zinc-950/85 p-0.5">
+            {/* On the left now, and the right side carries the tools (the owner, 30
+                October 2026, with a drawing: the zoom to the left, small icons
+                on the right to open the functions from). */}
+            <div data-editorzoomtools className="absolute bottom-1 left-0 z-10 flex flex-col items-center gap-0.5 rounded-2xl border border-white/10 bg-zinc-950/85 p-0.5">
               <button
                 type="button"
                 data-editorzoomin
@@ -5658,6 +5688,7 @@ async function smallerFrame(url: string): Promise<string> {
 
                 {/* ── And the music, under it ────────────────────────────── */}
                 <div
+                  data-editormusiclane
                   className="relative border-t border-zinc-800"
                   style={{ height: soundTall }}
                   data-editorsoundlane
@@ -5705,6 +5736,46 @@ async function smallerFrame(url: string): Promise<string> {
                       {t('edit.noBed', 'No track under it yet')}
                     </span>
                   )}
+                </div>
+
+                {/* The sound lanes' own grip, the same kind as the clock's. */}
+                <div
+                  data-editorsoundgrip
+                  role="separator"
+                  aria-label={t('edit.soundTall', 'How tall the sound is')}
+                  aria-valuenow={soundTall}
+                  aria-valuemin={53}
+                  aria-valuemax={TALLEST_SOUND}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    const by = event.key === 'ArrowUp' ? -8 : event.key === 'ArrowDown' ? 8 : 0;
+                    if (!by) return;
+                    event.preventDefault();
+                    setSoundOwn(Math.max(53, Math.min(TALLEST_SOUND, soundTall + by)));
+                  }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    const startY = event.clientY;
+                    const startTall = soundTall;
+                    const move = (m: PointerEvent) => {
+                      setSoundOwn(Math.max(53, Math.min(TALLEST_SOUND, startTall + (m.clientY - startY))));
+                    };
+                    const done = () => {
+                      window.removeEventListener('pointermove', move);
+                      window.removeEventListener('pointerup', done);
+                      window.removeEventListener('pointercancel', done);
+                    };
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', done);
+                    window.addEventListener('pointercancel', done);
+                  }}
+                  className="mt-0.5 flex h-7 cursor-ns-resize touch-none items-center justify-center gap-2 rounded-lg"
+                  style={{ background: 'rgba(56,189,248,0.07)' }}
+                >
+                  <ChevronsUpDown aria-hidden className="h-3.5 w-3.5" style={{ color: '#7dd3fc' }} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                    {t('edit.soundDrag', 'Drag to resize the sound')}
+                  </span>
                 </div>
 
                 {/* ── And her voice, under that — only once there is one ──── */}

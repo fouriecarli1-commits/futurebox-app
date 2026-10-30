@@ -182,8 +182,14 @@ ok('  and two blocks never decode the same strip at once',
   /BUSY\.has\(key\)/.test(strip) && /BUSY\.add\(key\)/.test(strip),
   'the same material at the same trim on two blocks is one piece of work');
 
+/* Sharp enough to see where you are (the owner, 30 October 2026: "baie swak
+   kwaliteit en blurry"), and the words kept readable by a dark band of their
+   own instead of by dimming the film. */
+ok('the strip is drawn at the size it is shown, at the screen\'s density, and nearly at full strength',
+  /devicePixelRatio/.test(strip) && /stripFor\(clip, from, to, count, pixWide, pixTall\)/.test(strip) && /opacity: 0\.9/.test(strip),
+  'a 48 by 27 picture stretched over a lane is the blur she saw');
 ok('the words stay readable over a photograph',
-  (strip.match(/opacity: 0\.55/g) ?? []).length === 1
+  /from-black\/70 to-transparent/.test(strip)
   && (room.match(/textShadow: '0 1px 2px rgba\(0,0,0,0\.85\)'/g) ?? []).length === 2,
   'a bright frame under white text is a name nobody can read, and the name'
   + ' is how she tells two shots apart');

@@ -2076,7 +2076,7 @@ html[data-singing] [data-tabbar] { display: none !important; }
    the Video Editor's glass (`[data-cutfloat]`): a dark see-through panel,
    blurred, with see-through tiles and a thin light edge rather than neon. */
 [data-postpop][data-neon] {
-  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.18) 0%, rgba(10, 12, 16, 0.5) 22%, rgba(10, 12, 16, 0.64) 100%) !important;
+  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.12) 0%, rgba(10, 12, 16, 0.32) 22%, rgba(10, 12, 16, 0.42) 100%) !important;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(226, 232, 240, 0.12);
@@ -3818,10 +3818,17 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
    words on top of those (27 October 2026, the sweep's photographs). The
    blur keeps the colour and light of the film behind it, which is what
    see-through was for, and takes away the letters. */
+/* Half the screen and very see-through, the buttons a little less so. The
+   owner, 30 October 2026: *"Die funksie bar wat van onder af op kom moet die
+   helfte van die bladsy vul, die background van daai bar moet transparent
+   wees en baie deurskynend, en die funksie buttons ook bietjie deurskynend,
+   maar nie so baie soos die background."* The blur stays light, so what is
+   behind still reads, and the words keep their dark halo for contrast. */
 [data-cutfloat] {
-  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.5) 0%, rgba(10, 12, 16, 0.84) 30%, rgba(10, 12, 16, 0.94) 100%);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(to bottom, rgba(10, 12, 16, 0.12) 0%, rgba(10, 12, 16, 0.32) 30%, rgba(10, 12, 16, 0.42) 100%);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid rgba(34, 211, 238, 0.35);
 }
 [data-cutfloat] > div { max-height: none !important; height: 100%; }
 [data-cutfloat] [data-desk] { background: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
@@ -3834,7 +3841,7 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 [data-cutfloat] [data-desk] :is(p, span, label, h3, h4, legend):not([data-coin]) { text-shadow: 0 0 2px #000, 0 1px 3px #000; }
 [data-cutfloat] [data-desk] :is(select, option) { background: #131a22 !important; }
 [data-cutfloat] [data-desk] :is(button, select, textarea, input[type="text"], input[type="number"], input[type="search"], a[href]) {
-  background: rgba(19, 26, 34, 0.74) !important;
+  background: rgba(19, 26, 34, 0.6) !important;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.16) inset !important;

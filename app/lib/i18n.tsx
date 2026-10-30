@@ -1828,6 +1828,8 @@ export const STRINGS: Dict = {
   "edit.noShotSound": { en: "No shot is speaking yet", af: "Geen skoot praat nog nie" },
   "edit.wordsLane": { en: "The words", af: "Die woorde" },
   "edit.noWords": { en: "No words on it yet", af: "Nog geen woorde op nie" },
+  "edit.soundTall": { en: "How tall the sound is", af: "Hoe hoog die klank is" },
+  "edit.soundDrag": { en: "Drag to resize the sound", af: "Sleep om die klank se grootte te verander" },
   "edit.laneDrag": { en: "Drag to resize the clock", af: "Sleep om die klok te verstel" },
   "edit.cutting": { en: "Cutting", af: "Sny" },
   "edit.splitHere": { en: "Split here", af: "Sny hier" },

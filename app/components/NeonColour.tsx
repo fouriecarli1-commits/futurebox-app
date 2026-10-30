@@ -16,6 +16,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X } from 'lucide-react';
+import { useBackLayer } from '../lib/backstack';
 
 type Say = (key: string, fallback: string) => string;
 
@@ -124,6 +125,8 @@ export default function NeonColour({
     if (isHex(code)) remember(code);
     setOpen(false);
   };
+  /* The phone's Back shuts the sheet rather than leaving the room under it. */
+  useBackLayer(open, shut);
 
   const [h, s, l] = hsl;
   const tracks = useMemo(() => ({

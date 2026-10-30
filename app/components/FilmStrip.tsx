@@ -82,7 +82,17 @@ export default function FilmStrip({
   readonly tall: number;
 }): React.ReactElement | null {
   const count = howMany(wide);
-  const key = stripKey(clipId, from, to, count);
+  /* Drawn at the size each picture is shown, times the screen's own density.
+     The owner, 30 October 2026: *"Daai prent is baie swak kwaliteit en blurry.
+     Mens kan eintlik nie sien waar mens in die video is nie."* Every picture
+     was drawn 48 by 27 and stretched over a lane up to 180 tall, on a screen
+     with three pixels to every one. Rounded to a step of 16 so a lane being
+     dragged taller does not redraw the strip on every pixel. */
+  const dense = typeof window === 'undefined' ? 1 : Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+  const step = (v: number): number => Math.max(16, Math.ceil(v / 16) * 16);
+  const pixWide = step((Math.max(1, wide) / count) * dense);
+  const pixTall = step(Math.max(1, tall) * dense);
+  const key = `${stripKey(clipId, from, to, count)}|${pixWide}x${pixTall}`;
   const [shots, setShots] = useState<string[]>(() => REMEMBERED.get(key) ?? []);
 
   useEffect(() => {
@@ -97,7 +107,7 @@ export default function FilmStrip({
     BUSY.add(key);
     void (async () => {
       try {
-        const got = await stripFor(clip, from, to, count);
+        const got = await stripFor(clip, from, to, count, pixWide, pixTall);
         if (got.length) keepStrip(key, got);
         if (alive) setShots(got);
       } catch {
@@ -107,7 +117,7 @@ export default function FilmStrip({
       }
     })();
     return () => { alive = false; };
-  }, [key, clip, from, to, count]);
+  }, [key, clip, from, to, count, pixWide, pixTall]);
 
   if (shots.length === 0) return null;
 
@@ -117,17 +127,17 @@ export default function FilmStrip({
       data-filmstrip={shots.length}
       className="pointer-events-none absolute inset-0 flex overflow-hidden rounded-lg"
     >
+      <span aria-hidden className="absolute inset-x-0 top-0 z-[1] h-1/2 bg-linear-to-b from-black/70 to-transparent" />
       {shots.map((one, at) => (
         <span
           key={`${key}-${at}`}
           className="h-full flex-1 bg-cover bg-center"
           style={{
             backgroundImage: `url(${one})`,
-            /* Dimmed, because the name and the duration are drawn over this
-               and white-on-photograph is unreadable half the time. The strip
-               is there to show the SHAPE of a shot, which survives being
-               darkened; the words have to stay legible on every frame. */
-            opacity: 0.55,
+            /* Nearly full strength since 30 October 2026, so it can be read
+               where the film is; the words over it get a dark band of their
+               own instead (below). */
+            opacity: 0.9,
             minWidth: 0,
           }}
         />
