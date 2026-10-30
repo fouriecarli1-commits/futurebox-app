@@ -111,7 +111,7 @@ const SENDS: Record<string, Processor> = {
      That is the whole lesson of this audit: the gap was never written, it
      accumulated, one honest feature at a time. Video of a person's face is
      as personal as it gets, so it is marked special from the start. */
-  'api.audd.io': { name: 'AudD', gets: 'twenty seconds from inside a song a member brought in, made small; not the file name, not who sent it' },
+  'api.audd.io': { name: 'AudD', gets: 'twenty seconds from inside a song a member brought in, made small; not the file name, not who sent it', basis: null },
   'fal.run': { name: 'fal.ai', gets: 'the clip or photo they are editing, which may show a person; and a picture for the art wall or a profile, looked at for sexual content first', special: true, basis: 'DPA in their standard terms as a binding agreement (POPIA s72(1)(a)), and the member says yes on the button (s72(1)(b)) — see docs/FAL-TERME.md' },
   'queue.fal.run': { name: 'fal.ai', gets: 'the clip or photo they are editing, which may show a person; and a picture for the art wall or a profile, looked at for sexual content first', special: true, basis: 'DPA in their standard terms as a binding agreement (POPIA s72(1)(a)), and the member says yes on the button (s72(1)(b)) — see docs/FAL-TERME.md' },
   /* The catalogue only. Nothing of the member's is sent — the search term is
