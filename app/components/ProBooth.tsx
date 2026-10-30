@@ -64,6 +64,8 @@ import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
 import LaneMeter from './LaneMeter';
 import type { AutoMode } from './BoothAuto';
+import BeatPads from './BeatPads';
+import { renderBeat, RATE as BEAT_RATE, type Beat } from '../lib/beatbox';
 import { whatsIn, type Heard as PieceHeard } from '../lib/whatsin';
 import { transitionsIn } from '../lib/transitions';
 import { midiBlob, midiFor, type Source } from '../lib/midi';
@@ -586,6 +588,8 @@ export default function ProBooth({
   const laneEars = useRef(new Map<string, AnalyserNode>());
   /* Which automation line is being drawn over the lanes, if any. */
   const [autoMode, setAutoMode] = useState<AutoMode | null>(null);
+  /* The drum pads, open for a new beat or for a beat lane being changed. */
+  const [beatOpen, setBeatOpen] = useState<{ readonly laneId?: string; readonly start?: Beat } | null>(null);
   const earOf = useCallback((id: string): AnalyserNode | undefined => laneEars.current.get(id), []);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
@@ -717,6 +721,7 @@ export default function ProBooth({
           ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
           ...(lane.sends ? { sends: lane.sends } : {}),
           ...(lane.auto ? { auto: lane.auto } : {}),
+          ...(lane.beat ? { beat: lane.beat } : {}),
           ...(lane.notes?.length ? { notes: lane.notes } : {}),
           ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
         });
@@ -5507,6 +5512,38 @@ export default function ProBooth({
         </button>
       </Card>
 
+      {/* ── Drum pads ───────────────────────────────────────────────────
+          A beat on the sixteen-step pads (`BeatPads`), and any beat lane
+          opened again to change it. */}
+      <Card
+        wide
+        icon={<Grid3x3 className="h-4 w-4" />}
+        title={t('beat.title', 'Drum pads')}
+        what={t('beat.cardWhat', 'Sixteen steps a bar, eight sounds including a log drum, styles to start from, swing. Drawn on your device, on the session\u2019s tempo, and it can be changed after.')}
+      >
+        <button
+          type="button"
+          data-beatopen
+          onClick={() => setBeatOpen({})}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 px-3 text-sm font-bold text-fuchsia-200"
+        >
+          <Grid3x3 className="h-4 w-4" />
+          {t('beat.make', 'Make a beat')}
+        </button>
+        {lanes.filter((one) => one.beat).map((lane) => (
+          <button
+            key={lane.id}
+            type="button"
+            data-beatedit={lane.id}
+            onClick={() => setBeatOpen({ laneId: lane.id, start: lane.beat })}
+            className="mt-2 inline-flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-200"
+          >
+            <span className="truncate">{lane.name}</span>
+            <span className="shrink-0 text-xs font-bold text-fuchsia-300">{t('beat.edit', 'Change the beat')}</span>
+          </button>
+        ))}
+      </Card>
+
       {/* ── A lane played as an instrument ─────────────────────────────
           The owner, 20 October 2026, of Kits' instrument models offered as
           voices: *"Hier is 'n fantastiese lys van instrumente maar moet dit
@@ -6818,6 +6855,7 @@ export default function ProBooth({
               if (how === 'record') void record();
               else if (how === 'file') fileRef.current?.click();
               else if (how === 'stems') setDeskOpen('stems');
+              else if (how === 'beat') setBeatOpen({});
               else setPartOpen(true);
             }}
             view={laneView}
@@ -6848,6 +6886,45 @@ export default function ProBooth({
         </div>
       </div>
       </div>
+
+      {beatOpen && (
+        <BeatPads
+          t={t}
+          bpm={meter.bpm}
+          start={beatOpen.start}
+          onClose={() => setBeatOpen(null)}
+          onPlace={(beat, named) => {
+            const ctx = context();
+            if (!ctx) return;
+            const samples = renderBeat(beat, meter.bpm, BEAT_RATE);
+            const audio = ctx.createBuffer(1, samples.length, BEAT_RATE);
+            audio.copyToChannel(samples as Float32Array<ArrayBuffer>, 0);
+            const editing = beatOpen.laneId;
+            setBeatOpen(null);
+            if (editing) {
+              remember(t('undo.beat', 'the beat'));
+              setLanes((was) => was.map((one) => (one.id !== editing ? one : {
+                ...one, audio, beat, from: undefined, to: undefined, repeat: 1, amped: undefined,
+              })));
+            } else {
+              /* On the bar the line is in, so it sits on the grid and the click. */
+              const bar = barSeconds(sane(meter));
+              remember(t('undo.add', 'the new lane'));
+              setLanes((was) => [...was, {
+                id: `beat-${Date.now()}`,
+                name: `${named} · ${t('beat.lane', 'Beat')}`,
+                audio,
+                at: bar > 0 ? Math.floor(at / bar) * bar : at,
+                gain: 0.9,
+                muted: false,
+                soloed: false,
+                beat,
+              }]);
+            }
+            setStale(true);
+          }}
+        />
+      )}
 
       {/* ── What went wrong, wherever you are ─────────────────────
 

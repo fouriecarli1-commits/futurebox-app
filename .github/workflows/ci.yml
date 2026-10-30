@@ -1959,6 +1959,8 @@ jobs:
         run: npm run check:mastering
       - name: ProBooth's reverse, normalise, sends and meters do what they say
         run: npm run check:dawtools
+      - name: ProBooth's drum pads put every hit on its step, the same every time
+        run: npm run check:beatbox
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.

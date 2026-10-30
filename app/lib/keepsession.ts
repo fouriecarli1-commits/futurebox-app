@@ -129,6 +129,8 @@ export interface KeptLane {
   readonly fadeOut?: number;
   /* The sends to the shared room and echo (29 October 2026). */
   readonly sends?: { readonly space?: number; readonly echo?: number };
+  /* A drum-pad lane's pattern, so it can be changed after a visit. */
+  readonly beat?: import('./beatbox').Beat;
   /* The automation lines (29 October 2026): plain points, as they are. */
   readonly auto?: { readonly gain?: readonly { readonly t: number; readonly v: number }[]; readonly pan?: readonly { readonly t: number; readonly v: number }[] };
   readonly notes?: readonly HumNote[];
@@ -216,6 +218,7 @@ export async function keepSession(
     fadeOut?: number;
     sends?: { readonly space?: number; readonly echo?: number };
     auto?: { readonly gain?: readonly { readonly t: number; readonly v: number }[]; readonly pan?: readonly { readonly t: number; readonly v: number }[] };
+    beat?: import('./beatbox').Beat;
     notes?: readonly HumNote[];
     amped?: { name: string; audio: AudioBuffer };
   }[],
@@ -259,6 +262,7 @@ export async function keepSession(
         ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
         ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
         ...(lane.sends ? { sends: { ...lane.sends } } : {}),
+        ...(lane.beat ? { beat: JSON.parse(JSON.stringify(lane.beat)) } : {}),
         ...(lane.auto ? { auto: { gain: lane.auto.gain?.map((one) => ({ ...one })), pan: lane.auto.pan?.map((one) => ({ ...one })) } } : {}),
         ...(lane.notes?.length ? { notes: lane.notes.map((one) => ({ ...one })) } : {}),
         ...(lane.amped

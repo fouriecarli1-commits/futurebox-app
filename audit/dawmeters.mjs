@@ -115,8 +115,8 @@ try {
   await room.locator('button').filter({ hasText: /Pro DAW Studio/ }).first().dispatchEvent('click');
   await page.waitForTimeout(3000);
 
-  check('under the lanes, the four ways to a new lane are offered where it will go',
-    (await page.locator('[data-laneadd] [data-laneaddhow]').count()) === 4);
+  check('under the lanes, the five ways to a new lane are offered where it will go',
+    (await page.locator('[data-laneadd] [data-laneaddhow]').count()) === 5);
   check('  and a lane header is wide enough for the whole name on a computer',
     !(await page.locator('[data-lanename] span').first().evaluate((one) => one.scrollWidth > one.clientWidth + 1)));
   check('every lane header has a meter', (await page.locator('[data-lanename]').count()) > 0
@@ -257,6 +257,30 @@ try {
   check('"Use this take here" plays that pass in the phrase and cuts the phrase from the others',
     lanesAfterComp === lanesBeforeComp + 2 + (passes.length - 1), `${lanesBeforeComp} → ${lanesAfterComp} with ${passes.length} passes`);
   await page.screenshot({ path: shot('dawmeters-comp.png') });
+
+  /* ── Drum pads: a style chosen, a step changed, put on a lane ────────── */
+  const beforeBeat = (await names()).length;
+  await page.locator('[data-laneaddhow="beat"]').first().click();
+  await page.waitForTimeout(500);
+  check('the drum pads open with eight sounds of sixteen steps',
+    (await page.locator('[data-beatpads] [data-beatstep]').count()) === 128);
+  await page.locator('[data-beatpreset="amapiano"]').first().click();
+  await page.waitForTimeout(200);
+  check('  and a style fills the grid, the log drum included',
+    (await page.locator('[data-beatstep^="log:"][data-on="hard"]').count()) > 0);
+  const step = page.locator('[data-beatstep="kick:2"]').first();
+  await step.click();
+  check('  a step tapped once is a hit', (await step.getAttribute('data-on')) === 'hard');
+  await step.click();
+  check('  twice a soft one', (await step.getAttribute('data-on')) === 'soft');
+  await page.locator('[data-beatplay]').first().click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: shot('dawmeters-beatpads.png') });
+  await page.locator('[data-beatplace]').first().click();
+  await page.waitForTimeout(800);
+  const afterBeat = await names();
+  check('putting it on a lane adds a beat lane named for its style',
+    afterBeat.length === beforeBeat + 1 && afterBeat.some((one) => /Amapiano/.test(one)), afterBeat.slice(-2).join(' | '));
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

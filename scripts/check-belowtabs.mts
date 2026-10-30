@@ -244,6 +244,8 @@ const KNOWN: readonly string[] = [
   /* Make a picture, 29 October 2026: the first room of the Make anything
      studio, over the photo editor. */
   'app/components/MakeStudio.tsx',
+  /* ProBooth's drum pads, 30 October 2026, over the studio. */
+  'app/components/BeatPads.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',

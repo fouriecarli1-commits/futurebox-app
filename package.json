@@ -457,6 +457,7 @@
     "check:fillers": "tsx scripts/check-fillers.mts",
     "check:mastering": "tsx scripts/check-mastering.mts",
     "check:dawtools": "tsx scripts/check-dawtools.mts",
+    "check:beatbox": "tsx scripts/check-beatbox.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",
     "check:cloudcopy": "tsx scripts/check-cloudcopy.mts",
     "check:kidsplaylists": "tsx scripts/check-kidsplaylists.mts",

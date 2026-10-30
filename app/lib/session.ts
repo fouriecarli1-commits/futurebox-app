@@ -52,6 +52,8 @@ export interface Lane {
    * the place of the pan knob while it has points. Session seconds.
    */
   readonly auto?: { readonly gain?: readonly AutoPoint[]; readonly pan?: readonly AutoPoint[] };
+  /** A lane made on the drum pads keeps its pattern, so it can be opened and changed (`lib/beatbox.ts`). */
+  readonly beat?: import('./beatbox').Beat;
   /**
    * How much of the lane goes to the session's shared room and echo
    * (`wireReturns`), 0 to 1 each. A send, as on every desk: several lanes in
