@@ -68,7 +68,7 @@ ok('  and the + and - buttons step by a quarter', /Math\.round\(\(was \+ 0\.25\)
 
 /* ── 5. The box says to type in it, and what the AI can do ─────────────── */
 ok('the shot box is labelled "Type here"', /edit\.shotTypeChange/.test(editor) && /htmlFor="editor-shot-words"/.test(editor));
-ok('  with suggestions of what the AI can do that write themselves in', /data-editorshotidea/.test(editor) && /SHOT_CHANGES/.test(editor));
+ok('  with suggestions of what the AI can do that write themselves in', /data-editorshotideas/.test(editor) && /SHOT_CHANGE_IDEAS/.test(editor) && /<IdeaChips/.test(editor));
 ok('  and a microphone', /data-editorshotwords[\s\S]{0,900}<SpeakButton/.test(editor));
 
 /* ── 6. Right-click and the keyboard, in every editor ─────────────────── */

@@ -594,49 +594,13 @@ try {
     for (const name of names) out[name] = sheet.querySelectorAll(`[data-${name}]`).length;
     return out;
   });
-  const simple = await toolsNow();
-  const switcher = page.locator('[data-postsimple]');
-  check('the room offers every setting there is, for somebody who wants them',
-    (await switcher.count()) > 0,
-    'one mode, and it is whichever one the last person to add a control chose');
-
-  if ((await switcher.count()) > 0 && simple) {
-    const saysFirst = (await switcher.first().innerText()).trim();
-    await switcher.first().click();
-    await page.waitForTimeout(600);
-    await bench('pic');
-    const everything = await toolsNow();
-    check('  and pressing it really brings more choices out',
-      everything !== null
-        && Object.values(everything).reduce((a, b) => a + b, 0)
-          > Object.values(simple).reduce((a, b) => a + b, 0),
-      `${JSON.stringify(simple)} against ${JSON.stringify(everything)} — a`
-      + ' switch that changes a word and no controls');
-    check('    without taking a single tool away',
-      everything !== null
-        && Object.entries(simple).every(([name, had]) => had === 0 || everything[name] > 0),
-      `${JSON.stringify(simple)} against ${JSON.stringify(everything)} — hiding a`
-      + ' tool is how somebody learns the app cannot do a thing it does');
-    check('    and the switch now offers the way back',
-      (await switcher.first().innerText()).trim() !== saysFirst,
-      `it still says "${saysFirst}" — a one-way switch is a trap`);
-
-    await switcher.first().click();
-    await page.waitForTimeout(600);
-    await bench('pic');
-    const backAgain = await toolsNow();
-    check('      and pressing it again puts them away',
-      JSON.stringify(backAgain) === JSON.stringify(simple),
-      `${JSON.stringify(backAgain)} against ${JSON.stringify(simple)}`);
-
-    /* And left on Everything for the rest of the walk, which is about the
-       controls rather than about the mode. Simple is the room's default, so
-       a walk that did not say this would be measuring the simple surface
-       and reporting it as the room — and the crop's shape snaps, which are
-       a rung, would not be in the page to press. */
-    await switcher.first().click();
-    await page.waitForTimeout(600);
-  }
+  /* One room, every setting. The owner, 30 October 2026: *"Everything moet
+     maar in 'n editor wees."* No switch between a simple and a full room. */
+  const all = await toolsNow();
+  check('the editor has no Simple and Everything switch', (await page.locator('[data-postsimple]').count()) === 0);
+  check('  and every setting is out at once',
+    all !== null && all.postbehindblur > 1 && all.postbigger > 1,
+    JSON.stringify(all));
 
 
   /** How much red and blue is on screen, and how much is neither. */
@@ -651,7 +615,10 @@ try {
     for (let i = 0; i < data.length; i += 4) {
       if (data[i] > 170 && data[i + 1] < 90 && data[i + 2] < 90) red += 1;
       else if (data[i + 2] > 170 && data[i] < 90 && data[i + 1] < 90) blue += 1;
-      else if (data[i + 1] > 170 && data[i] < 90 && data[i + 2] < 90) green += 1;
+      /* The background is pure #00ff00. The ring round the photo is #39ff14,
+         drawn on the glass whenever the photo is the layer in hand (the owner,
+         30 October 2026), and is not the background showing. */
+      else if (data[i + 1] > 170 && data[i] < 25 && data[i + 2] < 25) green += 1;
     }
     return { red, blue, green, total: data.length / 4 };
   });
@@ -668,7 +635,10 @@ try {
      time. An assertion that cannot fail is worse than none, because it is
      read as cover. */
   await bench('pic');
-  await page.locator('[data-postbehind]').first().fill('#00ff00');
+  /* The app's own colour sheet (`NeonColour`): open it, type the code, shut it. */
+  await page.locator('[data-postbehind]').first().click();
+  await page.locator('[data-neonhex]').fill('#00ff00');
+  await page.locator('[data-neondone]').click();
   await page.waitForTimeout(500);
 
   const middle = await colours();

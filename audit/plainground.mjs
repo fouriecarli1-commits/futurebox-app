@@ -174,8 +174,11 @@ try {
      cannot pass for the wrong reason. */
   const BEHIND = '#ff00d4';
   await bench('pic');
+  /* The app's own colour sheet (`NeonColour`): the swatch opens it, the code goes in its field. */
+  await page.locator('[data-postbehind]').first().click().catch(() => {});
+  await page.waitForTimeout(300);
   const painted = await page.evaluate((colour) => {
-    const input = document.querySelector('input[data-postbehind]');
+    const input = document.querySelector('input[data-neonhex]');
     if (!input) return false;
     const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
     set.call(input, colour);
@@ -184,6 +187,7 @@ try {
     return true;
   }, BEHIND);
   check('a colour can be put behind the picture', painted === true);
+  await page.locator('[data-neondone]').click().catch(() => {});
   await page.waitForTimeout(1200);
 
   const read = await page.evaluate((colour) => {

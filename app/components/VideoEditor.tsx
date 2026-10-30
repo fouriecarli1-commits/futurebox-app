@@ -180,6 +180,8 @@ import { FX_EFFECT_GROUPS, FX_FILTER_GROUPS } from '../lib/videofx';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 import { notify } from '../lib/notify';
+import IdeaChips from './IdeaChips';
+import { SHOT_CHANGE_IDEAS, SHOT_START_IDEAS } from '../lib/promptideas';
 
 
 /**
@@ -562,26 +564,6 @@ function Swatches({
     </div>
   );
 }
-
-/** What the AI can do to a frame already on the bench, as a start to type from. */
-const SHOT_CHANGES: readonly (readonly [string, string])[] = [
-  ['night', 'make it night'],
-  ['rain', 'add rain'],
-  ['sky', 'change the sky to a sunset'],
-  ['remove', 'take the person out of the background'],
-  ['style', 'make it look like a painting'],
-  ['colour', 'change the colours to neon'],
-  ['move', 'the camera moves slowly closer'],
-];
-/** And what a new shot can be asked for. */
-const SHOT_STARTS: readonly (readonly [string, string])[] = [
-  ['wide', 'a wide shot of a city at night'],
-  ['close', 'a close-up of hands on a guitar'],
-  ['drone', 'a drone shot over the sea'],
-  ['slow', 'in slow motion'],
-  ['light', 'golden-hour light'],
-  ['moves', 'the camera moves slowly closer'],
-];
 
 /**
  * One voice-over's sound in the preview: an element kept on the film's
@@ -3774,20 +3756,17 @@ async function smallerFrame(url: string): Promise<string> {
         />
         <SpeakButton onHeard={(said) => setShotWords((was) => withSaid(was, said).slice(0, 500))} className="absolute bottom-2 right-2" />
       </span>
-      <div className="flex flex-wrap gap-1.5" data-editorshotideas>
-        <span className="w-full text-[11px]" style={{ color: INK_DIM }}>{t('edit.shotIdeas', 'The AI can:')}</span>
-        {(shotPic ? SHOT_CHANGES : SHOT_STARTS).map(([key, says]) => (
-          <button
-            key={key}
-            type="button"
-            data-editorshotidea={key}
-            onClick={() => setShotWords((was) => withSaid(was, t(`edit.idea.${key}`, says)).slice(0, 500))}
-            className="min-h-[44px] rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 text-[12px] font-semibold"
-            style={{ color: INK }}
-          >
-            + {t(`edit.idea.${key}`, says)}
-          </button>
-        ))}
+      {/* What the AI can do, as a start to type from, with a fresh handful on the
+          round button (`lib/promptideas.ts`). A tap adds to what is written. */}
+      <div className="space-y-1.5" data-editorshotideas>
+        <span className="block text-[11px]" style={{ color: INK_DIM }}>{t('edit.shotIdeas', 'The AI can:')}</span>
+        <IdeaChips
+          key={shotPic ? 'change' : 'start'}
+          t={t}
+          pool={shotPic ? SHOT_CHANGE_IDEAS : SHOT_START_IDEAS}
+          count={4}
+          onPick={(said) => setShotWords((was) => withSaid(was, said).slice(0, 500))}
+        />
       </div>
       {/* ── Who is in the shot ──────────────────────────────────
 

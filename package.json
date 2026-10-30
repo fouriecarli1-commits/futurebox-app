@@ -457,6 +457,7 @@
     "check:promptideas": "tsx scripts/check-promptideas.mts",
     "check:poststart": "node audit/poststart.mjs 3417",
     "check:layerlook": "node audit/layerlook.mjs 3421",
+    "check:wordslook": "node audit/wordslook.mjs 3423",
     "check:fillers": "tsx scripts/check-fillers.mts",
     "check:mastering": "tsx scripts/check-mastering.mts",
     "check:dawtools": "tsx scripts/check-dawtools.mts",

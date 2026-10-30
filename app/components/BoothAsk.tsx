@@ -38,6 +38,8 @@ import { useLang } from '../lib/i18n';
 import { withSaid } from '../lib/speak';
 import SpeakButton from './SpeakButton';
 import { sayMove, type LaneNow, type Move } from '../lib/mixplan';
+import IdeaChips from './IdeaChips';
+import { MIX_IDEAS } from '../lib/promptideas';
 
 const INK = '#eef2ff';
 const INK_DIM = 'rgba(238,242,255,0.5)';
@@ -147,35 +149,14 @@ export default function BoothAsk({
         <p className="text-[10px] font-black uppercase tracking-wider text-sky-400/80">
           {t('ask.proTips', 'Ask it like an engineer')}
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div>
           {/* The owner, 14 October 2026: "Copilot in daardie booth moet dan ook
               goeie suggestions hê vir professionals om te vra." Each one is
               something this desk can actually do — a fader, a pan, or an
               effect on a lane switched on or off — said the way an engineer
               would ask for it. Nothing here asks it to listen, because it
               cannot. */}
-          {([
-            ['ask.proVocal', 'Sit the lead vocal two dB over the band and glue it with a compressor'],
-            ['ask.proKick', 'Make room for the kick: bass down a touch, compressed, and EQ on it'],
-            ['ask.proWide', 'Kick, bass and lead vocal in the centre; guitars and keys panned wide'],
-            ['ask.proDepth', 'Push the backing vocals back with reverb and a short delay'],
-            ['ask.proGlue', 'Gentle saturation on the drums and the bass for analog glue'],
-            ['ask.proPeaks', 'A limiter on the loudest lanes so nothing clips before I export'],
-            ['ask.proMud', 'Clear the low-mid mud: EQ the pads and the guitars, pull them back'],
-            ['ask.proStream', 'Balance it for streaming: nothing louder than the vocal, peaks under control'],
-          ] as const).map(([k, fallback]) => {
-            const promptText = t(k, fallback);
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setQuestion(promptText)}
-                className="min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-sky-500/40 hover:bg-sky-950/30 hover:text-sky-200 active:scale-[0.98]"
-              >
-                {promptText}
-              </button>
-            );
-          })}
+          <IdeaChips t={t} pool={MIX_IDEAS} count={4} onPick={setQuestion} glow="#38BDF8" />
         </div>
       </div>
 

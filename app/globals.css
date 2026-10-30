@@ -4106,3 +4106,27 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .fb-sticker-ready, .fb-peel, .fb-peel-sheen, .fb-nudge, .fb-idea, .fb-notice { animation-duration: 0.01s; animation-iteration-count: 1; }
 }
+
+/* ── The app's own colour picker (`NeonColour.tsx`) ────────────────────
+   The owner, 30 October 2026: the phone's colour dialog did not look like
+   this app. The track is the colour itself; the thumb is a glowing ring. */
+[data-neontrack]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.9), 0 0 2px #000;
+  cursor: pointer;
+}
+[data-neontrack]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.9), 0 0 2px #000;
+  cursor: pointer;
+}

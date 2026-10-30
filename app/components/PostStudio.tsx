@@ -74,6 +74,7 @@ import { CREDITS, creditsSaid, videoCost, VIDEO_GRADES, type VideoGrade } from '
 import { pagesPdf, type DrawnPage } from '../lib/postpdf';
 import RestoreBench from './RestoreBench';
 import MakeStudio from './MakeStudio';
+import NeonColour from './NeonColour';
 import { deliverTo } from '../lib/madekeep';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
@@ -134,7 +135,6 @@ import {
 /* `SHAPES` is already taken in this room by the pen's shapes — pencil,
    circle, square, line. These are the ratios a picture can be asked for. */
 import { SHAPES as RATIOS, SHAPE_DEFAULT, type ShapeId } from '../lib/pictureshapes';
-import { usePlain, useSetPlain } from '../lib/plainmode';
 import { TEMPLATES, type Template } from '../lib/posttemplates';
 import { templateStill } from '../lib/templatevideo';
 import {
@@ -350,6 +350,24 @@ interface Words {
   readonly alpha?: number;
   /** This layer's own Adjust and Filters, when it is the one chosen in Layers. Absent is as it was made. */
   readonly look?: Look;
+  /*
+   * The owner, 30 October 2026: *"By teks moet daar ook 'n transparency slider
+   * wees, en met die glowy tekste 'n glow slider ... Dan ook 'n shadow
+   * slider. Teks se rigting, vertical ... omgooi menend boontoe en
+   * ondertoe, agterste voor flip, of side ways flip. En rotation."*
+   */
+  /** How strong the glow is, 0 to 2; absent is 1. */
+  readonly glowPower?: number;
+  /** How dark the drop shadow is, 0 to 1; absent is the soft shadow every line always had. */
+  readonly shadow?: number;
+  /** Turned, in degrees, about the middle of the block. */
+  readonly turn?: number;
+  /** Read up the side: 'up' from the foot to the top, 'down' from the top to the foot. */
+  readonly vertical?: 'up' | 'down';
+  /** Mirrored, back to front. */
+  readonly flipX?: boolean;
+  /** Upside down. */
+  readonly flipY?: boolean;
 }
 
 /** Where a paragraph's lines line up: "center text or put it to the left, or right". */
@@ -1168,6 +1186,8 @@ export default function PostStudio({
   };
   const [magicInto, setMagicInto] = useState('');
   const [magicBusy, setMagicBusy] = useState('');
+  /* The phone's photos, opened from Magic touch when there is no photo yet. */
+  const magicPick = useRef<HTMLInputElement | null>(null);
   const [picked, setPicked] = useState<Pick | null>(null);
   /* ── The things in the picture, beside the words in it ────────────────
  
@@ -1667,8 +1687,11 @@ export default function PostStudio({
      The owner's list, 7 October 2026: *"Simple en advances opsies."* Every tool
      is in both; what simple hides is the rungs. `lib/plainmode.ts` carries
      why that distinction is the whole design. */
-  const plain = usePlain();
-  const setPlain = useSetPlain();
+  /* Every setting, always. The owner, 30 October 2026, of the Everything and
+     Simple switch in the bar: *"Ek dink nie die editor funksies het dit nodig
+     nie. Everything moet maar in 'n editor wees."* The app-wide setting still
+     shapes the other rooms; the editor shows all it has. */
+  const plain = false as boolean;
 
   const [kind, setKind] = useState<FileKind>('png');
   /* The ticked pages as one PDF rather than a file each. The owner, 29
@@ -2285,6 +2308,20 @@ export default function PostStudio({
           line is a stripe across the picture with a word in the middle of
           it. One width for the whole block, from its widest line, so a
           two-line caption does not step in and out. */
+      /* Turned, stood on its side, mirrored or upside down: about the middle
+         of the block, so it stays where it was put. */
+      const tallBlock = fit.lines.length * fit.px * lineGap;
+      const quarter = one.vertical === 'up' ? -90 : one.vertical === 'down' ? 90 : 0;
+      const turned = (one.turn ?? 0) + quarter;
+      ctx.save();
+      if (turned || one.flipX || one.flipY) {
+        const cx = put.x;
+        const cy = put.y + tallBlock / 2;
+        ctx.translate(cx, cy);
+        if (turned) ctx.rotate((turned * Math.PI) / 180);
+        ctx.scale(one.flipX ? -1 : 1, one.flipY ? -1 : 1);
+        ctx.translate(-cx, -cy);
+      }
       if (one.behind && one.behind !== 'none') {
         const widest = fit.lines.reduce(
           (most, line) => Math.max(most, ctx.measureText(line).width),
@@ -2331,14 +2368,18 @@ export default function PostStudio({
           Only from the glass: the file, the shelf and the feed preview are
           drawn too, and in the file a line may have been moved clear of the
           furniture — the thumb has to find it where the GLASS shows it. */
-      if (guides) laidOut.current.set(one.id, {
-        x: put.x / size.width,
-        y: (put.y + (fit.lines.length * fit.px * lineGap) / 2) / size.height,
-        w: Math.min(1, (fit.lines.reduce(
-          (most, line) => Math.max(most, measure(line, fit.px)), 0,
-        ) + fit.px * 0.6) / size.width),
-        h: (fit.lines.length * fit.px * lineGap + fit.px * 0.3) / size.height,
-      });
+      if (guides) {
+        const wideP = fit.lines.reduce((most, line) => Math.max(most, measure(line, fit.px)), 0) + fit.px * 0.6;
+        const tallP = fit.lines.length * fit.px * lineGap + fit.px * 0.3;
+        /* On its side, the place a thumb finds it is on its side too. */
+        const side = Boolean(quarter);
+        laidOut.current.set(one.id, {
+          x: put.x / size.width,
+          y: (put.y + (fit.lines.length * fit.px * lineGap) / 2) / size.height,
+          w: Math.min(1, (side ? tallP : wideP) / size.width),
+          h: (side ? wideP : tallP) / size.height,
+        });
+      }
 
       /* ── The glow, if the line has one ─────────────────────────────
           Written three times over with a widening, changing shadow — far
@@ -2355,21 +2396,32 @@ export default function PostStudio({
           y += fit.px * lineGap;
         }
       };
-      if (passes.length) {
+      /* The drop shadow, as dark as the slider says, a little down and to
+         the right; then the glow, as strong as its slider says; then the
+         letters crisp on top. */
+      const shade = Math.max(0, Math.min(1, one.shadow ?? (passes.length ? 0 : 0.55)));
+      const power = Math.max(0, Math.min(2, one.glowPower ?? 1));
+      if (shade > 0) {
+        ctx.shadowColor = `rgba(0,0,0,${shade.toFixed(2)})`;
+        ctx.shadowBlur = Math.max(2, fit.px * 0.12 * (0.6 + shade));
+        ctx.shadowOffsetX = one.shadow === undefined ? 0 : fit.px * 0.06 * shade;
+        ctx.shadowOffsetY = one.shadow === undefined ? 0 : fit.px * 0.06 * shade;
+        writeBlock();
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      if (passes.length && power > 0) {
         for (const pass of passes) {
           ctx.shadowColor = pass.colour;
-          ctx.shadowBlur = pass.blur;
+          ctx.shadowBlur = pass.blur * power;
           writeBlock();
+          if (power > 1.4) writeBlock();
         }
-        ctx.shadowColor = 'rgba(0,0,0,0)';
-        ctx.shadowBlur = 0;
-        writeBlock();
-      } else {
-        ctx.shadowColor = 'rgba(0,0,0,0.55)';
-        ctx.shadowBlur = Math.max(2, fit.px * 0.12);
-        writeBlock();
-        ctx.shadowBlur = 0;
       }
+      ctx.shadowColor = 'rgba(0,0,0,0)';
+      ctx.shadowBlur = 0;
+      writeBlock();
+      ctx.restore();
     };
 
     /* A photo in the grid: in its frame, placed by the same `place()` as the
@@ -2664,7 +2716,9 @@ export default function PostStudio({
        the owner looked for it and it was not there. A photo bigger than the
        frame has its corners off the edge, so they are drawn where the photo
        meets the edge, a knob's width in: always on the screen to catch. */
-    if (guides && picture && !cropBox && !photoHidden && (layerOn === 'all' || layerOn === 'photo')) {
+    /* Not while Magic touch is open: there a finger paints, and a green ring
+       over the photo would be read as paint. */
+    if (guides && picture && !cropBox && !photoHidden && bench !== 'magic' && (layerOn === 'all' || layerOn === 'photo')) {
       const knob = Math.max(9, size.width * 0.018);
       const seen = seenPart(place(picture, size, crop), size);
       const inset = (v: number, most: number): number => Math.max(knob * 1.3, Math.min(most - knob * 1.3, v));
@@ -3269,7 +3323,7 @@ export default function PostStudio({
        grows or shrinks about its middle (`zoomAbout`). Checked before the
        move, because a corner sits on the picture's edge and the move below
        would take it as a drag. */
-    if (picture && at && !cropBox && !photoHidden && (layerOn === 'all' || layerOn === 'photo')) {
+    if (picture && at && !cropBox && !photoHidden && bench !== 'magic' && (layerOn === 'all' || layerOn === 'photo')) {
       const put = frameAt(event);
       if (put) {
         const px = put.x * size.width;
@@ -6835,22 +6889,22 @@ export default function PostStudio({
           It was a 48-pixel chip beside a caption — 36 tall where every other
           control in the bench is 44 — which made it the one thing in the row
           that did not read as a control. */}
-      <label className={`${KNOP} cursor-pointer`}>
+      <div className={KNOP}>
         <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
           {t('post.behind', 'Behind')}
         </span>
-        <input
-          type="color"
-          data-postbehind
+        <NeonColour
+          t={t}
+          data="postbehind"
           value={back ?? lastColour}
-          onChange={(event) => {
-            setLastColour(event.target.value);
-            setBack(event.target.value);
+          label={t('post.behindColour', 'The colour behind')}
+          onChange={(hex) => {
+            setLastColour(hex);
+            setBack(hex);
           }}
-          className="h-6 w-8 rounded border border-zinc-700 bg-zinc-950"
-          aria-label={t('post.behind', 'Behind')}
+          className="!h-8 !min-w-[2.5rem]"
         />
-      </label>
+      </div>
       {/* Turning it off remembers the colour, so coming back is one press
           and not a hunt for the same dark grey again. */}
       <button
@@ -7327,16 +7381,16 @@ export default function PostStudio({
           <p className={MIKRO}>{t('post.paint', 'Its colour')}</p>
 
           {paintColours.map((one, at) => (
-            <input
+            <NeonColour
               key={`paint-${at}`}
-              type="color"
+              t={t}
+              data={`postpaintcolour-${at}`}
               value={one}
-              data-postpaintcolour={at}
-              aria-label={t('post.paintColour', 'Colour {n}').replace('{n}', String(at + 1))}
-              onChange={(e) => setPaintColours(
-                paintColours.map((was, which) => (which === at ? e.target.value : was)),
+              label={t('post.paintColour', 'Colour {n}').replace('{n}', String(at + 1))}
+              onChange={(hex) => setPaintColours(
+                paintColours.map((was, which) => (which === at ? hex : was)),
               )}
-              className="h-11 w-11 shrink-0 cursor-pointer rounded-xl border border-zinc-700 bg-transparent p-1"
+              className="w-11"
             />
           ))}
 
@@ -8677,13 +8731,14 @@ export default function PostStudio({
                 {t(glow.name[0], glow.name[1])}
               </button>
             ))}
-            <input
-              type="color"
+            <NeonColour
+              t={t}
+              data="postwordsink"
               value={one.ink}
-              onChange={(event) => setWords((was) => was.map((w) => (
-                w.id === one.id ? { ...w, ink: event.target.value } : w)))}
-              className="h-9 w-12 rounded border border-zinc-700 bg-zinc-950"
-              aria-label={t('post.ink', 'Colour')}
+              label={t('post.inkOfWords', 'The colour of the words')}
+              onChange={(hex) => setWords((was) => was.map((w) => (
+                w.id === one.id ? { ...w, ink: hex } : w)))}
+              className="w-12"
             />
             <button
               type="button"
@@ -8694,6 +8749,60 @@ export default function PostStudio({
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          {/* ── How it is lit, how see-through, and which way it reads ──
+              The owner, 30 October 2026: transparency, glow and shadow as
+              sliders, the words stood on their side either way, turned,
+              mirrored or upside down. Drawn, so no credits. */}
+          {(() => {
+            const change = (how: Partial<Words>): void => setWords((was) => was.map((w) => (w.id === one.id ? { ...w, ...how } : w)));
+            const row = (id: string, name: string, value: number, min: number, max: number, step: number, said: string, set: (v: number) => void): React.ReactElement => (
+              <label className="block space-y-1" data-postwordslider={id}>
+                <span className="flex items-center justify-between text-[12px] font-bold" style={{ color: INK }}>
+                  {name}
+                  <span className="tabular-nums" style={{ color: PHOTO.cyan }}>{said}</span>
+                </span>
+                <input type="range" min={min} max={max} step={step} value={value} aria-label={name}
+                  onChange={(event) => set(Number(event.target.value))} className="h-11 w-full" />
+              </label>
+            );
+            const turnNow = one.turn ?? 0;
+            return (
+              <div className="space-y-2" data-postwordslook>
+                {row('alpha', t('post.wordsAlpha', 'See-through'), Math.round((1 - (one.alpha ?? 1)) * 100), 0, 90, 1,
+                  `${Math.round((1 - (one.alpha ?? 1)) * 100)}%`, (v) => change({ alpha: 1 - v / 100 }))}
+                {(one.glow ?? 'none') !== 'none' && row('glow', t('post.wordsGlow', 'Glow'), Math.round((one.glowPower ?? 1) * 100), 0, 200, 5,
+                  `${Math.round((one.glowPower ?? 1) * 100)}%`, (v) => change({ glowPower: v / 100 }))}
+                {row('shadow', t('post.wordsShadow', 'Shadow'), Math.round((one.shadow ?? 0.55) * 100), 0, 100, 1,
+                  `${Math.round((one.shadow ?? 0.55) * 100)}%`, (v) => change({ shadow: v / 100 }))}
+                {row('turn', t('post.wordsTurn', 'Turn'), turnNow, -180, 180, 1, `${turnNow}°`, (v) => change({ turn: Math.abs(v) < 3 ? 0 : v }))}
+                <div className={RY} data-postwordsway>
+                  {([
+                    ['flat', t('post.wordsFlat', 'Across')],
+                    ['up', t('post.wordsUp', 'Up the side')],
+                    ['down', t('post.wordsDown', 'Down the side')],
+                  ] as const).map(([way, name]) => {
+                    const on = (one.vertical ?? 'flat') === way;
+                    return (
+                      <button key={way} type="button" data-postwordsvertical={way} aria-pressed={on}
+                        onClick={() => change({ vertical: way === 'flat' ? undefined : way })}
+                        className={`${LEEG} ${on ? GEKIES : ''}`}>
+                        {name}
+                      </button>
+                    );
+                  })}
+                  <button type="button" data-postwordsflipx aria-pressed={Boolean(one.flipX)}
+                    onClick={() => change({ flipX: !one.flipX })} className={`${LEEG} ${one.flipX ? GEKIES : ''}`}>
+                    {t('post.wordsMirror', 'Mirror')}
+                  </button>
+                  <button type="button" data-postwordsflipy aria-pressed={Boolean(one.flipY)}
+                    onClick={() => change({ flipY: !one.flipY })} className={`${LEEG} ${one.flipY ? GEKIES : ''}`}>
+                    {t('post.wordsUpside', 'Upside down')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── The two spacings ──────────────────────────────────────
  
@@ -9130,6 +9239,7 @@ export default function PostStudio({
       tap={pullTap}
       start={becomeStart}
       onStarted={() => setBecomeStart(null)}
+      onBring={() => magicPick.current?.click()}
       lastCut={lastCut}
       onCut={showCut}
       onCuts={showCuts}
@@ -9141,8 +9251,25 @@ export default function PostStudio({
 
   const magicBench = (
     <div className="space-y-3" data-postmagic>
+      {/* No photo yet: the way to one, here, and every style still on show.
+          The owner, 30 October 2026, on a page with only a chart on it: *"Ek
+          kry nou nerens in photo editor hierdie oulike funksies wat ons by gesit
+          het nie. Dit was nou nou daar nou is dit weg."* Style match hid until
+          there was a photo, so on that page it had gone. */}
       {!picture ? (
-        <p className="text-[13px]" style={{ color: INK_DIM }}>{t('post.magicNone', 'Bring a photo in first.')}</p>
+        <button
+          type="button"
+          data-postmagicbring
+          onClick={() => magicPick.current?.click()}
+          className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl px-3 py-2 text-left"
+          style={{ background: `linear-gradient(135deg, ${PHOTO.cyan}26, rgba(10,12,16,0.55))`, border: `1px solid ${PHOTO.cyan}99`, boxShadow: `0 0 16px ${PHOTO.cyan}40` }}
+        >
+          <ImageIcon className="h-5 w-5 shrink-0" style={{ color: PHOTO.cyan, filter: `drop-shadow(0 0 6px ${PHOTO.cyan})` }} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-extrabold text-white" style={{ textShadow: `0 0 10px ${PHOTO.cyan}88` }}>{t('post.magicBring', 'Bring a photo in')}</span>
+            <span className="block text-xs font-medium" style={{ color: PHOTO.cyan }}>{t('post.magicBringWhy', 'Then restyle it, or change any part of it')}</span>
+          </span>
+        </button>
       ) : (
         /* One column, not three. Under the photo on a phone each section of
            a tool is a column of its own, and the instruction, the size and
@@ -9208,7 +9335,7 @@ export default function PostStudio({
           sample tiles under tabs — ours, drawn here (`lib/magicstyles.ts`).
           A press restyles what is painted, or the whole photograph when
           nothing is, with the before-and-after line after. */}
-      {picture && (
+      {(
         <div className="space-y-2" data-postmagicstyles>
           <p className={MIKRO}>{t('post.styleTitle', 'Style match')}</p>
           <div className="flex flex-wrap gap-1.5" role="tablist">
@@ -9233,7 +9360,7 @@ export default function PostStudio({
                 type="button"
                 data-poststyle={one.id}
                 disabled={Boolean(magicBusy)}
-                onClick={() => void magicPart('style', undefined, one.id)}
+                onClick={() => (picture ? void magicPart('style', undefined, one.id) : magicPick.current?.click())}
                 className="relative flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 p-1 text-[10px] font-bold text-zinc-300 disabled:opacity-50"
               >
                 <StyleTile id={one.id} />
@@ -9348,16 +9475,14 @@ export default function PostStudio({
                   style={{ background: ink, boxShadow: mark.ink === ink ? `0 0 14px ${ink}` : `0 0 6px ${ink}` }}
                 />
               ))}
-              <label className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-dashed border-zinc-500" title={t('post.markOwnColour', 'Any colour')}>
-                <input
-                  type="color"
-                  value={mark.ink.length === 7 ? mark.ink : '#ffffff'}
-                  onChange={(e) => changeMark(mark.id, { ink: e.target.value })}
-                  aria-label={t('post.markOwnColour', 'Any colour')}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
-                <span aria-hidden className="grid h-full w-full place-items-center text-xs">+</span>
-              </label>
+              <NeonColour
+                t={t}
+                round
+                data="postmarkown"
+                value={mark.ink.length === 7 ? mark.ink : '#FFFFFF'}
+                label={t('post.markOwnColour', 'Any colour')}
+                onChange={(hex) => changeMark(mark.id, { ink: hex })}
+              />
             </div>
             <div className="flex flex-wrap gap-2 pb-1">
               {GLOWS.map((glow) => (
@@ -10856,19 +10981,6 @@ export default function PostStudio({
       {upright ? null : undoRedo}
       <button
         type="button"
-        data-postsimple
-        aria-pressed={!plain}
-        onClick={() => setPlain(!plain)}
-        title={plain
-          ? t('post.showAllWhat', 'Show every setting there is')
-          : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
-        className="flex h-9 shrink-0 items-center rounded-xl px-1.5 text-[11px] font-bold sm:px-2 sm:text-xs"
-        style={chipStyle}
-      >
-        {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
-      </button>
-      <button
-        type="button"
         data-postsocial
         onClick={showSocial}
         aria-label={t('post.social', 'How it looks on social')}
@@ -12124,6 +12236,19 @@ export default function PostStudio({
           </div>
         </div>
       )}
+      {/* The phone's photos, for Magic touch and Alive with no photo yet. Always here, so either can open it. */}
+      <input
+        ref={magicPick}
+        type="file"
+        accept={ACCEPTS}
+        data-postmagicpick
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0] ?? null;
+          event.target.value = '';
+          void bringIn(file);
+        }}
+      />
       {socialModal}
       {making && (
         <MakeStudio

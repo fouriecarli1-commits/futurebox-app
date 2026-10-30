@@ -40,6 +40,8 @@ import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
 import Note from './Note';
 import Card from './Card';
+import IdeaChips from './IdeaChips';
+import { HOSTS_IDEAS } from '../lib/promptideas';
 
 const EXAMPLE = `Host 1: So what actually changed this year?
 Host 2: Everything, and none of it at once.
@@ -245,23 +247,8 @@ export default function TwoHosts({
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             {/* Starting points for the people this app is for: musicians and creators. */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {([
-                ['hosts.chipSong', 'The story behind a song'],
-                ['hosts.chipScene', 'Our local music scene this month'],
-                ['hosts.chipMaking', 'How we made our first record'],
-                ['hosts.chipQuestions', 'Listener questions'],
-                ['hosts.chipGear', 'Gear on a small budget'],
-              ] as const).map(([key, fallback]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setAiTopic(t(key, fallback))}
-                  className="rounded-full border border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/50 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition-colors"
-                >
-                  {t(key, fallback)}
-                </button>
-              ))}
+            <div className="pt-1">
+              <IdeaChips t={t} pool={HOSTS_IDEAS} count={3} onPick={setAiTopic} />
             </div>
           </div>
 

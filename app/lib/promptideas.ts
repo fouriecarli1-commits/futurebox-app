@@ -144,3 +144,101 @@ export const MAKE_IDEAS = {
     ['A lone tree on a hill at sunset', '’n Eensame boom op ’n heuwel met sonsondergang'],
   ],
 } as const satisfies Readonly<Record<string, readonly PromptIdea[]>>;
+
+/* ── Make a character (`CharacterBench`) ─────────────────────────────── */
+
+export const CHARACTER_IDEAS: readonly PromptIdea[] = [
+  ['a friendly robot DJ with glowing headphones', '’n vriendelike robot-DJ met gloeiende oorfone'],
+  ['a young astronaut with a light-up helmet', '’n jong ruimtevaarder met ’n helm wat opgloei'],
+  ['a meerkat in a tiny silver space suit', '’n meerkat in ’n klein silwer ruimtepak'],
+  ['a street dancer from the year 2080', '’n straatdanser uit die jaar 2080'],
+  ['a cyborg violinist with a chrome arm', '’n kuborg-violis met ’n chroom-arm'],
+  ['a rhino rock star in a leather jacket', '’n renoster-rockster in ’n leerbaadjie'],
+  ['a tiny dragon who plays the drums', '’n klein draakie wat tromme speel'],
+  ['a holographic singer made of blue light', '’n hologram-sanger gemaak van blou lig'],
+  ['a grandmother skateboarder with neon shoes', '’n ouma-skaatsplankryer met neonskoene'],
+  ['a penguin barista on a space station', '’n pikkewyn-barista op ’n ruimtestasie'],
+  ['a desert wanderer with a glowing guitar', '’n woestynswerwer met ’n gloeiende kitaar'],
+  ['a cat detective in a rainy neon city', '’n kat-speurder in ’n reënerige neonstad'],
+  ['a deep-sea diver with a lantern of stars', '’n diepsee-duiker met ’n lantern vol sterre'],
+  ['a samurai made of paper and ink', '’n samoerai gemaak van papier en ink'],
+  ['an owl professor with tiny round glasses', '’n uil-professor met klein ronde brilletjie'],
+  ['a giraffe pilot in a vintage plane', '’n kameelperd-vlieënier in ’n ou vliegtuig'],
+];
+
+/* ── Ask about the mix (`BoothAsk`) ─────────────────────────────────── */
+
+export const MIX_IDEAS: readonly PromptIdea[] = [
+  ['Sit the lead vocal two dB over the band and glue it with a compressor', 'Sit die hoofstem twee dB bo die orkes en bind dit met ’n kompressor'],
+  ['Make room for the kick: bass down a touch, compressed, and EQ on it', 'Maak plek vir die skopdrom: bas effens af, gekomprimeer, en EQ daarop'],
+  ['Kick, bass and lead vocal in the centre; guitars and keys panned wide', 'Skopdrom, bas en hoofstem in die middel; kitare en klawers wyd gepan'],
+  ['Push the backing vocals back with reverb and a short delay', 'Druk die agtergrondstemme terug met galm en ’n kort eggo'],
+  ['Gentle saturation on the drums and the bass for analog glue', 'Sagte versadiging op die dromme en die bas vir analoog-gom'],
+  ['A limiter on the loudest lanes so nothing clips before I export', '’n Beperker op die hardste bane sodat niks afsny voor ek uitvoer nie'],
+  ['Clear the low-mid mud: EQ the pads and the guitars, pull them back', 'Maak die lae-middel modder skoon: EQ die pads en kitare, trek hulle terug'],
+  ['Balance it for streaming: nothing louder than the vocal, peaks under control', 'Balanseer dit vir stroming: niks harder as die stem nie, pieke onder beheer'],
+  ['Cut the harsh top end on the cymbals with EQ', 'Sny die skerp hoë punt op die simbale met EQ'],
+  ['Pan the backing vocals left and right, a little under the lead', 'Pan die agtergrondstemme links en regs, effens onder die hoofstem'],
+  ['Give the snare more snap and less ring', 'Gee die strikdrom meer klap en minder gelui'],
+  ['Make the bass audible on phone speakers', 'Laat die bas hoorbaar wees op foonluidsprekers'],
+  ['Put the vocal in a small warm room, not a cathedral', 'Sit die stem in ’n klein warm kamer, nie ’n katedraal nie'],
+  ['Pull the hi-hats back so they stop poking out', 'Trek die hi-hats terug sodat hulle nie meer uitsteek nie'],
+  ['Bring every lane down 3 dB to leave headroom', 'Bring elke baan 3 dB af om kopruimte te laat'],
+  ['Add a short slap delay to the lead vocal', 'Sit ’n kort klap-eggo op die hoofstem'],
+];
+
+/* ── Two hosts, what it is about (`TwoHosts`) ───────────────────────── */
+
+export const HOSTS_IDEAS: readonly PromptIdea[] = [
+  ['The story behind a song', 'Die storie agter ’n liedjie'],
+  ['Our local music scene this month', 'Ons plaaslike musiektoneel vandeesmaand'],
+  ['How we made our first record', 'Hoe ons ons eerste plaat gemaak het'],
+  ['Listener questions', 'Luisteraars se vrae'],
+  ['Gear on a small budget', 'Toerusting op ’n klein begroting'],
+  ['The worst gig we ever played', 'Die slegste optrede wat ons nog gespeel het'],
+  ['Writing lyrics when nothing comes', 'Lirieke skryf wanneer niks kom nie'],
+  ['Five albums that changed us', 'Vyf albums wat ons verander het'],
+  ['Getting your music on playlists', 'Hoe jou musiek op snitlyste kom'],
+  ['Life on the road, honestly', 'Die lewe op toer, eerlik'],
+  ['Home studio mistakes we made', 'Tuisateljee-foute wat ons gemaak het'],
+  ['A song we wish we had written', '’n Liedjie wat ons wens ons het geskryf'],
+  ['How to plan a release week', 'Hoe om ’n vrystellingsweek te beplan'],
+  ['Collaborating without falling out', 'Saamwerk sonder om uit te val'],
+  ['Stage fright and how we beat it', 'Verhoogvrees en hoe ons dit oorwin het'],
+];
+
+/* ── The Video Editor's shot box: changing a frame, or a new shot ─────── */
+
+export const SHOT_CHANGE_IDEAS: readonly PromptIdea[] = [
+  ['make it night', 'maak dit nag'],
+  ['add rain', 'voeg reën by'],
+  ['change the sky to a sunset', 'verander die lug na ’n sonsondergang'],
+  ['take the person out of the background', 'haal die persoon uit die agtergrond'],
+  ['make it look like a painting', 'laat dit soos ’n skildery lyk'],
+  ['change the colours to neon', 'verander die kleure na neon'],
+  ['the camera moves slowly closer', 'die kamera beweeg stadig nader'],
+  ['add falling snow', 'voeg vallende sneeu by'],
+  ['make it look like an old film', 'laat dit soos ’n ou film lyk'],
+  ['add soft fog on the ground', 'voeg sagte mis op die grond by'],
+  ['turn the lights into glowing neon signs', 'verander die ligte in gloeiende neonborde'],
+  ['make it look like a comic book', 'laat dit soos ’n strokiesprent lyk'],
+  ['add sparks drifting through the air', 'voeg vonke by wat deur die lug dryf'],
+  ['make it autumn, with orange leaves', 'maak dit herfs, met oranje blare'],
+];
+
+export const SHOT_START_IDEAS: readonly PromptIdea[] = [
+  ['a wide shot of a city at night', '’n wye skoot van ’n stad in die nag'],
+  ['a close-up of hands on a guitar', '’n nabyskoot van hande op ’n kitaar'],
+  ['a drone shot over the sea', '’n hommeltuigskoot oor die see'],
+  ['in slow motion', 'in stadige aksie'],
+  ['golden-hour light', 'goue-uur lig'],
+  ['the camera moves slowly closer', 'die kamera beweeg stadig nader'],
+  ['a crowd jumping at a festival', '’n skare wat by ’n fees spring'],
+  ['a car driving through neon streets in the rain', '’n kar wat deur neonstrate in die reën ry'],
+  ['a time-lapse of clouds over mountains', '’n tydsverloop van wolke oor berge'],
+  ['a singer lit by one red light', '’n sanger verlig deur een rooi lig'],
+  ['waves crashing on rocks at sunset', 'golwe wat teen rotse breek met sonsondergang'],
+  ['a dancer spinning in an empty warehouse', '’n danser wat in ’n leë pakhuis draai'],
+  ['the camera circles slowly around', 'die kamera draai stadig in ’n sirkel'],
+  ['a vinyl record spinning, very close', '’n plaat wat draai, baie naby'],
+];

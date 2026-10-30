@@ -228,6 +228,7 @@ export default function BecomeBench({
   onBusy,
   onSay,
   onStarted,
+  onBring,
   onVideo,
 }: {
   readonly picture: HTMLImageElement | null;
@@ -257,6 +258,8 @@ export default function BecomeBench({
   /** A suggestion has been pointed at: the room forgets it, so the bench
       opening again later does not point at it a second time. */
   readonly onStarted?: () => void;
+  /** Opens the phone's photos, when there is no photo yet. */
+  readonly onBring?: () => void;
   /** A clip has been made from the photo: the room plays it on the big screen. */
   readonly onVideo?: (url: string) => void;
 }): React.ReactElement {
@@ -433,7 +436,24 @@ export default function BecomeBench({
   }, [start, onStarted]);
 
   if (!picture) {
-    return <p className="text-[13px] text-zinc-400" data-becomenone>{t('become.none', 'Bring a photo in first.')}</p>;
+    /* The way to a photo, here, rather than a line that sends you looking for
+       one (the owner, 30 October 2026: the tools seemed gone on a page with
+       no photo on it). */
+    return onBring ? (
+      <button
+        type="button"
+        data-becomenone
+        data-becomebring
+        onClick={onBring}
+        className="flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-fuchsia-400/60 bg-fuchsia-500/10 px-3 py-2 text-left shadow-[0_0_16px_rgba(232,121,249,0.25)]"
+      >
+        <Sparkles className="h-5 w-5 shrink-0 text-fuchsia-300 drop-shadow-[0_0_6px_rgba(232,121,249,0.9)]" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-extrabold text-white">{t('post.magicBring', 'Bring a photo in')}</span>
+          <span className="block text-xs font-medium text-fuchsia-200">{t('become.bringWhy', 'Then make it move, peel a sticker off it, or make it 3D')}</span>
+        </span>
+      </button>
+    ) : <p className="text-[13px] text-zinc-400" data-becomenone>{t('become.none', 'Bring a photo in first.')}</p>;
   }
 
   /* One column, not several: under the photo on a phone each child of a

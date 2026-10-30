@@ -46,14 +46,8 @@ import { asDataUrl } from '../lib/shotframes';
 import { INK, INK_DIM, LIT } from '../lib/cutlook';
 import FutureTile from './FutureTile';
 import { whySaid } from './Cast';
-
-/** A start to type from, so the box is never a blank page. */
-const IDEAS: readonly (readonly [string, string])[] = [
-  ['future.idea.robot', 'a friendly robot DJ with glowing headphones'],
-  ['future.idea.astro', 'a young astronaut with a light-up helmet'],
-  ['future.idea.meerkat', 'a meerkat in a tiny silver space suit'],
-  ['future.idea.dancer', 'a street dancer from the year 2080'],
-];
+import IdeaChips from './IdeaChips';
+import { CHARACTER_IDEAS } from '../lib/promptideas';
 
 export type CharacterPut =
   | { readonly as: 'frame'; readonly picture: string; readonly words: string }
@@ -205,19 +199,9 @@ export default function CharacterBench({ onPut, castFull }: {
         className="w-full rounded-xl border bg-black/40 p-2.5 text-[13px] leading-relaxed outline-hidden focus:border-emerald-400"
         style={{ color: INK, borderColor: 'rgba(52,211,153,0.35)' }}
       />
-      <div className="flex flex-wrap gap-1.5" data-charideas>
-        {IDEAS.map(([key, says]) => (
-          <button
-            key={key}
-            type="button"
-            data-charidea={key}
-            onClick={() => setWho(t(key, says))}
-            className="min-h-[44px] rounded-full border px-3 text-[12px] font-semibold"
-            style={{ color: INK, borderColor: 'rgba(52,211,153,0.35)', background: 'rgba(52,211,153,0.08)' }}
-          >
-            + {t(key, says)}
-          </button>
-        ))}
+      {/* A start to type from, and a fresh handful on the round button (`lib/promptideas.ts`). */}
+      <div data-charideas>
+        <IdeaChips t={t} pool={CHARACTER_IDEAS} count={4} onPick={setWho} />
       </div>
 
       <Step n="02">{t('future.char.look', 'The look')}</Step>
