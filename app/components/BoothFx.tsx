@@ -618,8 +618,10 @@ function Unit({
   readonly children?: React.ReactNode;
 }): React.ReactElement {
   const hue = HUES[id] ?? 200;
+  const { t } = useLang();
   return (
     <div
+      data-fxunit={id}
       className="rounded-2xl p-3.5 transition-all"
       style={{
         background: on ? `hsl(${hue} 55% 45% / 0.07)` : 'rgba(255,255,255,0.025)',
@@ -656,7 +658,7 @@ function Unit({
             boxShadow: on ? `0 0 12px ${lit(hue, 0.4)}` : 'none',
           }}
         >
-          {on ? 'ON' : 'OFF'}
+          {on ? t('fx.unitOn', 'ON') : t('fx.unitOff', 'OFF')}
         </button>
       </div>
       {on && <div className="space-y-3 pt-3">{children}</div>}
@@ -699,6 +701,110 @@ interface AiPreset {
   descFallback: string;
   icon: string;
   fx: Fx;
+}
+
+/** What a playing lane's rack is doing, read every frame: its sound after the chain, and its compressor and limiter. */
+export interface LiveRack {
+  readonly ear?: AnalyserNode;
+  readonly squash?: DynamicsCompressorNode;
+  readonly stop?: DynamicsCompressorNode;
+}
+
+/**
+ * How hard a compressor or the limiter is working, as it plays: the gain it
+ * is taking off, read from the node itself every frame, with the deepest of
+ * the last second held. Still and saying so when nothing is playing.
+ */
+function SquashMeter({ read, hue, label }: { readonly read?: () => DynamicsCompressorNode | undefined; readonly hue: number; readonly label: string }): React.ReactElement {
+  const bar = useRef<HTMLDivElement | null>(null);
+  const hold = useRef<HTMLDivElement | null>(null);
+  const said = useRef<HTMLSpanElement | null>(null);
+  const box = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    let frame = 0;
+    let peak = 0;
+    let peakAt = 0;
+    const tick = (now: number): void => {
+      const node = read?.();
+      const db = node ? Math.max(0, -node.reduction) : 0;
+      if (db >= peak || now - peakAt > 1000) { peak = db; peakAt = now; }
+      const width = (v: number): string => `${Math.min(100, (v / 24) * 100)}%`;
+      if (bar.current) bar.current.style.width = width(db);
+      if (hold.current) hold.current.style.left = width(peak);
+      if (said.current) said.current.textContent = node ? `−${db.toFixed(1)} dB` : '';
+      if (box.current) {
+        box.current.dataset.db = db.toFixed(1);
+        box.current.dataset.live = node ? 'yes' : 'no';
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [read]);
+  return (
+    <div ref={box} data-squashmeter className="space-y-1">
+      <div className="flex items-center justify-between text-[11px] font-semibold" style={{ color: INK_DIM }}>
+        <span>{label}</span>
+        <span ref={said} className="tabular-nums" style={{ color: `hsl(${hue} 90% 70%)` }} />
+      </div>
+      <div className="relative h-2.5 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div ref={bar} className="absolute inset-y-0 left-0 rounded-full" style={{ width: 0, background: `linear-gradient(90deg, hsl(${hue} 90% 55%), hsl(${(hue + 330) % 360} 90% 60%))`, boxShadow: `0 0 10px hsl(${hue} 90% 55%)` }} />
+        <div ref={hold} className="absolute inset-y-0 w-0.5" style={{ left: 0, background: INK }} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The lane's own sound under the EQ line, as it plays: the spectrum after
+ * the whole chain, on the same log scale as the line, 20 Hz to 20 kHz.
+ */
+function LiveSpectrum({ read, hue }: { readonly read?: () => AnalyserNode | undefined; readonly hue: number }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    let frame = 0;
+    let bins: Uint8Array<ArrayBuffer> | null = null;
+    const tick = (): void => {
+      const box = canvas.current;
+      const ear = read?.();
+      if (box) {
+        const w = box.clientWidth * devicePixelRatio;
+        const h = box.clientHeight * devicePixelRatio;
+        if (box.width !== w || box.height !== h) { box.width = w; box.height = h; }
+        const g = box.getContext('2d');
+        if (g) {
+          g.clearRect(0, 0, w, h);
+          box.dataset.live = ear ? 'yes' : 'no';
+          if (ear) {
+            if (!bins || bins.length !== ear.frequencyBinCount) bins = new Uint8Array(ear.frequencyBinCount);
+            ear.getByteFrequencyData(bins);
+            const nyquist = ear.context.sampleRate / 2;
+            const fill = g.createLinearGradient(0, h, 0, 0);
+            fill.addColorStop(0, `hsla(${hue}, 90%, 50%, 0.05)`);
+            fill.addColorStop(1, `hsla(${hue}, 90%, 65%, 0.55)`);
+            g.beginPath();
+            g.moveTo(0, h);
+            let loud = 0;
+            for (let x = 0; x <= w; x += 2) {
+              const hz = 20 * 1000 ** (x / w);
+              const v = bins[Math.min(bins.length - 1, Math.round((hz / nyquist) * bins.length))] / 255;
+              loud = Math.max(loud, v);
+              g.lineTo(x, h - v * h);
+            }
+            g.lineTo(w, h);
+            g.closePath();
+            g.fillStyle = fill;
+            g.fill();
+            box.dataset.loud = loud.toFixed(2);
+          }
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [read, hue]);
+  return <canvas ref={canvas} data-livespectrum aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" />;
 }
 
 /** A preset's EQ as a small curve: low, the mid at its frequency, high. */
@@ -812,6 +918,7 @@ export default function BoothFx({
   onTune,
   tuning = null,
   keyRoot = 0,
+  live,
 }: {
   readonly fx: Fx;
   readonly onChange: (next: Fx) => void;
@@ -830,8 +937,13 @@ export default function BoothFx({
    * back. So the room remembers first, named by what is about to happen.
    */
   readonly onWhole?: (what: 'preset' | 'reset') => void;
+  /** What this lane's rack is doing while it plays, for the live meters. */
+  readonly live?: () => LiveRack;
 }): React.ReactElement {
   const { t } = useLang();
+  const readEar = React.useCallback(() => live?.().ear, [live]);
+  const readSquash = React.useCallback(() => live?.().squash, [live]);
+  const readStop = React.useCallback(() => live?.().stop, [live]);
 
   /* A context purely to ask the biquads what they do — `responseOf` reads
      the filters' maths, which does not need a running graph. One for the
@@ -1059,7 +1171,12 @@ export default function BoothFx({
         on={Boolean(fx.eq)}
         onToggle={() => toggle('eq', FX_DEFAULTS.eq)}
       >
-        {eqLine && <Bend points={eqLine} hue={HUES.eq} diagonal={false} unitId="EQ Filter Response" />}
+        {eqLine && (
+          <div className="relative">
+            <LiveSpectrum read={readEar} hue={HUES.eq} />
+            <Bend points={eqLine} hue={HUES.eq} diagonal={false} unitId="EQ Filter Response" />
+          </div>
+        )}
         <div className="flex flex-wrap gap-2.5 pt-1">
           <Dial label={t('fx.low', 'Low')} value={eq.low} min={-18} max={18} step={0.5} unit=" dB" hue={HUES.eq}
             onChange={(low) => set('eq', { ...eq, low })} />
@@ -1116,6 +1233,7 @@ export default function BoothFx({
         onToggle={() => toggle('compressor', FX_DEFAULTS.compressor)}
       >
         <Bend points={squashLine(fx.compressor ?? FX_DEFAULTS.compressor)} hue={HUES.compressor} unitId="Dynamic Transfer" />
+        <SquashMeter read={readSquash} hue={HUES.compressor} label={t('fx.squashNow', 'Holding back now')} />
         <div className="flex flex-wrap gap-2.5 pt-1">
           <Dial label={t('fx.threshold', 'Above')} value={(fx.compressor ?? FX_DEFAULTS.compressor).threshold}
             min={-60} max={0} step={1} unit=" dB" hue={HUES.compressor}
@@ -1141,6 +1259,7 @@ export default function BoothFx({
         onToggle={() => toggle('limiter', FX_DEFAULTS.limiter)}
       >
         <LimiterVisualizer ceiling={(fx.limiter ?? FX_DEFAULTS.limiter).ceiling} hue={HUES.limiter} />
+        <SquashMeter read={readStop} hue={HUES.limiter} label={t('fx.stopNow', 'Catching now')} />
         <div className="flex flex-wrap gap-2.5 pt-1">
           <Dial label={t('fx.ceiling', 'Ceiling')} value={(fx.limiter ?? FX_DEFAULTS.limiter).ceiling}
             min={-24} max={0} step={0.5} unit=" dB" hue={HUES.limiter}

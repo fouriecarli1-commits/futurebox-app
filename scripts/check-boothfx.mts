@@ -146,6 +146,12 @@ ok(
   'fresh noise per render would make two exports of one unchanged session measurably different',
 );
 
+/* Live, while it plays (30 October 2026): the rack reads the lane's own nodes. */
+ok('the compressor and limiter nodes are handed out of the chain that plays', /return \{ input, output, running, squash: squashNode, stop: stopNode \}/.test(fx) && /LIVE\.set\(source, \{ squash: rack\.squash, stop: rack\.stop \}\)/.test(session));
+ok('  and the meter reads how much the node itself is taking off, every frame', /Math\.max\(0, -node\.reduction\)/.test(panel) && /<SquashMeter read=\{readSquash\}/.test(panel) && /<SquashMeter read=\{readStop\}/.test(panel));
+ok('  and the EQ line has the lane\'s own spectrum under it, from its meter\'s ear', /<LiveSpectrum read=\{readEar\}/.test(panel) && /getByteFrequencyData/.test(panel));
+ok('  and the room hands the rack the open lane\'s nodes only while it plays', /live=\{liveRack\}/.test(booth) && /if \(!id \|\| !playingRef\.current\.length\) return \{\};/.test(booth));
+
 if (failures) {
   console.error(
     '\ncheck:boothfx — the rack is built once, in wireLane, out of ordinary Web Audio nodes,\n' +

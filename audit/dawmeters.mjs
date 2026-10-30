@@ -418,6 +418,32 @@ try {
   await page.locator('[data-duckoff]').first().click();
   await page.waitForTimeout(300);
   check('  and "Stop the pumping" takes it off every lane', (await page.locator('[data-ducksays]').count()) === 0);
+
+  /* ── The rack, live: the compressor's squeeze and the sound under the EQ ── */
+  await page.getByRole('button', { name: /^Close this desk$/ }).first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-lanename]').first().click();
+  await page.waitForTimeout(250);
+  await page.locator('[data-boothdesk="effects"]').first().click();
+  await page.waitForTimeout(400);
+  for (const unit of ['compressor', 'eq']) {
+    const toggle = page.locator(`[data-fxunit="${unit}"] button[aria-pressed="false"]`).first();
+    if (await toggle.count()) await toggle.click();
+    await page.waitForTimeout(150);
+  }
+  /* The compressor pressed hard, so a test tone is well over where it starts. */
+  await page.getByRole('button', { name: /^Play$/ }).first().click();
+  await page.waitForTimeout(1500);
+  const squeeze = await page.locator('[data-fxunit="compressor"] [data-squashmeter]').first().evaluate((el) => ({ live: el.dataset.live, db: Number(el.dataset.db) }));
+  const spectrum = await page.locator('[data-livespectrum]').first().evaluate((el) => ({ live: el.dataset.live, loud: Number(el.dataset.loud ?? 0) }));
+  await page.locator('[data-fxunit="compressor"]').first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: shot('dawmeters-rack.png') });
+  await page.getByRole('button', { name: /^(Stop|Pause)$/ }).first().click().catch(() => undefined);
+  await page.waitForTimeout(300);
+  check('the compressor shows how hard it is holding back, as it plays', squeeze.live === 'yes' && squeeze.db >= 0, JSON.stringify(squeeze));
+  check('  and the EQ draws the lane\'s own sound under its line', spectrum.live === 'yes' && spectrum.loud > 0.05, JSON.stringify(spectrum));
+  const still = await page.locator('[data-fxunit="compressor"] [data-squashmeter]').first().evaluate((el) => el.dataset.live);
+  check('  and both go still when it stops', still === 'no', String(still));
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

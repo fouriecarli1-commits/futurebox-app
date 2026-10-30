@@ -631,6 +631,12 @@ export function fadedApart(carved: Carved): Carved {
 /** The fade stage of a wired lane, found again when the lane is started. */
 const FADES = new WeakMap<AudioBufferSourceNode, GainNode>();
 /** A wired lane's level and pan, for its automation, scheduled in `startLane`. */
+/* What a playing lane's rack is doing, for its meters: the compressor and limiter, when on. */
+const LIVE = new WeakMap<AudioBufferSourceNode, { readonly squash?: DynamicsCompressorNode; readonly stop?: DynamicsCompressorNode }>();
+/** A playing lane's compressor and limiter, so the rack can show how hard they are working. */
+export const liveOf = (source: AudioBufferSourceNode): { readonly squash?: DynamicsCompressorNode; readonly stop?: DynamicsCompressorNode } =>
+  LIVE.get(source) ?? {};
+
 /* The duck stage on a lane that is ducked by another, and how long it takes to come back up. */
 const DUCKS = new WeakMap<AudioBufferSourceNode, { readonly gain: GainNode; readonly release: number }>();
 /** How fast a duck goes down, in seconds: quick enough to make room for the kick, slow enough not to click. */
@@ -837,6 +843,7 @@ export function wireLane(
      effect that silently does nothing, and in an offline render there is no
      sound to notice it by. */
   for (const source of rack?.running ?? []) source.start(0);
+  if (rack && (rack.squash || rack.stop)) LIVE.set(source, { squash: rack.squash, stop: rack.stop });
 
   /* The fades, first in the chain, so everything after them — the amp, the
      tone, the effects' tails — hears the lane come up and go away the way

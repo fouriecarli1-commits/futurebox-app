@@ -32,7 +32,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  anySends, playsOf, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
+  anySends, liveOf, playsOf, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, lufsOfTarget, soundOf as plainSound, type Finished } from '../lib/mastering';
@@ -110,7 +110,7 @@ import { EDGE, INK, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothTransport from './BoothTransport';
 import BoothDock, { type Desk } from './BoothDock';
-import BoothFx from './BoothFx';
+import BoothFx, { type LiveRack } from './BoothFx';
 import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { canMove, move } from '../lib/laneorder';
@@ -618,6 +618,15 @@ export default function ProBooth({
   /* The keyboard sheet: play an instrument in. */
   const [keysOpen, setKeysOpen] = useState(false);
   const earOf = useCallback((id: string): AnalyserNode | undefined => laneEars.current.get(id), []);
+  /* Each playing lane's compressor and limiter, for the rack's live meters. */
+  const laneLive = useRef(new Map<string, { squash?: DynamicsCompressorNode; stop?: DynamicsCompressorNode }>());
+  const liveFor = useRef<string | null>(null);
+  /** The rack's live meters read the lane whose rack is open; nothing while it is not playing. */
+  const liveRack = useCallback((): LiveRack => {
+    const id = liveFor.current;
+    if (!id || !playingRef.current.length) return {};
+    return { ear: laneEars.current.get(id), ...laneLive.current.get(id) };
+  }, []);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
      line and clock follow this every frame; `at` follows it a few times a
@@ -936,6 +945,7 @@ export default function ProBooth({
       const bus = wireMaster(ctx, master, master.gain * trim, scopeRef.current);
 
       laneEars.current.clear();
+      laneLive.current.clear();
       /* The ducks' hits from their keys as they are now, as the mixdown does. */
       const heard = audible(withDucks(lanes, meter.bpm));
       const returns = anySends(heard) ? wireReturns(ctx, bus, meter.bpm) : undefined;
@@ -947,6 +957,7 @@ export default function ProBooth({
         ear.connect(bus);
         laneEars.current.set(lane.id, ear);
         const source = wireLane(ctx, lane, ear, returns);
+        laneLive.current.set(lane.id, liveOf(source));
         /* Joining part-way through, and stopping where the lane is cut — both
            worked out in `startLane`, which the render calls too. This was four
            lines here and four more in `mixSession`, and a cut added to one of
@@ -6728,6 +6739,8 @@ export default function ProBooth({
      Nothing to rack when no lane is picked, and that is said rather than
      shown as an empty panel — a rack with no lane under it looks broken. */
   const fxLane = lanes.find((one) => one.id === picked);
+  /* The lane the rack's live meters read: a ref, so the meters' frame loop keeps running as the lane changes. */
+  liveFor.current = fxLane?.id ?? null;
   const fxDesk = (
     <>
       {lanePick}
@@ -6769,6 +6782,7 @@ export default function ProBooth({
             onTune={(how) => { void tuneLane(fxLane, how); }}
             tuning={tuning}
             keyRoot={Math.max(0, (KEYS as readonly string[]).indexOf(meter.key))}
+            live={liveRack}
           />
         </Card>
       ) : (

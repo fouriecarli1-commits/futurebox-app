@@ -403,6 +403,9 @@ export interface Chain {
   readonly output: AudioNode;
   /** Oscillators the chain needs running. `wireLane` starts them. */
   readonly running: readonly AudioScheduledSourceNode[];
+  /** The compressor and the limiter, when on, so a meter can read how hard they are working. */
+  readonly squash?: DynamicsCompressorNode;
+  readonly stop?: DynamicsCompressorNode;
 }
 
 /**
@@ -591,8 +594,11 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
     add(shaper);
   }
 
+  let squashNode: DynamicsCompressorNode | undefined;
+  let stopNode: DynamicsCompressorNode | undefined;
   if (fx.compressor) {
     const squash = ctx.createDynamicsCompressor();
+    squashNode = squash;
     squash.threshold.value = fx.compressor.threshold;
     squash.ratio.value = fx.compressor.ratio;
     squash.attack.value = fx.compressor.attack;
@@ -603,6 +609,7 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
 
   if (fx.limiter) {
     const stop = ctx.createDynamicsCompressor();
+    stopNode = stop;
     stop.threshold.value = fx.limiter.ceiling;
     stop.ratio.value = 20;
     stop.attack.value = 0.001;
@@ -795,5 +802,5 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
     dry.connect(room).connect(wet).connect(output);
   }
 
-  return { input, output, running };
+  return { input, output, running, squash: squashNode, stop: stopNode };
 }
