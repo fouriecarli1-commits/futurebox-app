@@ -254,8 +254,12 @@ try {
   await page.locator('button').filter({ hasText: /^Use this take here/ }).first().click();
   await page.waitForTimeout(600);
   const lanesAfterComp = (await names()).length;
+  /* The chosen pass becomes three pieces (+2), and every other pass that
+     reaches the phrase becomes two (+1 each). The last pass stops where the
+     recording stopped, so it may end before the phrase and be left whole. */
+  const added = lanesAfterComp - lanesBeforeComp;
   check('"Use this take here" plays that pass in the phrase and cuts the phrase from the others',
-    lanesAfterComp === lanesBeforeComp + 2 + (passes.length - 1), `${lanesBeforeComp} → ${lanesAfterComp} with ${passes.length} passes`);
+    added >= 2 + (passes.length - 2) && added <= 2 + (passes.length - 1), `${lanesBeforeComp} → ${lanesAfterComp} with ${passes.length} passes`);
   await page.screenshot({ path: shot('dawmeters-comp.png') });
 
   /* ── Drum pads: a style chosen, a step changed, put on a lane ────────── */
