@@ -71,8 +71,26 @@ try {
   await p.waitForTimeout(800);
   await p.locator('[data-footage]').scrollIntoViewIfNeeded().catch(() => undefined);
 
-  check('three AI choices for the shot: the background, an item, and sound',
-    (await p.locator('[data-footagejob]').count()) === 3 && (await p.locator('[data-footagejob="sound"]').count()) === 1);
+  check('five AI choices for the shot: change it, an item, the background, a new shape, and sound',
+    (await p.locator('[data-footagejob]').count()) === 5 && (await p.locator('[data-footagejob="sound"]').count()) === 1);
+
+  /* ── Change it in words, and a new shape (30 October 2026) ──────────
+     The owner: changes on a video go through the whole clip. Both are
+     priced per five seconds on the button, and wait for what they need. */
+  await p.locator('[data-footagejob="change"]').click();
+  await p.waitForTimeout(300);
+  const changeGo = p.locator('[data-footagego]');
+  check('changing it in words says its price on the button', /Change every frame/.test(await changeGo.innerText()) && /credit/.test(await changeGo.innerText()), await changeGo.innerText());
+  check('  and offers ideas to change it with, dealt again on a press', (await p.locator('[data-footage] [data-ideachip]').count()) >= 3 && (await p.locator('[data-footage] [data-idearefresh]').count()) === 1);
+  await p.locator('[data-footage] [data-ideachip]').first().click();
+  check('  and a picked idea lands in the words', (await p.locator('[data-footagechangewords]').inputValue()).length > 4);
+  await p.locator('[data-footagejob="reframe"]').click();
+  await p.waitForTimeout(300);
+  check('a new shape offers tall, square, portrait and wide, tall first', (await p.locator('[data-footageshape]').count()) === 4
+    && (await p.locator('[data-footageshape="9:16"]').getAttribute('aria-pressed')) === 'true');
+  await p.locator('[data-footageshape="1:1"]').click();
+  check('  and the one pressed is the one chosen', (await p.locator('[data-footageshape="1:1"]').getAttribute('aria-pressed')) === 'true');
+  check('  with its price on the button', /Fill it to the new shape/.test(await changeGo.innerText()) && /credit/.test(await changeGo.innerText()), await changeGo.innerText());
   await p.locator('[data-footagejob="sound"]').click();
   await p.waitForTimeout(300);
   const go = p.locator('[data-footagego]');
@@ -102,4 +120,4 @@ if (problems.length) {
   console.error(`\naudit/footagesound — ${problems.length} problem(s).`);
   process.exit(1);
 }
-console.log('\naudit/footagesound — three AI presses on a shot, sound priced on its button, both yeses asked, and a press that cannot go says why.');
+console.log('\naudit/footagesound — five AI presses on a shot, sound priced on its button, both yeses asked, and a press that cannot go says why.');

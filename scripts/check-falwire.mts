@@ -68,6 +68,24 @@ ok('  one price a clip, said on the button, never under two', CREDITS.clipSound 
   && /job === 'sound' \? CREDITS\.clipSound/.test(route) && /job === 'sound' \? CREDITS\.clipSound/.test(screen));
 ok('  and what it should sound like is screened like any other words', /if \(words\) \{\s*const screened = await guard\(request, words, 'footage', caller\)/.test(route));
 
+/* A whole clip changed in words, or filled out to a new shape (30 October
+   2026): fal.ai's own models, the safety checker on (VACE's is off unless
+   asked), 720p, and priced per five seconds on the button. */
+const change = inputFor('change', 'https://example.test/clip.mp4', 'make it night', 7);
+const longest = inputFor('change', 'x', 'y', 99);
+const shorter = inputFor('change', 'x', 'y', 1);
+ok('a clip changed in words is fal.ai\'s own Wan VACE, with its safety checker on',
+  FAL_MODELS.change === 'fal-ai/wan-vace-14b' && change.enable_safety_checker === true && change.prompt === 'make it night' && change.resolution === '720p');
+ok('  made for the clip\'s own length, within the 81 to 241 frames it makes',
+  change.num_frames === 113 && longest.num_frames === 241 && shorter.num_frames === 81);
+const reframe = inputFor('reframe', 'x', '', 10, '1:1');
+ok('a clip filled out to a new shape is fal.ai\'s own, safety checker on, 720p, the shape asked for',
+  FAL_MODELS.reframe === 'fal-ai/ltx-2.3/reframe' && reframe.enable_safety_checker === true && reframe.aspect_ratio === '1:1' && reframe.resolution === '720p');
+ok('  both priced per five seconds, at 80% or more, on the route and on the button',
+  CREDITS.clipChange >= 25 && CREDITS.clipReframe >= 31
+  && /change: CREDITS\.clipChange, reframe: CREDITS\.clipReframe/.test(route) && /change: CREDITS\.clipChange, reframe: CREDITS\.clipReframe/.test(screen));
+ok('  a change needs words, a new shape needs a shape', /job === 'change' && !words/.test(route) && /job === 'reframe' && !shape/.test(route));
+
 /* ── Bring to life (`lib/becomes.ts`, `app/api/become`), 27 October 2026 ── */
 const become = readFileSync('app/api/become/route.ts', 'utf8');
 const bench = readFileSync('app/components/BecomeBench.tsx', 'utf8');

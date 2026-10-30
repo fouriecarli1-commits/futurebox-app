@@ -262,3 +262,19 @@ export const SHAPE_IDEAS: readonly PromptIdea[] = [
   ['an origami bird', '’n origami-voël'],
   ['a vinyl record', '’n plaat'],
 ];
+
+/** A whole clip changed in words in the Video Editor (`fal-ai/wan-vace-14b`): a new look, the same movement. */
+export const CLIP_CHANGE_IDEAS: readonly PromptIdea[] = [
+  ['make it night with neon lights', 'maak dit nag met neonligte'],
+  ['a synthwave world, pink and purple', '’n synthwave-wêreld, pienk en pers'],
+  ['make it snow', 'laat dit sneeu'],
+  ['turn it into a cartoon', 'maak dit ’n spotprent'],
+  ['golden hour, warm and soft', 'goue uur, warm en sag'],
+  ['a rainy city street at night', '’n reënerige stadstraat in die nag'],
+  ['make it look like an old film', 'laat dit lyk soos ’n ou film'],
+  ['a glowing hologram look', '’n gloeiende hologram-voorkoms'],
+  ['underwater, with light rays', 'onder die water, met ligstrale'],
+  ['a comic book drawing', '’n strokiesprent-tekening'],
+  ['in the desert at sunset', 'in die woestyn met sonsondergang'],
+  ['make it look like claymation', 'laat dit lyk soos kleianimasie'],
+];

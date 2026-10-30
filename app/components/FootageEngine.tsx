@@ -18,16 +18,24 @@
  * comes back onto the clock beside the shot it was made from.
  */
 import React, { useEffect, useState } from 'react';
-import { AudioLines, Eraser, Loader2, UserRoundX } from 'lucide-react';
+import { AudioLines, Eraser, Loader2, RectangleVertical, UserRoundX, Wand2 } from 'lucide-react';
+import IdeaChips from './IdeaChips';
+import { CLIP_CHANGE_IDEAS } from '../lib/promptideas';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { CREDITS, creditsSaid, filterCost } from '../lib/credits';
 import { measure } from '../lib/stitch';
 import { shrinkClip } from '../lib/shrinkclip';
 
-type Job = 'cutout' | 'erase' | 'sound';
+type Job = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe';
 /** The same limits as the route: the item remover works on about eight
-    seconds, and sound is made for up to thirty. */
-const MOST_SECONDS: Readonly<Record<Job, number>> = { cutout: 20, erase: 8, sound: 30 };
+    seconds, sound is made for up to thirty, and a change for up to ten. */
+const MOST_SECONDS: Readonly<Record<Job, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20 };
+/** What each costs per five seconds; sound is one price a clip. */
+const RATE: Readonly<Record<Job, number>> = {
+  cutout: CREDITS.cutout, erase: CREDITS.erase, sound: CREDITS.clipSound, change: CREDITS.clipChange, reframe: CREDITS.clipReframe,
+};
+/** The shapes a clip can be filled out to, as the route takes them. */
+const SHAPES = [['9:16', 'tall'], ['1:1', 'square'], ['4:5', 'portrait'], ['16:9', 'wide']] as const;
 const TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 export default function FootageEngine({
@@ -46,6 +54,7 @@ export default function FootageEngine({
   const [seconds, setSeconds] = useState<number | null>(null);
   const [job, setJob] = useState<Job>('cutout');
   const [words, setWords] = useState('');
+  const [shape, setShape] = useState<(typeof SHAPES)[number][0]>('9:16');
   const [abroad, setAbroad] = useState(false);
   const [adult, setAdult] = useState(false);
   const [state, setState] = useState<'idle' | 'sending' | 'working'>('idle');
@@ -60,10 +69,10 @@ export default function FootageEngine({
   }, [clip]);
 
   /* Sound is one price a clip; the other two are per five seconds. */
-  const price = seconds ? (job === 'sound' ? CREDITS.clipSound : filterCost(seconds, CREDITS[job])) : null;
+  const price = seconds ? (job === 'sound' ? CREDITS.clipSound : filterCost(seconds, RATE[job])) : null;
   const tooLong = seconds !== null && seconds > MOST_SECONDS[job];
   const ready = Boolean(clip) && seconds !== null && !tooLong && abroad && adult
-    && (job !== 'erase' || words.trim().length > 0) && state === 'idle';
+    && ((job !== 'erase' && job !== 'change') || words.trim().length > 0) && state === 'idle';
 
   const go = async (): Promise<void> => {
     if (!clip || !seconds) return;
@@ -74,7 +83,7 @@ export default function FootageEngine({
       if (!token) { setSaid(t('foot.signIn', 'Sign in first — this uses credits.')); setState('idle'); return; }
       /* The background remover bills by the megapixel: 720p goes, made so
          here (`lib/shrinkclip.ts`). The item remover is one price a clip. */
-      const sent = job === 'cutout' ? await shrinkClip(clip) : clip;
+      const sent = job === 'cutout' || job === 'change' ? await shrinkClip(clip) : clip;
       const size = await measure(sent).catch(() => ({ width: 0, height: 0 }));
       const plain = sent.type.split(';')[0];
       const type = TYPES.includes(plain) ? plain : 'video/mp4';
@@ -89,7 +98,7 @@ export default function FootageEngine({
       const started = await fetch('/api/footage', {
         method: 'POST',
         headers: auth,
-        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, pixels: size.width * size.height, words: words.trim(), abroad, adult }),
+        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, pixels: size.width * size.height, words: words.trim(), shape, abroad, adult }),
       });
       const job0 = await started.json().catch(() => ({})) as { ticket?: string; message?: string };
       if (!started.ok || !job0.ticket) { setSaid(job0.message ?? t('foot.noStart', 'That did not start. Nothing was charged.')); setState('idle'); return; }
@@ -104,7 +113,11 @@ export default function FootageEngine({
           const got = await fetch(at.url);
           const blob = await got.blob();
           const kind = blob.type || 'video/webm';
-          const said = job === 'cutout' ? t('foot.cutoutName', 'no background') : job === 'sound' ? t('foot.soundName', 'with sound') : t('foot.eraseName', 'taken out');
+          const said = job === 'cutout' ? t('foot.cutoutName', 'no background')
+            : job === 'sound' ? t('foot.soundName', 'with sound')
+              : job === 'change' ? t('foot.changeName', 'changed')
+                : job === 'reframe' ? shape
+                  : t('foot.eraseName', 'taken out');
           onBack(new File([blob], `${name} · ${said}.${kind.includes('mp4') ? 'mp4' : 'webm'}`, { type: kind }));
           setSaid(t('foot.done', 'Done. The new clip is on the clock, beside the shot it came from.'));
           setState('idle');
@@ -131,10 +144,12 @@ export default function FootageEngine({
         <p className="text-sm text-zinc-400" data-footagenone>{t('foot.pick', 'Pick a shot on the clock first.')}</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2" role="group">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="group">
             {([
-              ['cutout', UserRoundX, t('foot.cutout', 'The background')],
+              ['change', Wand2, t('foot.change', 'Change it')],
               ['erase', Eraser, t('foot.erase', 'An item')],
+              ['cutout', UserRoundX, t('foot.cutout', 'The background')],
+              ['reframe', RectangleVertical, t('foot.reframe', 'New shape')],
               ['sound', AudioLines, t('foot.sound', 'Sound')],
             ] as const).map(([id, Icon, label]) => (
               <button
@@ -155,8 +170,44 @@ export default function FootageEngine({
               ? t('foot.cutoutWhat', 'Keeps the people and takes away everything behind them, so you can put them anywhere. Up to 20 seconds.')
               : job === 'sound'
                 ? t('foot.soundWhat', 'A silent shot gets the sound of what is happening in it: footsteps, rain, traffic, a crowd. Say what you want to hear, or leave it to the picture. Up to 30 seconds.')
-                : t('foot.eraseWhat', 'Say one thing in the shot and it disappears from every frame. Up to 8 seconds.')}
+                : job === 'change'
+                  ? t('foot.changeWhat', 'Say how it should look and every frame changes, moving just as it did. Up to 10 seconds.')
+                  : job === 'reframe'
+                    ? t('foot.reframeWhat', 'Wide to tall, or tall to wide: the sides are filled in, nothing is cropped off. Up to 20 seconds.')
+                    : t('foot.eraseWhat', 'Say one thing in the shot and it disappears from every frame. Up to 8 seconds.')}
           </p>
+          {job === 'change' && (
+            <>
+              <input
+                type="text"
+                value={words}
+                maxLength={200}
+                onChange={(event) => setWords(event.target.value)}
+                placeholder={t('foot.howChange', 'How it should change — e.g. make it night, neon rain')}
+                aria-label={t('foot.howChange', 'How it should change — e.g. make it night, neon rain')}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-white"
+                data-footagechangewords
+              />
+              <IdeaChips pool={CLIP_CHANGE_IDEAS} onPick={(idea) => setWords(idea)} glow="#22D3EE" t={t} />
+            </>
+          )}
+          {job === 'reframe' && (
+            <div className="grid grid-cols-4 gap-2" role="group" data-footageshapes>
+              {SHAPES.map(([id, name]) => (
+                <button
+                  key={id}
+                  type="button"
+                  data-footageshape={id}
+                  aria-pressed={shape === id}
+                  onClick={() => setShape(id)}
+                  className={`inline-flex min-h-[44px] w-full flex-col items-center justify-center rounded-xl border px-1 text-xs font-semibold leading-tight ${shape === id ? 'border-emerald-400 bg-emerald-500/15 text-emerald-100' : 'border-zinc-700 text-zinc-200'}`}
+                >
+                  <span>{id}</span>
+                  <span className="text-[10px] font-normal opacity-80">{t(`foot.shape.${name}`, name === 'tall' ? 'Tall' : name === 'square' ? 'Square' : name === 'portrait' ? 'Portrait' : 'Wide')}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {job === 'sound' && (
             <input
               type="text"
@@ -183,7 +234,9 @@ export default function FootageEngine({
           )}
           {tooLong && (
             <p className="text-sm text-amber-300" data-footagetoolong>
-              {job === 'erase'
+              {job === 'change'
+                ? t('foot.tooLongChange', 'A clip of up to 10 seconds can be changed. Trim it on your phone first, or split it into pieces.')
+                : job === 'erase'
                 ? t('foot.tooLongErase', 'An item can be taken out of clips of up to 8 seconds. Trim it on your phone first, or split it into pieces.')
                 : job === 'sound'
                   ? t('foot.tooLongSound', 'Sound can be made for clips of up to 30 seconds. Trim it on your phone first, or split it into pieces.')
@@ -210,7 +263,11 @@ export default function FootageEngine({
               ? t('foot.sending', 'Sending the clip…')
               : state === 'working'
                 ? t('foot.working', 'Working on it…')
-                : `${job === 'cutout' ? t('foot.goCutout', 'Take the background out') : job === 'sound' ? t('foot.goSound', 'Give it sound') : t('foot.goErase', 'Take it out')}${price ? ` · ${creditsSaid(price, t)}` : ''}`}
+                : `${job === 'cutout' ? t('foot.goCutout', 'Take the background out')
+                  : job === 'sound' ? t('foot.goSound', 'Give it sound')
+                    : job === 'change' ? t('foot.goChange', 'Change every frame')
+                      : job === 'reframe' ? t('foot.goReframe', 'Fill it to the new shape')
+                        : t('foot.goErase', 'Take it out')}${price ? ` · ${creditsSaid(price, t)}` : ''}`}
           </button>
         </>
       )}

@@ -37,7 +37,7 @@ import { CREDITS, filterCost } from '@/app/lib/credits';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { wrote } from '@/app/lib/server/wrote';
-import { FAL_MODELS, falProgress, falReady, falSubmit, inputFor, type FalJob } from '@/app/lib/server/fal';
+import { FAL_MODELS, REFRAME_SHAPES, falProgress, falReady, falSubmit, inputFor, type FalJob } from '@/app/lib/server/fal';
 import { seal, unseal } from '@/app/lib/server/falticket';
 
 export const runtime = 'nodejs';
@@ -46,14 +46,18 @@ export const dynamic = 'force-dynamic';
 const BUCKET = 'videos';
 /** How long a clip each job takes. An item out works on about eight
     seconds at most (`ERASE_FRAMES`), so a longer one would come back cut. */
-const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8, sound: 30 };
+const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20 };
+/** What each job costs per five seconds; sound is one price a clip. */
+const RATE: Readonly<Record<FalJob, number>> = {
+  cutout: CREDITS.cutout, erase: CREDITS.erase, sound: CREDITS.clipSound, change: CREDITS.clipChange, reframe: CREDITS.clipReframe,
+};
 /** The background remover bills by the megapixel, so it is sent 720p:
     `lib/shrinkclip.ts` makes it so on the phone. A little over is allowed
     for a phone's own rounding. */
 const MOST_PIXELS = 1280 * 720 * 1.05;
 const LINK_SECONDS = 15 * 60;
 const TYPES: Readonly<Record<string, string>> = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' };
-const JOBS: readonly FalJob[] = ['cutout', 'erase', 'sound'];
+const JOBS: readonly FalJob[] = ['cutout', 'erase', 'sound', 'change', 'reframe'];
 
 interface Ticket {
   readonly id: string;
@@ -106,6 +110,7 @@ export async function POST(request: Request): Promise<Response> {
   const seconds = Number(body.seconds);
   const words = typeof body.words === 'string' ? body.words.trim().slice(0, 200) : '';
   const pixels = Number(body.pixels);
+  const shape = REFRAME_SHAPES.find((one) => one === body.shape) ?? null;
   if (!job) return Response.json({ message: 'Say which job.' }, { status: 400 });
   if (!path.startsWith(`${caller.id}/footage/`) || path.includes('..')) {
     return Response.json({ message: 'That clip is not yours to send.' }, { status: 403 });
@@ -123,10 +128,12 @@ export async function POST(request: Request): Promise<Response> {
   if (seconds > MOST_SECONDS[job]) {
     return Response.json({ message: `Clips of up to ${MOST_SECONDS[job]} seconds can go. Trim it on your phone first, or split it into pieces.` }, { status: 413 });
   }
-  if (job === 'cutout' && (!Number.isFinite(pixels) || pixels > MOST_PIXELS)) {
+  if ((job === 'cutout' || job === 'change') && (!Number.isFinite(pixels) || pixels > MOST_PIXELS)) {
     return Response.json({ message: 'This phone could not make the clip small enough to send. Save it at 720p and bring it in again.' }, { status: 413 });
   }
   if (job === 'erase' && !words) return Response.json({ message: 'Say what to take out of the clip.' }, { status: 400 });
+  if (job === 'change' && !words) return Response.json({ message: 'Say how the clip should change.' }, { status: 400 });
+  if (job === 'reframe' && !shape) return Response.json({ message: 'Say which shape the clip should become.' }, { status: 400 });
 
   /* The words first, strictly: refused when the check cannot run. A
      background removal has no words, and fal.ai's own screening reads the
@@ -137,7 +144,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   /* Sound is one price a clip: it costs fal.ai a tenth of a cent a second. */
-  const credits = job === 'sound' ? CREDITS.clipSound : filterCost(seconds, CREDITS[job]);
+  const credits = job === 'sound' ? CREDITS.clipSound : filterCost(seconds, RATE[job]);
   const paid = await charge(request, credits, `footage:${job}`);
   if (!paid.ok) return paid.response;
 
@@ -147,7 +154,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'The clip did not arrive. Bring it in again and try once more.' }, { status: 404 });
   }
 
-  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words, seconds));
+  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words, seconds, shape ?? undefined));
   if ('error' in sent) {
     await paid.refund();
     console.error(`[footage] ${FAL_MODELS[job]} would not take the job: ${sent.error}`);

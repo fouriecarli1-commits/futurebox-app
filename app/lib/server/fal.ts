@@ -30,7 +30,11 @@
  * one-line change.
  */
 
-export type FalJob = 'cutout' | 'erase' | 'sound';
+export type FalJob = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe';
+
+/** The shapes a clip can be filled out to (`fal-ai/ltx-2.3/reframe`). */
+export const REFRAME_SHAPES = ['9:16', '1:1', '4:5', '16:9'] as const;
+export type ReframeShape = (typeof REFRAME_SHAPES)[number];
 
 /** fal.ai's own models only. See the note above on partner models. */
 export const FAL_MODELS: Readonly<Record<FalJob, string>> = {
@@ -39,6 +43,14 @@ export const FAL_MODELS: Readonly<Record<FalJob, string>> = {
   /* Sound for a silent shot (step 2 of `docs/FAL-MODELLE.md`): fal.ai's
      MMAudio, $0.001 a second; the clip comes back with its sound on it. */
   sound: 'fal-ai/mmaudio-v2',
+  /* The whole clip changed from words, every frame, keeping how it moves
+     (`task: 'depth'` follows the clip's own shapes): fal.ai's own Wan VACE,
+     $0.08 a second at 720p. Its safety checker is off by default and is
+     switched on here, as every model's is. */
+  change: 'fal-ai/wan-vace-14b',
+  /* A clip made tall, square or wide by filling in the sides instead of
+     cropping: $0.10 a second of the clip sent, at 720p. */
+  reframe: 'fal-ai/ltx-2.3/reframe',
 };
 
 /** How long fal.ai may keep the finished clip on its CDN. */
@@ -73,7 +85,23 @@ function headers(): Record<string, string> {
 }
 
 /** What each model is sent. `words` is what the member typed to take out, or what it should sound like. */
-export function inputFor(job: FalJob, videoUrl: string, words: string, seconds = 8): Record<string, unknown> {
+export function inputFor(job: FalJob, videoUrl: string, words: string, seconds = 8, shape: ReframeShape = '9:16'): Record<string, unknown> {
+  if (job === 'change') {
+    return {
+      video_url: videoUrl,
+      prompt: words,
+      task: 'depth',
+      resolution: '720p',
+      /* Sixteen frames a second, the model's own, for as long as the clip
+         is, within the 81 to 241 frames it makes. */
+      num_frames: Math.max(81, Math.min(CHANGE_FRAMES, Math.round(seconds * 16) + 1)),
+      frames_per_second: 16,
+      enable_safety_checker: true,
+    };
+  }
+  if (job === 'reframe') {
+    return { video_url: videoUrl, aspect_ratio: shape, resolution: '720p', enable_safety_checker: true };
+  }
   if (job === 'sound') {
     return {
       video_url: videoUrl,
@@ -97,6 +125,9 @@ export function inputFor(job: FalJob, videoUrl: string, words: string, seconds =
 
 /** The window VOID works on, at most; see `ERASE_MOST_SECONDS`. */
 export const ERASE_FRAMES = 197;
+
+/** The most frames Wan VACE makes: about fifteen seconds at sixteen a second. Clips are held to ten. */
+export const CHANGE_FRAMES = 241;
 
 export interface Submitted {
   readonly id: string;

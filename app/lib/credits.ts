@@ -989,6 +989,19 @@ export const CREDITS = {
      of up to thirty seconds: three credits is R4.50 at the cheapest tier,
      88%, and never under two (*"Niks 1 credit nie. Altyd 2."*). */
   clipSound: 3,
+  /* ── Two more presses for a whole clip, 30 October 2026 ──────────────
+     The owner: *"Baie van die photo editor funksies kan by video ook wees
+     ... veranderinge op 'n video moet regdeur die hele frame trek."* Both
+     fal.ai's own models (not partner APIs, not pending), priced per five
+     seconds like `cutout`, at R18.50 to the dollar against the cheapest
+     credit (R1.50), by the 80% rule:
+     change it in words, `fal-ai/wan-vace-14b` at 720p, $0.08 a second:
+     five seconds is $0.40 (R7.40); 25 credits is R37.50, 80%;
+     a new shape, filled in rather than cropped, `fal-ai/ltx-2.3/reframe` at
+     720p, $0.10 a second of the clip sent: five seconds is $0.50 (R9.25);
+     31 credits is R46.50, 80%. */
+  clipChange: 25,
+  clipReframe: 31,
   /* Make my photo good (`lib/restore.ts`), priced off the fal.ai pages the
      owner read on 29 October 2026, at R18.50 to the dollar against the
      cheapest credit (R1.50), by her 80% rule and never under two:
