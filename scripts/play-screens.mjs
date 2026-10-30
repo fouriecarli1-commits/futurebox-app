@@ -36,6 +36,9 @@ const SCREENS = [
   ['04-video-desk', 'Describe a shot. *Get the video.*', 'Start from a kind of video and make it yours'],
   ['05-photo-editor', 'Edit photos *like a pro*', 'Crop, filters, magic touch, text and designs'],
   ['06-adverts', 'Adverts for *your business*', 'Say what you sell — it writes, films and posts'],
+  ['07-radar', 'Find your *collab match*', 'Collab Radar scores who sounds like you'],
+  ['08-hooks', 'Cut the hook *that hits*', 'The fifteen seconds of your song worth posting'],
+  ['09-cubed', 'Classes from *the pros*', 'Cubed³ class: learn from people who do it'],
 ];
 /* The same lines for the Afrikaans listing, over the app in Afrikaans. */
 const SCREENS_AF = [
@@ -44,6 +47,9 @@ const SCREENS_AF = [
   ['04-video-desk', 'Beskryf ’n skoot. *Kry die video.*', 'Begin by ’n soort video en maak dit joune'],
   ['05-photo-editor', 'Redigeer foto’s *soos ’n pro*', 'Sny, filters, towerkuns, teks en ontwerpe'],
   ['06-adverts', 'Advertensies vir *jou besigheid*', 'Vertel wat jy verkoop, en dit maak jou advertensie'],
+  ['07-radar', 'Vind jou *samewerkingsmaat*', 'Collab Radar meet wie soos jy klink'],
+  ['08-hooks', 'Sny die hook *wat vat*', 'Die vyftien sekondes van jou liedjie wat werd is om te plaas'],
+  ['09-cubed', 'Klasse van *die kenners*', 'Cubed³-klas: leer by mense wat dit doen'],
 ];
 
 const page = (shot, head, line) => `<!doctype html><html><head><meta charset="utf-8"><style>

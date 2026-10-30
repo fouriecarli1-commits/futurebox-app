@@ -599,9 +599,12 @@ no location, contacts, local network, files, SMS or call log.
 - [ ] Japan left out of the countries, or its payments authorisation done by 1 December 2026
 - [x] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
       3840 pixels on the long side. **The ones to upload are in
-      `docs/play/store/`**: five at 1080 x 1920, each a real screen in a phone
-      under one line — the studio, Make a song, the video desk, the photo
-      editor and the advert desk — made on 19 October 2026 by
+      `docs/play/store/`** (English) and **`docs/play/store/af/`** (Afrikaans):
+      eight each, the most Play takes, at 1080 x 1920, each a real screen in a
+      phone under one line — the studio, Make a song, the video desk, the
+      photo editor (with the lighthouse picture, `docs/play/lighthouse.jpg`),
+      the advert desk, Collab Radar's sweep, Hooks and Cubed class — retaken
+      on 30 October 2026 by
       `node scripts/play-screens.mjs` from the raw screens in
       `docs/play/shots/`, which `npm run play:shots` (`audit/storeshots.mjs`)
       takes off the built app. Left out on purpose: the kids room (the

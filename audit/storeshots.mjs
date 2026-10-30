@@ -127,7 +127,7 @@ try {
       await bench.click();
       await page.waitForTimeout(600);
     }
-    await page.locator('[data-poststudio] input[type=file]').first().setInputFiles('public/welcome-cover.jpg');
+    await page.locator('[data-poststudio] input[type=file]').first().setInputFiles('docs/play/lighthouse.jpg');
     await page.waitForTimeout(2000);
     /* The bench shut again, so the photograph has the screen. */
     if (await bench.count()) {
@@ -135,6 +135,37 @@ try {
       await page.waitForTimeout(600);
     }
     await shoot(page, '05-photo-editor');
+    await browser.close();
+  }
+
+  /* ── 07 Collab Radar with the radar sweeping, 08 Hooks ──────────────── */
+  {
+    const { browser, page } = await enter({ ...PHONE, at: server.url });
+    await studio(page);
+    /* Folded and from the top, as the other rooms are: the radar is the
+       first thing in the room, and Hooks opens on what it does. */
+    await toRoom(page, 'Collab Radar', { folded: true });
+    await page.waitForTimeout(2500);
+    /* The radar itself at the top. Above it on this machine is the notice
+       that the collaboration tables are missing, which they are only here. */
+    /* Low enough that the list of shows under it sits behind the tab bar:
+       those are real shows by name, which a store listing must not carry. */
+    await bringUp(page, '[data-collabradar]', 150);
+    await page.waitForTimeout(1500);
+    await shoot(page, '07-radar');
+    await toRoom(page, 'Hooks', { folded: true });
+    await page.waitForTimeout(2000);
+    await bringUp(page, '[data-hooksroom] h4', 24);
+    await shoot(page, '08-hooks');
+    await browser.close();
+  }
+
+  /* ── 09 Cubed class, its own page ───────────────────────────────────── */
+  {
+    const { browser, page } = await enter({ ...PHONE, at: server.url });
+    await page.goto(`${server.url}/cubed`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1500);
+    await shoot(page, '09-cubed');
     await browser.close();
   }
 } finally {

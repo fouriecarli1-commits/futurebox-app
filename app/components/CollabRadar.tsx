@@ -101,7 +101,7 @@ function RadarHUD({
   readonly t: (key: string, fallback: string) => string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-linear-to-b from-zinc-950 via-cyan-950/20 to-black p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
+    <div data-collabradar className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-linear-to-b from-zinc-950 via-cyan-950/20 to-black p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
       {/* Top telemetry status line */}
       <div className="flex items-center justify-between pb-3 border-b border-cyan-500/20 text-xs">
         <div className="flex items-center gap-2">
@@ -447,7 +447,10 @@ export default function CollabRadar({
                         a name and nothing else yet, and `· · Unknown` under
                         it reads as a row that failed to load. */}
                     <p className="text-[13px] text-zinc-500">
-                      {[podcast.host, podcast.format, podcast.audience]
+                      {/* The format and the audience are words about the
+                          show, so they are said in the room's language; a
+                          show typed in by hand keeps what was typed. */}
+                      {[podcast.host, t(`pod.${podcast.id}.format`, podcast.format), t(`pod.${podcast.id}.audience`, podcast.audience)]
                         .map((one) => one.trim())
                         .filter(Boolean)
                         .join(' · ')}
