@@ -461,6 +461,7 @@
     "check:keys": "tsx scripts/check-keys.mts",
     "check:timepitch": "tsx scripts/check-timepitch.mts",
     "check:mixcritic": "tsx scripts/check-mixcritic.mts",
+    "check:besttake": "tsx scripts/check-besttake.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",
     "check:cloudcopy": "tsx scripts/check-cloudcopy.mts",
     "check:kidsplaylists": "tsx scripts/check-kidsplaylists.mts",

@@ -352,7 +352,7 @@ export default function Greeting({
             <span className="text-base font-black tracking-tight text-white">FutureBox</span>
             <span className="fb-fx-chip inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Pro Studio Edition
+              {t('greet.edition', 'Pro Studio Edition')}
             </span>
           </div>
           <div className="flex items-center gap-3">

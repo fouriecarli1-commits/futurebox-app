@@ -41,6 +41,21 @@ import { critique, type Finding, type LaneHeard } from '../lib/mixcritic';
 import { failed, separate, separateParts } from '../lib/stems';
 import TimePitch from './TimePitch';
 import { clampSpeed, timeAndPitch } from '../lib/timepitch';
+import BestTake from './BestTake';
+import { MIN_SUNG_S, rankPasses, readPass, type PassScore } from '../lib/besttake';
+import { scaleOf } from '../lib/tune';
+
+/* A number for each recording, so the best-pass card belongs to one take:
+   its lanes get new ids when a phrase is comped, the recording does not. */
+const TAKE_IDS = new WeakMap<AudioBuffer, number>();
+let takesSeen = 0;
+const takeIdOf = (audio: AudioBuffer): number => {
+  const known = TAKE_IDS.get(audio);
+  if (known !== undefined) return known;
+  takesSeen += 1;
+  TAKE_IDS.set(audio, takesSeen);
+  return takesSeen;
+};
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
 import { ampMaker, ampName, through } from '../lib/nam';
@@ -3147,19 +3162,22 @@ export default function ProBooth({
    * nothing changes, so phrase by phrase the best of each pass is what plays.
    * One undoable step.
    */
-  const regionComp = useCallback(() => {
-    const got = carveHere();
-    if (!got || !region) return;
-    const chosen = got.lane;
+  const compWith = useCallback((chosen: Lane): boolean => {
+    if (!region) return false;
+    const carved = carveLane(chosen, region.from, region.to);
+    if (!carved) {
+      setProblem(t('pro.regionMiss', 'The marked piece does not cross that lane. Move the mark over it, or open the lane it does cross.'));
+      return false;
+    }
     const siblings = lanes.filter((one) => one.id !== chosen.id && !one.backing && one.audio === chosen.audio);
     if (!siblings.length) {
       setProblem(t('pro.compNone', 'There are no other passes of this take to choose between. Loop over a piece while recording and every pass comes back as its own lane.'));
-      return;
+      return false;
     }
     remember(t('undo.comp', 'choosing the take'));
     setLanes((was) => was.flatMap((one) => {
       if (one.id === chosen.id) {
-        const { before, inside, after } = got.carved;
+        const { before, inside, after } = carved;
         return [before, { ...inside, muted: false }, after].filter((piece): piece is Lane => Boolean(piece));
       }
       if (!siblings.some((sib) => sib.id === one.id)) return [one];
@@ -3167,9 +3185,99 @@ export default function ProBooth({
       return cut ? [cut.before, cut.after].filter((piece): piece is Lane => Boolean(piece)) : [one];
     }));
     setStale(true);
-    setPicked(got.carved.inside.id);
+    setPicked(carved.inside.id);
     setRegionOpen(false);
-  }, [carveHere, lanes, region, remember, t]);
+    return true;
+  }, [lanes, region, remember, t]);
+
+  const regionComp = useCallback(() => {
+    const got = carveHere();
+    if (!got) return;
+    compWith(got.lane);
+  }, [carveHere, compWith]);
+
+  /**
+   * One pass of a take plays, the others are muted: one undoable step. A pass
+   * is every lane of this recording with its name, since comping leaves a
+   * pass in pieces.
+   */
+  const keepPass = useCallback((take: AudioBuffer, pass: string) => {
+    remember(t('undo.best', 'choosing the best pass'));
+    setLanes((was) => was.map((one) => (!one.backing && one.audio === take ? { ...one, muted: one.name !== pass } : one)));
+    setStale(true);
+  }, [remember, t]);
+
+  /**
+   * The best pass of the open lane's take, chosen by listening
+   * (`lib/besttake.ts`): for the marked piece it is comped in exactly as a
+   * hand-picked pass is; for the whole take the winner plays and the other
+   * passes are muted, one undoable step. The scores come back to be shown,
+   * one per pass, named as the lanes are.
+   */
+  const bestPass = useCallback((where: 'all' | 'marked'): PassScore[] | null => {
+    const ctx = context();
+    const lane = lanes.find((one) => one.id === picked);
+    if (!ctx || !lane) return null;
+    const family = lanes.filter((one) => !one.backing && one.audio === lane.audio);
+    const passes = [...new Set(family.map((one) => one.name))];
+    if (passes.length < 2) {
+      setProblem(t('pro.compNone', 'There are no other passes of this take to choose between. Loop over a piece while recording and every pass comes back as its own lane.'));
+      return null;
+    }
+    const scale = scaleOf(sane(meter).key);
+    const monoOfPieces = (pieces: readonly Lane[]): Float32Array => {
+      const parts = pieces.map((one) => playsOf(one, ctx));
+      const out = new Float32Array(parts.reduce((sum, one) => sum + one.length, 0));
+      let at = 0;
+      for (const part of parts) {
+        for (let c = 0; c < part.numberOfChannels; c += 1) {
+          const from = part.getChannelData(c);
+          for (let i = 0; i < from.length; i += 1) out[at + i] += from[i] / part.numberOfChannels;
+        }
+        at += part.length;
+      }
+      return out;
+    };
+    const readings = passes.flatMap((pass) => {
+      let pieces = family.filter((one) => one.name === pass);
+      if (where === 'all') {
+        /* The whole pass as it was recorded, from its first piece's start to
+           its last piece's end: a phrase comped out of it earlier is not a
+           phrase it failed to sing. */
+        const windows = pieces.map((one) => windowOf(one));
+        pieces = [{ ...pieces[0], from: Math.min(...windows.map((w) => w.from)), to: Math.max(...windows.map((w) => w.to)), repeat: 1 }];
+      }
+      if (where === 'marked') {
+        pieces = pieces.flatMap((one) => {
+          const cut = region ? carveLane(one, region.from, region.to) : null;
+          return cut ? [cut.inside] : [];
+        });
+        if (!pieces.length) return [];
+      }
+      return [{ id: pass, reading: readPass(monoOfPieces(pieces), ctx.sampleRate, scale) }];
+    });
+    if (readings.length < 2) {
+      setProblem(t('best.tooFew', 'Fewer than two passes cross the marked piece, so there is nothing to choose between.'));
+      return null;
+    }
+    /* Nothing with a pitch in any pass: there is nothing to judge them by, and
+       a ranking of noise against noise would be a guess dressed as a score. */
+    if (Math.max(...readings.map((one) => one.reading.voiced)) < MIN_SUNG_S) {
+      setProblem(t('best.nothingSung', 'No singing or playing with a pitch in it was heard in these passes, so there is nothing to choose them by.'));
+      return null;
+    }
+    setProblem(null);
+    const scores = rankPasses(readings);
+    if (where === 'marked') {
+      const chosen = region
+        ? family.find((one) => one.name === scores[0].id && carveLane(one, region.from, region.to))
+        : undefined;
+      if (!chosen || !compWith(chosen)) return null;
+      return scores;
+    }
+    keepPass(lane.audio, scores[0].id);
+    return scores;
+  }, [compWith, context, keepPass, lanes, meter, picked, region, t]);
 
   /**
    * Round twice, and everything after it on that lane moves along.
@@ -3963,6 +4071,21 @@ export default function ProBooth({
             onApply={(speed, semitones) => bendLane(lane, speed, semitones)}
           />
         ))}
+
+        {/* ── The best pass, when the open lane is one of several ───── */}
+        {lanes.filter((one) => one.id === picked).map((lane) => {
+          const passes = new Set(lanes.filter((one) => !one.backing && one.audio === lane.audio).map((one) => one.name)).size;
+          return passes > 1 ? (
+            <BestTake
+              key={`best-${takeIdOf(lane.audio)}`}
+              t={t}
+              passes={passes}
+              marked={Boolean(region && region.to - region.from >= 0.1)}
+              onChoose={bestPass}
+              onKeep={(pass) => keepPass(lane.audio, pass)}
+            />
+          ) : null;
+        })}
 
         {!picked && (
           <p className="text-sm leading-snug" style={{ color: INK_DIM }}>

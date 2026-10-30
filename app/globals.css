@@ -2752,14 +2752,16 @@ button[aria-pressed='true']:not(.fb-fx-go):not([data-liveheart]):not([data-kidsr
 }
 
 /* A sheet — Export, Share, Report, the pickers — is the panel's glass, kept
-   nearly solid because there is a room behind it. Matched on the panel
+   solid because there is a room behind it. It was 97% and the room's own
+   large text showed through it as ghost words (the Afrikaans Play Store shot
+   of the song picker, 30 October 2026). Matched on the panel
    itself or the panel straight inside the dimmed backdrop, which is how
    every sheet here is built; a sheet that already wears a warning colour
    keeps it. */
 :is([role='dialog'][class*='rounded'][class*='border'], [role='dialog'] > div[class*='rounded'][class*='border']):not([class*='bg-amber']):not([class*='bg-rose']):not([class*='bg-red']):not([class*='bg-surface-50']):not([data-kidsroom] *):not([data-booth] *) {
   border-color: transparent !important;
   background:
-    linear-gradient(170deg, rgb(var(--fb-surface-900) / 0.97), rgb(var(--fb-surface-950) / 0.99)) padding-box,
+    linear-gradient(170deg, rgb(var(--fb-surface-900)), rgb(var(--fb-surface-950))) padding-box,
     linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.55), rgb(var(--fb-secondary-400) / 0.08) 45%, rgb(var(--fb-secondary-400) / 0.45)) border-box !important;
   box-shadow: 0 30px 80px -30px rgb(var(--fb-secondary-500) / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.06) !important;
 }

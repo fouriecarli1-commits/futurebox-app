@@ -1967,6 +1967,8 @@ jobs:
         run: npm run check:timepitch
       - name: ProBooth's mix critic hears what is there and fixes it in one step
         run: npm run check:mixcritic
+      - name: ProBooth chooses the pass that is in tune, all there, steady and clean
+        run: npm run check:besttake
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.

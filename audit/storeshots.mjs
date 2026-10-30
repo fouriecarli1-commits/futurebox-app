@@ -91,8 +91,11 @@ try {
     /* The plus open, so the shot shows the list of feelings and sounds and
        the box's own buttons under it. */
     await box.locator('[data-makeplus]').click();
-    await page.waitForTimeout(600);
+    /* Long enough for the list to finish coming in: at 600 ms the Afrikaans
+       shot caught it half faded, with the room showing through. */
+    await page.waitForTimeout(1500);
     await bringUp(page, '[data-makepicker]', 0);
+    await page.waitForTimeout(500);
     await shoot(page, '03-make-a-song');
     await browser.close();
   }

@@ -8,8 +8,31 @@
  *
  *   node audit/dawmeters.mjs [port]
  */
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { enter, studio, toRoom } from './enter.mjs';
 import { serve, shot } from './where.mjs';
+
+/* What the microphone hears: a sung A (220 Hz, a few harmonics) for twenty
+   seconds, looped by Chrome. The default fake microphone is a test beep with
+   no pitch in it, and "choose the best pass" rightly refuses to rank those. */
+const MIC = join(tmpdir(), 'dawmeters-mic.wav');
+{
+  const rate = 16000;
+  const samples = rate * 20;
+  const wav = Buffer.alloc(44 + samples * 2);
+  wav.write('RIFF', 0); wav.writeUInt32LE(36 + samples * 2, 4); wav.write('WAVE', 8);
+  wav.write('fmt ', 12); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 2, 28); wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34);
+  wav.write('data', 36); wav.writeUInt32LE(samples * 2, 40);
+  for (let i = 0; i < samples; i += 1) {
+    const ph = (2 * Math.PI * 220 * i) / rate;
+    const v = 0.25 * (Math.sin(ph) + 0.5 * Math.sin(2 * ph) + 0.25 * Math.sin(3 * ph));
+    wav.writeInt16LE(Math.round(v * 32767), 44 + i * 2);
+  }
+  writeFileSync(MIC, wav);
+}
 
 const PORT = process.argv[2] || '3498';
 const SECONDS = 8;
@@ -82,7 +105,7 @@ const SEED = `(${(async (seconds, rate) => {
 const server = await serve(PORT);
 const { browser, page } = await enter({
   width: 1440, height: 900, at: server.url, lang: 'en',
-  args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+  args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${MIC}`],
 });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
@@ -353,6 +376,29 @@ try {
     await page.waitForTimeout(300);
     check('  and a fix pressed takes its finding off the list', (await page.locator('[data-mixfinding]').count()) === findings - 1);
   }
+
+  /* ── The best pass: chosen by listening, every pass scored ── */
+  await page.getByRole('button', { name: /^Close this desk$/ }).first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-lanename]').filter({ hasText: /pass 2/ }).first().click();
+  await page.waitForTimeout(250);
+  await page.locator('[data-boothdesk="tracks"]').first().click();
+  await page.locator('[data-besttake]').first().waitFor({ timeout: 8000 });
+  const lanesBeforeBest = (await names()).length;
+  await page.locator('[data-bestall]').first().click();
+  await page.waitForTimeout(800);
+  const scored = await page.locator('[data-bestscore]').count();
+  check('choosing the best pass scores every pass of the take', scored >= 2, String(scored));
+  check('  and hears the singing in them, in tune', /[1-9]\d*% in tune/.test(await page.locator('[data-bestscores]').first().innerText()));
+  await page.locator('[data-bestscores]').first().scrollIntoViewIfNeeded().catch(() => {});
+  await page.screenshot({ path: shot('dawmeters-besttake.png') });
+  const other = page.locator('[data-bestpick]').first();
+  if (await other.count()) {
+    await other.click();
+    await page.waitForTimeout(300);
+    check('  and another pass can still be chosen with one press', (await page.locator('[data-bestpick]').count()) === scored - 1);
+  }
+  check('  and nothing is thrown away doing it: the other passes are muted, not removed', (await names()).length === lanesBeforeBest);
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));
