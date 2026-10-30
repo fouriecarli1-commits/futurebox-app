@@ -245,6 +245,38 @@ export function zoomAbout(crop: Crop, picture: Size, frame: Size, to: number): C
 }
 
 /**
+ * The same picture in the same place, loose (`whole`), so it can be pulled
+ * smaller than the frame by its ring. Smart crop and the size buttons fill
+ * the frame; the owner, 30 October 2026, wanted the ring there straight
+ * after, to size the photo by hand. Nothing moves on the screen: the scale
+ * and the place are carried over, within what `whole` allows.
+ */
+export function loosen(picture: Size, frame: Size, crop: Crop): Crop {
+  if (crop.basis === 'whole') return crop;
+  const wide = picture.width > 0 ? picture.width : 1;
+  const tall = picture.height > 0 ? picture.height : 1;
+  const was = place(picture, frame, crop);
+  const base = Math.min(frame.width / wide, frame.height / tall);
+  const zoom = saneZoom(was.width / wide / base);
+  const next = place(picture, frame, { basis: 'whole', zoom, x: 0, y: 0 });
+  return {
+    basis: 'whole',
+    zoom,
+    x: next.slackX > 0 ? held((was.left - (frame.width - next.width) / 2) / next.slackX, -1, 1) : 0,
+    y: next.slackY > 0 ? held((was.top - (frame.height - next.height) / 2) / next.slackY, -1, 1) : 0,
+  };
+}
+
+/** The part of a placed picture inside the frame: where its ring can be seen and caught. */
+export function seenPart(at: Placed, frame: Size): { readonly left: number; readonly top: number; readonly width: number; readonly height: number } {
+  const left = Math.max(0, at.left);
+  const top = Math.max(0, at.top);
+  const right = Math.min(frame.width, at.left + at.width);
+  const bottom = Math.min(frame.height, at.top + at.height);
+  return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+}
+
+/**
  * Whether the picture leaves any of the frame uncovered.
  *
  * Used to say so on screen rather than to prevent it: `whole` is a choice,

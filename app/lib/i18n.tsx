@@ -5477,6 +5477,8 @@ export const STRINGS: Dict = {
   "best.nothingSung": { en: "No singing or playing with a pitch in it was heard in these passes, so there is nothing to choose them by.", af: "Geen sang of spel met ’n toonhoogte is in hierdie deurgange gehoor nie, so daar is niks om hulle op te kies nie." },
   "best.tooFew": { en: "Fewer than two passes cross the marked piece, so there is nothing to choose between.", af: "Minder as twee deurgange kruis die gemerkte stuk, so daar is niks om tussen te kies nie." },
   "undo.best": { en: "choosing the best pass", af: "die kies van die beste deurgang" },
+  "post.pageMore": { en: "More for this page", af: "Meer vir hierdie bladsy" },
+  "become.aliveGo": { en: "Make it move", af: "Laat dit beweeg" },
   "fx.unitOn": { en: "ON", af: "AAN" },
   "fx.unitOff": { en: "OFF", af: "AF" },
   "fx.squashNow": { en: "Holding back now", af: "Hou nou terug" },

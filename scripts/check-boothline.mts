@@ -80,13 +80,13 @@ ok(
        is that the cell NAMES its row and column, not that both sit on one
        line — matched per property, which is what was ever meant. */
     /gridColumn: 2,\r?\n?\s*gridRow: 1,/.test(line) &&
-    /gridColumn: 1,\r?\n\s*gridRow: index \+ 2,/.test(line) &&
-    /gridColumn: 2,\r?\n\s*gridRow: index \+ 2,/.test(line),
+    /gridColumn: 1,\r?\n\s*gridRow: row \+ 2,/.test(line) &&
+    /gridColumn: 2,\r?\n\s*gridRow: row \+ 2,/.test(line),
   'the playhead is placed explicitly, so anything left to auto-flow is pushed around it into an implicit third column',
 );
 ok(
   '  and the playhead is drawn in that same column, across every lane',
-  /gridColumn: 2, gridRow: `1 \/ span \$\{lanes\.length \+ 1\}`/.test(line),
+  /gridColumn: 2, gridRow: `1 \/ span \$\{rows\.length \+ 1\}`/.test(line),
 );
 ok(
   '  with a head big enough for a thumb to catch',
@@ -111,7 +111,7 @@ ok(
 ok(
   '  and the marked piece is drawn across every lane, not inside one',
   /region && region\.to - region\.from > 0\.01/.test(line) &&
-    /gridColumn: 2, gridRow: `1 \/ span \$\{lanes\.length \+ 1\}`/.test(line),
+    /gridColumn: 2, gridRow: `1 \/ span \$\{rows\.length \+ 1\}`/.test(line),
   'a piece of a song is a piece of the song; which lane it acts on is the lane that is open',
 );
 

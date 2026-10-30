@@ -91,7 +91,7 @@ ok('the transport shows the bar', /sayPlace\(placeAt\(/.test(booth));
 const line = readFileSync('app/components/BoothTimeline.tsx', 'utf8');
 ok('the bar lines are spaced by the meter', /const bar = barSeconds\(meter\);/.test(line));
 ok('  and placed on the same axis as the clips and the playhead',
-  /\{bars\.map\(\(second\) => \(/.test(line) && /left: `\$\{percent\(second\)\}%`/.test(line),
+  /\{(lead && )?bars\.map\(\(second\) => \(/.test(line) && /left: `\$\{percent\(second\)\}%`/.test(line),
   'a second measured one way for the grid and another for the sound is the old fault back');
 ok('  from the one function that turns a second into a place on it',
   /const percent = \(seconds: number\): number =>/.test(line));

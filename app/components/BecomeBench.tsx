@@ -237,7 +237,12 @@ export default function BecomeBench({
   readonly onPulling: (on: boolean) => void;
   /** The latest tap on the photo while pulling. */
   readonly tap: PullTap | null;
-  /** A press asked for from outside: a suggestion that was tapped. */
+  /**
+   * A suggestion that was tapped, from outside. It opens the bench at that
+   * tool and points at it; it never presses it. The owner, 30 October 2026:
+   * a suggestion that started making at once, before the motion was asked
+   * for, was spending before anybody had said what they wanted.
+   */
   readonly start: StartBecome | null;
   /** The last thing pulled out, which Make it 3D is made from. */
   readonly lastCut: Cut | null;
@@ -249,8 +254,8 @@ export default function BecomeBench({
   /** What the bench just said, so the room can show it over the photo too:
       on a phone the bench is often below the fold. */
   readonly onSay?: (words: string) => void;
-  /** A press asked for from outside has been taken: the room forgets it, so
-      the bench opening again later does not press it a second time. */
+  /** A suggestion has been pointed at: the room forgets it, so the bench
+      opening again later does not point at it a second time. */
   readonly onStarted?: () => void;
   /** A clip has been made from the photo: the room plays it on the big screen. */
   readonly onVideo?: (url: string) => void;
@@ -411,12 +416,21 @@ export default function BecomeBench({
     void pull(tap);
   }, [tap, busy, yes, pull]);
 
+  /* A suggestion points at its tool and asks first: for Wake it up that is
+     what should move, for the others their own card with its price. */
+  const [pointed, setPointed] = useState<BecomeId | null>(null);
   useEffect(() => {
     if (!start || start.n === seenStart.current) return;
     seenStart.current = start.n;
-    go(start.id);
+    setPointed(start.id);
     onStarted?.();
-  }, [start, go, onStarted]);
+    window.setTimeout(() => {
+      document.querySelector(`[data-becomeplace="${start.id}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (start.id === 'alive') (document.querySelector('[data-becomewords]') as HTMLInputElement | null)?.focus({ preventScroll: true });
+    }, 120);
+    const done = window.setTimeout(() => setPointed(null), 4000);
+    return () => window.clearTimeout(done);
+  }, [start, onStarted]);
 
   if (!picture) {
     return <p className="text-[13px] text-zinc-400" data-becomenone>{t('become.none', 'Bring a photo in first.')}</p>;
@@ -437,6 +451,7 @@ export default function BecomeBench({
       )}
       {said && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.07] px-3 py-2 text-[13px] text-emerald-100" data-becomesaid>{said}</p>}
       <div className="grid grid-cols-1 gap-2">
+        <div data-becomeplace="sticker" className={`rounded-2xl ${pointed === 'sticker' ? 'shadow-[0_0_24px_rgba(52,211,153,0.45)]' : ''}`}>
         <BecomeCard
           id="sticker"
           t={t}
@@ -446,9 +461,20 @@ export default function BecomeBench({
           onClick={() => go('sticker')}
           title={pulling ? t('become.stickerOn', 'Tap the thing in the photo') : undefined}
         />
-        <BecomeCard id="alive" t={t} busy={busy === 'alive'} disabled={busy !== null} onClick={() => go('alive')} />
-        <WakeChoices t={t} moves={moves} onMoves={setMoves} words={words} onWords={setWords} disabled={busy !== null} />
-        <BecomeCard id="model3d" t={t} busy={busy === 'model3d'} disabled={busy !== null} onClick={() => go('model3d')} />
+        </div>
+        {/* Wake it up asks first: what should move, in taps or in words,
+            and only then the button with its price. */}
+        <div data-becomeplace="alive" className={`space-y-2 rounded-2xl border p-3 transition-shadow ${pointed === 'alive' ? 'border-violet-400 shadow-[0_0_24px_rgba(167,139,250,0.45)]' : 'border-zinc-800'}`}>
+          <p className="flex items-center gap-2 text-sm font-bold text-zinc-100">
+            <Sparkles className="h-4 w-4 text-violet-300" />
+            {t(BECOMES.alive.name[0], BECOMES.alive.name[1])}
+          </p>
+          <WakeChoices t={t} moves={moves} onMoves={setMoves} words={words} onWords={setWords} disabled={busy !== null} />
+          <BecomeCard id="alive" t={t} busy={busy === 'alive'} disabled={busy !== null} onClick={() => go('alive')} title={t('become.aliveGo', 'Make it move')} />
+        </div>
+        <div data-becomeplace="model3d" className={`rounded-2xl ${pointed === 'model3d' ? 'shadow-[0_0_24px_rgba(52,211,153,0.45)]' : ''}`}>
+          <BecomeCard id="model3d" t={t} busy={busy === 'model3d'} disabled={busy !== null} onClick={() => go('model3d')} />
+        </div>
       </div>
       {video && (
         <div className="space-y-2" data-becomevideo>
@@ -569,11 +595,14 @@ export function BecomeNudge({ ids, t, onPick, onClose, onNotNow, bottom }: {
       {ids.map((id) => {
         const Icon = ICONS[id];
         return (
-          <div key={id} className="fb-nudge pointer-events-auto flex max-w-full items-center gap-1 rounded-full border border-emerald-400/60 bg-zinc-950/90 pl-1 pr-1 shadow-[0_0_24px_rgba(52,211,153,0.35)]">
-            <button type="button" data-becomenudgego={id} onClick={() => onPick(id)} className="inline-flex min-h-[40px] min-w-0 items-center gap-2 rounded-full px-3 text-xs font-bold text-emerald-100">
+          <div key={id} className="fb-nudge pointer-events-auto flex max-w-full items-center gap-1 rounded-3xl border border-emerald-400/70 bg-zinc-950/95 pl-1 pr-1 shadow-[0_0_24px_rgba(52,211,153,0.4)]">
+            {/* Whole words, never cut off: on a phone the line was truncated
+                and could not be read (the owner, 30 October 2026). It opens
+                the tool and asks first; it does not make anything yet. */}
+            <button type="button" data-becomenudgego={id} onClick={() => onPick(id)} className="inline-flex min-h-[44px] min-w-0 items-center gap-2 rounded-full px-3 py-1 text-left text-[13px] font-bold leading-tight text-emerald-50">
               <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{t(BECOMES[id].ask[0], BECOMES[id].ask[1])}</span>
-              <span className="shrink-0 text-emerald-300/80">· {creditsSaid(BECOMES[id].credits, t)}</span>
+              <span className="min-w-0">{t(BECOMES[id].ask[0], BECOMES[id].ask[1])}</span>
+              <span className="shrink-0 whitespace-nowrap text-emerald-300">· {creditsSaid(BECOMES[id].credits, t)}</span>
             </button>
             <button type="button" onClick={onNotNow} aria-label={t('become.nudgeShut', 'Not now')} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-zinc-400">
               <X className="h-4 w-4" />

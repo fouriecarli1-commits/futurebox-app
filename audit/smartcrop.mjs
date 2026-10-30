@@ -141,6 +141,38 @@ try {
       seen !== null && seen.first > 0 && Math.abs(seen.first - (seen.width - 1 - seen.last)) <= Math.max(6, seen.width * 0.03),
       JSON.stringify(seen));
   }
+
+  /* ── After Smart crop, the ring is there too ─────────────────────────
+     The owner, 30 October 2026: after Smart crop "die masjien sit nie
+     outomaties 'n drag ring rondom die foto". The crop fills the frame, so
+     the photo runs off both sides; its corners are caught where it meets
+     the frame's edge. Pulled in, the photo comes loose and gets smaller. */
+  await page.locator('[data-postsmartcrop="square"]').first().click();
+  await page.waitForTimeout(600);
+  const box2 = await page.locator('[data-postcanvas]').first().boundingBox();
+  if (box2) {
+    const cx = box2.x + 6;
+    const cy = box2.y + 6;
+    const midX = box2.x + box2.width / 2;
+    const midY = box2.y + box2.height / 2;
+    await page.mouse.move(cx, cy);
+    await page.mouse.down();
+    for (let step = 1; step <= 8; step += 1) {
+      await page.mouse.move(cx + (midX - cx) * 0.35 * (step / 8), cy + (midY - cy) * 0.35 * (step / 8));
+      await page.waitForTimeout(30);
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    const loose = (await page.locator('[data-postbasis="whole"]').first().getAttribute('aria-pressed')) === 'true';
+    const shown = await page.evaluate(() => {
+      const one = document.querySelector('[data-postcanvas]');
+      const ctx = one.getContext('2d');
+      const d = ctx.getImageData(0, 0, one.width, one.height).data;
+      /* The corner pixel: background now, where the photo filled it before. */
+      return Math.abs(d[0] - 0x7a) < 12 && Math.abs(d[1] - 0x7a) < 12 ? 'photo' : 'background';
+    });
+    check('after Smart crop the photo has its ring: a corner pulled in loosens it and makes it smaller', loose && shown === 'background', `loose ${loose}, corner shows ${shown}`);
+  }
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 300)}`);
 } finally {

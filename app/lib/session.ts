@@ -70,6 +70,14 @@ export interface Lane {
    * filled in by `withDucks` when the session is played or rendered, never
    * saved: the key lane can move. `release` too, from the tempo.
    */
+  /**
+   * The row this lane is drawn on. Absent means its own row, named by its id.
+   * The pieces a lane is cut into (a cut, a punch-in, a comp) keep the row
+   * they came from, so one row holds several clips, as a track does in every
+   * studio, and comping and punching stop multiplying rows. The engine does
+   * not look at it: every clip still plays as the lane it is.
+   */
+  readonly track?: string;
   readonly duck?: { readonly by: string; readonly depth: number; readonly hits?: readonly number[]; readonly release?: number };
   readonly id: string;
   readonly name: string;
@@ -523,7 +531,9 @@ export interface Carved {
  * Returns null where the region misses the lane, or overlaps it by less than
  * a tenth of a second, which is the same floor the drag handles hold to.
  */
-export function carveLane(lane: Lane, from: number, to: number): Carved | null {
+export function carveLane(whole: Lane, from: number, to: number): Carved | null {
+  /* Every piece stays on the row it was cut from. */
+  const lane: Lane = { ...whole, track: rowKey(whole) };
   const window = windowOf(lane);
   const once = window.to - window.from;
   const times = repeatOf(lane);
@@ -581,6 +591,22 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
         : null,
   });
 }
+
+/** The row a lane is drawn on. */
+export const rowKey = (lane: Lane): string => lane.track ?? lane.id;
+
+/** The rows, in the order their first lane appears. */
+export function rowsOf(lanes: readonly Lane[]): string[] {
+  const out: string[] = [];
+  for (const lane of lanes) if (!out.includes(rowKey(lane))) out.push(rowKey(lane));
+  return out;
+}
+
+/** Every lane on the same row as `id`, itself included. */
+export const rowMates = (lanes: readonly Lane[], id: string): Lane[] => {
+  const lane = lanes.find((one) => one.id === id);
+  return lane ? lanes.filter((one) => rowKey(one) === rowKey(lane)) : [];
+};
 
 /**
  * A lane's fades, handed out to the pieces it was cut into.

@@ -40,7 +40,7 @@ try {
 
   /* ── One page: nothing about the room changes ── */
   check('a design starts as one page, with no page counter in the way', (await page.locator('[data-postpagenow]').count()) === 0);
-  await tool('pages').click();
+  await page.locator('[data-postpagemore]').click();
   await page.waitForTimeout(400);
   check('the Pages tool says what it is for', (await page.locator('[data-postpages]').count()) === 1
     && (await page.locator('[data-postpageadd]').count()) === 1);
@@ -84,7 +84,7 @@ try {
   await page.waitForTimeout(300);
   await page.locator('textarea').first().fill('BLADSKUIF');
   await page.waitForTimeout(300);
-  await tool('pages').click();
+  await page.locator('[data-postpagemore]').click();
   await page.waitForTimeout(300);
   check('the page’s own layers are listed to choose from', (await page.locator('[data-postpagelayer="words"]').count()) === 1);
   await page.locator('[data-postpagelayer="words"]').click();
@@ -149,6 +149,21 @@ try {
      there must be a plus or add a window ... and then the screen must be
      able to scroll down to the next window." */
   check('every page is on the screen, one under the other', (await page.locator('[data-postpagesheet]').count()) === 3);
+  /* The owner, 30 October 2026, with a screenshot: the plus was half under the
+     bar at the foot of her phone, and the page counter sat on undo and redo. */
+  const placed = await page.evaluate(() => {
+    const box = (sel) => document.querySelector(sel)?.getBoundingClientRect();
+    const plus = box('[data-postpageplus]');
+    const row = box('[data-postpagebar]');
+    const undo = box('[data-postundorow]');
+    const meet = (a, b) => a && b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    return {
+      onScreen: Boolean(plus && plus.top >= 0 && plus.bottom <= innerHeight && plus.left >= 0 && plus.right <= innerWidth),
+      clearOfUndo: !meet(row, undo),
+      tall: plus ? plus.height : 0,
+    };
+  });
+  check('  the plus is wholly on the screen, a thumb tall, and clear of undo and redo', placed.onScreen && placed.clearOfUndo && placed.tall >= 44, JSON.stringify(placed));
   await page.locator('[data-postpageplus]').click();
   await page.waitForTimeout(1200);
   check('  the plus adds a page and goes to it', (await now()) === '4/4' && (await page.locator('[data-postpagesheet]').count()) === 4, await now());

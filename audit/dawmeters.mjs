@@ -207,6 +207,8 @@ try {
   await page.locator('[data-boothautomode="gain"]').first().click();
   await page.waitForTimeout(300);
   const names = () => page.locator('[data-lanename]').allInnerTexts();
+  /* A row can hold several clips now (a cut, a punch-in, a comp stay on their row). */
+  const clips = () => page.locator('[aria-label*="Drag this sound"]').count();
   const before = (await names()).length;
   await page.locator('[data-laneaddhow="record"]').first().click();
   await page.waitForTimeout(4500);
@@ -228,13 +230,15 @@ try {
   await page.locator('[data-boothpunch]').first().click();
   await page.waitForTimeout(200);
   check('  and Punch in says it is armed once a piece is marked', /armed/.test(await page.locator('[data-boothpunch]').first().innerText()));
+  const clipsBeforePunch = await clips();
   await page.locator('[data-laneaddhow="record"]').first().click();
   await page.waitForTimeout(5500);
   await page.getByRole('button', { name: /^Stop recording$/ }).first().click();
   await page.waitForTimeout(2500);
   const afterPunch = await names();
-  check('punching in adds the punched piece as its own lane', afterPunch.some((one) => /^Punch/.test(one.trim())), afterPunch.join(' | '));
-  check('  and cuts the marked piece out of the take under it, so the new one replaces it', afterPunch.length === afterTake.length + 2, `${afterTake.length} → ${afterPunch.length}`);
+  const clipsAfterPunch = await clips();
+  check('punching in lays the punched piece on the take\'s own row, not a new one', afterPunch.length === afterTake.length, `${afterTake.length} → ${afterPunch.length}`);
+  check('  and cuts the marked piece out of the take under it, so the new one replaces it: one clip becomes three', clipsAfterPunch === clipsBeforePunch + 2, `${clipsBeforePunch} → ${clipsAfterPunch}`);
   await page.screenshot({ path: shot('dawmeters-punch.png') });
 
   /* ── Comping: two passes of a looped take, a phrase taken from the first ── */
@@ -252,7 +256,7 @@ try {
   await page.waitForTimeout(300);
   await page.getByRole('button', { name: /^Loop it$/ }).first().click();
   await page.waitForTimeout(300);
-  const beforeLoop = (await names()).length;
+  const beforeLoop = await clips();
   await page.locator('[data-laneaddhow="record"]').first().click();
   await page.waitForTimeout(9000);
   await page.getByRole('button', { name: /^Stop recording$/ }).first().click();
@@ -273,10 +277,12 @@ try {
   await page.waitForTimeout(300);
   await page.locator('[data-regiontools]').first().click();
   await page.waitForTimeout(400);
-  const lanesBeforeComp = (await names()).length;
+  const lanesBeforeComp = await clips();
+  const rowsBeforeComp = (await names()).length;
   await page.locator('button').filter({ hasText: /^Use this take here/ }).first().click();
   await page.waitForTimeout(600);
-  const lanesAfterComp = (await names()).length;
+  const lanesAfterComp = await clips();
+  check('  and the comp stays on the passes\' own rows', (await names()).length === rowsBeforeComp);
   /* The chosen pass becomes three pieces (+2), and every other pass that
      reaches the phrase becomes two (+1 each). The last pass stops where the
      recording stopped, so it may end before the phrase and be left whole. */

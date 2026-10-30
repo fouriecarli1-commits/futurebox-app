@@ -59,7 +59,7 @@
 import LaneMeter from './LaneMeter';
 import BoothAuto, { type AutoMode } from './BoothAuto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
+import { fadesOf, lengthOf, repeatOf, rowKey, rowsOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
 import { LANE_BINS, paintSpectrogram, spectrogramOf, type Spectrogram } from '../lib/spectrogram';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
@@ -402,6 +402,8 @@ export default function BoothTimeline({
    * of the time it is the session's own. See the note on `frozen`.
    */
   const scaleTotal = frozen.current ?? total;
+  /* The rows: one per track, several clips on one where a lane was cut, punched or comped (`rowKey`). */
+  const rows = rowsOf(lanes);
 
   const percent = (seconds: number): number =>
     scaleTotal > 0 ? Math.max(0, Math.min(100, (seconds / scaleTotal) * 100)) : 0;
@@ -1430,7 +1432,10 @@ export default function BoothTimeline({
             const plays = lengthOf(lane);
             const once = window.to - window.from;
             const times = repeatOf(lane);
-            const hue = hueFor(index, lanes.length);
+            /* Which row it is drawn on, and whether it is that row's first clip. */
+            const row = rows.indexOf(rowKey(lane));
+            const lead = lanes.find((one) => rowKey(one) === rowKey(lane)) === lane;
+            const hue = hueFor(row, rows.length);
             /* How wide the clip really comes out, in pixels, so the handles
                can be a share of it rather than a fixed 24 that swallows a
                narrow one whole. The same `minWidth: 44` floor the block
@@ -1461,6 +1466,8 @@ export default function BoothTimeline({
                     rather than a shortcut here: any lane soloed silences
                     everything that is not, so two soloed lanes are a submix
                     of those two. That is what a desk does. */}
+                {/* Once per row: the first clip on a row carries its track's name, M and S. */}
+                {lead && (
                 <div
                   className="relative"
                   /* Stuck, like the corner above it. A name column that
@@ -1470,7 +1477,7 @@ export default function BoothTimeline({
                      to tell them apart while you are working inside one. */
                   style={{
                     gridColumn: 1,
-                    gridRow: index + 2,
+                    gridRow: row + 2,
                     height: ROW,
                     position: 'sticky',
                     left: 0,
@@ -1644,6 +1651,8 @@ export default function BoothTimeline({
                   </span>
                 </div>
 
+                )}
+
                 <div
                   /* ── `touch-none` only while marking ────────────────────
  
@@ -1688,12 +1697,16 @@ export default function BoothTimeline({
                      The whole point of this layout is that they are two
                      cells of one grid and cannot disagree about where a
                      second is; a claim like that is worth a measurement. */
-                  data-lanerow={index}
+                  data-lanerow={row}
                   style={{
                     gridColumn: 2,
-                    gridRow: index + 2,
+                    gridRow: row + 2,
                     height: ROW,
-                    borderBottom: `1px solid ${EDGE}`,
+                    /* A second clip on a row is drawn in the same cell, over
+                       the first: its own cell lets presses through to the
+                       clips under it, and only its clip takes them. */
+                    borderBottom: lead ? `1px solid ${EDGE}` : undefined,
+                    pointerEvents: lead ? undefined : 'none',
                     touchAction: marking ? 'none' : 'pan-x pan-y',
                   }}
                   /* The empty stretch either side of a clip. It is most of a
@@ -1702,8 +1715,8 @@ export default function BoothTimeline({
                      exactly where somebody marks — landed on nothing. */
                   onPointerDown={marking ? startRegion : undefined}
                 >
-                  {/* The grid, on the shared axis. */}
-                  {bars.map((second) => (
+                  {/* The grid, on the shared axis. Drawn once per row. */}
+                  {lead && bars.map((second) => (
                     <span
                       key={second}
                       data-barline={second}
@@ -1763,6 +1776,7 @@ export default function BoothTimeline({
                       marking ? 'touch-none' : 'touch-pan-y'
                     }`}
                     style={{
+                      pointerEvents: 'auto',
                       left: `${percent(lane.at)}%`,
                       width: `${Math.max(1.2, (plays / Math.max(0.001, scaleTotal)) * 100)}%`,
                       /* Eighteen pixels of clip is not a handle. A four-bar
@@ -2132,7 +2146,7 @@ export default function BoothTimeline({
                       )}
                     </span>
                   )}
-                  {autoMode && (
+                  {autoMode && lead && (
                     <BoothAuto
                       lane={lane}
                       mode={autoMode}
@@ -2155,7 +2169,7 @@ export default function BoothTimeline({
             <div
               data-laneadd
               className="sticky left-0 flex flex-wrap items-center gap-2 px-2 py-3"
-              style={{ gridColumn: '1 / -1', gridRow: lanes.length + 2, width: `min(100%, ${gutter + room}px)` }}
+              style={{ gridColumn: '1 / -1', gridRow: rows.length + 2, width: `min(100%, ${gutter + room}px)` }}
             >
               <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: INK_DIM }}>
                 {t('pro.addLane', 'A new lane')}
@@ -2205,7 +2219,7 @@ export default function BoothTimeline({
           {region && region.to - region.from > 0.01 && (
             <div
               className="pointer-events-none relative"
-              style={{ gridColumn: 2, gridRow: `1 / span ${lanes.length + 1}` }}
+              style={{ gridColumn: 2, gridRow: `1 / span ${rows.length + 1}` }}
             >
               <span
                 className="absolute inset-y-0"
@@ -2270,7 +2284,7 @@ export default function BoothTimeline({
               swallow every press meant for a clip underneath it. */}
           <div
             className="pointer-events-none relative"
-            style={{ gridColumn: 2, gridRow: `1 / span ${lanes.length + 1}` }}
+            style={{ gridColumn: 2, gridRow: `1 / span ${rows.length + 1}` }}
           >
             <span
               ref={lineRef}

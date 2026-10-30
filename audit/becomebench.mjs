@@ -27,6 +27,8 @@ const snap = async (name) => { if (folder) await page.screenshot({ path: `${fold
 
 try {
   /* The engine, answered with a white circle on black where the red one is. */
+  let becomeAsks = 0;
+  page.on('request', (one) => { if (/\/api\/become$/.test(new URL(one.url()).pathname) && one.method() === 'POST') becomeAsks += 1; });
   await page.route('**/api/become', async (route) => {
     const mask = await page.evaluate(() => {
       const c = document.createElement('canvas');
@@ -104,6 +106,23 @@ try {
     return el ? el.scrollWidth <= document.documentElement.clientWidth + 1 : false;
   });
   check('  and it fits the screen', fits);
+
+  /* The owner, 30 October 2026: the suggestion started making at once. A tap
+     on it now opens the tool and asks what should move; nothing is sent. */
+  const sentBefore = becomeAsks;
+  await page.locator('[data-becomenudgego="alive"]').click();
+  await page.waitForTimeout(900);
+  check('a tap on the suggestion opens the tool and asks what should move, and makes nothing yet',
+    becomeAsks === sentBefore && (await page.locator('[data-wakechoices]').count()) === 1
+    && (await page.locator('[data-becomeplace="alive"] [data-become="alive"]').count()) === 1,
+    `${becomeAsks - sentBefore} sent`);
+  const wrapped = await page.evaluate(() => {
+    const el = document.querySelector('[data-becomenudgego]');
+    return el ? Array.from(el.querySelectorAll('span')).every((one) => one.scrollWidth <= one.clientWidth + 1) : true;
+  });
+  check('  and the suggestion\'s words are whole, never cut off', wrapped);
+  await page.locator('[data-cutbench="pic"]').first().click();
+  await page.waitForTimeout(400);
 
   /* ── The bench: three presses, each with its price ── */
   await page.locator('[data-cutbench="alive"]').first().click();

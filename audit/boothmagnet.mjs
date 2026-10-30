@@ -123,19 +123,24 @@ try {
     await p.mouse.click(rulerBox.x + rulerBox.width * 0.25, rulerBox.y + rulerBox.height / 2);
     await p.waitForTimeout(250);
   }
+  /* A second lane of its own. A cut used to make one, but a cut now stays
+     on its row as two clips (30 October 2026), and the lock and the swap are
+     about two lanes. A beat off the drum pads is one, made on the device,
+     on the bar the line is in. */
+  const beat = p.locator('[data-laneaddhow="beat"]').first();
+  check('a second lane can be made, which is how this probe gets one', (await beat.count()) > 0);
+  if (await beat.count()) {
+    await beat.click();
+    await p.waitForTimeout(500);
+    await p.locator('[data-beatplace]').first().click();
+    await p.waitForTimeout(600);
+  }
   const name = p.locator('[data-lanename]').first();
   if ((await name.getAttribute('aria-pressed')) !== 'true') {
     await name.click();
     await p.waitForTimeout(250);
   }
   await openDesk('Track controls', 'Baankontroles');
-  const cut = p.getByRole('button', { name: new RegExp(af ? 'Sny waar die lyn' : 'Cut where the line') }).first();
-  check('the lane can be cut in two, which is how this probe gets a second lane',
-    (await cut.count()) > 0);
-  if (await cut.count()) {
-    await cut.click();
-    await p.waitForTimeout(400);
-  }
   const lanes = await p.locator('[data-lanename]').count();
   check('there are two lanes now', lanes >= 2, `${lanes} lane(s)`);
 

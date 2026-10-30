@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Files, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Files, Replace, ZoomIn, ZoomOut, Frame, X, MoreHorizontal,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import CropSheet from './CropSheet';
@@ -106,7 +106,7 @@ import { GRID, bestCrop, interestOf, windowOf } from '../lib/smartcrop';
 import FileSize, { type Estimate } from './FileSize';
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
-  canMove, moveBy, place, showsThrough, zoomAbout, zoomTo, type Crop,
+  canMove, loosen, moveBy, place, seenPart, showsThrough, zoomAbout, zoomTo, type Crop,
 } from '../lib/postcrop';
 import {
   AUTO, PLAIN, RANGES, filterFor, lightnessOf, paintWashes, smartLight, touched, towards, washesOf, type Look,
@@ -675,8 +675,14 @@ const POST_CHARTS: BenchSpec = {
    without a swipe. The owner, 27 October 2026, looking for the sticker:
    *"Waar in watter funtion le dit"* — seventh in the bar, it was off the
    right edge of the screen. */
+/** The two rows of controls above the photo: undo, redo and zoom; then the pages. */
+const ABOVE_PHOTO = 100;
+
+/* No Pages on the rail: the plus on the photo adds one, and the "⋯" beside
+   it opens the page tools. The owner, 30 October 2026: "Dis mos eenvoudig,
+   mens click net op die plus. Daar hoef nie 'n hele button te wees nie." */
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_UPPER[0], POST_ALIVE, POST_STARTS, POST_PAGES, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
+  POST_UPPER[0], POST_ALIVE, POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -2581,11 +2587,20 @@ export default function PostStudio({
        whole picture) and is the layer being edited, the same ring the words
        get stands round it: pull a corner and it grows or shrinks about its
        middle; drag the body and it moves. Never in the exported file. */
-    if (guides && picture && !cropBox && !photoHidden && crop.basis === 'whole' && (layerOn === 'all' || layerOn === 'photo')) {
-      const ring = place(picture, size, crop);
+    /* Since 30 October 2026 the ring is there whenever the photo is the layer
+       being edited, filling the frame or not — after Smart crop too, where
+       the owner looked for it and it was not there. A photo bigger than the
+       frame has its corners off the edge, so they are drawn where the photo
+       meets the edge, a knob's width in: always on the screen to catch. */
+    if (guides && picture && !cropBox && !photoHidden && (layerOn === 'all' || layerOn === 'photo')) {
+      const knob = Math.max(9, size.width * 0.018);
+      const seen = seenPart(place(picture, size, crop), size);
+      const inset = (v: number, most: number): number => Math.max(knob * 1.3, Math.min(most - knob * 1.3, v));
+      const left = inset(seen.left, size.width);
+      const top = inset(seen.top, size.height);
+      const ring = { left, top, width: inset(seen.left + seen.width, size.width) - left, height: inset(seen.top + seen.height, size.height) - top };
       const line = Math.max(2, size.width * 0.004);
       const arm = Math.min(ring.width, ring.height, size.width * 0.06);
-      const knob = Math.max(9, size.width * 0.018);
       ctx.save();
       ctx.strokeStyle = '#39ff14';
       ctx.shadowColor = '#39ff14';
@@ -3182,18 +3197,28 @@ export default function PostStudio({
        grows or shrinks about its middle (`zoomAbout`). Checked before the
        move, because a corner sits on the picture's edge and the move below
        would take it as a drag. */
-    if (picture && at && !cropBox && !photoHidden && crop.basis === 'whole' && (layerOn === 'all' || layerOn === 'photo')) {
+    if (picture && at && !cropBox && !photoHidden && (layerOn === 'all' || layerOn === 'photo')) {
       const put = frameAt(event);
       if (put) {
         const px = put.x * size.width;
         const py = put.y * size.height;
         const reach = Math.max(22, size.width * 0.05);
-        const corner = [[0, 0], [1, 0], [0, 1], [1, 1]].some(([sx, sy]) =>
-          Math.hypot(px - (at.left + sx * at.width), py - (at.top + sy * at.height)) <= reach);
+        /* The corners as they are drawn: where the photo meets the frame's
+           edge, a knob's width in (see the ring in `paint`). */
+        const knob = Math.max(9, size.width * 0.018);
+        const seen = seenPart(at, size);
+        const inset = (v: number, most: number): number => Math.max(knob * 1.3, Math.min(most - knob * 1.3, v));
+        const xs = [inset(seen.left, size.width), inset(seen.left + seen.width, size.width)];
+        const ys = [inset(seen.top, size.height), inset(seen.top + seen.height, size.height)];
+        const corner = xs.some((x) => ys.some((y) => Math.hypot(px - x, py - y) <= reach));
         if (corner) {
+          /* Loose first, so it can be pulled smaller than the frame; nothing
+             moves on the screen as it changes over. */
+          const free = loosen(picture, size, crop);
+          if (free !== crop) setCrop(free);
           const cx = at.left + at.width / 2;
           const cy = at.top + at.height / 2;
-          photoPull.current = { cx, cy, from: Math.max(1, Math.hypot(px - cx, py - cy)), zoom: crop.zoom };
+          photoPull.current = { cx, cy, from: Math.max(1, Math.hypot(px - cx, py - cy)), zoom: free.zoom };
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
@@ -6614,6 +6639,18 @@ export default function PostStudio({
 
   const picBench = (
     <div className="space-y-4">
+    {/* Templates and starter packs are where a picture starts, so they are
+        here with the photo (the owner, 30 October 2026), not under the frame. */}
+    <div data-posttemplatespic>
+        <button
+          type="button"
+          onClick={() => setShowTemplatesModal(true)}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-sm font-bold text-purple-300 hover:brightness-110 active:scale-95 transition-all text-center"
+        >
+          <LayoutTemplate className="h-4 w-4 text-purple-400" />
+          {t('stpl.openTemplates', 'Templates & Starter Packs')}
+        </button>
+    </div>
     {/* ── The picture ───────────────────────────────────────────────── */}
     <div className={RY}>
       <button type="button" data-postmakebench onClick={() => setMaking(true)} className={`${LEEG} col-span-2 inline-flex items-center gap-1.5`}>
@@ -7688,7 +7725,7 @@ export default function PostStudio({
           </div>
         </div>
       )}
-      <div className={`mt-2 ${RY}`}>
+      <div className="mt-2">
         <button
           type="button"
           onClick={() => setShowSizeModal(true)}
@@ -7696,14 +7733,6 @@ export default function PostStudio({
         >
           <Maximize2 className="h-4 w-4 text-teal-400" />
           {t('size.customOrStandard', 'Standard & Custom Sizes')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowTemplatesModal(true)}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-sm font-bold text-purple-300 hover:brightness-110 active:scale-95 transition-all text-center"
-        >
-          <LayoutTemplate className="h-4 w-4 text-purple-400" />
-          {t('stpl.openTemplates', 'Templates & Starter Packs')}
         </button>
       </div>
       <p className="pt-2 text-[13px] leading-relaxed text-zinc-500">{size.what[lang]}</p>
@@ -10554,7 +10583,7 @@ export default function PostStudio({
   const ALL_BENCHES = POST_TOOLS;
   /* Half the tools down the left of the photo, the rest down the right. */
   const SIDE_HALF = Math.ceil(ALL_BENCHES.length / 2);
-  const here = [...ALL_BENCHES, POST_CELL].find((one) => one.id === bench) ?? null;
+  const here = [...ALL_BENCHES, POST_CELL, POST_PAGES].find((one) => one.id === bench) ?? null;
   const chipStyle: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
   const openBench = (next: Exclude<Bench, null>): void => {
     /* ── Crop on a design's or a grid's photo ────────────────────────────
@@ -10634,7 +10663,11 @@ export default function PostStudio({
          the screen, and the bar lay over its foot. */
       /* Nothing lies over the photograph any more (23 October 2026): the
          panel is docked under it, so the stage's own box is all photo. */
-      const keep = 0;
+      /* Two rows above the photo are its controls' (30 October 2026): undo,
+         redo and zoom, then the pages. They used to lie on the photo's top
+         corners, where its ring's handles are, so the photo could not be
+         sized from there, and the page counter covered what it sat on. */
+      const keep = ABOVE_PHOTO;
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
       setFitted({ w, h: Math.floor(w / ratio), room: box.height });
@@ -10854,18 +10887,6 @@ export default function PostStudio({
             </button>
           )))}
         </div>
-        <button
-          type="button"
-          data-postpageplus
-          onClick={() => addPage(false)}
-          aria-label={t('post.pageAdd', 'Add a page')}
-          title={t('post.pageAdd', 'Add a page')}
-          className="absolute bottom-3 right-3 z-30 inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-[12px] font-bold shadow-lg"
-          style={{ background: PHOTO.accent, color: PHOTO.floor }}
-        >
-          <Plus className="h-4 w-4" />
-          {t('post.pagePlus', 'Page')}
-        </button>
       </div>
     );
   };
@@ -10879,7 +10900,8 @@ export default function PostStudio({
          while it is out the photo rises to the top of its space (the owner's
          15 October rule: it moves, it never shrinks) and sits clear above
          the strip; tucked or shut, it sits in the middle. */
-      className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp && !tucked && !saveFull ? 'items-start pt-2' : 'items-center'}`}
+      className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp && !tucked && !saveFull ? 'items-start' : 'items-center'}`}
+      style={{ paddingTop: ABOVE_PHOTO + (panelUp && !tucked && !saveFull ? 8 : 0) }}
       onWheel={(event) => {
         /* With pages, the wheel goes from page to page; a pinch (or Ctrl)
            still zooms. */
@@ -10963,18 +10985,6 @@ export default function PostStudio({
       {/* ── Bring to life, over the photograph ──────────────────────────
           The sticker waiting to be peeled, and the suggestion of what the
           photo or the sticker can become next (`BecomeBench.tsx`). */}
-      {/* Which page this is, and the way to the next, small in the corner. */}
-      {pages.length > 1 && (
-        <div className="absolute left-2 top-2 z-30 flex items-center rounded-full bg-zinc-950/80 text-[11px] font-bold text-zinc-100 backdrop-blur" data-postpagenow>
-          <button type="button" onClick={() => goPage(pageAt - 1)} disabled={pageAt === 0} aria-label={t('post.pagePrev', 'The page before')} className="grid h-8 w-8 place-items-center disabled:opacity-30">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="tabular-nums">{pageAt + 1}/{pages.length}</span>
-          <button type="button" onClick={() => goPage(pageAt + 1)} disabled={pageAt === pages.length - 1} aria-label={t('post.pageNext', 'The next page')} className="grid h-8 w-8 place-items-center disabled:opacity-30">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
       {peels.map((one) => (
         <PeelOverlay
           key={one.id}
@@ -11397,11 +11407,12 @@ export default function PostStudio({
           phone with a tool open, over the top of it: the tool covers the
           foot, and Grab's answers ("Tap one to lift it out", or why the
           engine said no) were printed behind it. The owner, 15 October 2026:
-          "Die grab funksie werk ook nie." */}
+          "Die grab funksie werk ook nie." Under the pages row, not on it
+          (30 October 2026): it covered "+ Page" and the arrows. */}
       {said && (
         /* Above a tapped frame's own bar, not on it: "Cropped. Undo brings
            the whole photo back." sat over Replace and Delete. */
-        <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : cellNow && !editingCell && bench === null ? 'bottom-[68px]' : 'bottom-2'}`}>
+        <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-[108px]' : cellNow && !editingCell && bench === null ? 'bottom-[68px]' : 'bottom-2'}`}>
           {/* No warning sign for words under a platform's bars. The owner, 17
               October 2026: *"Daai groen sirkel wat elke keer by die photo
               app op kom daar onder moet weg gaan. Dit is 'n weird
@@ -11821,6 +11832,49 @@ export default function PostStudio({
                 360-pixel screen (The owner, 15 October 2026: "Daai take it out
                 button daar regs bo is afgesny"). */}
             {undoRedo ? <div data-postundorow className="absolute left-2 top-2 z-10 flex gap-1">{undoRedo}</div> : null}
+            {/* The pages, under undo and redo: which page this is, the way to
+                the others, and a new one. The "+ Page" used to sit in the
+                bottom corner, where on the owner's phone it was half under
+                the bar (30 October 2026), and the page count sat on top of
+                undo and redo. Both live here now, where nothing covers them. */}
+            <div data-postpagebar className="absolute left-1/2 top-[52px] z-10 flex -translate-x-1/2 items-center gap-1" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+              {pages.length > 1 && (
+                <div className="flex items-center rounded-full bg-zinc-950/80 text-[11px] font-bold text-zinc-100 backdrop-blur" data-postpagenow>
+                  <button type="button" onClick={() => goPage(pageAt - 1)} disabled={pageAt === 0} aria-label={t('post.pagePrev', 'The page before')} className="grid h-11 w-9 place-items-center disabled:opacity-30">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="tabular-nums">{pageAt + 1}/{pages.length}</span>
+                  <button type="button" onClick={() => goPage(pageAt + 1)} disabled={pageAt === pages.length - 1} aria-label={t('post.pageNext', 'The next page')} className="grid h-11 w-9 place-items-center disabled:opacity-30">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              <button
+                type="button"
+                data-postpageplus
+                onClick={() => addPage(false)}
+                aria-label={t('post.pageAdd', 'Add a page')}
+                title={t('post.pageAdd', 'Add a page')}
+                className="inline-flex h-11 items-center gap-1 rounded-full px-3.5 text-[12px] font-bold shadow-lg"
+                style={{ background: PHOTO.accent, color: PHOTO.floor }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('post.pagePlus', 'Page')}
+              </button>
+              {/* The rest of what a page can do: copy it, move it, delete it,
+                  send a layer to another page. */}
+              <button
+                type="button"
+                data-postpagemore
+                onClick={() => (bench === 'pages' ? setBench(null) : openBench('pages'))}
+                aria-label={t('post.pageMore', 'More for this page')}
+                title={t('post.pageMore', 'More for this page')}
+                aria-pressed={bench === 'pages'}
+                className="grid h-11 w-11 place-items-center rounded-full bg-zinc-950/80 text-zinc-100 backdrop-blur"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </div>
             {view.scale > 1 && (
               <button
                 type="button"

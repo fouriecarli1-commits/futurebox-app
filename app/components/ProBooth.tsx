@@ -32,7 +32,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  anySends, liveOf, playsOf, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
+  anySends, liveOf, playsOf, rowKey, rowMates, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, lufsOfTarget, soundOf as plainSound, type Finished } from '../lib/mastering';
@@ -757,6 +757,7 @@ export default function ProBooth({
           ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
           ...(lane.sends ? { sends: lane.sends } : {}),
           ...(lane.duck ? { duck: { by: lane.duck.by, depth: lane.duck.depth } } : {}),
+          ...(lane.track ? { track: lane.track } : {}),
           ...(lane.auto ? { auto: lane.auto } : {}),
           ...(lane.beat ? { beat: lane.beat } : {}),
           ...(lane.notes?.length ? { notes: lane.notes } : {}),
@@ -1300,7 +1301,8 @@ export default function ProBooth({
             const kept = carved
               ? was.flatMap((one) => (one.id !== under?.id ? [one] : [carved.before, carved.after].filter((piece2): piece2 is Lane => Boolean(piece2))))
               : was;
-            return [...kept, take];
+            /* On the row it punched into: the new piece sits where the old one was cut out. */
+            return [...kept, under ? { ...take, track: rowKey(under) } : take];
           });
           setStale(true);
           return take;
@@ -1773,11 +1775,18 @@ export default function ProBooth({
     downloadBlob(midiBlob(written), safeFilename(named, 'mid'));
   };
 
+  /** The settings of a track, which every clip on its row shares. */
+  const ROW_WIDE = ['muted', 'soloed', 'gain', 'pan', 'sends', 'name', 'auto'] as const;
   const change = (id: string, how: Partial<Lane>): void => (
     setStale(true),
-    setLanes((was) =>
-      was.map((lane) => {
-        if (lane.id !== id) return lane;
+    setLanes((was) => {
+      /* What belongs to the track rather than the clip goes to every clip on
+         the row: a mute, a solo, the fader, the pan, the sends, the name and
+         the automation, which is drawn across the row. */
+      const wide = Object.fromEntries(ROW_WIDE.filter((key) => key in how).map((key) => [key, how[key]])) as Partial<Lane>;
+      const mates = Object.keys(wide).length ? rowMates(was, id).map((one) => one.id) : [];
+      return was.map((lane) => {
+        if (lane.id !== id) return mates.includes(lane.id) ? { ...lane, ...wide } : lane;
         const next = { ...lane, ...how };
         /* The grid applies where a start time is being *placed*, and nowhere
            else. Snapping a gain or a name would be absurd, and snapping on
@@ -1794,8 +1803,8 @@ export default function ProBooth({
            alone. */
         if (how.at === undefined || how.from !== undefined) return next;
         return { ...next, at: snapped(next.at, sane(meter), snap) };
-      }),
-    )
+      });
+    })
   );
 
   /**
@@ -2992,8 +3001,9 @@ export default function ProBooth({
        Both halves used to carry both, so a lane that faded in and out became
        two that each did — a dip to silence at the cut that nobody drew.
        `fadedApart` in lib/session.ts holds the same rule for a region. */
-    const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name, fadeOut: undefined };
-    const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name, fadeIn: undefined };
+    /* Both halves stay on the row the lane was on. */
+    const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name, fadeOut: undefined, track: rowKey(lane) };
+    const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name, fadeIn: undefined, track: rowKey(lane) };
 
     /* Two lanes where there was one, and there is no button that joins them
        back up — so this is not one of the free ones however cheap it looks.
@@ -4296,7 +4306,9 @@ export default function ProBooth({
           its label on the left and its value on the right in the same
           columns on every lane. On a desk two lanes sit side by side. */}
       <div data-mixer className="grid gap-2 lg:grid-cols-2">
-        {lanes.map((lane) => {
+        {/* One strip per track: its first clip stands for the row, and what a
+            strip sets, `change` hands to every clip on it. */}
+        {lanes.filter((lane) => lanes.find((one) => rowKey(one) === rowKey(lane)) === lane).map((lane) => {
           const db = lane.gain > 0 ? 20 * Math.log10(lane.gain) : -Infinity;
           const fxCount = lane.fx ? Object.keys(lane.fx).length : 0;
           const on = picked === lane.id;
