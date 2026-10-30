@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
-import { loadTracks, type Track } from '../lib/library';
+import { getAudio, loadTracks, type Track } from '../lib/library';
+import { checkSong, songCheckOf, type SongCheck } from '../lib/songcheck';
 import { saveSong } from '../lib/songfile';
 import Pictures from './Pictures';
 import { readAudio } from '../lib/trackaudio';
@@ -151,6 +152,32 @@ export default function Channel({
  
      One request for the lot. It generates nothing and spends nothing. */
   const { photos: sleeves, credits: sleeveCredits } = useSleeves(tracks.map((one) => one.id));
+  /* ── Is a brought-in song somebody else's record? ─────────────────
+     The owner, 30 October 2026: *"Het google nie 'n produk wat ons kan
+     gebruik om te check vir plagiaat nie. As mense songs kan in bring kan dit
+     legal issues veroorsaak."* Each brought-in song is listened to once
+     (`lib/songcheck.ts`), one at a time, and the card says what was found. */
+  const [checks, setChecks] = useState<Record<string, SongCheck | 'busy'>>({});
+  const broughtKey = tracks.filter((one) => one.source === 'upload').map((one) => one.id).join(',');
+  useEffect(() => {
+    if (!broughtKey) return undefined;
+    let live = true;
+    void (async () => {
+      for (const id of broughtKey.split(',')) {
+        const known = songCheckOf(id);
+        if (known && known.state !== 'unchecked') {
+          if (live) setChecks((was) => ({ ...was, [id]: known }));
+          continue;
+        }
+        const audio = await getAudio(id).catch(() => null);
+        if (!audio || !live) continue;
+        setChecks((was) => ({ ...was, [id]: 'busy' }));
+        const got = await checkSong(id, audio);
+        if (live) setChecks((was) => ({ ...was, [id]: got }));
+      }
+    })();
+    return () => { live = false; };
+  }, [broughtKey]);
   /** A file being taken in, and what was wrong with it if it was refused. */
   const [taking, setTaking] = useState(false);
   const [tookBadly, setTookBadly] = useState<string | null>(null);
@@ -964,6 +991,35 @@ export default function Channel({
 
               <div className="p-3 space-y-1.5">
                 <p className="text-sm font-bold text-white leading-snug truncate">{track.title}</p>
+                {track.source === 'upload' && (() => {
+                  const check = checks[track.id];
+                  if (check === 'busy') {
+                    return (
+                      <p data-songcheck="busy" className="flex items-center gap-1.5 text-xs font-semibold text-cyan-200">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {t('chan.checkBusy', 'Checking it against known records…')}
+                      </p>
+                    );
+                  }
+                  if (!check || check.state === 'unchecked') return null;
+                  if (check.state === 'clear') {
+                    return (
+                      <p data-songcheck="clear" className="text-xs font-semibold text-emerald-300" style={{ textShadow: '0 0 8px rgba(52,211,153,0.5)' }}>
+                        {t('chan.checkClear', 'Checked: not a known record')}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div data-songcheck="matched" className="space-y-0.5 rounded-xl border border-amber-400/60 bg-amber-500/10 px-2.5 py-1.5 shadow-[0_0_12px_rgba(251,191,36,0.25)]">
+                      <p className="text-xs font-bold text-amber-200">
+                        {t('chan.checkMatched', 'Sounds like “{title}” by {artist}').replace('{title}', check.title).replace('{artist}', check.artist)}
+                      </p>
+                      <p className="text-[11px] leading-snug text-amber-100/80">
+                        {t('chan.checkMatchedSays', 'Only post it, or a video with it, if you have the rights.')}
+                      </p>
+                    </div>
+                  );
+                })()}
                 {/* Who it is by, on a brought-in song that has been told.
 
                     Only there when somebody typed it. A card that prints the

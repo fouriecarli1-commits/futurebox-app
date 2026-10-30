@@ -455,6 +455,7 @@
     "check:restore": "tsx scripts/check-restore.mts",
     "check:picturemake": "tsx scripts/check-picturemake.mts",
     "check:promptideas": "tsx scripts/check-promptideas.mts",
+    "check:songcheck": "tsx scripts/check-songcheck.mts",
     "check:poststart": "node audit/poststart.mjs 3417",
     "check:layerlook": "node audit/layerlook.mjs 3421",
     "check:wordslook": "node audit/wordslook.mjs 3423",

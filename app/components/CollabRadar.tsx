@@ -361,7 +361,9 @@ export default function CollabRadar({
         <div className="min-w-0 flex-1">
           <h4 className="flex items-center space-x-2 text-lg font-black">
             <Handshake className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.9)]" />
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg,#6EE7B7,#22D3EE,#C4B5FD)', filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.5))' }}>{t('radar.heading', 'Get yourself heard')}</span>
+            {/* Solid ink with a glow rather than gradient-filled letters: this room
+                also has a light theme, where the pale gradient read at 1.46:1. */}
+            <span className="text-white" style={{ textShadow: '0 0 12px rgba(34,211,238,0.55)' }}>{t('radar.heading', 'Get yourself heard')}</span>
           </h4>
           {/* How the room works, on the same terms as every other explanation
               in this app: one clipped line and a mark on a phone. It was four

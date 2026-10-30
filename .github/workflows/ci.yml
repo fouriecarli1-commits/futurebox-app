@@ -1955,6 +1955,8 @@ jobs:
         run: npm run check:picturemake
       - name: Every prompt with ideas deals new ones on a press, none repeated until all are seen
         run: npm run check:promptideas
+      - name: A brought-in song is checked against known records, a short piece only, at no charge
+        run: npm run check:songcheck
       - name: Only hesitations are cut from an episode, on the device
         run: npm run check:fillers
       - name: A finished mix is loud the way streaming services measure it, and never over the ceiling

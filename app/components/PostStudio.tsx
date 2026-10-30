@@ -10895,7 +10895,10 @@ export default function PostStudio({
          redo and zoom, then the pages. They used to lie on the photo's top
          corners, where its ring's handles are, so the photo could not be
          sized from there, and the page counter covered what it sat on. */
-      const keep = ABOVE_PHOTO;
+      /* And the eight pixels the stage adds above the photo while a panel is
+         up, or the photo's foot ran under the panel (`check:magicbrush`,
+         found when the panels went to half the screen). */
+      const keep = ABOVE_PHOTO + (panelUp && !tucked && !saveFull ? 8 : 0);
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
       setFitted({ w, h: Math.floor(w / ratio), room: box.height });
@@ -10904,7 +10907,7 @@ export default function PostStudio({
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     return () => watch.disconnect();
-  }, [size.width, size.height, upright, stripsUp, brushUp]);
+  }, [size.width, size.height, upright, stripsUp, brushUp, panelUp, tucked, saveFull]);
 
   const undoRedo = (picture !== null || told > 0) ? (
     <>

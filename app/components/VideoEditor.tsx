@@ -139,6 +139,7 @@ import { fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
+import { checkSong, type SongCheck } from '../lib/songcheck';
 import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, type Brought } from '../lib/brought';
 import { myVideosSaid, type MyVideo } from '../lib/filmed';
 import { linesFrom, type Timed } from '../lib/timedtext';
@@ -1058,6 +1059,19 @@ export default function VideoEditor({
      changes, below. */
   const [owns, setOwns] = useState(false);
   const brought = useMemo(() => broughtIn(edit), [edit]);
+  /* The song under a film, when it came from outside, is listened to against
+     known records before it goes out (`lib/songcheck.ts`; the owner, 30
+     October 2026, on brought-in songs and the law). Once per song. */
+  const [bedCheck, setBedCheck] = useState<SongCheck | null>(null);
+  const bedOutside = Boolean(edit.under) && brought.some((one) => one.kind === 'song');
+  useEffect(() => {
+    setBedCheck(null);
+    if (!bedOutside || !edit.under) return undefined;
+    let live = true;
+    const id = `bed:${edit.underName ?? 'song'}:${edit.under.size}`;
+    void checkSong(id, edit.under).then((got) => { if (live) setBedCheck(got); });
+    return () => { live = false; };
+  }, [bedOutside, edit.under, edit.underName]);
   useEffect(() => { setOwns(false); }, [brought.length]);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
@@ -9095,6 +9109,17 @@ async function smallerFrame(url: string): Promise<string> {
                           </li>
                         ))}
                       </ul>
+                      {bedCheck?.state === 'matched' && (
+                        <p data-editorbedmatched className="rounded-xl border border-amber-400/60 bg-amber-500/10 px-2.5 py-1.5 text-sm font-semibold leading-snug text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.25)]">
+                          {t('edit.bedMatched', 'The song under it sounds like “{title}” by {artist}. A platform will likely mute or remove a video with it unless you have the rights.')
+                            .replace('{title}', bedCheck.title).replace('{artist}', bedCheck.artist)}
+                        </p>
+                      )}
+                      {bedCheck?.state === 'clear' && (
+                        <p data-editorbedclear className="text-sm font-semibold text-emerald-300">
+                          {t('edit.bedClear', 'The song under it was checked: not a known record.')}
+                        </p>
+                      )}
                       <label className="flex items-start gap-2 pt-1" data-editorrightsown>
                         <input
                           type="checkbox"
@@ -9112,7 +9137,7 @@ async function smallerFrame(url: string): Promise<string> {
                       <p className="text-sm leading-snug" style={{ color: INK_DIM }} data-editorrightswhy>
                         {t(
                           'edit.rightsWhy',
-                          'This is not a copyright check. Nothing here listens to your film against the rights databases the platforms use — a video can pass this and still be taken down.',
+                          'This is not a copyright check of the shots. A brought-in song is matched against known records; a video can still be taken down.',
                         )}
                       </p>
                     </>

@@ -332,6 +332,22 @@ else's job. Unset, the service-role key does the sealing.
 What the key is used for, and the settings on every request that keep
 fal.ai from holding on to a member's clip, are in `docs/FAL-TERME.md`.
 
+### AudD — is a brought-in song somebody else's record?
+
+`AUDD_API_TOKEN`, from audd.io → sign up → Dashboard → API token. It goes in
+Vercel, Production and Preview, and nowhere else. **Never in the
+repository**, and never pasted into a chat.
+
+What it does: when somebody brings a song in from their phone, twenty
+seconds from inside it are sent to AudD, which says whether it is a known
+commercial recording. The song's card then says *"Sounds like … by …"* or
+*"Checked: not a known record"*, and a video with that song under it says so
+before it goes out. Members are not charged; to us it costs about $5 per
+1,000 songs, and the first 300 are free.
+
+Without it nothing breaks: the songs are simply not checked, and the cards
+say nothing about it.
+
 ### 12. Kits.AI — the model that actually sings
 
 `KITS_API_KEY`, from kits.ai → the API Access page → generate a token. It goes
