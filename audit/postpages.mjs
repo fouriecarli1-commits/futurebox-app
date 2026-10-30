@@ -51,7 +51,7 @@ try {
   check('Add a page makes a second page and goes to it', (await now()) === '2/2', await now());
   await page.locator('[data-postpagecopy]').click();
   await page.waitForTimeout(400);
-  check('Copy this page makes a third, after it', (await now()) === '3/3', await now());
+  check('Duplicate this page makes a third, after it', (await now()) === '3/3', await now());
   check('  and the row shows every page', (await page.locator('[data-postpage]').count()) === 3);
   await snap('pages');
 
@@ -170,6 +170,24 @@ try {
   await page.locator('[data-postpagestack]').evaluate((el) => el.scrollTo({ top: 0 }));
   await page.waitForTimeout(1200);
   check('  and scrolling up to the first makes it the page being worked on', (await now()) === '1/4', await now());
+  /* The owner, 30 October 2026, with Export open: *"Die add a page button gaan
+     nou bo oor die pop up bars."* An open tool covers the page row; the row
+     never covers the tool. */
+  for (const id of ['save', 'text']) {
+    await page.locator(`[data-cutbench="${id}"]`).first().click();
+    await page.waitForTimeout(700);
+    const onTop = await page.evaluate(() => {
+      const plus = document.querySelector('[data-postpageplus]')?.getBoundingClientRect();
+      if (!plus || plus.width === 0) return false;
+      const hit = document.elementFromPoint(plus.left + plus.width / 2, plus.top + plus.height / 2);
+      const pop = document.querySelector('[data-postpop]')?.getBoundingClientRect();
+      const under = pop && pop.left < plus.right && plus.left < pop.right && pop.top < plus.bottom && plus.top < pop.bottom;
+      return Boolean(under && hit?.closest('[data-postpagebar]'));
+    });
+    check(`  with ${id === 'save' ? 'Export' : 'Text'} open, the page row is not over the tool`, !onTop);
+    await page.locator(`[data-cutbench="${id}"]`).first().click();
+    await page.waitForTimeout(400);
+  }
 } finally {
   await browser.close();
   await server.stop();

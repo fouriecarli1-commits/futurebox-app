@@ -15,6 +15,7 @@
  * aspect of the whole picture. These are marks ON the picture.
  */
 
+import type { Look } from './postlook';
 import type { GlowId } from './postglow';
 import { drawChart, type ChartSpec } from './postcharts';
 import { glowOf, haloPasses } from './postglow';
@@ -73,6 +74,8 @@ export interface Mark {
   readonly hidden?: boolean;
   /** The layer's own opacity, 0.1 to 1, from the layer list — the whole shape, glow and all. Absent is 1. */
   readonly alpha?: number;
+  /** The layer's own Adjust and Filters, when it is chosen in Layers (`lib/postlook.ts`). Absent is as drawn. */
+  readonly look?: Look;
   /** A chart's data and look, for the kind 'chart'. */
   readonly chart?: ChartSpec;
   /** Vector art, for the kind 'art': the SVG drawn, and the studio's drawing to open again. */

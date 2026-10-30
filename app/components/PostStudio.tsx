@@ -348,6 +348,8 @@ interface Words {
   readonly hidden?: boolean;
   /** How see-through, 0.1 to 1, from the layer list. Absent is solid. */
   readonly alpha?: number;
+  /** This layer's own Adjust and Filters, when it is the one chosen in Layers. Absent is as it was made. */
+  readonly look?: Look;
 }
 
 /** Where a paragraph's lines line up: "center text or put it to the left, or right". */
@@ -396,6 +398,8 @@ interface PostPage {
   readonly photoAt: number;
   readonly backHidden: boolean;
   readonly allLook: Look;
+  /** The background colour's own look, from Adjust with Background chosen in Layers. */
+  readonly backLook?: Look;
   /** A small copy of the page as it was left, drawn in the page row. */
   readonly thumb: HTMLCanvasElement | null;
 }
@@ -1516,6 +1520,12 @@ export default function PostStudio({
   const [backHidden, setBackHidden] = useState(false);
   const [allLook, setAllLook] = useState<Look>(PLAIN);
   const [toneAll, setToneAll] = useState(false);
+  /* The background's own look. The owner, 30 October 2026, with Background
+     chosen in Layers and the Blur slider pulled: *"nou dat ek blur, blur die
+     hele bladsy in plaas van net die background."* How it reads only knew
+     two layers, the photo and everything, so every other choice in Layers
+     fell through to everything. Now each layer has a look of its own. */
+  const [backLook, setBackLook] = useState<Look>(PLAIN);
   /** Where the before-and-after line is, as a share across the post; null when it is not shown. */
   const [compare, setCompare] = useState<number | null>(null);
   /* ── The photo grid — `lib/postcells.ts` ─────────────────────────────
@@ -1534,9 +1544,43 @@ export default function PostStudio({
   const [editingCell, setEditingCell] = useState<string | null>(null);
   const changeCell = (id: string, how: Partial<Cell>): void =>
     setCells((was) => was.map((one) => (one.id === id ? { ...one, ...how } : one)));
-  /* What How it reads is changing right now. */
-  const lookNow = toneAll ? allLook : look;
-  const setLookNow = toneAll ? setAllLook : setLook;
+  /* What How it reads and Filters are changing right now: the layer chosen
+     in Layers. The photo and All as before; the background; or one shape,
+     chart or line of words, on its own (`look` on the item). A framed photo
+     of a grid has its own look already, in its own editor. */
+  const lookItem: Mark | Words | null = layerOn === 'all' || layerOn === 'photo' || layerOn === 'back'
+    ? null
+    : marks.find((one) => one.id === layerOn) ?? words.find((one) => one.id === layerOn) ?? null;
+  const layerNameOf = (kind: 'mark' | 'words' | 'cell', item: Mark | Words | Cell): string => {
+    if (kind === 'cell') {
+      const at = cells.findIndex((one) => one.id === item.id);
+      return `${t('post.layerCell', 'Photo')} ${at + 1}${(item as Cell).image ? '' : ` · ${t('post.layerCellEmpty', 'empty')}`}`;
+    }
+    if (kind === 'mark' && (item as Mark).kind === 'art') return `🎨 ${t('post.layerArt', 'Vector art')}`;
+    if (kind === 'mark' && (item as Mark).kind === 'chart') {
+      return `📊 ${(item as Mark).chart?.title || t('post.layerChart', 'Chart')}`;
+    }
+    if (kind === 'mark') {
+      const spec = MARK_SPECS.find((one) => one.id === (item as Mark).kind) ?? MARK_SPECS[0];
+      return `${spec.icon} ${t(spec.name[0], spec.name[1])}`;
+    }
+    const text = (item as Words).text.trim().replace(/\s+/g, ' ');
+    if (!text) return t('post.layerEmptyWords', 'Words (empty)');
+    return `“${text.length > 24 ? `${text.slice(0, 23)}…` : text}”`;
+  };
+  const lookKey: string = layerOn === 'back' ? 'back' : lookItem ? lookItem.id : toneAll ? 'all' : 'photo';
+  const lookNow: Look = lookKey === 'back' ? backLook : lookItem ? (lookItem.look ?? PLAIN) : toneAll ? allLook : look;
+  const setLookNow = (next: Look | ((was: Look) => Look)): void => {
+    const of = (was: Look): Look => (typeof next === 'function' ? next(was) : next);
+    if (lookKey === 'back') { setBackLook(of); return; }
+    if (lookItem) {
+      const id = lookItem.id;
+      setMarks((was) => was.map((one) => (one.id === id ? { ...one, look: of(one.look ?? PLAIN) } : one)));
+      setWords((was) => was.map((one) => (one.id === id ? { ...one, look: of(one.look ?? PLAIN) } : one)));
+      return;
+    }
+    if (toneAll) setAllLook(of); else setLook(of);
+  };
   /* A small square of the photograph — or of the drawn evening before there
      is one — that the tool pictures and the filter pictures are drawn from. */
   const [thumb, setThumb] = useState<HTMLCanvasElement | null>(null);
@@ -1554,8 +1598,8 @@ export default function PostStudio({
   /** A picked frame is being moved and sized rather than its photo panned. */
   const [framing, setFraming] = useState(false);
   /** The filter on, how strong, and whether it is on the photo or on all of it. */
-  const [filterOn, setFilterOn] = useState<{ readonly id: string; readonly share: number; readonly all: boolean } | null>(null);
-  const filterHere = filterOn && filterOn.all === toneAll ? filterOn : null;
+  const [filterOn, setFilterOn] = useState<{ readonly id: string; readonly share: number; readonly on: string } | null>(null);
+  const filterHere = filterOn && filterOn.on === lookKey ? filterOn : null;
   const putFilter = (id: string | null, share = 1): void => {
     const one = id ? filterById(id) : undefined;
     if (!one) {
@@ -1564,7 +1608,7 @@ export default function PostStudio({
       return;
     }
     setLookNow(towards(one.look, share));
-    setFilterOn({ id: one.id, share, all: toneAll });
+    setFilterOn({ id: one.id, share, on: lookKey });
   };
   /* With no photograph there is only the whole picture to change — a
      template, a grid, words on a colour — so Adjust and Filters change that
@@ -1580,8 +1624,8 @@ export default function PostStudio({
   /* Put back as it came — by Adjust, a new photograph, an undo — and no
      filter is on any more, so none is shown as chosen. */
   useEffect(() => {
-    if (filterOn && !touched(filterOn.all ? allLook : look)) setFilterOn(null);
-  }, [filterOn, look, allLook]);
+    if (filterOn && filterOn.on === lookKey && !touched(lookNow)) setFilterOn(null);
+  }, [filterOn, lookKey, lookNow]);
   /* The before-and-after line belongs to the looks: it goes when there is
      nothing to compare, or when another tool is opened. */
   useEffect(() => {
@@ -1935,8 +1979,13 @@ export default function PostStudio({
     /* The background layer can be switched off in the layer list, which is
        the same as nothing behind it — `lib/postlayers.ts`. */
     if (back && !backHidden) {
+      /* With its own look: brightness, contrast, colour and warmth. A blur of
+         one flat colour is the same colour, so it is not offered for it. */
+      ctx.filter = filterFor({ ...backLook, blur: 0 });
       ctx.fillStyle = back;
       ctx.fillRect(0, 0, size.width, size.height);
+      ctx.filter = 'none';
+      paintWashes(ctx, backLook, 0, 0, size.width, size.height);
     } else if (guides) {
       /* A checkerboard, and only on screen — `draw(sheet, false)` is what the
          download uses, exactly as the safe-zone bands are.
@@ -2411,7 +2460,12 @@ export default function PostStudio({
          of its own and laid down at the opacity chosen, it is exactly as
          see-through as the slider says. */
       const alpha = Math.max(0.1, Math.min(1, layer.item.alpha ?? 1));
-      const sheet = alpha < 0.999 ? document.createElement('canvas') : null;
+      /* A layer with a look of its own is drawn on its own sheet too, and the
+         look goes on that sheet alone: a blur on a chart blurs the chart, and
+         the words beside it stay sharp. */
+      const own = layer.kind === 'cell' ? undefined : (layer.item as Mark | Words).look;
+      const looked = own && touched(own) ? own : null;
+      const sheet = alpha < 0.999 || looked ? document.createElement('canvas') : null;
       const sctx = sheet?.getContext('2d') ?? null;
       if (!sheet || !sctx) {
         paint(ctx);
@@ -2421,9 +2475,26 @@ export default function PostStudio({
       sheet.height = to.height;
       sctx.setTransform(ctx.getTransform());
       paint(sctx);
+      if (looked && washesOf(looked).length) {
+        /* Warmth and a filter's tint, kept to what the layer drew. */
+        const tint = document.createElement('canvas');
+        tint.width = to.width;
+        tint.height = to.height;
+        const tctx = tint.getContext('2d');
+        if (tctx) {
+          tctx.drawImage(sheet, 0, 0);
+          paintWashes(tctx, looked, 0, 0, to.width, to.height);
+          tctx.globalCompositeOperation = 'destination-in';
+          tctx.drawImage(sheet, 0, 0);
+          sctx.setTransform(1, 0, 0, 1, 0, 0);
+          sctx.clearRect(0, 0, to.width, to.height);
+          sctx.drawImage(tint, 0, 0);
+        }
+      }
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha = alpha;
+      if (looked) ctx.filter = filterFor(looked, to.width / size.width);
       ctx.drawImage(sheet, 0, 0);
       ctx.restore();
     }
@@ -2822,7 +2893,7 @@ export default function PostStudio({
     /* The ring round the touched line is drawn by `draw` as well. */
     wordOn,
     /* The layer list's switches and the look over everything. */
-    photoHidden, photoAlpha, backHidden, allLook,
+    photoHidden, photoAlpha, backHidden, allLook, backLook,
     /* The before-and-after line, and which look it compares. */
     compare, toneAll,
     /* The photo grid, and a frame being placed. */
@@ -4012,7 +4083,7 @@ export default function PostStudio({
   const pageNow = (): PostPage => ({
     key: pages[pageAt]?.key ?? freshId(),
     post, size, picture, crop, look, back, words, marks, cells,
-    photoHidden, photoAlpha, photoAt, backHidden, allLook,
+    photoHidden, photoAlpha, photoAt, backHidden, allLook, backLook,
     thumb: pageThumb(),
   });
 
@@ -4033,6 +4104,7 @@ export default function PostStudio({
     photoAt: 0,
     backHidden: false,
     allLook: PLAIN,
+    backLook: PLAIN,
     thumb: null,
   });
 
@@ -4055,6 +4127,7 @@ export default function PostStudio({
     setPhotoAt(one.photoAt);
     setBackHidden(one.backHidden);
     setAllLook(one.allLook);
+    setBackLook(one.backLook ?? PLAIN);
     setWordOn(null);
     setMarkOn(null);
     setCellOn(null);
@@ -7097,12 +7170,12 @@ export default function PostStudio({
           </button>
         )}
       </div>
-      <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-        {t(
-          'post.askWhat',
-          'Say what you want and it is drawn; bring a picture in first and it changes that one instead. This is the only thing in this room that uses credits and does not happen on your phone — the picture is drawn somewhere else, so it costs credits and takes a few seconds. It can write words INTO the picture, on a window or along a wall; for words on top in a real font, use Words below, which uses no credits and can be moved afterwards. It will not put a real person into a picture, and it cannot make album art: a cover is made in the booth or bought from an artist.',
-        )}
-      </span>
+      {/* One line. The owner, 30 October 2026, of the paragraph that was here:
+          *"Hierdie description is te lank en onnodig."* The price is on the
+          button; what it will not draw, it says when asked. */}
+      <p data-keep data-postaskwhat className="text-[13px] font-medium leading-snug" style={{ color: '#A5F3FC', textShadow: '0 0 8px rgba(34,211,238,0.45)' }}>
+        {t('post.askWhat', 'Describe it and AI draws it. With a photo in, it changes that photo.')}
+      </p>
     </div>
     {/* ── The background, taken out ──────────────────────────────────
  
@@ -8054,13 +8127,13 @@ export default function PostStudio({
       >
         {/* Which layer this changes — the photo alone, or the whole
             picture with its words and shapes. Chosen here or in Layers. */}
-        <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
+        <div className={RY} data-postlooktarget={lookKey === 'all' || lookKey === 'photo' || lookKey === 'back' ? lookKey : 'item'}>
           {picture && <button
             type="button"
             data-postlookon="photo"
-            aria-pressed={!toneAll}
+            aria-pressed={lookKey === 'photo'}
             onClick={() => { setToneAll(false); setLayerOn('photo'); }}
-            className={`${LEEG} ${!toneAll ? GEKIES : ''}`}
+            className={`${LEEG} ${lookKey === 'photo' ? GEKIES : ''}`}
           >
             <ImageIcon className="h-3.5 w-3.5" />
             {t('post.lookOnPhoto', 'The photo')}
@@ -8068,13 +8141,27 @@ export default function PostStudio({
           <button
             type="button"
             data-postlookon="all"
-            aria-pressed={toneAll}
+            aria-pressed={lookKey === 'all'}
             onClick={() => { setToneAll(true); setLayerOn('all'); }}
-            className={`${LEEG} ${toneAll ? GEKIES : ''}`}
+            className={`${LEEG} ${lookKey === 'all' ? GEKIES : ''}`}
           >
             <Layers className="h-3.5 w-3.5" />
             {t('post.lookOnAll', 'All layers')}
           </button>
+          {/* The layer chosen in Layers, when it is neither: this is what
+              changes, and only this (the owner, 30 October 2026). */}
+          {(lookKey === 'back' || lookItem) && (
+            <button
+              type="button"
+              data-postlookon="layer"
+              aria-pressed
+              onClick={() => setBench('layers')}
+              className={`${LEEG} ${GEKIES} col-span-2`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="truncate">{t('post.lookOnLayer', 'Only')}: {lookKey === 'back' ? t('post.layerBack', 'Background') : lookItem ? layerNameOf(words.some((one) => one.id === lookItem.id) ? 'words' : 'mark', lookItem) : ''}</span>
+            </button>
+          )}
         </div>
         {selectRow}
         <div className="space-y-2">
@@ -8154,7 +8241,7 @@ export default function PostStudio({
           ['colour', t('post.colour', 'Colour')],
           ['warmth', t('post.warmth', 'Warmth')],
           ['blur', t('post.blur', 'Blur')],
-        ] as const).map(([key, name]) => (
+        ] as const).filter(([key]) => !(key === 'blur' && lookKey === 'back')).map(([key, name]) => (
           <label key={key} className="block space-y-1">
             <span className="text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
               {name}
@@ -9748,23 +9835,6 @@ export default function PostStudio({
     setWords((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
     setCells((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
   };
-  const layerNameOf = (kind: 'mark' | 'words' | 'cell', item: Mark | Words | Cell): string => {
-    if (kind === 'cell') {
-      const at = cells.findIndex((one) => one.id === item.id);
-      return `${t('post.layerCell', 'Photo')} ${at + 1}${(item as Cell).image ? '' : ` · ${t('post.layerCellEmpty', 'empty')}`}`;
-    }
-    if (kind === 'mark' && (item as Mark).kind === 'art') return `🎨 ${t('post.layerArt', 'Vector art')}`;
-    if (kind === 'mark' && (item as Mark).kind === 'chart') {
-      return `📊 ${(item as Mark).chart?.title || t('post.layerChart', 'Chart')}`;
-    }
-    if (kind === 'mark') {
-      const spec = MARK_SPECS.find((one) => one.id === (item as Mark).kind) ?? MARK_SPECS[0];
-      return `${spec.icon} ${t(spec.name[0], spec.name[1])}`;
-    }
-    const text = (item as Words).text.trim().replace(/\s+/g, ' ');
-    if (!text) return t('post.layerEmptyWords', 'Words (empty)');
-    return `“${text.length > 24 ? `${text.slice(0, 23)}…` : text}”`;
-  };
   const layerRow = (
     id: LayerOn,
     name: string,
@@ -10044,13 +10114,13 @@ export default function PostStudio({
           </label>
         )}
         {compareButton}
-        <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
+        <div className={RY} data-postlooktarget={lookKey === 'all' || lookKey === 'photo' || lookKey === 'back' ? lookKey : 'item'}>
           {picture && <button
             type="button"
             data-postfilteron="photo"
-            aria-pressed={!toneAll}
+            aria-pressed={lookKey === 'photo'}
             onClick={() => { setToneAll(false); setLayerOn('photo'); }}
-            className={`${LEEG} ${!toneAll ? GEKIES : ''}`}
+            className={`${LEEG} ${lookKey === 'photo' ? GEKIES : ''}`}
           >
             <ImageIcon className="h-3.5 w-3.5" />
             {t('post.lookOnPhoto', 'The photo')}
@@ -10058,13 +10128,27 @@ export default function PostStudio({
           <button
             type="button"
             data-postfilteron="all"
-            aria-pressed={toneAll}
+            aria-pressed={lookKey === 'all'}
             onClick={() => { setToneAll(true); setLayerOn('all'); }}
-            className={`${LEEG} ${toneAll ? GEKIES : ''}`}
+            className={`${LEEG} ${lookKey === 'all' ? GEKIES : ''}`}
           >
             <Layers className="h-3.5 w-3.5" />
             {t('post.lookOnAll', 'All layers')}
           </button>
+          {/* The layer chosen in Layers, when it is neither: this is what
+              changes, and only this (the owner, 30 October 2026). */}
+          {(lookKey === 'back' || lookItem) && (
+            <button
+              type="button"
+              data-postfilteron="layer"
+              aria-pressed
+              onClick={() => setBench('layers')}
+              className={`${LEEG} ${GEKIES} col-span-2`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="truncate">{t('post.lookOnLayer', 'Only')}: {lookKey === 'back' ? t('post.layerBack', 'Background') : lookItem ? layerNameOf(words.some((one) => one.id === lookItem.id) ? 'words' : 'mark', lookItem) : ''}</span>
+            </button>
+          )}
         </div>
         {selectRow}
         <p className="text-[11px] leading-relaxed text-zinc-500">
@@ -10469,7 +10553,7 @@ export default function PostStudio({
           <Plus className="h-4 w-4" />{t('post.pageAdd', 'Add a page')}
         </button>
         <button type="button" onClick={() => addPage(true)} data-postpagecopy className={LEEG}>
-          <Copy className="h-4 w-4" />{t('post.pageCopy', 'Copy this page')}
+          <Copy className="h-4 w-4" />{t('post.pageCopy', 'Duplicate this page')}
         </button>
       </div>
       {pages.length > 1 && (
