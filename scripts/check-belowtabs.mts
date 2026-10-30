@@ -246,6 +246,8 @@ const KNOWN: readonly string[] = [
   'app/components/MakeStudio.tsx',
   /* ProBooth's drum pads, 30 October 2026, over the studio. */
   'app/components/BeatPads.tsx',
+  /* ProBooth's keyboard, 30 October 2026, over the studio. */
+  'app/components/KeysSheet.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',

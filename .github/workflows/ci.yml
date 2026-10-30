@@ -1961,6 +1961,10 @@ jobs:
         run: npm run check:dawtools
       - name: ProBooth's drum pads put every hit on its step, the same every time
         run: npm run check:beatbox
+      - name: ProBooth's keyboard lands what was played on the grid, as notes
+        run: npm run check:keys
+      - name: ProBooth's time and pitch reads a clip and moves one without the other
+        run: npm run check:timepitch
 
       # The file Google reads to verify the website for the Play Console. It
       # must stay for as long as the developer account does.

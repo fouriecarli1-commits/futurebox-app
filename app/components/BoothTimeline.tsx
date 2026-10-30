@@ -252,7 +252,7 @@ export default function BoothTimeline({
   /** Which automation line is drawn over every lane, if any (`BoothAuto`). */
   readonly autoMode?: AutoMode | null;
   /** The three ways to start a new lane, offered where the next lane will go. */
-  readonly onAdd?: (how: 'record' | 'file' | 'part' | 'beat' | 'stems') => void;
+  readonly onAdd?: (how: 'record' | 'file' | 'part' | 'beat' | 'keys' | 'stems') => void;
   /** Whether adding is possible right now (not mid-take, not busy). */
   readonly addOff?: boolean;
   /** Every lane as a wave, or as a spectrogram. The owner, 26 October 2026. */
@@ -2164,6 +2164,7 @@ export default function BoothTimeline({
                 ['record', '●', t('pro.addRecord', 'Record')],
                 ['file', '↥', t('pro.addFile', 'Bring a file in')],
                 ['beat', '▦', t('pro.addBeat', 'Drum pads')],
+                ['keys', '♫', t('pro.addKeys', 'Play keys')],
                 ['part', '♪', t('pro.addPart', 'Make a part')],
                 ['stems', '≋', t('pro.addStems', 'Split into stems')],
               ] as const).map(([how, mark, says]) => (

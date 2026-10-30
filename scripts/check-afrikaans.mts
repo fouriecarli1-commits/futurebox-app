@@ -85,7 +85,7 @@ const SAME_IN_BOTH = new Set([
   /* ProBooth's loudness target: the names of the places, the same everywhere. */
   'Spotify, YouTube, TikTok',
   /* The drum pads: names of styles and drums a musician says in Afrikaans too. */
-  'Pop', 'House', 'Boom bap', 'Trap', 'Amapiano', 'Hi-hat', 'Tom', 'Stop',
+  'Pop', 'House', 'Boom bap', 'Trap', 'Amapiano', 'Hi-hat', 'Tom', 'Stop', 'Instrument',
   /* The jam room's characters: a robot is a robot in Afrikaans too. */
   'Robot',
   /* A singer says "vibrato" in Afrikaans too: the hum dials. */

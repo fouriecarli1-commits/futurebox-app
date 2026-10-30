@@ -115,8 +115,8 @@ try {
   await room.locator('button').filter({ hasText: /Pro DAW Studio/ }).first().dispatchEvent('click');
   await page.waitForTimeout(3000);
 
-  check('under the lanes, the five ways to a new lane are offered where it will go',
-    (await page.locator('[data-laneadd] [data-laneaddhow]').count()) === 5);
+  check('under the lanes, the six ways to a new lane are offered where it will go',
+    (await page.locator('[data-laneadd] [data-laneaddhow]').count()) === 6);
   check('  and a lane header is wide enough for the whole name on a computer',
     !(await page.locator('[data-lanename] span').first().evaluate((one) => one.scrollWidth > one.clientWidth + 1)));
   check('every lane header has a meter', (await page.locator('[data-lanename]').count()) > 0
@@ -285,6 +285,58 @@ try {
   const afterBeat = await names();
   check('putting it on a lane adds a beat lane named for its style',
     afterBeat.length === beforeBeat + 1 && afterBeat.some((one) => /Amapiano/.test(one)), afterBeat.slice(-2).join(' | '));
+
+  /* ── Keys: played on the computer's keyboard, recorded, put on a lane ── */
+  const beforeKeys = (await names()).length;
+  await page.locator('[data-laneaddhow="keys"]').first().click();
+  await page.waitForTimeout(500);
+  check('the keyboard opens with two octaves of keys', (await page.locator('[data-keyssheet] [data-key]').count()) === 25);
+  await page.keyboard.down('a');
+  await page.waitForTimeout(120);
+  check('  and the computer keys play it: A is the C at the bottom', (await page.locator('[data-key="48"][data-down]').count()) === 1);
+  await page.keyboard.up('a');
+  await page.locator('[data-keysrecord]').first().click();
+  await page.waitForTimeout(2700);
+  for (const key of ['a', 'd', 'g', 'k']) {
+    await page.keyboard.down(key);
+    await page.waitForTimeout(300);
+    await page.keyboard.up(key);
+    await page.waitForTimeout(150);
+  }
+  await page.locator('[data-keysrecord]').first().click();
+  await page.waitForTimeout(500);
+  const played = await page.locator('[data-keyssheet] [data-rollnote]').count();
+  check('  what was played comes back as notes in the piano roll', played >= 4, String(played));
+  await page.screenshot({ path: shot('dawmeters-keys.png') });
+  await page.locator('[data-keysplace]').first().click();
+  await page.waitForTimeout(800);
+  const afterKeys = await names();
+  check('  and lands on a lane named for its instrument', afterKeys.length === beforeKeys + 1, afterKeys.slice(-2).join(' | '));
+
+  /* ── Time and pitch: the beat lane read, fitted, and moved up ── */
+  await page.locator('[data-lanename]').filter({ hasText: /Amapiano/ }).first().click();
+  await page.waitForTimeout(250);
+  /* The open lane's controls are on the Tracks desk. */
+  await page.locator('[data-boothdesk="tracks"]').first().click();
+  const said = page.locator('[data-timepitchread]').first();
+  await said.waitFor({ timeout: 8000 });
+  await page.waitForFunction(() => /BPM|no steady beat/.test(document.querySelector('[data-timepitchread]')?.textContent ?? ''), null, { timeout: 15000 });
+  const heardText = (await said.innerText()).trim();
+  check('opening a lane reads its tempo, on the device', /\d+ BPM/.test(heardText), heardText);
+  const session = Number(await page.locator('input[aria-label="Tempo"]').first().inputValue());
+  await page.locator('[data-timepitchfit]').first().click();
+  const fitted = Number(/(\d+) BPM/.exec(await page.locator('[data-timepitchspeedsays]').first().innerText())?.[1] ?? NaN);
+  check('  and fitting it lands on the session tempo (or its half or double)',
+    [session, session / 2, session * 2].some((one) => Math.abs(one - fitted) <= 1), `${fitted} vs ${session}`);
+  await page.locator('[data-timepitchspeed]').first().fill('100');
+  for (let i = 0; i < 3; i += 1) await page.locator('[data-timepitchup]').first().click();
+  check('  three presses up say three semitones', /^\+3/.test((await page.locator('[data-timepitchshiftsays]').first().innerText()).trim()));
+  const beforeBend = (await names()).length;
+  await page.locator('[data-timepitchapply]').first().click();
+  await page.waitForFunction(() => !/^\+/.test((document.querySelector('[data-timepitchshiftsays]')?.textContent ?? '').trim()), null, { timeout: 20000 });
+  await page.screenshot({ path: shot('dawmeters-timepitch.png') });
+  check('  and changing the lane bakes it in and starts the card again from nothing moved',
+    (await names()).length === beforeBend && (await page.locator('[data-timepitchapply]').first().isDisabled()));
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

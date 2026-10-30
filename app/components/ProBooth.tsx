@@ -22,9 +22,10 @@
  * (`BoothTransport`), markers, copy and paste, a mixer with every lane side
  * by side, a playhead that moves without re-working the room every frame
  * (`lib/liveclock.ts`), its own pedals and amps (`lib/pedals.ts`), and a
- * hum that is read note by note onto a piano roll (`HumRoll`). What it still
- * does not have, and says so rather than drawing it: automation lanes, bus
- * routing, and a level meter on every lane — the master has the scope.
+ * hum that is read note by note onto a piano roll (`HumRoll`). Since the
+ * audit of 29 October 2026 it also has a meter on every lane and strip,
+ * room and echo sends, volume and pan automation, punch-in, comping, drum
+ * pads, a keyboard, and time and pitch (`lib/timepitch.ts`).
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -36,6 +37,8 @@ import {
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, soundOf as plainSound, type Finished } from '../lib/mastering';
 import { failed, separate, separateParts } from '../lib/stems';
+import TimePitch from './TimePitch';
+import { clampSpeed, timeAndPitch } from '../lib/timepitch';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
 import { ampMaker, ampName, through } from '../lib/nam';
@@ -65,6 +68,7 @@ import BoothScope from './BoothScope';
 import LaneMeter from './LaneMeter';
 import type { AutoMode } from './BoothAuto';
 import BeatPads from './BeatPads';
+import KeysSheet from './KeysSheet';
 import { renderBeat, RATE as BEAT_RATE, type Beat } from '../lib/beatbox';
 import { whatsIn, type Heard as PieceHeard } from '../lib/whatsin';
 import { transitionsIn } from '../lib/transitions';
@@ -590,6 +594,8 @@ export default function ProBooth({
   const [autoMode, setAutoMode] = useState<AutoMode | null>(null);
   /* The drum pads, open for a new beat or for a beat lane being changed. */
   const [beatOpen, setBeatOpen] = useState<{ readonly laneId?: string; readonly start?: Beat } | null>(null);
+  /* The keyboard sheet: play an instrument in. */
+  const [keysOpen, setKeysOpen] = useState(false);
   const earOf = useCallback((id: string): AnalyserNode | undefined => laneEars.current.get(id), []);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   /* The playhead while it moves — see `lib/liveclock.ts`. The timeline's
@@ -2882,7 +2888,7 @@ export default function ProBooth({
        back up — so this is not one of the free ones however cheap it looks.
        Both halves still point at the same recording, which is why the cut
        costs nothing; it is the SESSION that cannot be put back by hand. */
-    remember(t('undo.split', 'die sny in twee'));
+    remember(t('undo.split', 'the split in two'));
     if (times > 1) {
       const seam = Math.max(1, Math.min(times - 1, Math.round(into / once)));
       setLanes((was) =>
@@ -3046,7 +3052,7 @@ export default function ProBooth({
   const regionCut = useCallback(() => {
     const got = carveHere();
     if (!got) return;
-    const kept = commit(t('undo.cut', 'die uitsny'), got.lane.id, [got.carved.before, got.carved.after]);
+    const kept = commit(t('undo.cut', 'the cut'), got.lane.id, [got.carved.before, got.carved.after]);
     setPicked(kept[0]?.id ?? null);
     setRegion(null);
     setRegionOpen(false);
@@ -3056,7 +3062,7 @@ export default function ProBooth({
   const regionKeep = useCallback(() => {
     const got = carveHere();
     if (!got) return;
-    commit(t('undo.keep', 'die weggooi van die res'), got.lane.id, [got.carved.inside]);
+    commit(t('undo.keep', 'dropping the rest'), got.lane.id, [got.carved.inside]);
     setPicked(got.carved.inside.id);
     setRegionOpen(false);
   }, [carveHere, commit]);
@@ -3108,7 +3114,7 @@ export default function ProBooth({
     if (!got) return;
     const { before, inside, after } = got.carved;
     const extra = lengthOf(inside);
-    commit(t('undo.repeat', 'die herhaling'), got.lane.id, [
+    commit(t('undo.repeat', 'the repeat'), got.lane.id, [
       before,
       { ...inside, repeat: Math.min(64, repeatOf(inside) * 2) },
       after ? { ...after, at: after.at + extra } : null,
@@ -3134,7 +3140,7 @@ export default function ProBooth({
       const got = carveHere();
       if (!got) return;
       const { before, inside, after } = got.carved;
-      commit(t('undo.fade', 'die in- of uitdoof'), got.lane.id, [
+      commit(t('undo.fade', 'the fade'), got.lane.id, [
         before,
         {
           ...inside,
@@ -3196,6 +3202,53 @@ export default function ProBooth({
   );
 
   /**
+   * The whole lane faster or slower, higher or lower (`lib/timepitch.ts`).
+   *
+   * Baked from what plays (the cut window, the amp in it), as reverse and
+   * normalise are, and kept going round as often as it did. Everything
+   * measured in the clip's own seconds moves with it: the corner fades and
+   * the marks. The notes or the beat a lane was drawn from no longer match
+   * its sound, so it lets them go rather than keep a pattern that lies, and
+   * the song reader's spans are dropped for the same reason.
+   */
+  const bendLane = useCallback(
+    (lane: Lane, speed: number, semitones: number) => {
+      const ctx = context();
+      if (!ctx) return;
+      const piece = pieceOf(lane, ctx);
+      const moved = timeAndPitch(
+        Array.from({ length: piece.numberOfChannels }, (_, c) => piece.getChannelData(c)),
+        piece.sampleRate,
+        speed,
+        semitones,
+      );
+      const audio = ctx.createBuffer(moved.length, moved[0].length, piece.sampleRate);
+      moved.forEach((one, c) => audio.copyToChannel(one as Float32Array<ArrayBuffer>, c));
+      const fast = clampSpeed(speed);
+      const start = windowOf(lane).from;
+      commit(t('undo.timepitch', 'the time and pitch change'), lane.id, [
+        {
+          ...lane,
+          audio,
+          amped: undefined,
+          from: undefined,
+          to: undefined,
+          fadeIn: lane.fadeIn !== undefined ? lane.fadeIn / fast : undefined,
+          fadeOut: lane.fadeOut !== undefined ? lane.fadeOut / fast : undefined,
+          marks: lane.marks?.map((one) => (one - start) / fast).filter((one) => one >= 0 && one <= audio.duration),
+          notes: undefined,
+          beat: undefined,
+        },
+      ]);
+      setKnown((was) => {
+        const { [lane.id]: _gone, ...rest } = was;
+        return rest;
+      });
+    },
+    [commit, context, t],
+  );
+
+  /**
    * A part generated for exactly this long.
    *
    * The nearest whole number of bars the engine will take, at the room's own
@@ -3250,7 +3303,7 @@ export default function ProBooth({
       const got = carveHere();
       if (!got || !ctx) return;
       const { before, inside, after } = got.carved;
-      commit(t('undo.mark', 'die merk van die stuk'), got.lane.id, [before, inside, after]);
+      commit(t('undo.mark', 'marking the piece'), got.lane.id, [before, inside, after]);
       setPicked(inside.id);
       setRegionOpen(false);
       if (what === 'voice') void split(inside);
@@ -3275,7 +3328,7 @@ export default function ProBooth({
     if (!got) return;
     if (!(await payTool('smooth', `${got.lane.id}|${region?.from}|${region?.to}|${Date.now()}`))) return;
     const { before, inside, after } = got.carved;
-    commit(t('undo.smooth', 'die gladde oorgang'), got.lane.id, [
+    commit(t('undo.smooth', 'the smoothed transition'), got.lane.id, [
       before,
       { ...inside, audio: smoothedCopy(playsOf(inside, ctx), ctx), amped: undefined, from: undefined, to: undefined, repeat: 1 },
       after,
@@ -3811,7 +3864,7 @@ export default function ProBooth({
             onChange={(how) => change(lane.id, how)}
             onDeRoom={() => void deRoom(lane)}
             onRemove={() => {
-              remember(t('undo.lane', 'die weggooi van die baan'));
+              remember(t('undo.lane', 'dropping the lane'));
               setLanes((was) => was.filter((one) => one.id !== lane.id));
             }}
             onSplit={() => void split(lane)}
@@ -3825,6 +3878,20 @@ export default function ProBooth({
             }
             onSave={(what) => void saveLane(lane, what)}
             busy={busy}
+          />
+        ))}
+
+        {/* ── Time and pitch, under the lane it changes ─────────────── */}
+        {lanes.filter((one) => one.id === picked).map((lane) => (
+          <TimePitch
+            key={`tp-${lane.id}`}
+            t={t}
+            lane={lane}
+            bpm={sane(meter).bpm}
+            sessionKey={meter.key}
+            heard={known[lane.id]}
+            busy={busy}
+            onApply={(speed, semitones) => bendLane(lane, speed, semitones)}
           />
         ))}
 
@@ -6714,7 +6781,7 @@ export default function ProBooth({
               type="button"
               onClick={() => {
                 void forgetSession(song);
-                remember(t('undo.all', 'die skoonvee van al die bane'));
+                remember(t('undo.all', 'clearing every lane'));
                 setLanes((was) => was.filter((lane) => lane.backing));
                 setCameBack(false);
                 setSavedAt(null);
@@ -6856,6 +6923,7 @@ export default function ProBooth({
               else if (how === 'file') fileRef.current?.click();
               else if (how === 'stems') setDeskOpen('stems');
               else if (how === 'beat') setBeatOpen({});
+              else if (how === 'keys') setKeysOpen(true);
               else setPartOpen(true);
             }}
             view={laneView}
@@ -6886,6 +6954,39 @@ export default function ProBooth({
         </div>
       </div>
       </div>
+
+      {keysOpen && (
+        <KeysSheet
+          t={t}
+          bpm={meter.bpm}
+          beats={meter.beats}
+          onClose={() => setKeysOpen(false)}
+          onPlace={(notes, voiceId) => {
+            const ctx = context();
+            const voice = voiceById(voiceId);
+            if (!ctx || !voice || !notes.length) return;
+            const seconds = notes.reduce((most, one) => Math.max(most, one.to), 0) + 1.5;
+            const played = renderHum(notes, voice, seconds, ctx.sampleRate);
+            const audio = ctx.createBuffer(1, played.length, ctx.sampleRate);
+            audio.getChannelData(0).set(played);
+            const bar = barSeconds(sane(meter));
+            setKeysOpen(false);
+            remember(t('undo.add', 'the new lane'));
+            setLanes((was) => [...was, {
+              id: `keys-${Date.now()}`,
+              name: t(voice.says[0], voice.says[1]),
+              audio,
+              at: bar > 0 ? Math.floor(at / bar) * bar : at,
+              gain: 1,
+              muted: false,
+              soloed: false,
+              /* The notes the lane is, so MIDI comes out exact (see the hum). */
+              notes,
+            }]);
+            setStale(true);
+          }}
+        />
+      )}
 
       {beatOpen && (
         <BeatPads

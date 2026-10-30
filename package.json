@@ -458,6 +458,8 @@
     "check:mastering": "tsx scripts/check-mastering.mts",
     "check:dawtools": "tsx scripts/check-dawtools.mts",
     "check:beatbox": "tsx scripts/check-beatbox.mts",
+    "check:keys": "tsx scripts/check-keys.mts",
+    "check:timepitch": "tsx scripts/check-timepitch.mts",
     "check:googlesite": "tsx scripts/check-googlesite.mts",
     "check:cloudcopy": "tsx scripts/check-cloudcopy.mts",
     "check:kidsplaylists": "tsx scripts/check-kidsplaylists.mts",
