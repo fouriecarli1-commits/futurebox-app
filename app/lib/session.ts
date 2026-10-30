@@ -3,6 +3,7 @@
 import { isClean, isUncleaned, wireClean, wireTone, type Clean, type Tone } from './tone';
 import { anyFx, roomOf, wireFx, type Fx } from './fx';
 import type { HumNote } from './humnotes';
+import { STEPS, stepAt, stepSeconds } from './beatbox';
 
 /**
  * A session: several pieces of audio on one clock.
@@ -61,6 +62,15 @@ export interface Lane {
    * does not.
    */
   readonly sends?: { readonly space?: number; readonly echo?: number };
+  /**
+   * Ducked by another lane: the sidechain every studio has, which makes a mix
+   * pump (29 October 2026 audit). This lane dips by `depth` (0–1 of its
+   * level) on every hit of the lane `by`, and comes back up over a
+   * fraction of a beat. `hits` are the key's hits on the session's clock,
+   * filled in by `withDucks` when the session is played or rendered, never
+   * saved: the key lane can move. `release` too, from the tempo.
+   */
+  readonly duck?: { readonly by: string; readonly depth: number; readonly hits?: readonly number[]; readonly release?: number };
   readonly id: string;
   readonly name: string;
   readonly audio: AudioBuffer;
@@ -621,6 +631,29 @@ export function fadedApart(carved: Carved): Carved {
 /** The fade stage of a wired lane, found again when the lane is started. */
 const FADES = new WeakMap<AudioBufferSourceNode, GainNode>();
 /** A wired lane's level and pan, for its automation, scheduled in `startLane`. */
+/* The duck stage on a lane that is ducked by another, and how long it takes to come back up. */
+const DUCKS = new WeakMap<AudioBufferSourceNode, { readonly gain: GainNode; readonly release: number }>();
+/** How fast a duck goes down, in seconds: quick enough to make room for the kick, slow enough not to click. */
+export const DUCK_ATTACK = 0.006;
+
+/**
+ * Lay the ducks onto a lane's duck stage: down on every hit of its key, back
+ * up over `release`. Only the hits after where playback joins.
+ */
+function duckDown(gain: AudioParam, hits: readonly number[], depth: number, release: number, playFrom: number, when: number): void {
+  const low = Math.max(0, 1 - Math.max(0, Math.min(1, depth)));
+  const at = (t: number): number => when + (t - playFrom);
+  gain.cancelScheduledValues(0);
+  gain.setValueAtTime(1, Math.max(0, when));
+  for (const hit of hits) {
+    if (hit < playFrom) continue;
+    const start = Math.max(when, at(hit) - DUCK_ATTACK);
+    gain.setValueAtTime(1, start);
+    gain.linearRampToValueAtTime(low, at(hit));
+    gain.setTargetAtTime(1, at(hit) + DUCK_ATTACK, release / 3);
+  }
+}
+
 const RIDES = new WeakMap<AudioBufferSourceNode, { readonly level: GainNode; readonly base: number; readonly place: StereoPannerNode | null }>();
 
 /**
@@ -696,6 +729,8 @@ export function startLane(
   const rides = RIDES.get(source);
   if (rides && lane.auto?.gain?.length) ride(rides.level.gain, lane.auto.gain, rides.base, playFrom, when, 0, 1);
   if (rides?.place && lane.auto?.pan?.length) ride(rides.place.pan, lane.auto.pan, 1, playFrom, when, -1, 1);
+  const duck = DUCKS.get(source);
+  if (duck && lane.duck?.hits?.length) duckDown(duck.gain.gain, lane.duck.hits, lane.duck.depth, duck.release, playFrom, when);
 
   if (times === 1) {
     if (into >= 0) source.start(when, window.from + into, length - into);
@@ -816,18 +851,27 @@ export function wireLane(
   }
   /* For the automation, laid on when the lane is started (`startLane`). */
   RIDES.set(source, { level, base: lane.gain, place });
-  let out: AudioNode = level;
+  /* The duck stage, after the fader: the sidechain moves the lane as it sits
+     in the mix, so turning it up does not change how far it dips. */
+  let faded: AudioNode = level;
+  if (lane.duck && lane.duck.depth > 0) {
+    const duck = ctx.createGain();
+    level.connect(duck);
+    DUCKS.set(source, { gain: duck, release: lane.duck.release ?? 0.15 });
+    faded = duck;
+  }
+  let out: AudioNode = faded;
   if (place) {
     place.pan.value = Math.max(-1, Math.min(1, lane.pan ?? 0));
     source.connect(entry);
-    level.connect(place).connect(to);
+    faded.connect(place).connect(to);
     out = place;
   } else {
     /* Safari long ago, and some embedded browsers. Losing the pan is the right
        failure: the alternative is a hand-rolled panner that sounds different
        from the one everybody else hears. */
     source.connect(entry);
-    level.connect(to);
+    faded.connect(to);
   }
   /* The sends, after the fader and the pan (post-fader, as a desk sends by
      default): turning a lane down turns its reverb down with it. */
@@ -884,6 +928,100 @@ export function wireReturns(ctx: BaseAudioContext, to: AudioNode, bpm = 120): Re
 }
 
 /** Whether any lane sends anywhere, so a session with no sends builds no returns. */
+/* ── The sidechain ──────────────────────────────────────────────────── */
+
+/** Where a sound hits hardest in the low end, in seconds into `samples`. Kicks, mostly, which is what a duck follows. */
+export function kicksIn(samples: Float32Array, rate: number): number[] {
+  /* Below ~150 Hz, through four one-pole filters, so a hat or a voice does not count. */
+  const a = 1 - Math.exp((-2 * Math.PI * 150) / rate);
+  let s1 = 0; let s2 = 0; let s3 = 0; let s4 = 0;
+  const hop = Math.max(1, Math.round(rate * 0.005));
+  const frames = Math.floor(samples.length / hop);
+  const energy = new Float32Array(frames);
+  for (let f = 0; f < frames; f += 1) {
+    let sum = 0;
+    for (let i = f * hop; i < (f + 1) * hop; i += 1) {
+      s1 += a * (samples[i] - s1); s2 += a * (s1 - s2); s3 += a * (s2 - s3); s4 += a * (s3 - s4);
+      sum += s4 * s4;
+    }
+    energy[f] = sum / hop;
+  }
+  let top = 0;
+  for (let f = 0; f < frames; f += 1) top = Math.max(top, energy[f]);
+  if (!(top > 1e-7)) return [];
+  const out: number[] = [];
+  let last = -Infinity;
+  for (let f = 2; f < frames; f += 1) {
+    /* A rise to over a fifth of the loudest, at least 90 ms after the last: one kick, not its ring. */
+    const rising = energy[f] > top * 0.2 && energy[f] > energy[f - 2] * 3;
+    const t = (f * hop) / rate;
+    if (rising && t - last > 0.09) {
+      out.push(Math.max(0, t - 0.01));
+      last = t;
+    }
+  }
+  return out;
+}
+
+/* Read once per recording. */
+const KICKS = new WeakMap<AudioBuffer, number[]>();
+
+/**
+ * Every hit of a lane, on the session's clock. A drum-pad lane knows its
+ * kicks exactly from its pattern (the log drum when there is no kick); any
+ * other lane is listened to.
+ */
+export function hitsOf(key: Lane, bpm: number): number[] {
+  const window = windowOf(key);
+  const once = window.to - window.from;
+  if (!(once > 0)) return [];
+  const times = repeatOf(key);
+  let inOnce: number[];
+  if (key.beat) {
+    const row = key.beat.pattern.kick?.some((v) => v > 0) ? key.beat.pattern.kick : key.beat.pattern.log ?? [];
+    const bar = stepSeconds(bpm) * STEPS;
+    const bars = Math.max(1, Math.round(key.beat.bars));
+    inOnce = [];
+    for (let b = 0; b < bars; b += 1) {
+      row.forEach((hard, step) => { if (hard > 0) inOnce.push(b * bar + stepAt(step, bpm, key.beat?.swing ?? 0)); });
+    }
+    inOnce = inOnce.filter((t) => t >= window.from && t < window.to).map((t) => t - window.from);
+  } else {
+    let all = KICKS.get(key.audio);
+    if (!all) {
+      const mono = new Float32Array(key.audio.length);
+      for (let c = 0; c < key.audio.numberOfChannels; c += 1) {
+        const data = key.audio.getChannelData(c);
+        for (let i = 0; i < data.length; i += 1) mono[i] += data[i] / key.audio.numberOfChannels;
+      }
+      all = kicksIn(mono, key.audio.sampleRate);
+      KICKS.set(key.audio, all);
+    }
+    inOnce = all.filter((t) => t >= window.from && t < window.to).map((t) => t - window.from);
+  }
+  const out: number[] = [];
+  for (let n = 0; n < times; n += 1) for (const t of inOnce) out.push(key.at + n * once + t);
+  return out.filter((t) => t >= 0).sort((x, y) => x - y);
+}
+
+/**
+ * The lanes with every duck's hits and release filled in from its key, as
+ * they are now. Called by playback, the mixdown and the stems alike, so all
+ * three duck on the same hits. A key that is muted, missing or the lane
+ * itself ducks nothing.
+ */
+export function withDucks(lanes: readonly Lane[], bpm: number): Lane[] {
+  if (!lanes.some((one) => one.duck)) return [...lanes];
+  const heard = new Set(audible(lanes).map((one) => one.id));
+  const beat = 60 / Math.max(30, Math.min(300, bpm));
+  return lanes.map((lane) => {
+    if (!lane.duck) return lane;
+    const key = lanes.find((one) => one.id === lane.duck?.by);
+    const hits = key && key.id !== lane.id && heard.has(key.id) ? hitsOf(key, bpm) : [];
+    return { ...lane, duck: { ...lane.duck, hits, release: Math.min(0.35, beat * 0.45) } };
+  });
+}
+
 export const anySends = (lanes: readonly Lane[]): boolean =>
   lanes.some((one) => (one.sends?.space ?? 0) > 0 || (one.sends?.echo ?? 0) > 0);
 
@@ -912,7 +1050,8 @@ export async function mixSession(
   /** The trim the mixer was listening through. Worked out once, used twice. */
   trim = 1,
 ): Promise<AudioBuffer | null> {
-  const heard = audible(lanes);
+  /* The ducks' hits from their keys as they are now, as playback does. */
+  const heard = audible(withDucks(lanes, master.bpm ?? 120));
   if (!heard.length) return null;
   const Ctx = (window as unknown as { OfflineAudioContext?: typeof OfflineAudioContext }).OfflineAudioContext;
   if (!Ctx) return null;
@@ -956,7 +1095,9 @@ export async function stemOf(lane: Lane, lanes: readonly Lane[], rate: number, b
   bus.connect(offline.destination);
   /* With its own sends, so the stem carries its share of the room and echo. */
   const returns = anySends([lane]) ? wireReturns(offline, bus, bpm) : undefined;
-  startLane(wireLane(offline, { ...lane, muted: false, soloed: false }, bus, returns), lane);
+  /* Ducked by its key as it is in the mix: a stem of a pumping pad pumps. */
+  const ducked = withDucks(lanes, bpm).find((one) => one.id === lane.id) ?? lane;
+  startLane(wireLane(offline, { ...ducked, muted: false, soloed: false }, bus, returns), ducked);
   try {
     return await offline.startRendering();
   } catch {

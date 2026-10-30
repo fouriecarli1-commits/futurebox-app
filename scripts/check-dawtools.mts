@@ -6,7 +6,8 @@
  * meter that reads real sound.
  */
 import { readFileSync } from 'node:fs';
-import { NORMAL_PEAK, normalisedCopy, reversedCopy, valueAt } from '../app/lib/session.ts';
+import { NORMAL_PEAK, hitsOf, kicksIn, normalisedCopy, reversedCopy, valueAt, withDucks, type Lane } from '../app/lib/session.ts';
+import { PRESETS, RATE, hit } from '../app/lib/beatbox.ts';
 import { valueOfY, yOfValue } from '../app/components/BoothAuto.tsx';
 import { withoutComments } from './prose.mts';
 
@@ -55,7 +56,7 @@ const session = withoutComments(readFileSync('app/lib/session.ts', 'utf8'));
 const booth = withoutComments(readFileSync('app/components/ProBooth.tsx', 'utf8'));
 const timeline = withoutComments(readFileSync('app/components/BoothTimeline.tsx', 'utf8'));
 ok('the sends reach the returns in the mixdown', /wireLane\(offline, lane, bus, returns\)/.test(session) && /wireReturns\(offline, bus, master\.bpm\)/.test(session));
-ok('  in a stem', /wireLane\(offline, \{ \.\.\.lane, muted: false, soloed: false \}, bus, returns\)/.test(session));
+ok('  in a stem', /wireLane\(offline, \{ \.\.\.ducked, muted: false, soloed: false \}, bus, returns\)/.test(session));
 ok('  and in what is heard while it plays', /wireLane\(ctx, lane, ear, returns\)/.test(booth) && /wireReturns\(ctx, bus, meter\.bpm\)/.test(booth));
 ok('  post-fader, after the pan, as a desk sends', /out = place;[\s\S]{0,700}out\.connect\(send\)\.connect\(returns\[which\]\)/.test(session));
 ok('the echo is a beat at the session tempo, and the tempo is on the master', /60 \/ Math\.max\(30, Math\.min\(300, bpm\)\)/.test(session) && /\{ \.\.\.was, bpm: meter\.bpm \}/.test(booth));
@@ -82,6 +83,30 @@ ok('  and is one undoable step', /remember\(t\('undo\.punch'/.test(booth));
 ok('comping takes the phrase from the chosen pass, unmuted', /\[before, \{ \.\.\.inside, muted: false \}, after\]/.test(booth));
 ok('  and cuts the phrase from every other pass of the same recording, never another lane or the song', /one\.id !== chosen\.id && !one\.backing && one\.audio === chosen\.audio/.test(booth) && /carveLane\(one, region\.from, region\.to\)/.test(booth));
 ok('  and is one undoable step, offered as a region tool', /remember\(t\('undo\.comp'/.test(booth) && /id: 'comp'/.test(booth));
+
+/* The sidechain: a lane ducked by the beat dips on every kick, in playback, the mixdown and a stem alike. */
+const fakeAudio = (seconds: number, fill?: (i: number) => number) => {
+  const data = Float32Array.from({ length: Math.round(seconds * RATE) }, (_, i) => (fill ? fill(i) : 0));
+  return { duration: seconds, length: data.length, sampleRate: RATE, numberOfChannels: 1, getChannelData: () => data } as unknown as AudioBuffer;
+};
+const house = PRESETS.find((one) => one.id === 'fourfloor')!.beat;
+const beatLane = { id: 'beat', name: 'Beat', audio: fakeAudio(8), at: 2, gain: 1, muted: false, soloed: false, beat: { ...house, bars: 2 } } as Lane;
+const beatHits = hitsOf(beatLane, 120);
+ok('a drum-pad lane\'s kicks come from its pattern: four a bar at 120 is one every half second, from where the lane starts', beatHits.length === 8 && beatHits.every((t, i) => Math.abs(t - (2 + i * 0.5)) < 1e-9), beatHits.join());
+const kick = hit('kick', RATE);
+const kicks = new Float32Array(RATE * 4);
+for (const at of [0.5, 1.5, 2.5, 3.5]) kicks.set(kick, Math.round(at * RATE));
+const heardKicks = kicksIn(kicks, RATE);
+ok('  and a recorded beat\'s kicks are heard where they land', heardKicks.length === 4 && heardKicks.every((t, i) => Math.abs(t - (0.5 + i)) < 0.03), heardKicks.map((t) => t.toFixed(3)).join());
+const pad = { id: 'pad', name: 'Pad', audio: fakeAudio(8), at: 0, gain: 1, muted: false, soloed: false, duck: { by: 'beat', depth: 0.5 } } as Lane;
+const ready = withDucks([beatLane, pad], 120);
+ok('withDucks hands every ducked lane its key\'s hits and a release from the tempo', ready[1].duck?.hits?.length === 8 && (ready[1].duck?.release ?? 0) > 0 && (ready[1].duck?.release ?? 1) <= 0.35);
+ok('  and a muted key ducks nothing', withDucks([{ ...beatLane, muted: true }, pad], 120)[1].duck?.hits?.length === 0);
+ok('  and playback, the mixdown and a stem all take their ducks from it',
+  /audible\(withDucks\(lanes, meter\.bpm\)\)/.test(booth) && /audible\(withDucks\(lanes, master\.bpm \?\? 120\)\)/.test(session) && /withDucks\(lanes, bpm\)\.find/.test(session));
+ok('  laid on after the fader, before the pan', /level\.connect\(duck\)/.test(session) && /faded\.connect\(place\)/.test(session));
+ok('  saved with the lane without its hits, and part of the mix signature', /duck: \{ by: lane\.duck\.by, depth: lane\.duck\.depth \}/.test(readFileSync('app/lib/keepsession.ts', 'utf8')) && /JSON\.stringify\(one\.duck \?\? null\)/.test(booth));
+ok('  and set as one undoable step', /const setDucking[\s\S]{0,200}remember\(t\('undo\.duck'/.test(booth));
 
 if (bad) {
   console.error(`\ncheck:dawtools — ${bad} assertion(s) failed.`);

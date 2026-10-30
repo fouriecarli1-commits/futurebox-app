@@ -129,6 +129,9 @@ export interface KeptLane {
   readonly fadeOut?: number;
   /* The sends to the shared room and echo (29 October 2026). */
   readonly sends?: { readonly space?: number; readonly echo?: number };
+  /* Which lane ducks this one, and how far (29 October 2026). The hits are
+     worked out from the key each time it plays, so they are not kept. */
+  readonly duck?: { readonly by: string; readonly depth: number };
   /* A drum-pad lane's pattern, so it can be changed after a visit. */
   readonly beat?: import('./beatbox').Beat;
   /* The automation lines (29 October 2026): plain points, as they are. */
@@ -217,6 +220,7 @@ export async function keepSession(
     fadeIn?: number;
     fadeOut?: number;
     sends?: { readonly space?: number; readonly echo?: number };
+    duck?: { readonly by: string; readonly depth: number };
     auto?: { readonly gain?: readonly { readonly t: number; readonly v: number }[]; readonly pan?: readonly { readonly t: number; readonly v: number }[] };
     beat?: import('./beatbox').Beat;
     notes?: readonly HumNote[];
@@ -262,6 +266,7 @@ export async function keepSession(
         ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
         ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
         ...(lane.sends ? { sends: { ...lane.sends } } : {}),
+        ...(lane.duck ? { duck: { by: lane.duck.by, depth: lane.duck.depth } } : {}),
         ...(lane.beat ? { beat: JSON.parse(JSON.stringify(lane.beat)) } : {}),
         ...(lane.auto ? { auto: { gain: lane.auto.gain?.map((one) => ({ ...one })), pan: lane.auto.pan?.map((one) => ({ ...one })) } } : {}),
         ...(lane.notes?.length ? { notes: lane.notes.map((one) => ({ ...one })) } : {}),

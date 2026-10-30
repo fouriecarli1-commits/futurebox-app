@@ -399,6 +399,25 @@ try {
     check('  and another pass can still be chosen with one press', (await page.locator('[data-bestpick]').count()) === scored - 1);
   }
   check('  and nothing is thrown away doing it: the other passes are muted, not removed', (await names()).length === lanesBeforeBest);
+
+  /* ── Make it pump: the beat found, the others ducked under it ── */
+  await page.locator('[data-boothdesk="mix"]').first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-duckpump]').first().click();
+  await page.waitForTimeout(400);
+  const ducking = (await page.locator('[data-ducksays]').first().innerText().catch(() => '')).trim();
+  check('"Make it pump" finds the beat and ducks the other lanes under it', /^\d+ lanes dip on every hit of .*Amapiano/.test(ducking), ducking);
+  await page.locator('[data-duckpump]').first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: shot('dawmeters-duck.png') });
+  /* Played with the pumping on: the live path lays the ducks on too. */
+  await page.getByRole('button', { name: /^Play$/ }).first().click();
+  await page.waitForTimeout(1800);
+  await page.getByRole('button', { name: /^(Stop|Pause)$/ }).first().click().catch(() => undefined);
+  await page.waitForTimeout(300);
+  check('  and it plays with the pumping on, nothing thrown', errors.length === 0, errors.join(' ;; '));
+  await page.locator('[data-duckoff]').first().click();
+  await page.waitForTimeout(300);
+  check('  and "Stop the pumping" takes it off every lane', (await page.locator('[data-ducksays]').count()) === 0);
   check('no page errors', errors.length === 0, errors.join(' ;; '));
 } catch (error) {
   check('the walk finished', false, String(error).slice(0, 200));

@@ -32,11 +32,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Play as PlayIcon, Plus, Redo2, Repeat, RotateCcw, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, normalisedCopy, reversedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
-  anySends, playsOf, readInto, valueAt, readSession, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
+  anySends, playsOf, readInto, valueAt, readSession, withDucks, repeatOf, span, startLane, stemOf, windowOf, wireLane, wireMaster, wireReturns,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { TARGETS, bufferOf, finish, lufsOfTarget, soundOf as plainSound, type Finished } from '../lib/mastering';
 import MixCritic from './MixCritic';
+import DuckCard, { type Ducking } from './DuckCard';
 import { critique, type Finding, type LaneHeard } from '../lib/mixcritic';
 import { failed, separate, separateParts } from '../lib/stems';
 import TimePitch from './TimePitch';
@@ -746,6 +747,7 @@ export default function ProBooth({
           ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
           ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
           ...(lane.sends ? { sends: lane.sends } : {}),
+          ...(lane.duck ? { duck: { by: lane.duck.by, depth: lane.duck.depth } } : {}),
           ...(lane.auto ? { auto: lane.auto } : {}),
           ...(lane.beat ? { beat: lane.beat } : {}),
           ...(lane.notes?.length ? { notes: lane.notes } : {}),
@@ -934,7 +936,8 @@ export default function ProBooth({
       const bus = wireMaster(ctx, master, master.gain * trim, scopeRef.current);
 
       laneEars.current.clear();
-      const heard = audible(lanes);
+      /* The ducks' hits from their keys as they are now, as the mixdown does. */
+      const heard = audible(withDucks(lanes, meter.bpm));
       const returns = anySends(heard) ? wireReturns(ctx, bus, meter.bpm) : undefined;
       heard.forEach((lane) => {
         /* An ear on the lane after its own chain, for its meter: the sound
@@ -1989,6 +1992,19 @@ export default function ProBooth({
     }
   }, [context, lanes, master, rate]);
 
+  /** The sidechain set, or taken off, across the lanes: one undoable step. */
+  const setDucking = useCallback((next: Ducking | null) => {
+    remember(t('undo.duck', 'the pumping'));
+    setLanes((was) => was.map((lane) => {
+      const on = next && next.lanes.includes(lane.id) && lane.id !== next.by;
+      if (on) return { ...lane, duck: { by: next.by, depth: next.depth } };
+      if (!lane.duck) return lane;
+      const { duck: _gone, ...rest } = lane;
+      return rest;
+    }));
+    setStale(true);
+  }, [remember, t]);
+
   /** One finding's fix, as one undoable step. The critic only ever proposes. */
   const applyFix = useCallback((finding: Finding) => {
     const fix = finding.fix;
@@ -2565,7 +2581,7 @@ export default function ProBooth({
       one.from ?? '', one.to ?? '',
       one.pan ?? 0, one.repeat ?? 1, one.fadeIn ?? 0, one.fadeOut ?? 0,
       JSON.stringify(one.fx ?? null), JSON.stringify(one.tone ?? null), JSON.stringify(one.clean ?? null),
-      JSON.stringify(one.sends ?? null), JSON.stringify(one.auto ?? null),
+      JSON.stringify(one.sends ?? null), JSON.stringify(one.auto ?? null), JSON.stringify(one.duck ?? null),
       one.amped ? `${one.amped.name}#${soundTag(one.amped.audio)}` : '',
       soundTag(one.audio),
     ].join(':'));
@@ -4603,6 +4619,16 @@ export default function ProBooth({
           onListen={() => void hearMix()}
           onFix={applyFix}
         />
+      </Card>
+
+      {/* ── The sidechain: every other lane dips on the beat ───────── */}
+      <Card
+        wide
+        icon={<Activity className="h-4 w-4" />}
+        title={t('duck.title', 'Make it pump')}
+        what={t('duck.cardWhat', 'The sidechain: the other lanes dip on every kick of the beat and come back up, so the kick always has room and the song breathes. It finds the beat by itself, or choose it.')}
+      >
+        <DuckCard t={t} lanes={lanes} bpm={meter.bpm} onSet={setDucking} />
       </Card>
     </>
   );
