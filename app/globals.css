@@ -4137,3 +4137,16 @@ html[data-signedin="1"] [data-landing] { visibility: hidden; }
   box-shadow: 0 0 12px rgba(34, 211, 238, 0.9), 0 0 2px #000;
   cursor: pointer;
 }
+
+/* ── A function's heading: bold and glowing, everywhere ──────────────────
+   The owner: a function's heading must be bolder and glowing, and the
+   writing prettier and lit throughout: "It is a future app." Every room
+   writes its small section headings the same way (small capitals, spaced
+   out), so they are lit here, once, in the theme's own primary colour: the
+   same in every room, in daylight and at night, and never on a button or a
+   tab, which have looks of their own. The colour is left alone, so every
+   contrast the theme was measured at still holds. */
+:is(p, h2, h3, h4, legend, label)[class*="uppercase"][class*="tracking-"]:not(button *, a *, [role="tab"] *) {
+  font-weight: 800;
+  text-shadow: 0 0 10px rgb(var(--fb-primary-400) / 0.55), 0 0 2px rgb(var(--fb-primary-400) / 0.45);
+}

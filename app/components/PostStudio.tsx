@@ -8575,7 +8575,7 @@ export default function PostStudio({
           : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
       >
         <div className="space-y-2">
-          <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
+          <p className={MIKRO}>{t('post.grab', 'Copy the words off a photo')}</p>
           {/* ── Said on the screen, not behind the mark ──────────────────
  
               The owner asked what this was twice — *"Ek weet nogsteeds nie wat is
@@ -8590,7 +8590,7 @@ export default function PostStudio({
           >
             {t(
               'post.grabWhy',
-              'Photograph a poster, a sign, a label or a page, and this turns the words printed in it into text — to put on the picture, or to copy out. It all happens on your own phone.',
+              'A poster, sign, label or page: its printed words become text you can put on the picture or copy. Runs on your phone, no credits.',
             )}
           </p>
           <div className="grid grid-flow-col auto-cols-fr gap-2">
