@@ -106,6 +106,36 @@ try {
      Asserted on the file that actually arrives, not on the button: the whole
      failure mode here is a button that fires and produces nothing, because
      the audio is on the account rather than on this device. */
+  /* ── Neat and even ───────────────────────────────────────────────────
+     The owner, 31 October 2026, with a screenshot of this card: *"Die buttons
+     is everywhere. Onthou ons soek netheid en simetrie."* Every button on a
+     song is the same box in a two-column grid: two widths at most (half, and
+     the whole row for an odd one out at the end), one height, no label
+     wrapped onto a second line. */
+  const grids = await p.evaluate(() => [...document.querySelectorAll('[data-chansongtop], [data-chansongactions]')].map((grid) => ({
+    top: grid.hasAttribute('data-chansongtop'),
+    wide: Math.round(grid.getBoundingClientRect().width),
+    cells: [...grid.children].map((cell) => {
+      const box = cell.getBoundingClientRect();
+      const button = cell.matches('button') ? cell : cell.querySelector('button');
+      return { left: Math.round(box.left), wide: Math.round(box.width), tall: Math.round((button ?? cell).getBoundingClientRect().height) };
+    }),
+  })));
+  check('every song card lays its buttons out in even grids', grids.length >= 4, `${grids.length} grids`);
+  const uneven = grids.filter((grid) => {
+    const half = (grid.wide - 8) / 2;
+    return grid.cells.some((cell, k) => {
+      const lastOdd = k === grid.cells.length - 1 && grid.cells.length % 2 === 1;
+      return Math.abs(cell.wide - (grid.top || lastOdd ? grid.wide : half)) > 2;
+    });
+  });
+  check('  each button half the row (the two on top, and an odd one out at the end, the whole row)', uneven.length === 0, JSON.stringify(uneven[0] ?? null));
+  const heights = grids.flatMap((grid) => grid.cells.map((cell) => cell.tall));
+  check('  all one height, no label wrapped', heights.every((one) => one >= 44 && one <= 52), JSON.stringify(heights));
+  await p.locator('[data-chansongtop]').first().evaluate((el) => el.scrollIntoView({ block: 'start' }));
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: shot('songscreen-buttons.png') });
+
   const keepButtons = p.locator('button').filter({ hasText: /^Download$/ });
   check('every song can be downloaded', (await keepButtons.count()) === 2,
     `${await keepButtons.count()} of 2`);

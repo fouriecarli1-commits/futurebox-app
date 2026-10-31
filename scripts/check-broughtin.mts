@@ -147,7 +147,7 @@ ok(
 const mustBeGuarded: ReadonlyArray<{ what: string; near: RegExp }> = [
   {
     what: 'a brought-in song cannot be posted to the live room',
-    near: /\{track\.source !== 'upload' && <PostToLive track=\{track\} \/>\}/,
+    near: /\{track\.source !== 'upload' && <div><PostToLive track=\{track\} wide \/><\/div>\}/,
   },
   {
     what: 'and cannot be opened in the studio to be regenerated',

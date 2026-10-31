@@ -66,6 +66,17 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
+/* ── A song's buttons: one size, in even pairs ───────────────────────────
+   The owner, 31 October 2026, with a screenshot of a song card whose
+   buttons were every width and wrapped wherever they fell: *"Die buttons is
+   everywhere. Onthou ons soek netheid en simetrie."* So every button on the
+   card is the same box, filling its half of a two-column grid, and an odd
+   one out at the end spans the whole row rather than hanging on the left.
+   The two big ones on top (the words, the camera) are a full row each: at
+   half a phone's width "Film yourself to it" wraps onto two lines. */
+const SONG_BTN = 'min-h-[44px] w-full px-3 py-2 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 transition-colors';
+const SONG_GRID = 'grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2';
+
 export default function Channel({
   reloadKey,
   onUpgrade,
@@ -1074,6 +1085,7 @@ export default function Channel({
                     nobody can find. It opens either way now, and says which of
                     the two it is on the button itself rather than letting
                     somebody press "Lyrics" and meet a blank. */}
+                <div className="grid grid-cols-1 gap-2" data-chansongtop>
                 {(
                   <button
                     type="button"
@@ -1096,7 +1108,7 @@ export default function Channel({
                           );
                         });
                     }}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                    className={SONG_BTN}
                   >
                     <MessageSquareQuote className="w-4 h-4 shrink-0" />
                     {timedFor(track).length > 0
@@ -1139,11 +1151,12 @@ export default function Channel({
                         );
                       });
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                  className={SONG_BTN}
                 >
                   <Video className="w-4 h-4 shrink-0" />
                   {t('chan.filmIt', 'Film yourself to it')}
                 </button>
+                </div>
 
                 <ShareRow
                   title={track.title}
@@ -1151,6 +1164,7 @@ export default function Channel({
                   hashtags={['newmusic', track.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
                   track={track}
                   live={<PostToLive track={track} />}
+                  wide
                 />
 
                 {adding === track.id ? (
@@ -1187,11 +1201,11 @@ export default function Channel({
                       brought-in file: inventing sections for somebody else's
                       recording would be the app making something up. */}
                   <SongForm parts={track.parts} className="mb-3" />
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <div className={SONG_GRID} data-chansongactions>
                     <button
                       type="button"
                       onClick={() => setAdding(track.id)}
-                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      className={SONG_BTN}
                     >
                       <Plus className="w-3.5 h-3.5" />
                       {t('chan.addTo', 'Add to a playlist')}
@@ -1221,7 +1235,7 @@ export default function Channel({
                       data-chancover
                       onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
                       aria-expanded={sleeveFor === track.id}
-                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      className={SONG_BTN}
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
                       {t('make.cover', 'Cover art')}
@@ -1244,13 +1258,13 @@ export default function Channel({
                       busyLabel={t('chan.keeping', 'Fetching the file\u2026')}
                       doneLabel={t('chan.kept', 'Downloaded')}
                       again={2400}
-                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
+                      className={`${SONG_BTN} disabled:opacity-60`}
                       onDo={() => keep(track)}
                     />
                     {/* And into the live room, from the room the finished
                         songs are in. It used to be reachable only from a list
                         inside Live that showed the first six. */}
-                    {track.source !== 'upload' && <PostToLive track={track} />}
+                    {track.source !== 'upload' && <div><PostToLive track={track} wide /></div>}
                     {/* ── Naming a song somebody brought in ─────────────
 
                         The owner: "Kan die liedjie gerename word, en die artist
@@ -1276,7 +1290,7 @@ export default function Channel({
                           setNamed({ title: track.title, by: track.by ?? '' });
                         }}
                         aria-expanded={naming === track.id}
-                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                        className={SONG_BTN}
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         {t('chan.nameIt', 'Name it')}
@@ -1286,7 +1300,7 @@ export default function Channel({
                       <button
                         type="button"
                         onClick={() => void dropUpload(track.id)}
-                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-rose-500/[0.06] border border-rose-500/25 text-zinc-400 hover:border-rose-500/50 hover:text-rose-300 flex items-center gap-1.5"
+                        className="min-h-[44px] w-full px-3 py-2 rounded-xl text-sm font-semibold bg-rose-500/[0.06] border border-rose-500/25 text-zinc-300 hover:border-rose-500/50 hover:text-rose-300 flex items-center justify-center gap-2"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         {t('chan.dropBrought', 'Take it out again')}
@@ -1296,7 +1310,7 @@ export default function Channel({
                       <button
                         type="button"
                         onClick={() => onEdit(track.id)}
-                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                        className={SONG_BTN}
                       >
                         <SlidersHorizontal className="w-3.5 h-3.5" />
                         {t('chan.edit', 'Open it in the studio')}

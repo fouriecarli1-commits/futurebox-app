@@ -65,8 +65,11 @@ import { listenPrice, wordsForRoom } from '../lib/postwords';
 export default function PostToLive({
   track,
   onPosted,
+  wide = false,
 }: {
   readonly track: Track;
+  /** Fill its cell, centred, in a grid of equal buttons (the channel's song card). */
+  readonly wide?: boolean;
   /** So a screen that shows the room can refresh itself after a post. */
   readonly onPosted?: () => void;
 }): React.ReactElement {
@@ -165,7 +168,9 @@ export default function PostToLive({
         type="button"
         onClick={() => setAsking(true)}
         disabled={busy}
-        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+        className={wide
+          ? 'min-h-[44px] w-full px-3 py-2 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 disabled:opacity-50'
+          : 'min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50'}
       >
         {busy ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />

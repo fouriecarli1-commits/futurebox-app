@@ -61,7 +61,10 @@ export default function ShareRow({
   track,
   live,
   file: fileFor,
+  wide = false,
 }: {
+  /** The button fills the row, centred, like the buttons around it on the channel's song card. */
+  wide?: boolean;
   title: string;
   /** A line about the thing, which becomes the first line of the caption. */
   what: string;
@@ -232,7 +235,7 @@ export default function ShareRow({
             if (!asked) setOpen(true);
           });
         }}
-        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white"
+        className={`${wide ? 'flex w-full justify-center gap-2 bg-zinc-950' : 'inline-flex gap-1.5 bg-zinc-900'} min-h-[44px] items-center rounded-xl border border-zinc-700 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white`}
       >
         <Share2 className="w-4 h-4" />
         {t('share.post', 'Post it')}
