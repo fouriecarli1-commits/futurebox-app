@@ -302,6 +302,39 @@ function shapeOf(width: number, height: number): string {
    words on a story was over the safe right margin, so the room's own
    warning was on for every story that had any words at all. */
 
+/* ── Text effects (30 October 2026) ───────────────────────────────────────
+   The owner's list: *"much more variety"* in the text styles. */
+const TEXT_FX = ['none', 'outline', 'gradient', 'chrome', 'extrude', 'glitch', 'echo'] as const;
+type TextFx = (typeof TEXT_FX)[number];
+const FX_NAMES: Readonly<Record<TextFx, readonly [string, string]>> = {
+  none: ['post.fx.none', 'Plain'],
+  outline: ['post.fx.outline', 'Outline'],
+  gradient: ['post.fx.gradient', 'Gradient'],
+  chrome: ['post.fx.chrome', 'Chrome'],
+  extrude: ['post.fx.extrude', '3D'],
+  glitch: ['post.fx.glitch', 'Glitch'],
+  echo: ['post.fx.echo', 'Echo'],
+};
+
+/** A colour made darker, for the sides of 3D letters. */
+function darker(hex: string, by: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return '#1f2937';
+  const n = parseInt(m[1], 16);
+  const part = (shift: number): string => Math.round(((n >> shift) & 255) * (1 - by)).toString(16).padStart(2, '0');
+  return `#${part(16)}${part(8)}${part(0)}`;
+}
+
+/** The colour across the wheel from this one, for a gradient nobody picked a second colour for. */
+function partnerOf(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return '#ff2bd6';
+  const n = parseInt(m[1], 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  /* The same light, the hue turned a third of the way round: cyan to pink, green to violet. */
+  return `#${[b, r, g].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 interface Words {
   readonly id: string;
   readonly text: string;
@@ -360,6 +393,10 @@ interface Words {
    */
   /** How strong the glow is, 0 to 2; absent is 1. */
   readonly glowPower?: number;
+  /** What is done to the letters themselves (`TEXT_FX`): their edges only, a gradient, chrome, 3D, a glitch or an echo. Absent is plain. */
+  readonly fx?: TextFx;
+  /** The second colour of the gradient effect. Absent is a partner of the ink. */
+  readonly inkTwo?: string;
   /** How dark the drop shadow is, 0 to 1; absent is the soft shadow every line always had. */
   readonly shadow?: number;
   /** Turned, in degrees, about the middle of the block. */
@@ -2292,16 +2329,29 @@ export default function PostStudio({
             : atX - wide / 2;
         const was = ctx.textAlign;
         ctx.textAlign = 'left';
+        const put1 = (what: string, px: number): void => {
+          if (stroking) ctx.strokeText(what, px, atY);
+          else ctx.fillText(what, px, atY);
+        };
         if (letterGap === 0) {
-          ctx.fillText(line, x, atY);
+          put1(line, x);
         } else {
           for (const letter of line) {
-            ctx.fillText(letter, x, atY);
+            put1(letter, x);
             x += ctx.measureText(letter).width + gapPx;
           }
         }
         ctx.textAlign = was;
       };
+      /* The outline effect writes the letters' edges instead of filling them,
+         in every pass: the shadow and the glow too, or a filled word sits
+         under the outline and it reads as plain. */
+      const stroking = one.fx === 'outline';
+      if (stroking) {
+        ctx.strokeStyle = one.ink;
+        ctx.lineWidth = Math.max(1.5, fit.px * 0.045);
+        ctx.lineJoin = 'round';
+      }
 
       /* ── Something solid behind the words, where she asked for it ──────
  
@@ -2422,6 +2472,61 @@ export default function PostStudio({
       }
       ctx.shadowColor = 'rgba(0,0,0,0)';
       ctx.shadowBlur = 0;
+      /* ── The letters themselves, with their effect ──────────────────
+         The owner (task list): *"much more variety"* in the text styles.
+         Six effects on top of the faces, glows and colours: the edges
+         only, a gradient, chrome, a 3D extrusion, a glitch and an echo.
+         Drawn here, so the file and the glass are the same. */
+      const fx = one.fx ?? 'none';
+      const tallFx = fit.lines.length * fit.px * lineGap;
+      if (fx === 'extrude') {
+        /* Layers stepped down and to the right in a darker ink, then the face on top. */
+        const depth = Math.max(3, Math.round(fit.px * 0.12));
+        ctx.fillStyle = darker(one.ink, 0.45);
+        ctx.save();
+        for (let i = depth; i >= 1; i -= 1) {
+          ctx.translate(i === depth ? depth : -1, i === depth ? depth : -1);
+          writeBlock();
+        }
+        ctx.restore();
+        ctx.fillStyle = one.ink;
+      } else if (fx === 'glitch') {
+        /* Cyan pulled left and magenta right, the colours a broken screen splits into. */
+        const split = Math.max(2, fit.px * 0.045);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = 'rgba(0,240,255,0.85)';
+        ctx.translate(-split, 0);
+        writeBlock();
+        ctx.fillStyle = 'rgba(255,43,214,0.85)';
+        ctx.translate(split * 2, split * 0.3);
+        writeBlock();
+        ctx.restore();
+        ctx.fillStyle = one.ink;
+      } else if (fx === 'echo') {
+        /* Three fading copies trailing under it. */
+        const base = ctx.globalAlpha;
+        for (let i = 3; i >= 1; i -= 1) {
+          ctx.save();
+          ctx.globalAlpha = base * 0.18 * (4 - i);
+          ctx.translate(0, fit.px * 0.22 * i);
+          writeBlock();
+          ctx.restore();
+        }
+      }
+      if (fx === 'gradient' || fx === 'chrome') {
+        const sheen = ctx.createLinearGradient(0, put.y - fit.px * 0.8, 0, put.y + tallFx);
+        if (fx === 'chrome') {
+          sheen.addColorStop(0, '#ffffff');
+          sheen.addColorStop(0.45, '#9ca3af');
+          sheen.addColorStop(0.5, '#f8fafc');
+          sheen.addColorStop(1, '#6b7280');
+        } else {
+          sheen.addColorStop(0, one.ink);
+          sheen.addColorStop(1, one.inkTwo ?? partnerOf(one.ink));
+        }
+        ctx.fillStyle = sheen;
+      }
       writeBlock();
       ctx.restore();
     };
@@ -8868,6 +8973,35 @@ export default function PostStudio({
             const turnNow = one.turn ?? 0;
             return (
               <div className="space-y-2" data-postwordslook>
+                {/* The letters' own effect, a row of chips that write it as they are named. */}
+                <p className="text-[12px] font-black uppercase tracking-[0.14em] text-cyan-200" style={{ textShadow: '0 0 10px rgba(34,211,238,0.7)' }}>
+                  {t('post.fxTitle', 'Effect')}
+                </p>
+                <div className="flex flex-wrap gap-2" data-postwordsfx>
+                  {TEXT_FX.map((fx) => {
+                    const on = (one.fx ?? 'none') === fx;
+                    return (
+                      <button key={fx} type="button" data-postwordsfxpick={fx} aria-pressed={on}
+                        onClick={() => change({ fx: fx === 'none' ? undefined : fx })}
+                        className={`${LEEG} !w-auto ${on ? GEKIES : ''}`}
+                        style={fx === 'outline' ? { WebkitTextStroke: '1px currentColor', color: 'transparent' }
+                          : fx === 'gradient' ? { backgroundImage: 'linear-gradient(90deg,#22D3EE,#FF2BD6)', WebkitBackgroundClip: 'text', color: 'transparent' }
+                            : fx === 'chrome' ? { backgroundImage: 'linear-gradient(180deg,#fff,#9ca3af 45%,#f8fafc 50%,#6b7280)', WebkitBackgroundClip: 'text', color: 'transparent' }
+                              : fx === 'extrude' ? { textShadow: '1px 1px 0 #0e7490, 2px 2px 0 #0e7490, 3px 3px 0 #0e7490' }
+                                : fx === 'glitch' ? { textShadow: '-2px 0 rgba(0,240,255,0.9), 2px 0 rgba(255,43,214,0.9)' }
+                                  : fx === 'echo' ? { textShadow: '0 3px 0 rgba(255,255,255,0.35), 0 6px 0 rgba(255,255,255,0.18)' }
+                                    : undefined}>
+                        {t(FX_NAMES[fx][0], FX_NAMES[fx][1])}
+                      </button>
+                    );
+                  })}
+                </div>
+                {one.fx === 'gradient' && (
+                  <div className="flex items-center gap-2" data-postwordsinktwo>
+                    <span className="text-[12px] font-bold text-zinc-200">{t('post.fxSecond', 'Second colour')}</span>
+                    <NeonColour t={t} data="postwordsinktwo" value={one.inkTwo ?? partnerOf(one.ink)} label={t('post.fxSecond', 'Second colour')} onChange={(hex) => change({ inkTwo: hex })} />
+                  </div>
+                )}
                 {row('alpha', t('post.wordsAlpha', 'See-through'), Math.round((1 - (one.alpha ?? 1)) * 100), 0, 90, 1,
                   `${Math.round((1 - (one.alpha ?? 1)) * 100)}%`, (v) => change({ alpha: 1 - v / 100 }))}
                 {(one.glow ?? 'none') !== 'none' && row('glow', t('post.wordsGlow', 'Glow'), Math.round((one.glowPower ?? 1) * 100), 0, 200, 5,

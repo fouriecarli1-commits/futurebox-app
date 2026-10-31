@@ -86,6 +86,28 @@ try {
   check('See-through fades them', faint.n < flat.n * 0.2, `${flat.n} → ${faint.n}`);
   await slide('alpha', 0);
 
+  /* ── The letters' own effect (30 October 2026) ──────────────────────
+     Each of the six changes what is drawn, and Plain puts it back. */
+  check('there are seven effects to choose from, Plain first', (await page.locator('[data-postwordsfxpick]').count()) === 7
+    && (await page.locator('[data-postwordsfxpick="none"]').getAttribute('aria-pressed')) === 'true');
+  const plain = await letters();
+  for (const fx of ['outline', 'gradient', 'chrome', 'extrude', 'glitch', 'echo']) {
+    await page.locator(`[data-postwordsfxpick="${fx}"]`).click();
+    await page.waitForTimeout(350);
+    const now = await letters();
+    check(`  ${fx} changes the letters`, now.sum !== plain.sum, `${plain.sum} → ${now.sum}`);
+  }
+  await page.locator('[data-postwordsfxpick="outline"]').click();
+  await page.waitForTimeout(350);
+  const edged = await letters();
+  check('  an outline is fewer bright pixels than the filled letters (the inside is hollow)', edged.n < plain.n * 0.92, `${plain.n} filled, ${edged.n} outlined`);
+  await page.locator('[data-postwordsfxpick="gradient"]').click();
+  await page.waitForTimeout(300);
+  check('  a gradient offers its second colour', (await page.locator('[data-postwordsinktwo]').count()) >= 1);
+  await page.locator('[data-postwordsfxpick="none"]').click();
+  await page.waitForTimeout(350);
+  check('  and Plain puts them back as they were', (await letters()).sum === plain.sum);
+
   await page.locator('[data-postwordsink]').first().click();
   await page.waitForTimeout(300);
   check('the colour opens the app\'s own sheet, with every word whole',

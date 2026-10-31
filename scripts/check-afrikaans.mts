@@ -84,6 +84,8 @@ const SAME_IN_BOTH = new Set([
   'Looper', 'Pads',
   /* The Photo Editor's plus shape: "plus" is the Afrikaans word for it too. */
   'Plus',
+  /* The text effect: "3D" is what it is called in Afrikaans too. */
+  '3D',
   /* ProBooth's loudness target: the names of the places, the same everywhere. */
   'Spotify, YouTube, TikTok',
   /* The drum pads: names of styles and drums a musician says in Afrikaans too. */
