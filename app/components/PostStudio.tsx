@@ -50,6 +50,7 @@ import {
   Bookmark,
   Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Files, Replace, ZoomIn, ZoomOut, Frame, X, MoreHorizontal,
   AlignLeft, AlignCenter, AlignRight, FlipVertical,
+  ImagePlus,
 } from 'lucide-react';
 import CropSheet from './CropSheet';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -57,7 +58,7 @@ import { probeVideoEngine } from '../lib/videograde';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
 import { TITLE_STYLES } from '../lib/posttitles';
 import {
-  ART_READY, MARK_SPECS, NEON_INKS, drawMark, hasCorners, isFilled, markBox, newMark, roundOf, type Mark,
+  ART_READY, MARK_SPECS, NEON_INKS, STICKER_EMOJI, drawMark, hasCorners, isFilled, markBox, newMark, roundOf, type Mark,
 } from '../lib/postshapes';
 import IdeaChips from './IdeaChips';
 import { SHAPE_IDEAS } from '../lib/promptideas';
@@ -9732,6 +9733,56 @@ export default function PostStudio({
           </button>
         ))}
       </div>
+      {/* ── Stickers ───────────────────────────────────────────────────
+          The owner, 31 October 2026, after the Video Editor got them: *"Die
+          stickers en emojis sal net so oulik by photo editor ook wees."* The
+          same sticker shape (`lib/postshapes.ts`): a lit emoji or a picture of
+          their own, dragged and sized on the photo, with every setting a
+          shape has. Drawn here, so no credits. */}
+      <div className="space-y-2" data-poststickers>
+        <p className={MIKRO}>{t('edit.stickersTitle', 'Stickers')}</p>
+        <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+          {STICKER_EMOJI.map((one) => (
+            <button
+              key={one}
+              type="button"
+              data-postaddsticker={one}
+              aria-label={t('post.stickerAdd', 'Put this sticker on the photo')}
+              onClick={() => {
+                const id = freshId();
+                setMarks((was) => [...was, { ...newMark('sticker', id), size: 0.28, glowPower: 0, sticker: { emoji: one }, z: frontZ(was, words) }]);
+                setMarkOn(id);
+              }}
+              className="grid min-h-[44px] place-items-center rounded-xl border border-zinc-700 bg-zinc-950 text-xl"
+            >
+              {one}
+            </button>
+          ))}
+        </div>
+        <label className={`${LEEG} w-full cursor-pointer justify-center`} data-poststickerown>
+          <ImagePlus className="h-4 w-4" />
+          {t('edit.stickerOwn', 'Your own picture as a sticker')}
+          <input
+            type="file"
+            accept={ACCEPTS}
+            className="sr-only"
+            data-poststickerfile
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (!file) return;
+              /* Through `fit`, as every picture in the app is. */
+              void fit(file, 512).then((made) => {
+                if (!made.ok) return;
+                const id = freshId();
+                setMarks((was) => [...was, { ...newMark('sticker', id), size: 0.34, glowPower: 0, sticker: { picture: made.preview }, z: frontZ(was, words) }]);
+                setMarkOn(id);
+              });
+            }}
+          />
+        </label>
+        <p className="text-[11px]" style={{ color: INK_DIM }}>{t('post.stickerHow', 'A PNG with a see-through background works best. Drag it on the photo; no credits.')}</p>
+      </div>
       {(() => {
         const shapesOnly = marks.filter((one) => one.kind !== 'chart');
         const mark = shapesOnly.find((one) => one.id === markOn) ?? shapesOnly[shapesOnly.length - 1];
@@ -9773,7 +9824,9 @@ export default function PostStudio({
           <div key={mark.id} data-postmark={mark.kind} className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-bold">
-                {mark.kind === 'ai'
+                {mark.kind === 'sticker'
+                  ? <><span aria-hidden>{mark.sticker?.emoji ?? '🖼️'}</span> {t('post.mark.sticker', 'Sticker')}</>
+                  : mark.kind === 'ai'
                   ? <><Sparkles aria-hidden className="mr-1 inline h-3.5 w-3.5" />{t('post.mark.ai', 'Your shape')}</>
                   : <><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</>}
               </span>
@@ -9793,7 +9846,7 @@ export default function PostStudio({
                 glow is, a shadow, a turn and the two flips. */}
             {hasCorners(mark.kind) && slider(t('post.markRound', 'Round corners'), roundOf(mark), 0, 1, 0.02, (v) => changeMark(mark.id, { round: v }), 'round')}
             {slider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
-            {mark.glow !== 'none' && slider(t('post.wordsGlow', 'Glow'), mark.glowPower ?? 1, 0, 2, 0.05, (v) => changeMark(mark.id, { glowPower: v }), 'glow')}
+            {mark.glow !== 'none' && slider(t('post.wordsGlow', 'Glow'), mark.glowPower ?? (mark.kind === 'sticker' ? 0 : 1), 0, 2, 0.05, (v) => changeMark(mark.id, { glowPower: v }), 'glow')}
             {slider(t('post.markShadow', 'Shadow'), mark.shadow ?? 0, 0, 1, 0.05, (v) => changeMark(mark.id, { shadow: v }), 'shadow')}
             {slider(t('post.markTurn', 'Turn'), mark.turn ?? 0, -180, 180, 1, (v) => changeMark(mark.id, { turn: v }), 'turn')}
             <div className={RY}>
