@@ -42,7 +42,8 @@ import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED } from '../lib/cutlook';
 import { TITLE_STYLES, type TitleStyle } from '../lib/posttitles';
 import { glowOf, haloPasses } from '../lib/postglow';
-import { MARK_SPECS, NEON_INKS, type MarkKind } from '../lib/postshapes';
+import { MARK_SPECS, NEON_INKS, STICKER_EMOJI, type Mark, type MarkKind } from '../lib/postshapes';
+import { fit } from '../lib/imagefile';
 import { fontFor } from '../lib/videofonts';
 import {
   FRAMES, FRAME_INKS, WORD_MOTIONS, drawFrame, motionAt, motionCss, shownWords, wordsStyleOf,
@@ -67,6 +68,13 @@ interface VideoTemplatesPickerProps {
   readonly shapesCount: number;
   readonly onShape: (kind: MarkKind, ink: string) => void;
   readonly onClearShapes: () => void;
+  /** The stickers on the film (shapes of the kind 'sticker'), and how to add, change and take one off. */
+  readonly stickers?: readonly Mark[];
+  readonly onSticker?: (sticker: { readonly picture?: string; readonly emoji?: string }, ink: string) => void;
+  readonly onStickerSet?: (id: string, patch: Partial<Mark>) => void;
+  readonly onStickerOff?: (id: string) => void;
+  /** The editor's hold on a slide, so one slide of a sticker's dial is one step of Back. */
+  readonly stickerGesture?: React.HTMLAttributes<HTMLInputElement>;
 }
 
 type Tab = 'film' | 'text' | 'captions' | 'motion' | 'shapes' | 'frames';
@@ -201,12 +209,18 @@ export default function VideoTemplatesPicker({
   shapesCount,
   onShape,
   onClearShapes,
+  stickers = [],
+  onSticker,
+  onStickerSet,
+  onStickerOff,
+  stickerGesture,
 }: VideoTemplatesPickerProps): React.ReactElement {
   const { t } = useLang();
   const [selectedStartId, setSelectedStartId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('film');
   const [trying, setTrying] = useState<MotionId>((wordsMotion as MotionId | undefined) ?? 'pop');
   const [shapeInk, setShapeInk] = useState<string>(NEON_INKS[1]);
+  const [stickerSaid, setStickerSaid] = useState('');
   const [ink, setInk] = useState<string>(frameInk ?? FRAME_INKS[0]);
   const TABS: readonly { id: Tab; icon: React.ReactElement; label: string }[] = [
     { id: 'film', icon: <Film className="h-3.5 w-3.5" />, label: t('edit.tplFilm', 'Whole film') },
@@ -543,6 +557,116 @@ export default function VideoTemplatesPicker({
           <p className="text-[11px]" style={{ color: INK_DIM }}>
             {t('edit.shapesHow', 'A shape lands in the middle of the picture. Drag it there to move it; it stays for the whole film.')}
           </p>
+          {/* ── Stickers ─────────────────────────────────────────────────
+              The owner, 30 October 2026: the photo tools on video, a sticker
+              among them, across the whole clip. A sticker is a shape of its
+              own kind (`lib/postshapes.ts`), so it is dragged on the film,
+              burned into the cut and kept on the edit the way a shape is;
+              its own picture or a lit emoji, and every setting a shape has. */}
+          {onSticker && (
+            <div className="space-y-2 pt-1" data-editorstickers>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>{t('edit.stickersTitle', 'Stickers')}</p>
+              <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+                {STICKER_EMOJI.map((one) => (
+                  <button
+                    key={one}
+                    type="button"
+                    data-editoraddsticker={one}
+                    disabled={noClip}
+                    aria-label={t('edit.stickerAdd', 'Put this sticker on the film')}
+                    onClick={() => onSticker({ emoji: one }, shapeInk)}
+                    className="grid min-h-[44px] place-items-center rounded-xl border text-xl disabled:opacity-40"
+                    style={{ borderColor: EDGE, background: RAISED }}
+                  >
+                    {one}
+                  </button>
+                ))}
+              </div>
+              <label
+                className={`inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-xl border px-3 text-xs font-bold ${noClip ? 'pointer-events-none opacity-40' : ''}`}
+                style={{ borderColor: LIT, background: 'rgba(52,211,153,0.12)', color: INK }}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {t('edit.stickerOwn', 'Your own picture as a sticker')}
+                <input
+                  type="file"
+                  accept="image/*"
+                  data-editorstickerfile
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = '';
+                    if (!file) return;
+                    setStickerSaid('');
+                    /* Through `fit`, as every picture in the app is: a big
+                       phone photo decoded whole would close the tab. 512 is
+                       more than a sticker on a film can use. */
+                    void fit(file, 512).then((made) => {
+                      if (!made.ok) { setStickerSaid(t('edit.markBad', 'That picture could not be read.')); return; }
+                      onSticker({ picture: made.preview }, shapeInk);
+                    });
+                  }}
+                />
+              </label>
+              <p className="text-[11px]" style={{ color: INK_DIM }}>
+                {t('edit.stickerHow', 'A PNG with a see-through background works best. Drag it on the film to move it; it stays for the whole film. No credits.')}
+              </p>
+              {stickerSaid && <p className="text-[11px]" role="status" style={{ color: '#fca5a5' }}>{stickerSaid}</p>}
+              {stickers.map((one, at) => (
+                <div key={one.id} data-editorsticker={one.id} className="space-y-1.5 rounded-xl border p-2" style={{ borderColor: EDGE, background: RAISED }}>
+                  <div className="flex items-center gap-2">
+                    <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg text-xl" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                      {one.sticker?.picture
+                        ? <img src={one.sticker.picture} alt="" className="h-full w-full object-contain" />
+                        : one.sticker?.emoji}
+                    </span>
+                    <span className="flex-1 text-xs font-bold" style={{ color: INK }}>{t('edit.stickerN', 'Sticker {n}').replace('{n}', String(at + 1))}</span>
+                    <button
+                      type="button"
+                      data-editorstickerflip
+                      onClick={() => onStickerSet?.(one.id, { flipX: !one.flipX })}
+                      className="min-h-[36px] rounded-lg border px-2 text-[11px] font-bold"
+                      style={{ borderColor: EDGE, color: INK }}
+                    >
+                      {t('post.markFlipX', 'Flip sideways')}
+                    </button>
+                    <button
+                      type="button"
+                      data-editorstickeroff
+                      aria-label={t('edit.stickerOff', 'Take this sticker off')}
+                      onClick={() => onStickerOff?.(one.id)}
+                      className="grid h-9 w-9 place-items-center rounded-lg border"
+                      style={{ borderColor: EDGE, color: INK }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {([
+                    ['size', t('edit.stickerSize', 'Size'), 0.08, 0.9, 0.01, one.size],
+                    ['turn', t('post.markTurn', 'Turn'), -180, 180, 1, one.turn ?? 0],
+                    ['glowPower', t('edit.stickerGlow', 'Glow'), 0, 1.5, 0.05, one.glowPower ?? 0],
+                    ['shadow', t('post.markShadow', 'Shadow'), 0, 1, 0.05, one.shadow ?? 0],
+                    ['opacity', t('edit.stickerSolid', 'How solid'), 0.1, 1, 0.05, one.opacity ?? 1],
+                  ] as const).map(([key, label, low, high, step, value]) => (
+                    <label key={key} className="grid grid-cols-[84px_1fr] items-center gap-2 text-[11px]" style={{ color: INK_DIM }}>
+                      {label}
+                      <input
+                        type="range"
+                        data-editorstickerdial={key}
+                        {...stickerGesture}
+                        min={low}
+                        max={high}
+                        step={step}
+                        value={value}
+                        onChange={(event) => onStickerSet?.(one.id, { [key]: Number(event.target.value) } as Partial<Mark>)}
+                        className="w-full accent-emerald-400"
+                      />
+                    </label>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
           {shapesCount > 0 && (
             <button
               type="button"

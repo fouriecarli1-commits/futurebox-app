@@ -41,7 +41,7 @@ export const FILLED_KINDS = [
 /* Vector art from the vector studio (17 October 2026) is a mark the same
    way: an SVG drawn as a picture, carrying the drawing so it can be opened
    and changed again. */
-export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame', 'chart', 'art'] as const;
+export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame', 'chart', 'art', 'sticker'] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
 export interface MarkSpec {
@@ -102,6 +102,12 @@ export interface Mark {
   readonly art?: { readonly svg: string; readonly doc: unknown };
   /** The outline the AI drew, for the kind 'ai': SVG path data in a 100 by 100 box (`lib/shapeai.ts`). */
   readonly path?: string;
+  /**
+   * For the kind 'sticker': a picture (a data URL the device made, at most
+   * 512 pixels) or one emoji, laid on the film. The owner, 30 October 2026:
+   * the photo tools on video, a sticker among them, across the whole clip.
+   */
+  readonly sticker?: { readonly picture?: string; readonly emoji?: string };
   /*
    * The owner, 30 October 2026: *"al die verstellings wat ek vroeer gevra het
    * moet saam met 'n shape gaan"* — the ones the words got that day: glow,
@@ -207,6 +213,79 @@ export function artImage(svg: string): HTMLImageElement | null {
     ART.set(svg, img);
   }
   return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+/** A sticker's picture, decoded once and kept, like the art above; null until it has loaded. */
+export function stickerImage(src: string): HTMLImageElement | null {
+  if (typeof Image === 'undefined') return null;
+  let img = ART.get(src);
+  if (!img) {
+    if (ART.size > 40) ART.delete(ART.keys().next().value as string);
+    img = new Image();
+    img.onload = () => window.dispatchEvent(new Event(ART_READY));
+    img.src = src;
+    ART.set(src, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+/** Every sticker picture in these marks decoded, so a cut never draws a frame without one. */
+export async function stickersReady(marks: readonly Mark[]): Promise<void> {
+  const waits = marks
+    .filter((one) => one.kind === 'sticker' && one.sticker?.picture)
+    .map((one) => new Promise<void>((done) => {
+      const src = one.sticker?.picture ?? '';
+      if (stickerImage(src)) { done(); return; }
+      const img = ART.get(src);
+      if (!img) { done(); return; }
+      img.addEventListener('load', () => done(), { once: true });
+      img.addEventListener('error', () => done(), { once: true });
+      /* Never held up for ever by a picture that will not decode. */
+      setTimeout(done, 4000);
+    }));
+  await Promise.all(waits);
+}
+
+/** The emoji a sticker can be, lit: the ones that read as this app. */
+export const STICKER_EMOJI = ['✨', '🔥', '⚡', '💜', '🚀', '🎧', '🎤', '🎸', '🎹', '🥁', '🎵', '💿', '👑', '💥', '🌈', '😎', '❤️', '⭐', '🌙', '👽', '🤖', '💎', '🪩', '📣'] as const;
+
+/**
+ * A sticker on the film or the post: the picture kept to its own shape inside
+ * the box, or the emoji filling it; turned, flipped, faded, and lit with the
+ * mark's glow in its colour, or with a soft shadow.
+ */
+function drawSticker(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number): void {
+  const box = markBox(mark, width, height);
+  const what = mark.sticker;
+  if (!what || (!what.picture && !what.emoji)) return;
+  const img = what.picture ? stickerImage(what.picture) : null;
+  if (what.picture && !img) return;
+  ctx.save();
+  ctx.translate(box.cx, box.cy);
+  if (mark.turn) ctx.rotate((mark.turn * Math.PI) / 180);
+  ctx.scale(mark.flipX ? -1 : 1, mark.flipY ? -1 : 1);
+  ctx.globalAlpha *= Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+  const power = mark.glowPower ?? 0;
+  if (power > 0) {
+    ctx.shadowColor = mark.ink;
+    ctx.shadowBlur = box.w * 0.12 * power;
+  } else if ((mark.shadow ?? 0) > 0) {
+    ctx.shadowColor = `rgba(0,0,0,${0.6 * (mark.shadow ?? 0)})`;
+    ctx.shadowBlur = box.w * 0.06;
+    ctx.shadowOffsetY = box.w * 0.04 * (mark.shadow ?? 0);
+  }
+  if (img) {
+    const wide = img.naturalWidth;
+    const tall = img.naturalHeight;
+    const scale = Math.min(box.w / wide, box.h / tall);
+    ctx.drawImage(img, (-wide * scale) / 2, (-tall * scale) / 2, wide * scale, tall * scale);
+  } else if (what.emoji) {
+    ctx.font = `${Math.round(box.h * 0.82)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(what.emoji, 0, box.h * 0.04);
+  }
+  ctx.restore();
 }
 
 export const isFilled = (kind: MarkKind): boolean => (FILLED_KINDS as readonly string[]).includes(kind);
@@ -362,6 +441,7 @@ function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
  * second time heavier, which is what makes them read as brackets.
  */
 export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number, lang = 'en'): void {
+  if (mark.kind === 'sticker') { drawSticker(ctx, mark, width, height); return; }
   if (mark.kind === 'art') {
     const img = mark.art ? artImage(mark.art.svg) : null;
     if (!img) return;

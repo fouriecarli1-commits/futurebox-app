@@ -77,7 +77,7 @@ import { applyPose, poseAt, shows, type Motion } from './videomotion';
 import { chainAudioFx, fadeLevel, type AudioFxOn, type SoundJoin } from './audiofx';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
-import { drawMark as drawShape, type Mark } from './postshapes';
+import { drawMark as drawShape, stickersReady, type Mark } from './postshapes';
 import { glowOf, haloPasses } from './postglow';
 
 export interface Scene {
@@ -1079,6 +1079,9 @@ export async function stitch(cut: Cut): Promise<Made> {
   canvas.height = cut.height;
   const context = canvas.getContext('2d');
   if (!context) return { ok: false, why: 'unsupported' };
+  /* Every sticker's picture decoded before the first frame, so none is missing
+     from the start of the film (`postshapes.ts`). */
+  await stickersReady(cut.shapes ?? []);
 
   /* The scratch the blurred background is built on, at the film's own shape
      so the cover maths below is the same maths at both sizes. Made once for

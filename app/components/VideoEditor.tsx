@@ -105,7 +105,8 @@ import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
 import { STARTS, dressed } from '../lib/filmstart';
 import VideoTemplatesPicker from './VideoTemplatesPicker';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
-import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
+import { heldWords, pointsOf, slidWords, spanReady, stretches, tidy, wordsSpan } from '../lib/videospan';
+import { filmBeats, hearGrid, onTheBeat, retimed, type Grid } from '../lib/beatgrid';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import BestMoments from './BestMoments';
@@ -158,7 +159,7 @@ import { KEEP_STEPS } from '../lib/undo';
 import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
 import { drawFrame, fontOfFace, motionAt, motionCss, shownWords, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
 import { allWordsReady, wordsReady } from '../lib/videofaces';
-import { drawMark as drawShape, markBox, newMark } from '../lib/postshapes';
+import { ART_READY, drawMark as drawShape, markBox, newMark } from '../lib/postshapes';
 import { GLOWS, glowOf, haloPasses } from '../lib/postglow';
 import { soundOf,
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
@@ -1599,6 +1600,56 @@ export default function VideoEditor({
   };
 
   const total = runs(edit);
+
+  /* ── The song's beat, on the film's clock ─────────────────────────────
+     The owner, 31 October 2026, asking for every feature the leading editors
+     have (docs/VIDEO-EDITOR-ROADMAP.md, gap 1): the beat marked on the music
+     lane, and every cut landed on it from one button. Heard on the device,
+     once per song, at no charge (`lib/beatgrid.ts`). */
+  const [grid, setGrid] = useState<Grid | null>(null);
+  const [gridHearing, setGridHearing] = useState(false);
+  const [beatSaid, setBeatSaid] = useState('');
+  useEffect(() => {
+    setGrid(null);
+    setBeatSaid('');
+    if (!edit.under) return undefined;
+    let live = true;
+    setGridHearing(true);
+    void hearGrid(edit.under).then((found) => {
+      if (!live) return;
+      setGrid(found);
+      setGridHearing(false);
+    });
+    return () => { live = false; };
+  }, [edit.under]);
+  const beats = useMemo(() => (grid && edit.under && total > 0
+    ? filmBeats(grid, stretches(edit.underSkips ?? [], edit.underFrom ?? 0, total), edit.underSpeed ?? 1).slice(0, 4000)
+    : []), [grid, edit.under, edit.underSkips, edit.underFrom, edit.underSpeed, total]);
+  const [beatBusy, setBeatBusy] = useState(false);
+  /** Every cut moved to the nearest beat its clip can reach, as one step of Back. */
+  const cutOnBeat = async (): Promise<void> => {
+    if (!beats.length || beatBusy) return;
+    setBeatBusy(true);
+    try {
+      const reals = await Promise.all(edit.pieces.map((one) => lengthOf(one.clip).catch(() => one.to)));
+      const moved = onTheBeat(edit.pieces.map((one, at) => ({
+        id: one.id, from: one.from, to: one.to, speed: one.speed, real: Math.max(one.to, reals[at] || one.to),
+      })), beats);
+      if (moved.size === 0) {
+        setBeatSaid(t('edit.beatAlready', 'Every cut is already on the beat.'));
+        return;
+      }
+      commit((was) => ({
+        ...was,
+        pieces: was.pieces.map((one) => (moved.has(one.id) ? { ...one, to: moved.get(one.id) ?? one.to } : one)),
+      }));
+      setBeatSaid(moved.size === 1
+        ? t('edit.beatMovedOne', 'One cut moved onto the beat.')
+        : t('edit.beatMoved', '{n} cuts moved onto the beat.').replace('{n}', String(moved.size)));
+    } finally {
+      setBeatBusy(false);
+    }
+  };
 
   /* ── What this room would pick, and why ─────────────────────────────────
 
@@ -5753,6 +5804,25 @@ async function smallerFrame(url: string): Promise<string> {
                     {t('edit.musicLane', 'The music')}
                     <Keys which="music" />
                   </span>
+                  {/* The beat, marked: every fourth one brighter, as a bar line. */}
+                  {beats.length > 0 && (
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10" style={{ width: Math.max(0, total * perSecond) }}>
+                      {beats.map((at, k) => (
+                        <span
+                          key={k}
+                          data-editorbeatmark
+                          className="absolute bottom-0"
+                          style={{
+                            left: at * perSecond,
+                            width: k % 4 === 0 ? 2 : 1,
+                            height: k % 4 === 0 ? '55%' : '30%',
+                            background: k % 4 === 0 ? 'rgba(244,114,182,0.95)' : 'rgba(244,114,182,0.55)',
+                            boxShadow: k % 4 === 0 ? '0 0 6px rgba(244,114,182,0.9)' : undefined,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                   {edit.under ? (
                     <div
                       data-editorbed
@@ -8185,6 +8255,44 @@ async function smallerFrame(url: string): Promise<string> {
                 as shorter or longer. A browser has no time stretch worth
                 shipping, and a song that returns a semitone up with nothing
                 explaining it reads as the app being broken. */}
+            {/* ── On the beat ─────────────────────────────────────────
+                The tempo it heard, which can be halved or doubled by hand (a
+                song at 140 is often heard at 70), and the one button that
+                lands every cut on the beat. */}
+            {edit.under && (
+              <div className="space-y-2 rounded-xl border p-3" data-editorbeatbox style={{ borderColor: 'rgba(244,114,182,0.45)', background: 'rgba(244,114,182,0.08)' }}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold" style={{ color: INK }}>{t('edit.beatTitle', 'On the beat')}</span>
+                  <span className="text-sm tabular-nums" style={{ color: INK_DIM }} data-editorbeatbpm>
+                    {gridHearing ? t('edit.beatHearing', 'Listening…') : grid ? `${grid.bpm} BPM` : t('edit.beatNone', 'No steady beat heard')}
+                  </span>
+                </div>
+                {grid && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" data-editorbeathalf onClick={() => setGrid((was) => (was ? retimed(was, 0.5) ?? was : was))} className="min-h-[40px] rounded-xl border px-2 text-xs font-bold" style={{ borderColor: 'rgba(244,114,182,0.4)', color: INK }}>
+                      {t('edit.beatHalf', 'Half as fast')}
+                    </button>
+                    <button type="button" data-editorbeatdouble onClick={() => setGrid((was) => (was ? retimed(was, 2) ?? was : was))} className="min-h-[40px] rounded-xl border px-2 text-xs font-bold" style={{ borderColor: 'rgba(244,114,182,0.4)', color: INK }}>
+                      {t('edit.beatDouble', 'Twice as fast')}
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  data-editoronbeat
+                  disabled={!beats.length || beatBusy || edit.pieces.length === 0}
+                  onClick={() => { void cutOnBeat(); }}
+                  className="min-h-[44px] w-full rounded-xl border px-3.5 py-2 text-sm font-bold disabled:opacity-50"
+                  style={{ borderColor: 'rgba(244,114,182,0.8)', background: 'rgba(244,114,182,0.2)', color: INK, boxShadow: '0 0 14px rgba(244,114,182,0.35)' }}
+                >
+                  {beatBusy ? t('edit.beatWorking', 'Landing the cuts…') : t('edit.beatCut', 'Land every cut on the beat')}
+                </button>
+                <p className="text-[12px] leading-snug" style={{ color: INK_DIM }}>
+                  {t('edit.beatHow', 'The pink marks on the music lane are the beat. Heard on your phone, no credits.')}
+                </p>
+                {beatSaid && <p className="text-[12px] font-semibold" role="status" data-editorbeatsaid style={{ color: INK }}>{beatSaid}</p>}
+              </div>
+            )}
             <div className="space-y-1.5" data-editorunderspeedbox>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm text-zinc-400">{t('edit.underSpeed', 'How fast the track plays')}</span>
@@ -8642,6 +8750,23 @@ async function smallerFrame(url: string): Promise<string> {
                 shapes: [...(was.shapes ?? []), { ...newMark(kind, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`), ink }],
               }))}
               onClearShapes={() => commit((was) => ({ ...was, shapes: [] }))}
+              stickers={(edit.shapes ?? []).filter((one) => one.kind === 'sticker')}
+              onSticker={(sticker, ink) => commit((was) => ({
+                ...was,
+                shapes: [...(was.shapes ?? []), {
+                  ...newMark('sticker', `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+                  ink,
+                  size: 0.3,
+                  sticker,
+                }],
+              }))}
+              /* Through `slideFilm`, as the logo's sliders are: one slide, one Back. */
+              onStickerSet={(id, patch) => slideFilm((was) => ({
+                ...was,
+                shapes: (was.shapes ?? []).map((one) => (one.id === id ? { ...one, ...patch } : one)),
+              }))}
+              stickerGesture={gesture}
+              onStickerOff={(id) => commit((was) => ({ ...was, shapes: (was.shapes ?? []).filter((one) => one.id !== id) }))}
               onSelectStart={(one) => commit((was) => ({
                 ...was,
                 shape: one.shape,
@@ -9371,10 +9496,16 @@ function FilmFurniture({
   const tall = Math.round(wide / ratio);
   useEffect(() => {
     const ctx = canvas.current?.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, wide, tall);
-    for (const one of shapes) drawShape(ctx, one, wide, tall);
-    drawFrame(ctx, frame, wide, tall, frameInk);
+    if (!ctx) return undefined;
+    const paint = (): void => {
+      ctx.clearRect(0, 0, wide, tall);
+      for (const one of shapes) drawShape(ctx, one, wide, tall);
+      drawFrame(ctx, frame, wide, tall, frameInk);
+    };
+    paint();
+    /* A sticker's picture decodes after the first paint: paint again then. */
+    window.addEventListener(ART_READY, paint);
+    return () => window.removeEventListener(ART_READY, paint);
   }, [shapes, frame, frameInk, tall]);
   return (
     <canvas
