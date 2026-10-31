@@ -731,7 +731,13 @@ function WakeChoices({ t, moves, onMoves, words, onWords, disabled }: {
 }): React.ReactElement {
   return (
     <div className="-mt-0.5 space-y-1.5" data-wakechoices>
-      <p className="text-[11px] text-zinc-400">{t('become.movesHow', 'What should move? Tap up to 3, or say it below.')}</p>
+      {/* The owner, 30 October 2026: *"By daai prompt bar moet die description
+          verander en kyk dat sulke descriptions ook mooi en neon is. Sê eerder,
+          ask CoPilot to set your scene."* */}
+      <p className="text-[12px] font-black uppercase tracking-[0.12em] text-violet-200" style={{ textShadow: '0 0 10px rgba(167,139,250,0.85)' }} data-wakehead>
+        {t('become.sceneHead', 'Ask Copilot to set your scene')}
+      </p>
+      <p className="text-[11px] font-semibold text-cyan-100/85" style={{ textShadow: '0 0 8px rgba(34,211,238,0.45)' }}>{t('become.movesHow', 'Tap up to 3, or say it in your own words.')}</p>
       <div className="flex flex-wrap gap-1.5">
         {WAKE_MOVES.map((one) => {
           const on = moves.includes(one.id);
@@ -752,16 +758,16 @@ function WakeChoices({ t, moves, onMoves, words, onWords, disabled }: {
           );
         })}
       </div>
-      <label className="flex min-h-[44px] items-center gap-2 rounded-xl bg-zinc-900/90 px-3 ring-1 ring-violet-400/40" data-wakeask>
-        <Sparkles className="h-4 w-4 shrink-0 text-violet-300" aria-hidden />
+      <label className="flex min-h-[44px] items-center gap-2 rounded-xl bg-zinc-900/90 px-3 ring-1 ring-violet-400/70 shadow-[0_0_16px_rgba(167,139,250,0.35)]" data-wakeask>
+        <Sparkles className="h-4 w-4 shrink-0 text-violet-300" style={{ filter: 'drop-shadow(0 0 6px rgba(167,139,250,0.9))' }} aria-hidden />
         <input
           type="text"
           value={words}
           maxLength={200}
           disabled={disabled}
           onChange={(event) => onWords(event.target.value)}
-          placeholder={t('become.aliveOwn', 'Or tell it what should happen…')}
-          aria-label={t('become.aliveOwn', 'Or tell it what should happen…')}
+          placeholder={t('become.aliveOwn', 'Set your scene: what moves, how, where the camera goes…')}
+          aria-label={t('become.sceneHead', 'Ask Copilot to set your scene')}
           className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
           data-becomewords
         />
