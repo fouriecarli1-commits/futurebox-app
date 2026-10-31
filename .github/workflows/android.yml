@@ -50,6 +50,9 @@ jobs:
           # runner keeps it in <sdk>/cmdline-tools/latest/bin.
           [ -e "$ANDROID_HOME/bin" ] || sudo ln -s "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/bin"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          # The build-tools this Bubblewrap builds with, installed here by the
+          # runner's own sdkmanager, so Bubblewrap finds them and never has to.
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.1.0" > /dev/null
 
       - name: The upload key, from the secrets
         id: key
