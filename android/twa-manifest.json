@@ -39,5 +39,5 @@
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://futurebox.studio/",
-  "minSdkVersion": 21
+  "minSdkVersion": 23
 }
