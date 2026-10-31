@@ -46,6 +46,9 @@ jobs:
         run: |
           mkdir -p ~/.bubblewrap
           printf '{"jdkPath":"%s","androidSdkPath":"%s"}\n' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
+          # Bubblewrap looks for sdkmanager in <sdk>/bin or <sdk>/tools/bin; the
+          # runner keeps it in <sdk>/cmdline-tools/latest/bin.
+          [ -e "$ANDROID_HOME/bin" ] || sudo ln -s "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/bin"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: The upload key, from the secrets
