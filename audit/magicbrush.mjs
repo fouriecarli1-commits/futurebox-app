@@ -220,6 +220,8 @@ try {
   const digital = await tiles();
   check('Style match offers drawn samples', digital.length >= 5 && digital.every((one) => one > 0), JSON.stringify(digital.length));
   check('  and every sample looks different', new Set(digital).size === digital.length);
+  const kinds = await page.evaluate(() => [...document.querySelectorAll('[data-poststyletile]')].map((el) => el.getAttribute('data-poststyletile')));
+  check('  each one is the photo in the room, in that style', kinds.length >= 5 && kinds.every((one) => one === 'photo'), JSON.stringify(kinds.slice(0, 4)));
   await page.locator('[data-poststylegroup="craft"]').click();
   await page.waitForTimeout(300);
   const physical = await tiles();

@@ -1959,6 +1959,8 @@ jobs:
         run: npm run check:songcheck
       - name: A shape the AI draws is read before it is drawn, priced on its button, and every shape has every setting
         run: npm run check:shapeai
+      - name: Every style match tile shows the photo in the room, in a likeness of its own
+        run: npm run check:stylepreview
       - name: Only hesitations are cut from an episode, on the device
         run: npm run check:fillers
       - name: A finished mix is loud the way streaming services measure it, and never over the ceiling

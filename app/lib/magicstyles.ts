@@ -17,6 +17,8 @@
  * side so a style cannot be offered without a picture of what it does.
  */
 
+import { PREVIEWED, previewStyle } from './stylepreview';
+
 export type StyleGroup = 'featured' | 'characters' | 'digital' | 'physical' | 'craft' | 'photo';
 
 export const STYLE_GROUPS: readonly { readonly id: StyleGroup; readonly en: string; readonly af: string }[] = [
@@ -34,7 +36,10 @@ type Look =
   | 'etching' | 'pencil' | 'oil' | 'watercolour' | 'riso' | 'linocut' | 'dither' | 'glass' | 'mosaic'
   | 'scrapbook' | 'cutout' | 'origami' | 'clay' | 'crochet' | 'plush' | 'stitched' | 'glossy' | 'marble' | 'gold'
   | 'glittergold' | 'glitterorange' | 'glitterpink' | 'glittersilver' | 'glittergreen'
-  | 'vintage' | 'noir' | 'sticker';
+  | 'vintage' | 'noir' | 'sticker'
+  | 'synthwave' | 'vaporwave' | 'cyberpunk' | 'hologram'
+  | 'charcoal' | 'woodblock' | 'graffiti' | 'tattoo' | 'blueprint'
+  | 'thermal' | 'xray' | 'polaroid' | 'duotone' | 'infrared';
 
 export interface MagicStyle {
   readonly id: Look;
@@ -74,6 +79,10 @@ export const MAGIC_STYLES: readonly MagicStyle[] = [
   { id: 'chrome', group: 'digital', en: 'Chrome', af: 'Chroom', ask: 'polished liquid chrome: mirror-like silver metal with bright reflections', featured: true },
   { id: 'iridescent', group: 'digital', en: 'Iridescent', af: 'Reënboogglans', ask: 'iridescent holographic: shifting pink, violet, blue and orange sheen' },
   { id: 'neon', group: 'digital', en: 'Neon', af: 'Neon', ask: 'glowing neon light lines on a dark background, vivid electric colour' },
+  { id: 'synthwave', group: 'digital', en: 'Synthwave', af: 'Synthwave', ask: 'synthwave: a glowing magenta and violet sunset, a neon grid floor, retro-future light', featured: true },
+  { id: 'vaporwave', group: 'digital', en: 'Vaporwave', af: 'Vaporwave', ask: 'vaporwave: soft pastel pink and cyan, dreamy retro-digital haze' },
+  { id: 'cyberpunk', group: 'digital', en: 'Cyberpunk', af: 'Kuberpunk', ask: 'a cyberpunk night scene: neon cyan and magenta light, rain-wet reflections, high-tech glow', featured: true },
+  { id: 'hologram', group: 'digital', en: 'Hologram', af: 'Hologram', ask: 'a glowing blue hologram projection: translucent light, fine scan lines' },
   /* Paint and print */
   { id: 'etching', group: 'physical', en: 'Etching', af: 'Ets', ask: 'a fine black-ink etching: engraved cross-hatching on cream paper' },
   { id: 'pencil', group: 'physical', en: 'Pencil sketch', af: 'Potloodskets', ask: 'a graphite pencil sketch: fine hatching and loose construction lines on paper' },
@@ -83,6 +92,11 @@ export const MAGIC_STYLES: readonly MagicStyle[] = [
   { id: 'linocut', group: 'physical', en: 'Linocut', af: 'Linosnee', ask: 'a black-and-white linocut print: bold carved lines and gouge marks' },
   { id: 'dither', group: 'physical', en: 'Dither', af: 'Stippel', ask: 'a black-and-white dithered halftone: shading made only of dots' },
   { id: 'glass', group: 'physical', en: 'Stained glass', af: 'Loodglas', ask: 'a stained glass window: bright glass pieces with dark lead lines, light shining through' },
+  { id: 'charcoal', group: 'physical', en: 'Charcoal', af: 'Houtskool', ask: 'a charcoal drawing: deep smudged blacks and rough strokes on paper' },
+  { id: 'woodblock', group: 'physical', en: 'Woodblock', af: 'Houtblok', ask: 'a woodblock print: indigo ink on cream paper, carved flowing lines' },
+  { id: 'graffiti', group: 'physical', en: 'Graffiti', af: 'Graffiti', ask: 'street-art graffiti on a wall: spray-paint colour, bold outlines, drips' },
+  { id: 'tattoo', group: 'physical', en: 'Tattoo flash', af: 'Tatoeëerkuns', ask: 'tattoo flash art on paper: bold black outlines, red and green fills, classic sheet look' },
+  { id: 'blueprint', group: 'physical', en: 'Blueprint', af: 'Bloudruk', ask: 'a technical blueprint: fine white lines on deep blue, a faint grid' },
   { id: 'mosaic', group: 'physical', en: 'Mosaic', af: 'Mosaïek', ask: 'a tile mosaic: small square stone and glass tiles with grout between' },
   /* Craft and texture */
   { id: 'scrapbook', group: 'craft', en: 'Scrapbook', af: 'Plakboek', ask: 'a scrapbook collage: cut felt and paper pieces with visible texture and edges' },
@@ -103,6 +117,11 @@ export const MAGIC_STYLES: readonly MagicStyle[] = [
   /* Photo looks */
   { id: 'vintage', group: 'photo', en: 'Old photo', af: 'Ou foto', ask: 'an old sepia photograph: faded, soft grain, worn edges' },
   { id: 'noir', group: 'photo', en: 'Film noir', af: 'Film noir', ask: 'black-and-white film noir: hard shadows and dramatic contrast' },
+  { id: 'polaroid', group: 'photo', en: 'Instant photo', af: 'Kitsfoto', ask: 'an instant photo: warm faded colour, soft light and a white frame' },
+  { id: 'duotone', group: 'photo', en: 'Duotone', af: 'Tweetoon', ask: 'a duotone print: only deep violet shadows and bright gold light' },
+  { id: 'thermal', group: 'photo', en: 'Heat camera', af: 'Hittekamera', ask: 'a thermal camera image: blue cold areas, red, orange and yellow warm areas' },
+  { id: 'infrared', group: 'photo', en: 'Infrared', af: 'Infrarooi', ask: 'infrared film: pink and white foliage, deep skies, dreamy glow' },
+  { id: 'xray', group: 'photo', en: 'X-ray glow', af: 'X-straalgloed', ask: 'an x-ray film look: inverted glowing blue-white tones on black, the outer shape only' },
   { id: 'sticker', group: 'photo', en: 'Sticker', af: 'Plakker', ask: 'a die-cut sticker: thick white border, glossy, slight drop shadow' },
 ];
 
@@ -757,6 +776,9 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
     }
     default:
       flat(ctx, s);
+      /* The newer styles have no hand-drawn balloon of their own: the plain
+         one, in the same likeness the photo gets (`stylepreview.ts`). */
+      if ((PREVIEWED as readonly string[]).includes(id)) previewStyle(ctx, s, id);
   }
   ctx.restore();
 }

@@ -457,6 +457,7 @@
     "check:promptideas": "tsx scripts/check-promptideas.mts",
     "check:songcheck": "tsx scripts/check-songcheck.mts",
     "check:shapeai": "tsx scripts/check-shapeai.mts",
+    "check:stylepreview": "tsx scripts/check-stylepreview.mts",
     "check:poststart": "node audit/poststart.mjs 3417",
     "check:layerlook": "node audit/layerlook.mjs 3421",
     "check:shapewalk": "node audit/shapewalk.mjs 3427",

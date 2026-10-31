@@ -168,6 +168,7 @@ import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
 import { lookThrough, maskFromBox, maskFromGrey, maskFromStrokes, shareSelected, type SelectWhat, type Selection } from '../lib/postselect';
 import { STYLE_GROUPS, drawStyleTile, styleAsk, styleById, styleLabel, stylesIn, type StyleGroup } from '../lib/magicstyles';
+import { drawCover, previewStyle } from '../lib/stylepreview';
 import { MAGIC_ASKS, brushRect, cropOf, laidIn, padded, type Brush, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
 import { accessToken, getStorageClient } from '../lib/cloud';
@@ -913,12 +914,40 @@ function FilterTile({ from, look }: { readonly from: HTMLCanvasElement | null; r
 }
 
 /** A style's sample, drawn once — `lib/magicstyles.ts`. */
-function StyleTile({ id }: { readonly id: string }): React.ReactElement {
+/* The owner, 30 October 2026: *"kan jy nie die foto wat huidiglik daar op is
+   binne daai voorstelle sit nie?"* With a photo in the room, every tile is
+   that photo in a quick likeness of the style (`lib/stylepreview.ts`); with
+   none, or one the canvas may not read, the drawn balloon as before. */
+function StyleTile({ id, photo }: { readonly id: string; readonly photo: HTMLImageElement | null }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  const [own, setOwn] = useState(false);
   useEffect(() => {
-    if (canvas.current) drawStyleTile(canvas.current, id);
-  }, [id]);
-  return <canvas ref={canvas} width={144} height={144} aria-hidden className="aspect-square w-full rounded-xl" />;
+    const tile = canvas.current;
+    if (!tile) return;
+    const ctx = tile.getContext('2d');
+    if (photo && ctx) {
+      /* Worked on a spare canvas, so a picture the canvas may not read back
+         spoils only the spare and the tile can still take the balloon. */
+      const spare = document.createElement('canvas');
+      spare.width = tile.width;
+      spare.height = tile.height;
+      const work = spare.getContext('2d');
+      try {
+        if (!work) throw new Error('no canvas');
+        drawCover(work, spare.width, photo);
+        previewStyle(work, spare.width, id);
+        ctx.clearRect(0, 0, tile.width, tile.height);
+        ctx.drawImage(spare, 0, 0);
+        setOwn(true);
+        return;
+      } catch {
+        /* The balloon instead. */
+      }
+    }
+    drawStyleTile(tile, id);
+    setOwn(false);
+  }, [id, photo]);
+  return <canvas ref={canvas} width={144} height={144} aria-hidden data-poststyletile={own ? 'photo' : 'sample'} className="aspect-square w-full rounded-xl" />;
 }
 
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -9596,7 +9625,7 @@ export default function PostStudio({
                 onClick={() => (picture ? void magicPart('style', undefined, one.id) : magicPick.current?.click())}
                 className="relative flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 p-1 text-[10px] font-bold text-zinc-300 disabled:opacity-50"
               >
-                <StyleTile id={one.id} />
+                <StyleTile id={one.id} photo={picture} />
                 {magicBusy === `style:${one.id}` && (
                   <span className="absolute inset-1 grid place-items-center rounded-xl bg-black/50">
                     <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
