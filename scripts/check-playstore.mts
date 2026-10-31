@@ -122,6 +122,11 @@ if (existsSync(TWA)) {
     ['iconUrl', 'maskableIconUrl'].every((key) => existsSync(`public/${String(twa[key]).split('/').pop()}`)));
   ok('  Google Play Billing is switched on in it, or the buy buttons cannot reach Play',
     (twa.features as { playBilling?: { enabled?: boolean } } | undefined)?.playBilling?.enabled === true);
+/* Bubblewrap refuses to build Play Billing without notification delegation:
+   "Play Billing requires enableNotifications to be true" (31 October 2026,
+   the first build on GitHub's machines). */
+ok('  and notifications are delegated, which Play Billing needs to build at all',
+  (twa as { enableNotifications?: boolean }).enableNotifications === true);
   ok('  and the keystore it signs with is never committed',
     /android\/\*\.keystore/.test(readFileSync('.gitignore', 'utf8')));
 }

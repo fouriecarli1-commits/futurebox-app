@@ -12,7 +12,7 @@
   "navigationDividerColor": "#0f1412",
   "navigationDividerColorDark": "#0f1412",
   "backgroundColor": "#080c0a",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/",
   "iconUrl": "https://futurebox.studio/icon-chip-512.png",
   "maskableIconUrl": "https://futurebox.studio/icon-chip-512-maskable.png",
