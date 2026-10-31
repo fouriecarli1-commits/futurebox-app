@@ -36,9 +36,9 @@ image to video.
 
 | # | Gap | How | Engine |
 |---|---|---|---|
-| 1 | Beat sync: beat marks on the song lane, cuts snap to them | on the device (`lib/onbeat.ts` exists) | none |
-| 2 | Auto captions from speech, with the word lit as it is said | existing transcription route | `fal-ai/wizper` as an option |
-| 3 | Lip-sync a made character to the song | engine | `fal-ai/sync-lipsync/v3` or `fal-ai/latentsync` |
+| 1 ✅ | Beat sync: beat marks on the song lane, cuts snap to them | on the device (`lib/onbeat.ts` exists) | none |
+| 2 ✅ | Auto captions from speech, with the word lit as it is said | existing transcription route | `fal-ai/wizper` as an option |
+| 3 ✅ | Lip-sync a made character to the song (Sing it, 13 credits; own face or a made character only) | engine | `fal-ai/latentsync` |
 | 4 | Speed ramps (a curve per shot, with presets) | on the device, in `lib/stitch.ts` | none |
 | 5 | Smooth slow motion | engine | `fal-ai/rife/video` |
 | 6 | Picture-in-picture video layers, then blend modes | on the device | none |

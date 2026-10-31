@@ -72,7 +72,7 @@ try {
   await p.locator('[data-footage]').scrollIntoViewIfNeeded().catch(() => undefined);
 
   check('five AI choices for the shot: change it, an item, the background, a new shape, and sound',
-    (await p.locator('[data-footagejob]').count()) === 5 && (await p.locator('[data-footagejob="sound"]').count()) === 1);
+    (await p.locator('[data-footagejob]').count()) === 6 && (await p.locator('[data-footagejob="sound"]').count()) === 1);
 
   /* ── Change it in words, and a new shape (30 October 2026) ──────────
      The owner: changes on a video go through the whole clip. Both are
@@ -91,6 +91,21 @@ try {
   await p.locator('[data-footageshape="1:1"]').click();
   check('  and the one pressed is the one chosen', (await p.locator('[data-footageshape="1:1"]').getAttribute('aria-pressed')) === 'true');
   check('  with its price on the button', /Fill it to the new shape/.test(await changeGo.innerText()) && /credit/.test(await changeGo.innerText()), await changeGo.innerText());
+  /* ── Sing it (31 October 2026): a face's lips moved to the song under the
+     shot. With no song under this film it says so and stays shut, and it
+     asks a third yes: the face is the person at the screen, or made here. */
+  await p.locator('[data-footagejob="lipsync"]').click();
+  await p.waitForTimeout(300);
+  const singLabel = (await changeGo.innerText()).replace(/\s+/g, ' ');
+  check('Sing it says its one price on the button', /Make it sing/.test(singLabel) && /13 credits/.test(singLabel), singLabel);
+  check('  says a song must be under the film first, when there is none', (await p.locator('[data-footagenosong]').count()) === 1);
+  check('  and asks that the face is yours, or a character made here', (await p.locator('[data-footageownface]').count()) === 1);
+  await p.locator('[data-footageabroad]').check();
+  await p.locator('[data-footageadult]').check();
+  await p.locator('[data-footageownface]').check();
+  check('  and stays shut with no song to sing, all three ticked', await changeGo.isDisabled());
+  await p.locator('[data-footageabroad]').uncheck();
+  await p.locator('[data-footageadult]').uncheck();
   await p.locator('[data-footagejob="sound"]').click();
   await p.waitForTimeout(300);
   const go = p.locator('[data-footagego]');

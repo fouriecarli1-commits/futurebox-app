@@ -18,7 +18,7 @@
  * comes back onto the clock beside the shot it was made from.
  */
 import React, { useEffect, useState } from 'react';
-import { AudioLines, Eraser, Loader2, RectangleVertical, UserRoundX, Wand2 } from 'lucide-react';
+import { AudioLines, Eraser, Loader2, Mic2, RectangleVertical, UserRoundX, Wand2 } from 'lucide-react';
 import IdeaChips from './IdeaChips';
 import { CLIP_CHANGE_IDEAS } from '../lib/promptideas';
 import { accessToken, getStorageClient } from '../lib/cloud';
@@ -26,13 +26,14 @@ import { CREDITS, creditsSaid, filterCost } from '../lib/credits';
 import { measure } from '../lib/stitch';
 import { shrinkClip } from '../lib/shrinkclip';
 
-type Job = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe';
+type Job = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe' | 'lipsync';
 /** The same limits as the route: the item remover works on about eight
     seconds, sound is made for up to thirty, and a change for up to ten. */
-const MOST_SECONDS: Readonly<Record<Job, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20 };
+const MOST_SECONDS: Readonly<Record<Job, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20, lipsync: 40 };
 /** What each costs per five seconds; sound is one price a clip. */
 const RATE: Readonly<Record<Job, number>> = {
   cutout: CREDITS.cutout, erase: CREDITS.erase, sound: CREDITS.clipSound, change: CREDITS.clipChange, reframe: CREDITS.clipReframe,
+  lipsync: CREDITS.lipSync,
 };
 /** The shapes a clip can be filled out to, as the route takes them. */
 const SHAPES = [['9:16', 'tall'], ['1:1', 'square'], ['4:5', 'portrait'], ['16:9', 'wide']] as const;
@@ -43,7 +44,13 @@ export default function FootageEngine({
   name,
   t,
   onBack,
+  song,
 }: {
+  /**
+   * The part of the song under this shot, as a WAV, for a lip-sync. Absent
+   * when there is no song under the film. Made only when the press needs it.
+   */
+  readonly song?: () => Promise<Blob | null>;
   /** The picked shot's material, or null when nothing is picked. */
   readonly clip: Blob | null;
   readonly name: string;
@@ -57,6 +64,9 @@ export default function FootageEngine({
   const [shape, setShape] = useState<(typeof SHAPES)[number][0]>('9:16');
   const [abroad, setAbroad] = useState(false);
   const [adult, setAdult] = useState(false);
+  /* A lip-sync's third yes: the face is the person at the screen, or a
+     character made here (the route refuses without it). */
+  const [ownFace, setOwnFace] = useState(false);
   const [state, setState] = useState<'idle' | 'sending' | 'working'>('idle');
   const [said, setSaid] = useState('');
 
@@ -69,10 +79,11 @@ export default function FootageEngine({
   }, [clip]);
 
   /* Sound is one price a clip; the other two are per five seconds. */
-  const price = seconds ? (job === 'sound' ? CREDITS.clipSound : filterCost(seconds, RATE[job])) : null;
+  const price = seconds ? (job === 'sound' ? CREDITS.clipSound : job === 'lipsync' ? CREDITS.lipSync : filterCost(seconds, RATE[job])) : null;
   const tooLong = seconds !== null && seconds > MOST_SECONDS[job];
   const ready = Boolean(clip) && seconds !== null && !tooLong && abroad && adult
-    && ((job !== 'erase' && job !== 'change') || words.trim().length > 0) && state === 'idle';
+    && ((job !== 'erase' && job !== 'change') || words.trim().length > 0)
+    && (job !== 'lipsync' || (ownFace && Boolean(song))) && state === 'idle';
 
   const go = async (): Promise<void> => {
     if (!clip || !seconds) return;
@@ -95,10 +106,22 @@ export default function FootageEngine({
       const put = await storage.from('videos').uploadToSignedUrl(slot.path, slot.token, sent, { contentType: type });
       if (put.error) { setSaid(t('foot.noSend', 'The clip could not be sent just now. Try again.')); setState('idle'); return; }
 
+      /* A lip-sync sends the song under the shot as well, the same way. */
+      let audioPath = '';
+      if (job === 'lipsync') {
+        const tune = song ? await song() : null;
+        if (!tune) { setSaid(t('foot.noSong', 'Put a song under the film first: the lips move to it.')); setState('idle'); return; }
+        const openedSong = await fetch('/api/footage', { method: 'POST', headers: auth, body: JSON.stringify({ step: 'upload', type: 'audio/wav' }) });
+        const songSlot = await openedSong.json().catch(() => ({})) as { path?: string; token?: string; message?: string };
+        if (!openedSong.ok || !songSlot.path || !songSlot.token) { setSaid(songSlot.message ?? t('foot.noSend', 'The clip could not be sent just now. Try again.')); setState('idle'); return; }
+        const putSong = await storage.from('videos').uploadToSignedUrl(songSlot.path, songSlot.token, tune, { contentType: 'audio/wav' });
+        if (putSong.error) { setSaid(t('foot.noSend', 'The clip could not be sent just now. Try again.')); setState('idle'); return; }
+        audioPath = songSlot.path;
+      }
       const started = await fetch('/api/footage', {
         method: 'POST',
         headers: auth,
-        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, pixels: size.width * size.height, words: words.trim(), shape, abroad, adult }),
+        body: JSON.stringify({ step: 'start', job, path: slot.path, seconds, pixels: size.width * size.height, words: words.trim(), shape, abroad, adult, audioPath, ownFace }),
       });
       const job0 = await started.json().catch(() => ({})) as { ticket?: string; message?: string };
       if (!started.ok || !job0.ticket) { setSaid(job0.message ?? t('foot.noStart', 'That did not start. Nothing was charged.')); setState('idle'); return; }
@@ -117,6 +140,7 @@ export default function FootageEngine({
             : job === 'sound' ? t('foot.soundName', 'with sound')
               : job === 'change' ? t('foot.changeName', 'changed')
                 : job === 'reframe' ? shape
+                  : job === 'lipsync' ? t('foot.lipName', 'singing')
                   : t('foot.eraseName', 'taken out');
           onBack(new File([blob], `${name} · ${said}.${kind.includes('mp4') ? 'mp4' : 'webm'}`, { type: kind }));
           setSaid(t('foot.done', 'Done. The new clip is on the clock, beside the shot it came from.'));
@@ -151,6 +175,7 @@ export default function FootageEngine({
               ['cutout', UserRoundX, t('foot.cutout', 'The background')],
               ['reframe', RectangleVertical, t('foot.reframe', 'New shape')],
               ['sound', AudioLines, t('foot.sound', 'Sound')],
+              ['lipsync', Mic2, t('foot.lipsync', 'Sing it')],
             ] as const).map(([id, Icon, label]) => (
               <button
                 key={id}
@@ -174,6 +199,8 @@ export default function FootageEngine({
                   ? t('foot.changeWhat', 'Say how it should look and every frame changes, moving just as it did. Up to 10 seconds.')
                   : job === 'reframe'
                     ? t('foot.reframeWhat', 'Wide to tall, or tall to wide: the sides are filled in, nothing is cropped off. Up to 20 seconds.')
+                  : job === 'lipsync'
+                    ? t('foot.lipsyncWhat', 'The face in the shot sings the part of the song under it: lips moved to the words. Your own face or a character made here. Up to 40 seconds.')
                     : t('foot.eraseWhat', 'Say one thing in the shot and it disappears from every frame. Up to 8 seconds.')}
           </p>
           {job === 'change' && (
@@ -240,6 +267,8 @@ export default function FootageEngine({
                 ? t('foot.tooLongErase', 'An item can be taken out of clips of up to 8 seconds. Trim it on your phone first, or split it into pieces.')
                 : job === 'sound'
                   ? t('foot.tooLongSound', 'Sound can be made for clips of up to 30 seconds. Trim it on your phone first, or split it into pieces.')
+                : job === 'lipsync'
+                  ? t('foot.tooLongLip', 'A shot of up to 40 seconds can sing. Split it into pieces first.')
                   : t('foot.tooLong', 'Clips of up to 20 seconds can go. Trim it on your phone first, or split it into pieces.')}
             </p>
           )}
@@ -251,6 +280,17 @@ export default function FootageEngine({
             <input type="checkbox" checked={adult} onChange={(event) => setAdult(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500" data-footageadult />
             <span>{t('foot.adult', 'I am 18 or older.')}</span>
           </label>
+          {job === 'lipsync' && (
+            <>
+              {!song && (
+                <p className="text-sm text-amber-300" data-footagenosong>{t('foot.noSong', 'Put a song under the film first: the lips move to it.')}</p>
+              )}
+              <label className={tick}>
+                <input type="checkbox" checked={ownFace} onChange={(event) => setOwnFace(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500" data-footageownface />
+                <span>{t('foot.ownFace', 'The face in this shot is me, or a character made here. Nobody else\u2019s face may be made to sing.')}</span>
+              </label>
+            </>
+          )}
           <button
             type="button"
             data-footagego
@@ -267,6 +307,7 @@ export default function FootageEngine({
                   : job === 'sound' ? t('foot.goSound', 'Give it sound')
                     : job === 'change' ? t('foot.goChange', 'Change every frame')
                       : job === 'reframe' ? t('foot.goReframe', 'Fill it to the new shape')
+                        : job === 'lipsync' ? t('foot.goLip', 'Make it sing')
                         : t('foot.goErase', 'Take it out')}${price ? ` · ${creditsSaid(price, t)}` : ''}`}
           </button>
         </>

@@ -181,6 +181,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   /* A whole clip changed in words, or filled out to a new shape, 30 October 2026. */
   clipChange: ['change'],
   clipReframe: ['shape'],
+  /* A face that sings the song under the shot, 31 October 2026. */
+  lipSync: ['lips'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

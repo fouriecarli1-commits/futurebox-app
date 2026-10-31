@@ -121,6 +121,8 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   /* 30 October 2026: a whole clip changed in words, or filled out to a new shape, in the Video Editor. */
   clipChange: 'twenty-five credits per five seconds to change every frame of a shot in words, inside the Video Editor\u2019s Change a shot with AI, priced on its button',
   clipReframe: 'thirty-one credits per five seconds to fill a shot out to a new shape, inside the Video Editor\u2019s Change a shot with AI, priced on its button',
+  /* 31 October 2026: a face in a shot sung to the song under it, in the Video Editor. */
+  lipSync: 'thirteen credits a shot of up to forty seconds for the face in it to sing the song under it, inside the Video Editor\u2019s Change a shot with AI, priced on its button',
   /* 17 October 2026: the AI that sets a chart's numbers from her words. */
   chart: 'four credits to let the AI set a chart\u2019s numbers from words, inside the'
     + ' photo editor\u2019s Charts. The same case as `grab`: one press inside a'

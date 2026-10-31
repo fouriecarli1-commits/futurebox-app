@@ -109,6 +109,7 @@ import { heldWords, pointsOf, slidWords, spanReady, stretches, tidy, wordsSpan }
 import { filmBeats, hearGrid, onTheBeat, retimed, type Grid } from '../lib/beatgrid';
 import { linesFrom as subtitleLines, speechOf, subtitleAt, wordAt, SUB_LIT_DEFAULT, SUB_LITS } from '../lib/subtitles';
 import { attach } from '../lib/workfile';
+import { songSlice } from '../lib/songslice';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import BestMoments from './BestMoments';
@@ -9482,6 +9483,13 @@ async function smallerFrame(url: string): Promise<string> {
             name={edit.pieces.find((one) => one.id === picked)?.name ?? ''}
             t={t}
             onBack={(file) => { void bringIn([file], edit.pieces.find((one) => one.id === picked)?.came ?? 'device', picked || null); }}
+            /* For Sing it: the song under the picked shot, cut on the device. */
+            song={edit.under && picked ? async () => {
+              const shot = edit.pieces.find((one) => one.id === picked);
+              if (!shot || !edit.under) return null;
+              const from = songSecond(edit, startsAt(edit, shot.id));
+              return from === null ? null : songSlice(edit.under, from, lengthOfPiece(shot), edit.underSpeed ?? 1);
+            } : undefined}
           />
           </div>
         )}

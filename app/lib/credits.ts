@@ -1002,6 +1002,12 @@ export const CREDITS = {
      31 credits is R46.50, 80%. */
   clipChange: 25,
   clipReframe: 31,
+  /* ── A face that sings the song, 31 October 2026 ─────────────────────
+     docs/VIDEO-EDITOR-ROADMAP.md, gap 3: a shot's lips moved to the song
+     under it. `fal-ai/latentsync` (open source, run by fal.ai itself), $0.20
+     a clip of up to forty seconds (R3.70): thirteen credits is R19.50, 81%,
+     one price a clip, and clips longer than forty seconds are not sent. */
+  lipSync: 13,
   /* Make my photo good (`lib/restore.ts`), priced off the fal.ai pages the
      owner read on 29 October 2026, at R18.50 to the dollar against the
      cheapest credit (R1.50), by her 80% rule and never under two:

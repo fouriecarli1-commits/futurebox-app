@@ -85,6 +85,16 @@ ok('  both priced per five seconds, at 80% or more, on the route and on the butt
   CREDITS.clipChange >= 25 && CREDITS.clipReframe >= 31
   && /change: CREDITS\.clipChange, reframe: CREDITS\.clipReframe/.test(route) && /change: CREDITS\.clipChange, reframe: CREDITS\.clipReframe/.test(screen));
 ok('  a change needs words, a new shape needs a shape', /job === 'change' && !words/.test(route) && /job === 'reframe' && !shape/.test(route));
+/* ── Sing it: a face's lips moved to the song under the shot, 31 October 2026 ── */
+const lip = inputFor('lipsync', 'v', '', 12, '9:16', 'a');
+ok('a lip-sync is fal.ai\'s own LatentSync, safety checker on, the clip and the song both sent',
+  FAL_MODELS.lipsync === 'fal-ai/latentsync' && lip.enable_safety_checker === true && lip.video_url === 'v' && lip.audio_url === 'a');
+ok('  one price a shot of up to forty seconds, at 80% or more, on the route and on the button',
+  CREDITS.lipSync >= 13 && /job === 'lipsync' \? CREDITS\.lipSync/.test(route) && /job === 'lipsync' \? CREDITS\.lipSync/.test(screen) && /lipsync: 40/.test(route));
+ok('  refused without the third yes (the face is the person at the screen, or made here), on the route and on the screen',
+  /body\.ownFace !== true/.test(route) && /data-footageownface/.test(screen) && /ownFace && Boolean\(song\)/.test(screen));
+ok('  the song goes only from the caller\'s own folder, and is deleted with the clip',
+  /audioPath\.startsWith\(`\$\{caller\.id\}\/footage\/`\)/.test(route) && /if \(ticket\.audio\) await dropClip\(ticket\.audio\)/.test(route));
 
 /* ── Bring to life (`lib/becomes.ts`, `app/api/become`), 27 October 2026 ── */
 const become = readFileSync('app/api/become/route.ts', 'utf8');

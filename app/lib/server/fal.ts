@@ -30,7 +30,7 @@
  * one-line change.
  */
 
-export type FalJob = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe';
+export type FalJob = 'cutout' | 'erase' | 'sound' | 'change' | 'reframe' | 'lipsync';
 
 /** The shapes a clip can be filled out to (`fal-ai/ltx-2.3/reframe`). */
 export const REFRAME_SHAPES = ['9:16', '1:1', '4:5', '16:9'] as const;
@@ -51,6 +51,10 @@ export const FAL_MODELS: Readonly<Record<FalJob, string>> = {
   /* A clip made tall, square or wide by filling in the sides instead of
      cropping: $0.10 a second of the clip sent, at 720p. */
   reframe: 'fal-ai/ltx-2.3/reframe',
+  /* The lips moved to the song under the shot: fal.ai's own LatentSync (open
+     source), $0.20 a clip of up to forty seconds. Its safety checker is on by
+     default and is asked for here as well, as every model's is. */
+  lipsync: 'fal-ai/latentsync',
 };
 
 /** How long fal.ai may keep the finished clip on its CDN. */
@@ -85,7 +89,12 @@ function headers(): Record<string, string> {
 }
 
 /** What each model is sent. `words` is what the member typed to take out, or what it should sound like. */
-export function inputFor(job: FalJob, videoUrl: string, words: string, seconds = 8, shape: ReframeShape = '9:16'): Record<string, unknown> {
+export function inputFor(job: FalJob, videoUrl: string, words: string, seconds = 8, shape: ReframeShape = '9:16', audioUrl = ''): Record<string, unknown> {
+  if (job === 'lipsync') {
+    /* The song may run longer than the shot; the shot then loops under it
+       rather than freezing on its last frame. */
+    return { video_url: videoUrl, audio_url: audioUrl, loop_mode: 'loop', enable_safety_checker: true };
+  }
   if (job === 'change') {
     return {
       video_url: videoUrl,

@@ -46,24 +46,27 @@ export const dynamic = 'force-dynamic';
 const BUCKET = 'videos';
 /** How long a clip each job takes. An item out works on about eight
     seconds at most (`ERASE_FRAMES`), so a longer one would come back cut. */
-const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20 };
+const MOST_SECONDS: Readonly<Record<FalJob, number>> = { cutout: 20, erase: 8, sound: 30, change: 10, reframe: 20, lipsync: 40 };
 /** What each job costs per five seconds; sound is one price a clip. */
 const RATE: Readonly<Record<FalJob, number>> = {
   cutout: CREDITS.cutout, erase: CREDITS.erase, sound: CREDITS.clipSound, change: CREDITS.clipChange, reframe: CREDITS.clipReframe,
+  lipsync: CREDITS.lipSync,
 };
 /** The background remover bills by the megapixel, so it is sent 720p:
     `lib/shrinkclip.ts` makes it so on the phone. A little over is allowed
     for a phone's own rounding. */
 const MOST_PIXELS = 1280 * 720 * 1.05;
 const LINK_SECONDS = 15 * 60;
-const TYPES: Readonly<Record<string, string>> = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' };
-const JOBS: readonly FalJob[] = ['cutout', 'erase', 'sound', 'change', 'reframe'];
+const TYPES: Readonly<Record<string, string>> = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov', 'audio/wav': 'wav' };
+const JOBS: readonly FalJob[] = ['cutout', 'erase', 'sound', 'change', 'reframe', 'lipsync'];
 
 interface Ticket {
   readonly id: string;
   readonly job: FalJob;
   readonly owner: string;
   readonly path: string;
+  /** The song sent with a lip-sync, deleted with the clip. */
+  readonly audio?: string;
   readonly credits: number;
   readonly charged: boolean;
   readonly status: string;
@@ -134,6 +137,19 @@ export async function POST(request: Request): Promise<Response> {
   if (job === 'erase' && !words) return Response.json({ message: 'Say what to take out of the clip.' }, { status: 400 });
   if (job === 'change' && !words) return Response.json({ message: 'Say how the clip should change.' }, { status: 400 });
   if (job === 'reframe' && !shape) return Response.json({ message: 'Say which shape the clip should become.' }, { status: 400 });
+  /* A lip-sync needs the song, sent beside the clip into the caller's own
+     folder, and a third yes: the face is the person at the screen, or a
+     character made here. Lips moved on somebody else's face are words put in
+     their mouth, which nobody may do here. */
+  const audioPath = typeof body.audioPath === 'string' ? body.audioPath : '';
+  if (job === 'lipsync') {
+    if (!audioPath.startsWith(`${caller.id}/footage/`) || audioPath.includes('..') || !audioPath.endsWith('.wav')) {
+      return Response.json({ message: 'Send the song with the clip.' }, { status: 400 });
+    }
+    if (body.ownFace !== true) {
+      return Response.json({ message: 'Tick that the face is you, or a character made here: nobody else\'s face may be made to sing.' }, { status: 400 });
+    }
+  }
 
   /* The words first, strictly: refused when the check cannot run. A
      background removal has no words, and fal.ai's own screening reads the
@@ -144,7 +160,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   /* Sound is one price a clip: it costs fal.ai a tenth of a cent a second. */
-  const credits = job === 'sound' ? CREDITS.clipSound : filterCost(seconds, RATE[job]);
+  const credits = job === 'sound' ? CREDITS.clipSound : job === 'lipsync' ? CREDITS.lipSync : filterCost(seconds, RATE[job]);
   const paid = await charge(request, credits, `footage:${job}`);
   if (!paid.ok) return paid.response;
 
@@ -154,7 +170,16 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'The clip did not arrive. Bring it in again and try once more.' }, { status: 404 });
   }
 
-  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words, seconds, shape ?? undefined));
+  let audioUrl = '';
+  if (job === 'lipsync') {
+    const { data: song } = await client.storage.from(BUCKET).createSignedUrl(audioPath, LINK_SECONDS);
+    if (!song?.signedUrl) {
+      await paid.refund();
+      return Response.json({ message: 'The song did not arrive. Try once more.' }, { status: 404 });
+    }
+    audioUrl = song.signedUrl;
+  }
+  const sent = await falSubmit(job, inputFor(job, link.signedUrl, words, seconds, shape ?? undefined, audioUrl));
   if ('error' in sent) {
     await paid.refund();
     console.error(`[footage] ${FAL_MODELS[job]} would not take the job: ${sent.error}`);
@@ -166,6 +191,7 @@ export async function POST(request: Request): Promise<Response> {
     job,
     owner: caller.id,
     path,
+    ...(job === 'lipsync' ? { audio: audioPath } : {}),
     credits,
     charged: paid.owner !== null,
     status: sent.status,
@@ -203,6 +229,7 @@ export async function GET(request: Request): Promise<Response> {
   if (now.state === 'waiting') return Response.json({ state: 'waiting' });
 
   await dropClip(ticket.path);
+  if (ticket.audio) await dropClip(ticket.audio);
   if (now.state === 'done') return Response.json({ state: 'done', url: now.url });
 
   await giveBack(ticket);
