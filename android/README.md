@@ -18,7 +18,26 @@ Billing switched on in it.
   Signing, Google holds the real signing key; this one only proves the upload
   is yours, and Google can reset it if it is lost, but that takes days.
 
-## Building it
+## Building it on GitHub (the way it is done now)
+
+GitHub's machines have the JDK and the Android SDK, so the bundle is built
+there (`.github/workflows/android.yml`):
+
+1. Once: GitHub → Settings → Secrets and variables → Actions → two
+   repository secrets, `ANDROID_KEYSTORE_B64` (the keystore file, base64) and
+   `ANDROID_KEYSTORE_PASSWORD` (its password; the key's is the same). The
+   keystore and its password were handed to the owner privately on
+   31 October 2026 and are never in this public repository.
+2. Actions → **Android app** → **Run workflow**.
+3. When it is green, open the run and download **futurebox-android-bundle**
+   at the foot of the page: the zip holds `app-release-bundle.aab`, the file
+   for the Play Console.
+
+Without the two secrets the run still builds, unsigned, and hands nothing
+out. Every later release: raise `appVersionCode` by one in
+`twa-manifest.json`, push, run it again.
+
+## Building it on your own computer
 
 Needs Node (already here). Bubblewrap downloads the Java and Android tools it
 needs the first time.
