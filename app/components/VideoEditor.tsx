@@ -107,6 +107,8 @@ import VideoTemplatesPicker from './VideoTemplatesPicker';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, stretches, tidy, wordsSpan } from '../lib/videospan';
 import { filmBeats, hearGrid, onTheBeat, retimed, type Grid } from '../lib/beatgrid';
+import { linesFrom as subtitleLines, speechOf, subtitleAt, wordAt, SUB_LIT_DEFAULT, SUB_LITS } from '../lib/subtitles';
+import { attach } from '../lib/workfile';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import BestMoments from './BestMoments';
@@ -1625,6 +1627,45 @@ export default function VideoEditor({
   const beats = useMemo(() => (grid && edit.under && total > 0
     ? filmBeats(grid, stretches(edit.underSkips ?? [], edit.underFrom ?? 0, total), edit.underSpeed ?? 1).slice(0, 4000)
     : []), [grid, edit.under, edit.underSkips, edit.underFrom, edit.underSpeed, total]);
+  /* ── Subtitles from what is said ──────────────────────────────────────
+     docs/VIDEO-EDITOR-ROADMAP.md, gap 2: the shots' own sound put together
+     on the device, read once (priced per minute on the button), and the
+     words laid on the film's clock in short lines, the word being said lit
+     (`lib/subtitles.ts`). */
+  const [subBusy, setSubBusy] = useState(false);
+  const [subSaid, setSubSaid] = useState('');
+  const speechSeconds = edit.pieces.filter((one) => soundOf(one)).reduce((n, one) => n + Math.max(0, one.to - one.from), 0);
+  const subPrice = perMinute(Math.max(1, speechSeconds), CREDITS.transcribe);
+  const makeSubtitles = async (): Promise<void> => {
+    if (subBusy) return;
+    setSubBusy(true);
+    setSubSaid('');
+    try {
+      const speech = await speechOf(edit.pieces.map((one) => ({
+        clip: one.clip, from: one.from, to: one.to, speed: one.speed, film: startsAt(edit, one.id), heard: soundOf(one),
+      })));
+      if (!speech) { setSubSaid(t('edit.subsNoSound', 'No shot has its own sound to read.')); return; }
+      const body = new FormData();
+      const put = await attach(body, speech.blob, 'file', 'film-speech.wav');
+      if (!put.ok) { setSubSaid(put.why); return; }
+      body.append('seconds', String(Math.ceil(speech.seconds)));
+      const token = await accessToken();
+      const answer = await fetch('/api/transcribe', { method: 'POST', headers: token ? { authorization: `Bearer ${token}` } : undefined, body });
+      const data = (await answer.json().catch(() => ({}))) as { words?: { text: string; start: number; end: number }[]; message?: string };
+      if (!answer.ok || !data.words?.length) {
+        setSubSaid(data.message ?? t('edit.subsFailed', 'No words could be heard in the film.'));
+        return;
+      }
+      const lines = subtitleLines(data.words, speech.parts);
+      commit((was) => ({ ...was, subtitles: lines, subtitleLit: was.subtitleLit === undefined ? SUB_LIT_DEFAULT : was.subtitleLit }));
+      setSubSaid(t('edit.subsMade', '{n} lines of subtitles, timed to the words.').replace('{n}', String(lines.length)));
+    } catch {
+      setSubSaid(t('edit.subsFailed', 'No words could be heard in the film.'));
+    } finally {
+      setSubBusy(false);
+    }
+  };
+  const subNow = edit.subtitles?.length ? subtitleAt(edit.subtitles, at) : null;
   const [beatBusy, setBeatBusy] = useState(false);
   /** Every cut moved to the nearest beat its clip can reach, as one step of Back. */
   const cutOnBeat = async (): Promise<void> => {
@@ -4609,6 +4650,34 @@ async function smallerFrame(url: string): Promise<string> {
                   />
                 );
               })}
+              {/* The subtitle up now, drawn the way the cut draws it (`lib/subtitles.ts`). */}
+              {subNow && (
+                <div
+                  data-editorsubnow
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-[7%] text-center"
+                  style={{ bottom: '16%', transform: 'translateY(50%)', zIndex: 2, fontWeight: 800, fontSize: Math.max(10, frameHeight * 0.035), lineHeight: 1.25 }}
+                >
+                  {subNow.words.map((word, k) => {
+                    const on = edit.subtitleLit !== null && k === wordAt(subNow, at);
+                    const lit = edit.subtitleLit ?? SUB_LIT_DEFAULT;
+                    return (
+                      <span
+                        key={k}
+                        data-editorsubword={on ? 'lit' : undefined}
+                        className="inline-block px-[0.12em]"
+                        style={{
+                          color: on ? lit : '#ffffff',
+                          transform: on ? 'scale(1.08)' : undefined,
+                          textShadow: on ? `0 0 10px ${lit}, 0 0 2px #000, 0 1px 3px #000` : '0 0 2px #000, 0 1px 3px #000, 0 0 1px #000',
+                        }}
+                      >
+                        {word.text}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
               {wordsNow.said && (
                 <div
                   data-editorwordsdrag
@@ -7517,6 +7586,64 @@ async function smallerFrame(url: string): Promise<string> {
 
         {bench === 'words' && piece && (
           <div className="space-y-3">
+          {/* ── Subtitles from what is said, the word being said lit ── */}
+          <div className="space-y-2 rounded-xl border p-3" data-editorsubs style={{ borderColor: 'rgba(57,255,20,0.45)', background: 'rgba(57,255,20,0.06)' }}>
+            <p className="text-sm font-bold" style={{ color: INK }}>{t('edit.subsTitle', 'Subtitles from what is said')}</p>
+            <p className="text-[12px] leading-snug" style={{ color: INK_DIM }}>
+              {t('edit.subsHow', 'Reads the speech in your shots and times every word. The word being said lights up.')}
+            </p>
+            <button
+              type="button"
+              data-editorsubsgo
+              disabled={subBusy || speechSeconds <= 0}
+              onClick={() => { void makeSubtitles(); }}
+              className="min-h-[44px] w-full rounded-xl border px-3.5 py-2 text-sm font-bold disabled:opacity-50"
+              style={{ borderColor: 'rgba(57,255,20,0.75)', background: 'rgba(57,255,20,0.16)', color: INK, boxShadow: '0 0 14px rgba(57,255,20,0.3)' }}
+            >
+              {subBusy
+                ? t('edit.subsBusy', 'Listening to the film…')
+                : `${edit.subtitles?.length ? t('edit.subsAgain', 'Read it again') : t('edit.subsGo', 'Make subtitles')} · ${creditsSaid(subPrice, t)}`}
+            </button>
+            {(edit.subtitles?.length ?? 0) > 0 && (
+              <>
+                <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('edit.subsLit', 'The word being said')}>
+                  <span className="text-[12px]" style={{ color: INK_DIM }}>{t('edit.subsLit', 'The word being said')}</span>
+                  {SUB_LITS.map((one) => (
+                    <button
+                      key={one}
+                      type="button"
+                      data-editorsubslit={one}
+                      aria-pressed={(edit.subtitleLit ?? null) === one}
+                      aria-label={one}
+                      onClick={() => commit((was) => ({ ...was, subtitleLit: one }))}
+                      className="h-9 w-9 rounded-full border-2"
+                      style={{ background: one, borderColor: edit.subtitleLit === one ? '#ffffff' : 'rgba(255,255,255,0.25)', boxShadow: `0 0 10px ${one}` }}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    data-editorsubsplain
+                    aria-pressed={edit.subtitleLit === null}
+                    onClick={() => commit((was) => ({ ...was, subtitleLit: null }))}
+                    className="min-h-[36px] rounded-lg border px-2 text-[11px] font-bold"
+                    style={{ borderColor: 'rgba(255,255,255,0.25)', color: INK }}
+                  >
+                    {t('edit.subsPlain', 'Plain')}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  data-editorsubsoff
+                  onClick={() => commit((was) => ({ ...was, subtitles: undefined }))}
+                  className="min-h-[40px] rounded-xl border px-3 text-xs font-bold"
+                  style={{ borderColor: 'rgba(255,255,255,0.25)', color: INK }}
+                >
+                  {t('edit.subsOff', 'Take the subtitles off')} ({edit.subtitles?.length})
+                </button>
+              </>
+            )}
+            {subSaid && <p className="text-[12px] font-semibold" role="status" data-editorsubssaid style={{ color: INK }}>{subSaid}</p>}
+          </div>
           {/* ── The film's own lyrics ────────────────────────────────────
 
               The owner, 8 October 2026: *"wat dit awesome maak dat dit dadelik 'n

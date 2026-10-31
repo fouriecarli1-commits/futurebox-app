@@ -78,6 +78,7 @@ import { chainAudioFx, fadeLevel, type AudioFxOn, type SoundJoin } from './audio
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
 import { drawMark as drawShape, stickersReady, type Mark } from './postshapes';
+import { drawSubtitle, type Subtitle } from './subtitles';
 import { glowOf, haloPasses } from './postglow';
 
 export interface Scene {
@@ -511,6 +512,8 @@ export interface Cut {
   readonly frame?: string;
   readonly frameInk?: string;
   readonly shapes?: readonly Mark[];
+  readonly subtitles?: readonly Subtitle[];
+  readonly subtitleLit?: string | null;
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -1224,6 +1227,10 @@ export async function stitch(cut: Cut): Promise<Made> {
   })();
   /** Seconds of film laid down before the scene now playing. */
   let laid = 0;
+  /* The same, divided by each shot's speed: the film's own clock, which the
+     subtitles are timed on (`lib/subtitles.ts`). `laid` counts the clip's
+     seconds, and the fades are measured on that, so it is left as it is. */
+  let filmLaid = 0;
 
   /* ── The frame the last scene left behind ───────────────────────────────
 
@@ -1652,6 +1659,8 @@ export async function stitch(cut: Cut): Promise<Made> {
              the picture. */
           for (const one of cut.shapes ?? []) drawShape(context, one, cut.width, cut.height);
           if (cut.markUnder) { badge(); words(); } else { words(); badge(); }
+          /* The subtitles from what is said, on the film's own clock. */
+          if (cut.subtitles?.length) drawSubtitle(context, cut.subtitles, filmLaid + (video.currentTime - view.from) / fast, cut.width, cut.height, { lit: cut.subtitleLit });
           drawFrame(context, cut.frame, cut.width, cut.height, cut.frameInk);
 
           /* ── The join, over the picture and its furniture ───────────────
@@ -1730,6 +1739,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          film's real length, so an error here moves the fade rather than
          shortening it, which is the kind of wrong nobody can point at. */
       laid += Math.max(0, window.to - window.from);
+      filmLaid += Math.max(0, window.to - window.from) / fast;
 
       /* And its last frame is kept, for whatever arrives next.
  

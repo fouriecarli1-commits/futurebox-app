@@ -79,6 +79,8 @@
     "check:videosticker": "node audit/videosticker.mjs 3499",
     "check:beatsync": "node audit/beatsync.mjs 3500",
     "check:beatgrid": "tsx scripts/check-beatgrid.mts",
+    "check:subtitles": "tsx scripts/check-subtitles.mts",
+    "check:subtitlewalk": "node audit/subtitlewalk.mjs 3501",
     "check:postgrid": "node audit/postgrid.mjs 3333",
     "check:postfilters": "node audit/postfilters.mjs 3335",
     "check:videofx": "node audit/videofx.mjs 3339",

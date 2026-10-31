@@ -59,6 +59,7 @@ import type { Patch } from './videoblur';
 import type { FrameId, MotionId } from './videoextras';
 import type { GlowId } from './postglow';
 import type { Mark } from './postshapes';
+import type { Subtitle } from './subtitles';
 import type { Corner } from './logomark';
 
 /** A piece of video on the clock. */
@@ -614,6 +615,10 @@ export interface Edit {
   readonly frame?: FrameId;
   readonly frameInk?: string;
   readonly shapes?: readonly Mark[];
+  /** Subtitles made from what is said in the film, on its clock (`lib/subtitles.ts`). */
+  readonly subtitles?: readonly Subtitle[];
+  /** The colour the word being said lights up in; null for plain white lines. */
+  readonly subtitleLit?: string | null;
   /**
    * Her own mark on the film: the logo, and how it sits.
    *
@@ -1048,6 +1053,7 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
     ...(edit.frame && edit.frame !== 'none' ? { frame: edit.frame, frameInk: edit.frameInk ?? '#ffffff' } : {}),
     ...(edit.shapes?.length ? { shapes: edit.shapes } : {}),
+    ...(edit.subtitles?.length ? { subtitles: edit.subtitles, subtitleLit: edit.subtitleLit } : {}),
   };
 }
 
