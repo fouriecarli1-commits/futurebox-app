@@ -127,10 +127,10 @@ if (existsSync(TWA)) {
    the first build on GitHub's machines). */
 ok('  and notifications are delegated, which Play Billing needs to build at all',
   (twa as { enableNotifications?: boolean }).enableNotifications === true);
-/* And Android 6 or newer: the billing library declares minSdk 23, and the
+/* And Android 7 or newer: the browser helper declares minSdk 24 (billing 23), and the
    build refuses a project that asks for less (the same first build). */
-ok('  and the lowest Android it asks for is one the billing library runs on (6, SDK 23)',
-  Number((twa as { minSdkVersion?: number }).minSdkVersion) >= 23);
+ok('  and the lowest Android it asks for is one its libraries run on (7, SDK 24)',
+  Number((twa as { minSdkVersion?: number }).minSdkVersion) >= 24);
   ok('  and the keystore it signs with is never committed',
     /android\/\*\.keystore/.test(readFileSync('.gitignore', 'utf8')));
 }
